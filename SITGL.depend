@@ -1,0 +1,503 @@
+# depslib dependency file v1.0
+1616445667 source:c:\drive_e\projets\sitgl\sit.c
+	<windows.h>
+	<math.h>
+	<malloc.h>
+	<time.h>
+	"nanovg.h"
+	"glad.h"
+	"nanovg_gl.h"
+	"nanovg_gl_utils.h"
+	"SIT_P.h"
+	"SIT_CSSParser.h"
+	"SIT_CSSLayout.h"
+	"debugMem.h"
+
+1616446727 c:\drive_e\projets\sitgl\nanovg.h
+	<stdio.h>
+
+1594068816 c:\drive_e\projets\sitgl\glad.h
+	<stdint.h>
+
+1616446714 c:\drive_e\projets\sitgl\nanovg_gl.h
+	<stdlib.h>
+	<stdio.h>
+	<string.h>
+	<math.h>
+	"nanovg.h"
+
+1611199900 c:\drive_e\projets\sitgl\nanovg_gl_utils.h
+	<OpenGL/glext.h>
+
+1617308666 c:\drive_e\projets\sitgl\sit_p.h
+	"SIT.h"
+	"SIT_CSSStyles.h"
+	<stdio.h>
+	"debugMem.h"
+
+1617158391 c:\drive_e\projets\sitgl\sit.h
+	"UtilityLibLite.h"
+
+1616443161 c:\drive_e\projets\sitgl\utilityliblite.h
+	<stdarg.h>
+	<stdint.h>
+
+1616635499 c:\drive_e\projets\sitgl\sit_cssstyles.h
+	"UtilityLibLite.h"
+
+1616098298 c:\drive_e\projets\sitgl\debugmem.h
+
+1616097290 c:\drive_e\projets\sitgl\sit_cssparser.h
+	"SIT_P.h"
+
+1616635716 c:\drive_e\projets\sitgl\sit_csslayout.h
+	"SIT_CSSParser.h"
+
+1607217032 source:c:\drive_e\projets\sitgl\sit_app.c
+	<windows.h>
+	<shellapi.h>
+	<malloc.h>
+	<stdlib.h>
+	"SIT_P.h"
+	"SIT_CSSLayout.h"
+	"nanovg.h"
+
+1614118048 source:c:\drive_e\projets\sitgl\sit_button.c
+	<stdio.h>
+	<string.h>
+	<stdlib.h>
+	"SIT_P.h"
+	"SIT_CSSLayout.h"
+
+1616295857 source:c:\drive_e\projets\sitgl\sit_cssapply.c
+	<stdio.h>
+	<stddef.h>
+	<stdlib.h>
+	<string.h>
+	<ctype.h>
+	<malloc.h>
+	<math.h>
+	"SIT_CSSParser.h"
+	"SIT_CSSAttrs.h"
+	"SIT_CSSColors.h"
+
+1616295863 c:\drive_e\projets\sitgl\sit_cssattrs.h
+
+1603897900 c:\drive_e\projets\sitgl\sit_csscolors.h
+
+1617070311 source:c:\drive_e\projets\sitgl\sit_csslayout.c
+	<math.h>
+	<string.h>
+	<stdlib.h>
+	<stddef.h>
+	<ctype.h>
+	<malloc.h>
+	"SIT_P.h"
+	"SIT_CSSLayout.h"
+	"nanovg.h"
+
+1616101090 source:c:\drive_e\projets\sitgl\sit_cssparser.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<math.h>
+	<ctype.h>
+	<malloc.h>
+	"SIT_P.h"
+	"SIT_CSSParser.h"
+
+1614637360 source:c:\drive_e\projets\sitgl\sit_combobox.c
+	<stdio.h>
+	<string.h>
+	<malloc.h>
+	<math.h>
+	<ctype.h>
+	"SIT_P.h"
+	"SIT_CSSLayout.h"
+	"nanovg.h"
+
+1615818432 source:c:\drive_e\projets\sitgl\sit_dialog.c
+	<stdio.h>
+	"SIT_P.h"
+	"SIT_CSSLayout.h"
+
+1614447850 source:c:\drive_e\projets\sitgl\sit_editbox.c
+	<math.h>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<malloc.h>
+	<limits.h>
+	"SIT_P.h"
+	"SIT_CSSLayout.h"
+	"nanovg.h"
+
+1616098401 source:c:\drive_e\projets\sitgl\sit_event.c
+	<string.h>
+	<ctype.h>
+	"SIT_P.h"
+	"SIT_CSSParser.h"
+	"SIT_CSSLayout.h"
+
+1616098884 source:c:\drive_e\projets\sitgl\sit_geometry.c
+	<string.h>
+	<stddef.h>
+	<math.h>
+	"SIT_P.h"
+	"SIT_CSSLayout.h"
+
+1611159072 source:c:\drive_e\projets\sitgl\sit_gradient.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<malloc.h>
+	<math.h>
+	"SIT_P.h"
+	"SIT_CSSParser.h"
+
+1616165290 source:c:\drive_e\projets\sitgl\sit_label.c
+	<stdio.h>
+	<string.h>
+	<math.h>
+	<ctype.h>
+	"SIT_P.h"
+	"SIT_CSSLayout.h"
+
+1617314327 source:c:\drive_e\projets\sitgl\sit_listbox.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<stdarg.h>
+	<malloc.h>
+	<ctype.h>
+	<math.h>
+	"SIT_P.h"
+	"SIT_CSSLayout.h"
+	"nanovg.h"
+
+1614571959 source:c:\drive_e\projets\sitgl\sit_progress.c
+	<stdio.h>
+	<string.h>
+	"SIT_P.h"
+	"SIT_CSSLayout.h"
+	"nanovg.h"
+
+1616635809 source:c:\drive_e\projets\sitgl\sit_render.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<malloc.h>
+	<math.h>
+	"SIT_P.h"
+	"SIT_CSSLayout.h"
+	"SIT_CSSParser.h"
+	"nanovg.h"
+
+1604008186 source:c:\drive_e\projets\sitgl\sit_scrollbar.c
+	<windows.h>
+	<stdio.h>
+	<math.h>
+	"SIT_P.h"
+	"SIT_CSSLayout.h"
+
+1604276081 source:c:\drive_e\projets\sitgl\sit_slider.c
+	<stdio.h>
+	<math.h>
+	"SIT_P.h"
+	"SIT_CSSLayout.h"
+
+1594069280 source:c:\drive_e\projets\sitgl\sit_stddialog.c
+	<windows.h>
+	<malloc.h>
+	<shlobj.h>
+	<stdio.h>
+	"SIT_P.h"
+
+1604276108 source:c:\drive_e\projets\sitgl\sit_tab.c
+	<stdarg.h>
+	<stdlib.h>
+	<string.h>
+	<malloc.h>
+	"SIT_P.h"
+	"SIT_CSSLayout.h"
+
+1615998884 source:c:\drive_e\projets\sitgl\sit_template.c
+	<stdio.h>
+	<stdarg.h>
+	<stdlib.h>
+	<string.h>
+	<malloc.h>
+	<ctype.h>
+	"SIT_P.h"
+
+1614529803 source:c:\drive_e\projets\sitgl\sit_tooltip.c
+	<stdio.h>
+	<string.h>
+	<malloc.h>
+	"SIT_P.h"
+	"SIT_CSSLayout.h"
+
+1617158860 source:c:\drive_e\projets\sitgl\sit_widget.c
+	<windows.h>
+	<stdlib.h>
+	<string.h>
+	<stdarg.h>
+	<math.h>
+	"SIT_P.h"
+	"SIT_CSSLayout.h"
+
+1616099376 source:c:\drive_e\projets\sitgl\utilityliblite.c
+	<malloc.h>
+	<stdio.h>
+	<windows.h>
+	<sys/stat.h>
+	<unistd.h>
+	<wchar.h>
+	<ctype.h>
+	<process.h>
+	"UtilityLibLite.h"
+	"debugMem.h"
+
+1617314002 source:c:\drive_e\projets\sitgl\examplesdl.c
+	<stdio.h>
+	<SDL/SDL.h>
+	"nanovg.h"
+	<malloc.h>
+	<math.h>
+	"SIT.h"
+	"glad.h"
+	<windows.h>
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl.h
+	"SDL_main.h"
+	"SDL_stdinc.h"
+	"SDL_audio.h"
+	"SDL_cdrom.h"
+	"SDL_cpuinfo.h"
+	"SDL_endian.h"
+	"SDL_error.h"
+	"SDL_events.h"
+	"SDL_loadso.h"
+	"SDL_mutex.h"
+	"SDL_rwops.h"
+	"SDL_thread.h"
+	"SDL_timer.h"
+	"SDL_video.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_main.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+	"begin_code.h"
+	"close_code.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_stdinc.h
+	"SDL_config.h"
+	<sys/types.h>
+	<stdio.h>
+	<stdlib.h>
+	<stddef.h>
+	<stdarg.h>
+	<stdlib.h>
+	<malloc.h>
+	<stddef.h>
+	<stdarg.h>
+	<memory.h>
+	<string.h>
+	<strings.h>
+	<inttypes.h>
+	<stdint.h>
+	<ctype.h>
+	<iconv.h>
+	"begin_code.h"
+	<alloca.h>
+	<malloc.h>
+	<malloc.h>
+	<malloc.h>
+	<stdlib.h>
+	"close_code.h"
+
+1326114587 c:\drive_e\projets\external\includes\sdl\sdl_config.h
+	"SDL_platform.h"
+	"SDL_config_dreamcast.h"
+	"SDL_config_macos.h"
+	"SDL_config_macosx.h"
+	"SDL_config_symbian.h"
+	"SDL_config_win32.h"
+	"SDL_config_os2.h"
+	"SDL_config_minimal.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_platform.h
+
+1326114594 c:\drive_e\projets\external\includes\sdl\sdl_config_win32.h
+	"SDL_platform.h"
+
+1326114600 c:\drive_e\projets\external\includes\sdl\begin_code.h
+
+1325742239 c:\drive_e\projets\external\includes\sdl\close_code.h
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_audio.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_endian.h"
+	"SDL_mutex.h"
+	"SDL_thread.h"
+	"SDL_rwops.h"
+	"begin_code.h"
+	"close_code.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_error.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_endian.h
+	"SDL_stdinc.h"
+	<endian.h>
+	"begin_code.h"
+	"close_code.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_mutex.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_thread.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_mutex.h"
+	"begin_code.h"
+	<process.h>
+	"close_code.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_rwops.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_cdrom.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_cpuinfo.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_events.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_active.h"
+	"SDL_keyboard.h"
+	"SDL_mouse.h"
+	"SDL_joystick.h"
+	"SDL_quit.h"
+	"begin_code.h"
+	"close_code.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_active.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_keyboard.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_keysym.h"
+	"begin_code.h"
+	"close_code.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_keysym.h
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_mouse.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_video.h"
+	"begin_code.h"
+	"close_code.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_video.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_rwops.h"
+	"begin_code.h"
+	"close_code.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_joystick.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_quit.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_loadso.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_timer.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1325742239 c:\drive_e\projets\external\includes\sdl\sdl_version.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1617303441 source:c:\drive_e\projets\sitgl\nanovg.c
+	<stdlib.h>
+	<stdio.h>
+	<math.h>
+	<memory.h>
+	"nanovg.h"
+	"fontstash.h"
+	"stb_image.h"
+
+1613237495 c:\drive_e\projets\sitgl\fontstash.h
+	<ft2build.h>
+	<math.h>
+	"stb_truetype.h"
+
+1582890658 c:\drive_e\projets\sitgl\stb_truetype.h
+	"stb_truetype.h"
+	<stdio.h>
+	"stb_truetype.h"
+	<math.h>
+	<math.h>
+	<math.h>
+	<math.h>
+	<math.h>
+	<stdlib.h>
+	<assert.h>
+	<string.h>
+	<string.h>
+
+1594170650 c:\drive_e\projets\sitgl\stb_image.h
+	"stb_image.h"
+	<stdio.h>
+	<stdarg.h>
+	<stddef.h>
+	<stdlib.h>
+	<string.h>
+	<math.h>
+	<stdio.h>
+	<assert.h>
+	<stdint.h>
+	<emmintrin.h>
+	<intrin.h>
+	<arm_neon.h>
+

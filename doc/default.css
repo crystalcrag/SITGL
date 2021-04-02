@@ -1,0 +1,182 @@
+/*
+ * default.css : CSS for SITGL user's manual
+ *
+ * written by T.Pierron, april 2020
+ */
+
+html { font-family: Georgia; margin: 0 }
+body { counter-reset: h2 mainannex; padding-left: 22%; background: url("images/checkboard.png") }
+div#content { width: 85%; margin: 0 auto; background: white; padding: 60px 10px 60px; border: 2px solid #555 }
+:nth-page(1) p { margin: 80px 0 }
+:nth-page(n+2) body { padding-top: 10px }
+p { text-align: justify; margin-left: 40px; margin-right: 10px }
+dd { margin-left: 40px; text-align: justify }
+dt { margin-left: 40px; page-break-after: avoid }
+h1 { background: #333; color: white; padding: 9px 0 9px 40px; margin: 0 20px 60px 40px;
+     box-shadow: #555 5px 5px 5px }
+h1 span { font-variant: small-caps }
+h2 { counter-reset: h3; border-bottom: 3px solid; page-break-before: always; margin-top: 80px }
+h3 { counter-reset: h4; page-break-after: avoid }
+h4 { page-break-after: avoid }
+h5 { margin-left: 40px; text-align: center }
+h5:after  { content: ""; width: 50%; display: block; border-bottom: 2px solid black; margin: 2px auto }
+h2:before { counter-increment: h2; content: counter(h2) ". "; font-size: 2em }
+h3:before { content: "~·~·~·~·~·~·~·~·~"; color: #888; display: block; text-align: center }
+h3 span:before { counter-increment: h3; content: counter(h2) "." counter(h3) ". " }
+h4:before { counter-increment: h4; content: counter(h2) "." counter(h3) "." counter(h4) ". " }
+h3.annex span:before { counter-increment: h3; content: counter(mainannex, upper-alpha) "." counter(h3) ". " }
+h2.annex:before { counter-increment: mainannex; content: 'Annex ' counter(mainannex, upper-alpha) ': '; font-size: 1.5em }
+tt { background-color: #f0f0f0; padding: 2px 0 }
+#content { page-break-before: always }
+#auth, #logo { text-align: center }
+pre { margin-left: 40px; border: 1px solid #ccc; border-left-width: 5px; background-color: #f8f8f8;
+      padding: 5px; font-size: 0.9em; -moz-tab-size: 4; tab-size: 4 }
+table pre { margin: 0 }
+#content h2:first-child { page-break-before: auto }
+#tagline { font-size: 2em; text-align: center }
+#abstract { font-size: 1.2em; font-style: italic; border-top: 1px solid black; border-bottom: 1px solid black; margin: 120px 40px }
+#auth { text-align: center; margin-bottom: 200px }
+.nowrap { white-space: nowrap }
+hr { width: 40%; margin: 10px auto }
+
+.error { font-weight: bold; color: red }
+ul, ol { margin-top: 20px }
+ul ul { margin-left: 10px }
+dd ol { margin-left: 60px }
+dd ol > li { margin-bottom: 5px }
+dl.bullet dt::before { content: "\25cf  "; }
+dl.bullet dd p { margin-top: 5px }
+ul p, ol p, table p { margin-left: 0 }
+img { vertical-align: middle }
+blockquote { margin-left: 60px; font-style: italic; border-left: 10px solid #ccc; padding-left: 5px }
+table.selfref, ul, ol { margin-left: 40px }
+table.selfref td { padding-bottom: 8px }
+table.selfref ul, table.selfref ol { margin-left: 20px }
+ul.selfref { list-style-type: none }
+ul.attachp > li > p { margin-top: 5px; margin-bottom: 20px }
+ul div.image, ul div.photo, ol div.image, ol div.photo, ul pre, ol pre { margin-top: 15px }
+.selfref .marker { margin-right: 5px }
+li { margin-bottom: 15px }
+tt.dt { padding: 4px; border: 1px solid black; display: inline-block }
+ol.compact li, ul.compact li { margin-bottom: 5px }
+.key { background-color: #ddd; font-family: monospace; padding: 2px 5px; border-radius: 5px; border: 2px outset #ddd }
+.image.vspace { margin-top: 40px; margin-bottom: 50px }
+.image.vmargin { margin-top: 20px; margin-bottom: 20px }
+.image.hspace { margin-left: 80px }
+.photo { position: relative; margin: 20px 40px; text-align: center }
+.image { position: relative; margin-left: 40px; margin-right: 20px; text-align: center }
+.overlay { position: absolute; left: 0; top: 0; pointer-events: none }
+.image .marker { position: absolute }
+.image > div,
+.image img { margin-left: 0 10px; display: block; box-shadow: #555 0 0 5px; border: 2px solid black }
+.marker { border: 2px solid orange; border-radius: 50%; padding: 0 5px; background-color: green; color: white; font-weight: bold;
+          box-shadow: black 0 0 5px; text-decoration: none }
+.marker.alt { border: 0; background-color: transparent; border-radius: 0; box-shadow: none; margin-right: 1em }
+.marker.alt::before { border: 2px solid red; background-color: blue; border-radius: 0; transform: rotate(45deg);
+                      position: absolute; width: 1em; height: 1em; content: ""; box-shadow: black 0 0 5px; z-index: 1 }
+.marker.alt::after { content: attr(num); position: relative; z-index: 2; color: white; left: 0.3em }
+.marker.fat { padding: 1px 2px }
+.marker.small { font-size: 0.8em }
+.marker.blank { background: none; border: 0; box-shadow: none; color: black }
+.markerv { border-left: 1px solid #66f; position: absolute; top: 0; bottom: 0 }
+.image .marker { position: absolute }
+.image .marker.alt .lined,
+.image .marker.alt .lineu,
+.image .marker.alt .linel,
+.image .marker.alt .liner { border-color: red }
+.image .marker.alt .lineu { margin-left: 4px }
+.image .marker .lined { border-left: 2px solid orange; position: absolute; left: 50%; top: 100%; box-shadow: black 0 0 5px }
+.image .marker .lineu { border-left: 2px solid orange; position: absolute; left: 50%; bottom: 100%; box-shadow: black 0 0 5px }
+.image .marker .liner { border-bottom: 2px solid orange; position: absolute; left: 100%; top: 50%; box-shadow: black 0 0 5px }
+.image .marker .linel { border-bottom: 2px solid orange; position: absolute; right: 100%; top: 50%; box-shadow: black 0 0 5px }
+.image .rect { border: 2px solid orange; position: absolute; box-shadow: black 0 0 5px }
+.image .highlight { background-color: yellow; opacity: 0.25; position: absolute }
+.center { text-align: center }
+a { color: brown }
+span.p { font-family: sans-serif; color: blue; text-shadow: # 1px 1px }
+span.n { background-color: yellow }
+#toc { position: fixed; top: 0; left: 0; width: 22%; bottom: 0; background: #333; overflow: auto; color: white;
+       box-shadow: #000 0 0 10px; padding: 10px; box-sizing: border-box; counter-reset: tocH2 annex }
+table td { vertical-align: baseline }
+#info th { text-align: right; vertical-align: baseline }
+#toc li { margin: 0 }
+#toc ol { margin-left: 0 }
+#toc a:hover { text-decoration-style: solid; text-decoration: underline; color: #99ee28 }
+#toc a { display: block; color: white; text-decoration: none }
+#toc a.annex span,
+#toc a.sub1 span { text-decoration: underline; text-decoration-style: dotted; font-variant: small-caps }
+#toc a.sub1 { counter-reset: tocH3 }
+#toc a.sub2 { margin-left: 60px; counter-reset: tocH4 }
+#toc a.sub3 { margin-left: 40px; color: #ccc }
+#toc a.sub4 { margin-left: 90px; color: #ccc; display: list-item }
+#toc a.sub1::before { counter-increment: tocH2; content: counter(tocH2) ". " }
+#toc a.sub2::before { counter-increment: tocH3; content: counter(tocH2) "." counter(tocH3) ". ";
+                      position: absolute; left: 25px; width: 40px; text-align: right }
+#toc a.sub3::before { counter-increment: tocH4; content: counter(tocH2) "." counter(tocH3) "." counter(tocH4) ". " }
+#toc a.annex::before { counter-increment: annex; content: 'Annex ' counter(annex, upper-alpha) ': ' }
+#toc a.annex.sub2::before { counter-increment: tocH3; content: counter(annex, upper-alpha) "." counter(tocH3) }
+
+.toolbutton      { display: inline-block; margin: 0 10px 5px 40px }
+.toolbutton.left { float: left }
+.toolbutton img  { border: 0; display: block; margin-left: auto; margin-right: auto; height: 32px }
+.toolbutton span { color: #548316; font-family: sans-serif; font-size: 0.9em }
+
+p.warning { font-family: sans-serif; font-weight: bold; color: red; font-size: 0.9em; margin-left: 60px; margin-right: 20px }
+div.bigwarn { margin: 40px 80px; padding: 15px; background: repeating-linear-gradient(-45deg, yellow, yellow 20px, red 20px, red 40px); 
+              box-shadow: #555 0 0 5px }
+div.bigwarn div { width: 100%; background-color: white; padding: 5px; box-sizing: border-box; box-shadow: inset #522 0 0 5px }
+div.bigwarn .legend { display: block; border-bottom: 2px solid black; text-align: center; padding-bottom: 5px; margin: 0 15px 5px }
+div.bigwarn div p { margin-left: 10px; margin-right: 10px }
+
+.listview { border-collapse: collapse; margin-left: 40px }
+.listview td { border: 2px solid black }
+.listview caption { padding: 10px; font-weight: bold; border: 2px solid black; border-bottom: 0 }
+.listview caption.small { border: 0 }
+.listview caption.small::after { content: ""; width: 50%; display: block; border-bottom: 2px solid black; margin: 2px auto }
+.listview ul { margin-left: 0 }
+.listview thead td { background-color: black; color: white; text-align: center }
+.listview.pad td { padding: 3px 8px }
+.listview tt { background: none }
+.listview tag { font-family: monospace; font-weight: bold; color: #1fa74d }
+
+#colors td { width: 40px; height: 40px }
+
+.danger { background-color: yellow; border: 1px solid #FF8800; border-width: 1px 0; color: red }
+.warn   { color: #aaa }
+code    { background-color: white; border: 1px solid #888; padding: 2px 5px }
+sans    { font-family: sans-serif }
+usrcls  { background-color: crimson; border-radius: 1em; padding: 0 0.5em; font-size: 0.8em; font-family: sans-serif; color: white }
+cfg     { background-color: green; border-radius: 1em; padding: 0 0.5em; font-size: 0.8em; font-family: sans-serif; color: white; margin-right: 4px }
+tt.warn { color: black; background-color: yellow }
+tt.warn::after { content: url(../send-it/warning.png); background-color: white; padding-left: 5px }
+.xml     { font-weight: bold }
+.xml tag { color: purple }
+.xml com { color: green }
+.xml arg { color: blue }
+.ro      { background-color: yellow; font-family: monospace; border: 1px solid black; padding: 0 3px }
+
+.c  { color:#2222AA }
+.i  { color:#54AAAA }
+.d  { color:#A600F7 }
+.o  { color:#FF00FF }
+.s  { color:#7700FF }
+.q  { color:#FF2020 }
+.t  { color:#1fa74d; font-weight:bold }
+.k  { color:#A62828; font-weight:bold }
+.e  { color:#FFFFFF; background-color:#FF3333 }
+.n  { color:black;   background-color:#FFFF00 }
+.ok { color:#fff;    background-color:green }
+.h  { font-weight: bold }
+dim { color: #888 }
+.bgtip { background: url(images/tip.png) no-repeat 5px 5px, linear-gradient(to top, #e8e654, #ff5);
+         box-shadow: 2px 2px 8px #aaa; margin: 20px 40px; padding: 1px 5px; border-radius: 0.5em }
+.preformat { display: block; background-color: white; padding: 2px; border:1px solid rgb(229, 204, 255);
+	font-family: monospace; white-space: pre; margin: 5px 0 }
+
+.shortcut { background-color: white; font-family: monospace; padding: 0px 3px; border-radius: 5px; border: 1px outset #860 }
+
+@media print {
+  #toc { display: none }
+  body { padding-left: 0; background: none }
+  div#content { width: auto; border: 0 }
+}

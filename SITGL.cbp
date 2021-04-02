@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="SITGL" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="SITGL" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-DDEBUG_SIT" />
+					<Add option="-DDEBUG_MALLOC" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="SITGL" prefix_auto="1" extension_auto="1" />
+				<Option object_output="objs\" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-march=core2" />
+					<Add option="-Os" />
+					<Add option="-DBUILDING_DLL" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+			<Target title="ReleaseBTE">
+				<Option output="SITGL" prefix_auto="1" extension_auto="1" />
+				<Option object_output="objs\" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-DBUILDING_DLL" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add directory="..\external\includes" />
+			<Add directory="..\SDL\include" />
+		</Compiler>
+		<Linker>
+			<Add option="-static-libgcc" />
+			<Add library="gdi32" />
+			<Add library="user32" />
+			<Add library="kernel32" />
+			<Add library=".\SDL.dll" />
+		</Linker>
+		<Unit filename="SIT.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT.h" />
+		<Unit filename="SITGL.rc">
+			<Option compilerVar="WINDRES" />
+			<Option target="Release" />
+			<Option target="ReleaseBTE" />
+		</Unit>
+		<Unit filename="SIT_App.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_Button.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_CSSApply.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_CSSAttrs.h" />
+		<Unit filename="SIT_CSSLayout.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_CSSParser.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_CSSStyles.h" />
+		<Unit filename="SIT_ComboBox.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_Dialog.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_EditBox.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_Event.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_Geometry.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_Gradient.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_Label.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_ListBox.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_P.h" />
+		<Unit filename="SIT_Progress.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_Render.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_ScrollBar.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_Slider.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_StdDialog.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_Tab.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_Template.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_ToolTip.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="SIT_Widget.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="UtilityLibLite.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="exampleSDL.c">
+			<Option compilerVar="CC" />
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="nanovg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
