@@ -190,7 +190,7 @@ consideration on how to properly use this library. Care has been taken for this 
 possible, but don't expect miraculously dropping a few files on your project and start coding your
 interface right after. You'll have to read this documentation further, at least until chapter 11:
 controls.
-<!--
+
 <h2 id="history">History</h2>
 
 <p class="note">This part can be skipped for those who would like to dive directly in this framework.
@@ -3015,7 +3015,7 @@ separating the declarations with a comma: the shadows will be ordered top to bot
 
 <p><tt>box-shadow</tt> will take <tt>border-radius</tt> into account when drawing the corner:
 
-<div class="photo">
+<div class="image">
   <img src="images/box-shadow.png">
 </div>
 
@@ -3035,8 +3035,7 @@ background-image: &lt;uri&gt;
 background-attachment: fixed|scroll
 background-repeat: repeat|repeat-x|repeat-y|no-repeat
 background-position: &lt;offsetX&gt; &lt;offsetY&gt;
-background-size: cover|contain|&lt;sizeX&gt; &lt;sizeY&gt;
-background-clip: border-box|padding-box|content-box</pre>
+background-size: cover|contain|&lt;sizeX&gt; &lt;sizeY&gt;</pre>
 
 <p>All those properties <b>accept multiple background parameters</b>, separated by a comma. Backgrounds will
 be drawn top to bottom. CSS standard allow the use of <tt>background-color</tt> only for the last (bottomest)
@@ -3086,11 +3085,67 @@ SIT_SetValues(app, SIT_Style|XfMt, <span class="o">"background: id(%d)"</span>, 
  </pre>
 </ul>
 
+<p>Here are a few basic examples on how <tt>background:</tt> property works:
+<div class="image">
+  <img src="images/background_simple.png">
+</div>
+<p>Each box is exactly 100x100px, the border size is 2px, therefore the content area is 96x96px. The
+background image is 64x64px. From left to right, <b>here are the declarations used to produce those
+backgrounds</b>:
+<ul>
+  <li><tt class="dt">background: url("64x64.png");</tt>
+  <p>The default origin for the background will be the top left of the padding box (entire box, minus
+  border width).
+  <li><tt class="dt">background: url("64x64.png") 32px 0;</tt>
+  <p>Since the content area is 96px, the image 64px and shifted by 32px, it should touch the right border.
+  <li><tt class="dt">background: url("64x64.png") 32px 32px;</tt>
+  <p>Same here, with the height/bottom.
+  <li><tt class="dt">background: url("64x64.png") -32px -32px;</tt>
+  <p>Offset can also be negative.
+  <li><tt class="dt">background: url("64x64.png") 100% 100%;</tt>
+  <p>Relative unit, will place the relative position within the image at the (same) relative position
+  in the box. Therefore a position of <tt>100% 100%</tt> will place the image in the bottom left corner,
+  no matter what the image or box size is. Likewise a position of <tt>50% 50%</tt> will center the
+  image, no matter what the size of the image or the box is.
+  <li><tt class="dt">background: url("64x64.png") fixed;</tt>
+  <p>This effect can only be visualized in motion. On a still screenshot, it is hard to see what's going
+  on. Here the origin of the background is the <b>top left corner of the window</b> (ie: html tag). If
+  you were to move the window (the gray rounded rect, not the operating system window), the background
+  of the last box would appear to be fixed, like if the box would be transparent and show the background
+  of what would apppear the HTML element.
+</ul>
+
+<p>Here are some examples on how to <b>resize the <tt>background-image</tt></b>. It is extremely likely you'll want
+to do that at some point: when displaying any graphics, it is recommended to use a higher resolution
+image than what it is necessary and scale it down to the device resolution (typcially using <tt>Em</tt> unit).
+Scaling an image up will almost always give very blurry results.
+
+<div class="image">
+  <img src="images/background_size.png">
+</div>
+
+<p>The image is 128x64px, the box size is the same as the previous example (content box is 96x96px). <b>Here
+are the declarations used to produce the backgrounds</b>:
+<ul>
+  <li><tt class="dt">background: url("128x64.png") 50% 50%; background-size: contain;</tt>
+  <p>
+
+  <li><tt class="dt">background: url("64x64.png") 50% 50%; background-size: cover;</tt>
+  <p>
+
+  <li><tt class="dt">background: url("64x64.png"); background-size: 100% 100%;</tt>
+  <p>
+
+  <li><tt class="dt">background: url("64x64.png") center center; background-size: 64px 32px</tt>
+  <p>
+
+</ul>
+
 <p><tt>background-image</tt> can also be assigned to gradients. This library supports 3 types of gradients:
 <ul>
   <li><tt class="dt">linear-gradient</tt> and
   <li><tt class="dt">repeating-linear-gradient</tt> here are a few examples:
-  <div class="photo">
+  <div class="image">
     <img src="images/linear-gradients.png" style="width: 100%">
   </div>
   <p>From left to right, the declarations used to produce those gradients are:
@@ -3111,7 +3166,7 @@ SIT_SetValues(app, SIT_Style|XfMt, <span class="o">"background: id(%d)"</span>, 
 	along the way.
   </ul>
   <li><tt class="dt">radial-gradient</tt>
-  <div class="photo">
+  <div class="image">
     <img src="images/radial-gradients.png" style="width: 100%">
   </div>
   <p>From left to right, the declarations are:
@@ -3131,7 +3186,7 @@ SIT_SetValues(app, SIT_Style|XfMt, <span class="o">"background: id(%d)"</span>, 
 <ul>
   <li>Radial gradients are a bit more expensive than linear-gradients: radial gradients will require
   a full RGBA texture, the size of the area covered by the gradient, to be allocated. Linear gradients
-  only needs a 1px high image (and at most sqrt(2) * max(width, height) pixels wide).
+  only needs a 1px high image (and at most sqrt(width*width + height*height) pixels wide).
   <li>The number of color stops is limited to 8. You can increase that value by changing the size of
   the array for the type <tt>struct Gradient_t</tt> declared in <tt>SIT_CSSStyles.h</tt>.
   <span class="n">XXX</span> should be dynamic, really.
@@ -3522,7 +3577,6 @@ padding-left: &lt;dimension&gt;</tt>
   <p>Define alpha level of all the elements inside the container. <span class="n">XXX</span> doesn't
   handle group transparency at all, so this property is kind of useless.
 </ul>
--->
 
 <h2 id="widgets">Widgets/Controls</h2>
 
@@ -4544,7 +4598,7 @@ SIT_Wiget num = SIT_CreateWidget(<span class="o">"fps"</span>, SIT_EDITBOX, pare
 
 <p>The main event reported by text boxes that you might be interested in is <tt>SITE_OnChange</tt>.
 This event will be fired whenever the content of the edit buffer is changed. The <tt>call_data</tt>
-for this event will be the UTF-8 string that you can get by reading the <tt>SIT_Title</tt> property.
+for this event will be the UTF-8 string that you can also get by reading the <tt>SIT_Title</tt> property.
 By the time the event is fired, the changes will have already been commited, therefore it won't be
 possible to cancel them. And, as usual, don't try to modify the content of this buffer, you'll cause
 undefined behaviour all over the place.
@@ -4704,7 +4758,7 @@ specialized function:
 
 <pre><span class="t">Bool</span> SIT_ListSetColumn(SIT_Widget, <span class="t">int</span> col, <span class="t">int</span> width, <span class="t">int</span> align, <span class="t">STRPTR</span> label);</pre>
 
-<p>Where each parameters have the following meaning:</p>
+<p>Where each parameters have the following meaning:
 
 <ul>
   <li><tt>col</tt>: the 0-based column number you want to alter its properties.</li>
@@ -4712,25 +4766,25 @@ specialized function:
   value <tt>DontChange</tt> to let the width of the column as it is currently.
   Alternatively, you can also use <tt>AutoArrange</tt> to compute the optimal
   width to display both header and list items. Any numeric value, will set the
-  width to the specified number of pixels.</li>
+  width to the specified number of pixels.
   <li><tt>align</tt>: the alignment for this column: <tt class="o">'L'</tt> for
   left, <tt class="o">'R'</tt> for right, <tt class="o">'C'</tt> for center and
-  <tt>DontChange</tt> to leave the alignment as it is.</li>
+  <tt>DontChange</tt> to leave the alignment as it is.
   <li><tt>label</tt>: the new label for the column or <tt>DontChangePtr</tt> to
-  leave it as it is.</li>
+  leave it as it is.
 </ul>
 
 <p>You can also use the dedicated properties, but attributes for all columns
-will have to be specified in one <tt>SIT_SetValues()</tt> call.</p>
+will have to be specified in one <tt>SIT_SetValues()</tt> call.
 
 <h4 id="listitems">Managing items</h4>
 
 <p>Items are managed through dedicated functions. First, there is one function to
-<b>insert items in the list</b>:</p>
+<b>insert items in the list</b>:
 
 <pre><span class="t">int</span> SIT_ListInsertItem(SIT_Widget w, <span class="t">int</span> row, <span class="t">APTR</span> rowTag, ...);</pre>
 
-<p>Each parameter have the following meaning:</p>
+<p>Each parameter have the following meaning:
 
 <ul>
   <li><tt>row</tt>: 0-based index where you want to insert your row. Use a
@@ -4752,7 +4806,7 @@ will have to be specified in one <tt>SIT_SetValues()</tt> call.</p>
 <p><b>The return value</b> will be the row index at which the item was inserted, so that it can be
 manipulated using the various other functions.
 
-<p>To <b>delete one row</b>, you can use the following function:</p>
+<p>To <b>delete one row</b>, you can use the following function:
 
 <pre><span class="t">void</span> SIT_ListDeleteRow(SIT_Widget w, <span class="t">int</span> row);</pre>
 
@@ -4760,29 +4814,33 @@ manipulated using the various other functions.
 <tt class="o">-1</tt> to delete the last row of the list. You can also use <tt>DeleteAllRows</tt>,
 <b>to delete all the rows at once</b>.
 
-<p>To <b>modify a cell</b> of the listbox, there is the following function:</p>
+<p>To <b>modify a cell</b> of the listbox, there is the following function:
 
-<pre><span class="t">void</span> SIT_ListSetCell(SIT_Widget w, <span class="t">int</span> row, <span class="t">int</span> col, <span class="t">STRPTR</span> text, <span class="t">int</span> align, <span class="t">APTR</span> rowTag);</pre>
+<pre><span class="t">void</span> SIT_ListSetCell(SIT_Widget w, <span class="t">int</span> row, <span class="t">int</span> col, <span class="t">APTR</span> rowTag, <span class="t">int</span> align, <span class="t">STRPTR</span> text);</pre>
 
-<p>The following values can be assigned to each parameters:</p>
+<p>The following values can be assigned to each parameters:
 
 <ul>
   <li><tt>row</tt>: the 0-based index of the row you want to modify. Use a
-  negative value to modify the last item.</li>
+  negative value to modify the last item.
 
   <li><tt>col</tt>: 0-based index of the cell's column you want to set the
   text. This parameter is only meaningful if you are going to change the
   text of the cell. Otherwise, the value given for this parameter will be
-  ignored.</li>
-
-  <li><tt>text</tt>: label to set the targeted cell. You can use the
-  special value <tt>DontChangePtr</tt> to not modify the cell's text,
-  which can be useful if you want to alter the others cell properties.</li>
+  ignored.
 
   <li><tt>rowTag</tt>: the new tag you want to set for the row or <tt>DontChangePtr</tt>
   for leaving this value as it is. As with the <tt>image</tt> parameter, the
   <tt>rowTag</tt> will always be set on the first column, no matter what you
-  gave for the column number.</li>
+  gave for the column number.
+
+  <li><tt>align</tt>: use the character <tt class="o">'L'</tt>, <tt class="o">'C'</tt> or
+  <tt class="o">'R'</tt> to set the alignment on this cell. Or simply <tt>DontChange</tt>, if you
+  don't want to change anything.
+
+  <li><tt>text</tt>: label to set the targeted cell. You can use the  special value <tt>DontChangePtr</tt>
+  to not modify anything.
+
 </ul>
 
 <h4 id="listembed">Embedding controls</h4>
@@ -4845,9 +4903,24 @@ space there is available. Adding or deleting items can change that maximum.
 all the items in the row.
 
 <p>Therefore, there are two boxes per cell: <b>item box</b> and <b>cell box</b>. Item box is necessarily
-smaller or equal to the cell box. You might be interested to control how an item is positionned within
-the cell box. By default items will be placed on the top left corner, but you can select another one,
-using one of these methods:
+smaller or equal to the cell box (which is not necessarily true in list view). You might be interested
+to control how an item is positionned within the cell box. By default items will be placed on the top
+left corner, but you can select another one, using one of these methods:
+
+<ul>
+  <li>The default horizontal alignment can still be set using the <tt>SIT_ColumnAlign</tt> property.
+  Obviously, only one column needs to specified.
+
+  <li>For a finer control, you can use the function <tt>SIT_ListSetCell()</tt>. The align parameter
+  can also be used to specify both the horizontal and vertical centering in icon view. The first 8bit
+  of this parameter will specify the horizontal alignment, the next 8bit can be filled with the vertical
+  alignment using the character <tt class="o">T</tt>, <tt class="o">C</tt>, <tt class="o">B</tt>. For
+  example:
+  <pre>SIT_ListSetCell(list, row, col, DontChangePtr, (<span class="o">'B'</span> &lt;&lt; <span class="o">8</span>) | <span class="o">'R'</span>, DontchangePtr);</pre>
+  <p>This will set the alignment for this cell to bottom right.
+  <p>Technically, you could use multi-character constant for this parameter, but their use has been
+  discouraged by most compilers for whatever reasons (ie: alignment could be simplified as <tt class="o">'BR'</tt>).
+</ul>
 
 <h4 id="listcat">Category separator</h4>
 
@@ -4859,12 +4932,35 @@ between group of icons:
   <span class="caption">Category separator</span>
 </div>
 
+<p>You can create a category separator using the default function for inserting items:
 
-<p>TODO
+<pre><span class="t">int</span> SIT_ListInsertItem(SIT_Widget w, <span class="t">int</span> row, <span class="t">APTR</span> rowTag, ...);</pre>
+
+<p>You just have to set the <tt>rowTag</tt> parameter to <tt>SITV_CategoryRow</tt>. Since icon view
+can only have one column, the vararg part should only contain one string (which will be interpreted
+as an HTML label).
+
+<p>The <b>important aspect to keep in mind</b> about category separators is that they behave almost like regular
+items. The way you "add" items in one particular group, is simply by inserting the items in the "correct"
+row.
+
+<p>A bit of <b>automatic house-keeping</b> will be done for you with these items:
+<ul>
+  <li>Unless there are more than 2, category separators will be initially hidden.
+  <li>If a category has no items, it will stay hidden until some are added.
+  <li>Deleting an item, will hide (but not delete) the category if it becomes empty.
+</ul>
+
+<p>The drawback of using category separators is that you need to maintain extra house keeping on your
+side, to know where they are. You can still check if an item at a given row is a category separator,
+by retrieving the <tt>SIT_RowTag(row)</tt> property.
+
+<p>For the <b>purpose of CSS styling</b>, category separators will be created with the tag name
+<tt>&lt;thead&gt;</tt>.
 
 <h4 id="listprop">Listbox properties</h4>
 
-<p>A few more specialized properties exist to help you manage listbox:</p>
+<p>A few more specialized properties exist to help you manage listbox:
 
 <ul>
   <li><tt class="dt">SIT_ListBoxFlags</tt> (<tt class="t">int</tt>)
@@ -4879,7 +4975,8 @@ between group of icons:
 	through the <tt>SIT_ColumnNames</tt> properties, but the text width will not influence the width
 	of the columns.
     <li><tt class="dt">SITV_DoSort</tt> : only works in report view: allow user to click on headers to
-	change the sorting of the list box.
+	change the sorting of the list box. <span class="n">Note</span>: once a sort column has been set,
+	inserting new items will ignore the row number.
   </ul>
   <p>By default, this property is set to 0.
 
@@ -4892,6 +4989,9 @@ between group of icons:
   or 0, the specified column will be used to sort items in ascending order. If the integer is negative,
   the <tt>-n-2</tt> will be sorted in descending order (i.e: to sort first column in descending order,
   specify <tt>-2</tt>).
+  
+  <p>Alternatively, you can also use the macro <tt>SITV_SortColumn(column, direction)</tt> to set this
+  property.
 
   <li><tt class="dt">SIT_SelectedIndex</tt> (<tt class="t">int</tt>)
   <p>Set or get currently selected row. -1 will be returned if none are selected. If you try to set
@@ -4908,7 +5008,7 @@ between group of icons:
   <p>this tag allows you to set or get an arbitrary pointer to the given row. It works like the previous
   one: you have to specify the row you want to modify as argument to the tag name.
 
-  <li><tt class="dt">SIT_MakeVisible</tt> (<tt class="t">int</tt>)
+  <li><tt class="dt">SIT_MakeVisible</tt> (<tt class="t">int</tt>) <span class="ro">write-only</span>
   <p>Will bring into view the n<sup>th</sup> item by scrolling the content of list by the minimum
   amount required. Item number is 0-based and will be clamped to the min/max number of items if given
   an index outside of the permitted range.
@@ -4924,7 +5024,7 @@ between group of icons:
 <p>Here is the list of specific events sent by listbox:</p>
 
 <ul>
-  <li><tt class="dt">SITE_OnActivate</tt></dt>
+  <li><tt class="dt">SITE_OnActivate</tt>
   <p>This event is triggered whenever the user <b>double-click on an item or use the <span class="key">Enter</span> key</b>. The <tt>call_data</tt> parameter
   of the callback will be the row (0-based index) of the item being activated.
 
@@ -4940,32 +5040,31 @@ between group of icons:
 	<span class="t">APTR</span> item2;
 	<span class="t">int</span>  column;
 } SIT_OnSort;</pre>
-  <p>Where each field will be initialized the following way:</p>
+  <p>Where each field will be initialized the following way:
   <ul>
     <li><tt>item1</tt>, <tt>item2</tt>: the <tt>rowTag</tt> that was given when
     items were inserted.</li>
-    <li><tt>column</tt>: the 0-based index of the column to sort.</li>
+    <li><tt>column</tt>: the 0-based index of the column to sort.
   </ul>
-  <p>The return code of the callback has to be from the following set of enums:</p>
+  <p>The return code of the callback has to be from the following set of enums:
   <ul>
-    <li><tt>SIT_SortBefore</tt> (<tt class="o">-1</tt>): <tt>item1</tt> should be before <tt>item2</tt>.</li>
-    <li><tt>SIT_SortEqual</tt> (<tt class="o">0</tt>): <tt>item1</tt> is equal to <tt>item2</tt>.</li>
-    <li><tt>SIT_SortAfter</tt> (<tt class="o">1</tt>): <tt>item1</tt> should be after <tt>item2</tt>.</li>
+    <li><tt>SIT_SortBefore</tt> (<tt class="o">-1</tt>): <tt>item1</tt> should be before <tt>item2</tt>.
+    <li><tt>SIT_SortEqual</tt> (<tt class="o">0</tt>): <tt>item1</tt> is equal to <tt>item2</tt>.
+    <li><tt>SIT_SortAfter</tt> (<tt class="o">1</tt>): <tt>item1</tt> should be after <tt>item2</tt>.
     <li><tt>SIT_SortAlpha</tt> (<tt class="o">2</tt>): ask the library to perform a case-insensitive
-    lexicographic ordering based on the current text there is in the cells of each item.</li>
+    lexicographic ordering based on the current text there is in the cells of each item.
     <li><tt>SIT_SortBinary</tt> (<tt class="o">3</tt>): same like <tt>SIT_SortAlpha</tt>, but do not
-    take case into consideration.</li>
+    take case into consideration.
     <li><tt>SIT_SortNumeric</tt> (<tt class="o">4</tt>): consider the text of each item to be
-    decimal integers, and use them to sort the rows.</li>
+    decimal integers, and use them to sort the rows.
     <li><tt>SIT_SortAlphaNum</tt> (<tt class="o">5</tt>): mix between alpha and numeric, this sorting
     method is best intended for filenames, where files like these (in lexicographic order):
     <pre>File1.exe     File10.exe      File2.exe     File40.exe    File5.exe</pre>
     Will be sorted like this:
     <pre>File1.exe     File2.exe       File5.exe     File10.exe    File40.exe</pre>
-    </li>
   </ul>
-  <p>Note: you do not have to handle the ascending/descending order: this will
-  be taken care of automatically for you.</p>
+  <p><span class="n">Note</span>: you do not have to handle the ascending/descending order: this will
+  be taken care of automatically for you.
 
   <p>The only caveat when you handle the sorting yourself is to be careful to
   return a value in the range [-1, 1]. That means you cannot use the return
@@ -4980,142 +5079,14 @@ between group of icons:
     <span class="k">if</span> (diff &gt; <span class="o">0</span>) <span class="k">return</span>  <span class="o">1</span>;
     <span class="k">return</span> <span class="o">0</span>;
 }</pre>
+  <p><b>The default behavior</b> for sorting items is <tt>SIT_SortAlpha</tt>.
 </ul>
 
 <h3 id="SIT_CANVAS"><span>SIT_CANVAS</span></h3>
 
-<p>Canvas is a generic control, where you have to handle all by yourself,
-like keyboard, mouse and repainting. One visual feature is available, the
-possible border around the client area, through the <tt>SIT_FrameStyle</tt>
-property:</p>
-
-<div class="imgcaption">
-  <img src="images/SITV_Sunken.png" alt="Sunken frame">
-  <span class="caption">SITV_Sunken</span>
-</div>
-
-<div class="imgcaption">
-  <img src="images/SITV_SunkenThick.png" alt="Thick sunken frame">
-  <span class="caption">SITV_SunkenThick</span>
-</div>
-
-<div class="imgcaption">
-  <img src="images/SITV_Raised.png" alt="Raised frame">
-  <span class="caption">SITV_Raised</span>
-</div>
-
-<div class="imgcaption">
-  <img src="images/SITV_RaisedThick.png" alt="Thick raised frame">
-  <span class="caption">SITV_RaisedThick</span>
-</div>
-
-<div class="imgcaption">
-  <img src="images/SITV_Etched.png" alt="Etched frame">
-  <span class="caption">SITV_Etched</span>
-</div>
-
-<p>Despite having no intrinsic features for the user, this is one of the most
-useful control from a programmer stand point. Still, designing something useful
-and user-friendly, especially taking into account keyboard and mouse interface,
-can be a daunting task even for something as simple as a pushbutton.</p>
-
-<p>Usually the first event handled is the one managing the OnPaint
-notifications, because default handler does almost nothing. Without any
-graphics on the screen, no user interaction can be made, therefore we'll
-first see what to expect from this event.</p>
-
-<h4 id="SITE_OnPaint">Handling <tt>SITE_OnPaint</tt> event</h4>
-
-<p>This is one of the most important event for such kind of widget, since the
-default handler only erases the control with its background color. As stated
-in the previous section, the <tt>call_data</tt> will be a pointer to a graphic
-context, which has to be seen as an opaque pointer: usually the <tt>call_data</tt>
-is directly renamed into <tt>gc</tt> and used as is for all graphics-related
-functions that ask such pointer. Remember what have been said in
-<a href="#chapter7">chapter VII: Events/callbacks</a>: <tt>call_data</tt>
-parameter remain the property of this library, do not try to free that object
-with <tt>GFX_Free()</tt>. Other than that, what functions are available will
-be described in the next chapter, there is a few points to be aware before.</p>
-
-<p>Windows, like many other graphical operating system, does not by default
-save what you draw on a window. If another top-level dialog is put in front
-of the area you just draw, and then moved away, without further action, the
-drawing will be irremediably erased. Hopefully, the system will notify you
-whenever part of your area has been erased one way or another: this is the
-purpose of the <tt>SITE_OnPaint</tt> event.</p>
-
-<p>A first point to be aware is that the area to refresh in response to an
-OnPaint event is usually smaller than the client area of your canvas.
-The graphics layer can report the area to refresh in the form of a rectangle,
-it is strongly advised to honor this information, by limiting the numbers of
-objects to redraw to the ones that are affected by the erasure. It doesn't have
-to be pixel-perfect, but at least provide some provision to limit redrawing.</p>
-
-<p>Second, even if the area reported is in the form of a rectangle, the area
-to refresh might not be a rectangle. For example, when you have other top-level
-dialogs covering partially your area like this:</p>
-
-<div class="imgcaption" style="padding-right: 20px">
-  <img src="images/OnPaintRegion.png" alt="Canvas OnPaint region">
-  <span class="caption">Canvas covered by two dialogs</span>
-</div>
-
-<div class="imgcaption">
-  <img src="images/OnPaintClippingArea.png" alt="Area to refresh">
-  <span class="caption">Area concerned by refresh (red)</span>
-</div>
-
-<div class="imgcaption">
-  <img src="images/OnPaintClippingAreaZoom.png" alt="Area to refresh (zoom)">
-  <span class="caption">Clipping region enlarged</span>
-</div>
-
-<p>If the canvas is ever brought to front, the area that will be marked for
-refresh are indicated in red. Although the rectangle reported will covered the
-entire client area, any attempt to draw outside of the red region will be ignored. This
-is actually more than useful, as otherwise you'll have to be extra cautious
-when handling redrawing notifications, especially when using alpha-blended
-operations, like 32bpp bitmaps or anti-aliased fonts.</p>
-
-<p>Limiting the area to refresh can become a daunting task depending on the
-complexity of the document you try to render. There is a known design pattern
-for handling documents that are composed of a discreet set of objects (like a
-CAD diagram, a list, ...): you write an iterator that for a given rectangle
-gives you all the objects that are included, even partially, in this rectangle.
-This iterator will solve at least two problems for you:</p>
-
-<ol>
-  <li>You'll be able to limit the objects to refresh when receiving an
-  <tt>OnPaint</tt> notification.</li>
-  <li>This iterator will also be useful when handling mouse action. Usually,
-  it will be able to tell you over which object the user has clicked, or
-  perform some kind of hot-tracking.</li>
-</ol>
-
-<h4>Flicker-free drawing</h4>
-
-<p>Flicker is likely to occur when the canvas is being resized. The default
-behavior of this control in that case is to clear the entire canvas content
-with its background color, and only after that, you'll get an <tt>OnPaint</tt>
-notification. The slight delay between the two operations (clearing and
-redrawing) will be enough to create a flickering effect, because there can
-be no guarantee to fire both events before the screen got updated.</p>
-
-<p>To avoid this, you'll have to prevent the background from being cleared on resize.
-To do this, you can set the property <tt>SIT_UserBgClear</tt> of the canvas to
-<tt class="o">True</tt> (it defaults to <tt>False</tt>). The effect of this property
-is that it <strong>will not</strong> clear the background of your canvas whenever it
-is resized. You'll still get <tt>OnPaint</tt> notifications for the entire area.
-When this property is set to <tt class="o">True</tt>, you'll have to be extra cautious
-when drawing with operations involving alpha-blend. This includes for example painting
-text with a transparent brush (<tt>GFX_TxtModeTransparent</tt>) or 32bpp bitmaps.
-You'll not be able to draw them directly on the display, because there will be something
-on the screen when you get the <tt>OnPaint</tt> notification. Use this property with
-caution, it is much harder to get it right than it seems.</li>
-</ol>
-
-<p>Now that you have something on screen, you can start interacting with
-user input.</p>
+<p>Canvas is a generic control, where you have to handle all by yourself, like keyboard, mouse and
+repainting. Even though it sounds easy, you'll quickly find out that it involves a lot of work to
+handle all use cases.
 
 <h4>Handling mouse events</h4>
 
@@ -5176,84 +5147,16 @@ that a whole page need to be scrolled.</p>
 although the latter provides one more feature that is usually related to
 keyboard: <strong>the caret</strong>.</p>
 
-<p>Not to be confused with the mouse cursor, the caret is that blinking
-bar/block to indicate where text insertion occurs when using the keyboard.
-To handle this, there are 5 properties: 4 are used to manage its position
-and dimension, and one is used to control its state. The state is what
-will make the caret appear, it is a bitfield that can be set using the
-<tt>SIT_CaretState</tt> property and is composed of a combination of the
-following values:</p>
-
-<ul>
-  <li><tt>SITV_HasCaret</tt>: indicate that you want that the control manages
-  a caret for you. It means that caret will automatically be hidden when the
-  control lose the focus, and displayed again when it got it back. The caret
-  will also blink according to user preferences set in the control panel, the
-  only thing you'll have to take care is setting its size/position.</li>
-  <li><tt>SITV_CaretVisible</tt>: without this flag, the caret will be hidden.
-  This is useful in the repainting cycle. Since the caret is usually drawn
-  using a XOR operation, you'll have to hide it before repainting anything on
-  the canvas, and display it again once you are done. This can be done like this:
-  <pre><span class="t">int</span> my_onpaint(SIT_Widget canvas, <span class="t">APTR</span> gc, <span class="t">APTR</span> ud)
-{
-    SIT_SetValues(canvas, SIT_CaretState, SITV_HasCaret, <span class="o">NULL</span>);
-
-    <span class="c">/* Handle repainting ... */</span>
-
-    SIT_SetValues(canvas, SIT_CaretState, SITV_HasCaret | SITV_CaretVisible, <span class="o">NULL</span>);
-
-    <span class="k">return</span> <span class="o">1</span>;
-}</pre>
-  <p>This seems simple enough, but can become quite challenging as an application
-  grows in complexity. Rule of the thumb to avoid caret leftovers: do not refresh
-  your canvas directly using function like <tt>GFX_GetDC()</tt>. Handle everything
-  within an <tt>OnPaint</tt> handler and use <tt>SIT_Refresh()</tt> to trigger your
-  callback.
-  </li>
-</ul>
-
-<p>The caret size and position is set through the properties <tt>SIT_CaretX</tt>,
-<tt>SIT_CaretY</tt>, <tt>SIT_CaretWidth</tt> and <tt>SIT_CaretHeight</tt>.
-Whenever you change any of these properties, the caret will be redrawn for you,
-it is not needed to hide it before.</p>
-
-<p>Another feature related to keyboard management is <strong>the focus</strong>.
-The focus is the control to which keyboard events will be sent. You can move
-this focus using the tab and/or arrows keys. Some controls will "steal" the focus
-whenever they are clicked on, like push-buttons, radio, checkboxes, listbox, ...
-some do not, like toolbars or canvas. If you ever add a keyboard interface, you
-might be interested to enable this behavior, by setting the
-property <tt>SIT_AutoFocus</tt> to <tt class="o">True</tt>. If your canvas also
-has a border around it, a focus rectangle will be drawn for you whenever the
-canvas receive the focus.</p>
-
-<p>Remember that whenever the whole dialog lose the focus (user activating
-another window), if your dialog is activated again later, your canvas will not
-receive the focus again (unless the user clicked inside, with auto-focus on).
-If you want the focus to remain on the canvas whenever no other controls have
-the focus, you might trap the <tt>OnFocus</tt> event for the dialog and use
-<tt>SIT_SetFocus()</tt> to force the canvas to be the default control.</p>
-
-<h3 id="SIT_SCROLLBAR">SIT_SCROLLBAR</h3>
+<h3 id="SIT_SCROLLBAR"><span>SIT_SCROLLBAR</span></h3>
 
 <p>Scroll bars are typically required when you want to display a document that
 could not fit in a given area. You can then display horizontal and/or vertical
 scroll bars along the view to allow the user to jump to other parts of the
 document.</p>
 
-<div class="imgcaption">
+<div class="image">
   <img src="images/SIT_SCROLLBAR.png" alt="Scroll bar">
-  <span class="caption">Scroll bar</span>
 </div>
-
-<div class="imgcaption">
-  <img src="images/ScrollBarDisabled.png" alt="Disbaled scroll bar">
-  <span class="caption">Disabled</span>
-</div>
-
-<p><strong>Caveat</strong>: to disable a scrollbar using <tt>SIT_Enabled</tt>
-property, you must not modify anything related to the thumb, otherwise the
-control will be automatically re-enabled.</p>
 
 <p>The following properties control the appearance of the scroll bar:</p>
 <dl>
@@ -5283,31 +5186,15 @@ control will be automatically re-enabled.</p>
 thumb changed. The <tt>call_data</tt> can be cast to an <tt class="t">long</tt>
 integer to get thumb's position.</p>
 
-<h3 id="SIT_SLIDER">SIT_SLIDER</h3>
+<h3 id="SIT_SLIDER"><span>SIT_SLIDER</span></h3>
 
 <p>Sliders, like scrollbar, allow the user to choose an integer among a certain
 range. But unless scrollbars, which are intended to display the relative size
 of a view within a larger part, the purpose of a slider is to point to a
-particular integer.</p>
+particular integer.
 
-<div class="imgcaption">
+<div class="image">
   <img src="images/SIT_SLIDER.png" alt="Slider">
-  <span class="caption">Slider with tick marks</span>
-</div>
-
-<div class="imgcaption">
-  <img src="images/SIT_SLIDER_NoTicks.png" alt="Slider without ticks">
-  <span class="caption">Slider without ticks</span>
-</div>
-
-<div class="imgcaption">
-  <img src="images/SIT_SLIDER_Disabled.png" alt="Disabled">
-  <span class="caption">Disabled slider</span>
-</div>
-
-<div class="imgcaption">
-  <img src="images/CustomSlider.png" alt="Custom drawn slider">
-  <span class="caption">Custom drawn sliders with their buddy edits</span>
 </div>
 
 <p>The slider shares most of its properties with the progress bar:</p>
@@ -5348,60 +5235,20 @@ particular integer.</p>
   TickFreq in a range of [0, 100], will draw 101 tick marks.</li>
 </ul>
 
-<p>Slider can be associated with a buddy control. It is a control that will
-display the current slider value. Any changes on the slider will get
-reflected on the buddy control (more precisely the <tt>SIT_Title</tt> property
-will be set to the current value). If the buddy is an edit box, it will
-also work the other way around: the edit will update the slider whenever its
-value is changed. If you use an edit, it is advised to use a
-<tt>SITV_Integer</tt> as for the <tt>SIT_EditType</tt> property.</p>
-
 <p>Sliders like scrollbars report any change in its value through the
 <tt>SITE_OnScroll</tt> event. And like scrollbars, <tt>call_data</tt>
 can be cast to an integer to get the current thumb position.</p>
 
-<p>Sliders also report to <tt>SITE_OnPaint</tt> event, to allow you
-to customize part of the control. This event will be fired whenever the
-slider has to be redrawn: this includes when it is being resized,
-when the thumb is moving or when part of the area has been invalidated.
-No caching/double-buffering will be done for you. To know which part
-to redraw, use the function <tt>GFX_GetStage()</tt>, it returns
-one of the following values:</p>
-<ul>
-  <li><tt>1</tt> : tick marks must be redrawn.</li>
-  <li><tt>2</tt> : thumb must be redrawn.</li>
-  <li><tt>3</tt> : channel awaiting refresh.</li>
-</ul>
+<h3 id="SIT_PROGRESS"><span>SIT_PROGRESS</span></h3>
 
-<p>If you <tt class="k">return</tt> <tt class="o">0</tt> in your callback,
-the given part will be redrawn using the default theme. If you return
-anything else, it will supposed you have handled the repainting operation.
-To get the area to refresh for a specific stage, you must use the function
-<tt>SIT_GetRefresh()</tt>. Do not draw outside this rectangle, especially
-for the thumb, although you can refresh a smaller area, including an
-irregular shape.</p>
-
-<p>Check out the <tt>ColorChooser</tt> example to do this properly, this
-is where the screenshot of the custom sliders comes from.</p>
-
-
-<h3 id="SIT_PROGRESS">SIT_PROGRESS</h3>
-
-<p>Progress are a way to let the user know about the advancement of a lengthy
-operation:</p>
+<p>Progress are a way to let the user know about the advancement of a lengthy operation:
 
 <div class="imgcaption">
   <img src="images/SIT_PROGRESS.png" alt="Plain progress bar">
-  <span class="caption">Progress bar</span>
-</div>
-
-<div class="imgcaption">
-  <img src="images/SIT_PROGRESS_Caption.png" alt="Progress with caption">
-  <span class="caption">With caption</span>
 </div>
 
 <p>Properties associated with progress bars are not that different from sliders
-or scroll bars:</p>
+or scroll bars:
 
 <ul>
   <li><tt>SIT_MinValue</tt>, <tt>SIT_MaxValue</tt> (<tt class="t">int</tt>):
@@ -5438,17 +5285,16 @@ or scroll bars:</p>
   </li>
 </ul>
 
-<p>Progress bars report no specific events.</p>
+<p>Progress bars report no specific events.
 
-<h3 id="SIT_TAB">SIT_TAB</h3>
+<h3 id="SIT_TAB"><span>SIT_TAB</span></h3>
 
 <p>Tab controls become handy when your interface grow to the point where it is hard
 to fit everything in one dialog window and where you don't want to use separate
 sub-dialog to present the options to the user:</p>
 
-<div class="imgcaption" style="margin-right: 15px">
+<div class="image">
   <img src="images/SIT_TAB.png" alt="Single line tab">
-  <span class="caption">Standard tab</span>
 </div>
 
 <p>Placing control within a specific tab, can be done using two methods:</p>
@@ -5515,24 +5361,13 @@ will not be fired. If you want to display a popup menu for a given tab, use the 
 <tt>SITE_OnCtxMenu</tt> instead. This event will provide you the coordinates where
 it is best suited to display the popup menu.
 
-<h3 id="SIT_TOOLTIP">SIT_TOOLTIP</h3>
+<h3 id="SIT_TOOLTIP"><span>SIT_TOOLTIP</span></h3>
 
 <p>Tooltips are usually small popup windows that attempt to provide contextual
-help to the user:</p>
+help to the user:
 
 <div class="imgcaption">
   <img src="images/SIT_TOOLTIP.png" alt="Tooltip">
-  <span class="caption">Default tooltip</span>
-</div>
-
-<div class="imgcaption">
-  <img src="images/SITV_BallonTips.png" alt="Ballon tips">
-  <span class="caption">Ballon tooltip</span>
-</div>
-
-<div class="imgcaption">
-  <img src="images/SITV_BallonTipsIcon.png" alt="Ballon tips">
-  <span class="caption">Tooltip with icon, header and balloon style</span>
 </div>
 
 <p>Tooltips can be created using two different methods:</p>
@@ -5564,110 +5399,50 @@ the following values:</p>
   set though). XXX useless.</li>
 </ul>
 
-<h3 id="SIT_STATUSBAR">SIT_STATUSBAR</h3>
 
-<p>Status bars are a way to provide to users additional information,
-usually to display state of various part of the application, like
-key qualifiers, selected objects, current application state, etc...</p>
+<h3 id="SIT_HTMLTAG"><span>SIT_HTMLTAG</span></h3>
 
-<div class="imgcaption">
-  <img src="images/SIT_STATUSBAR.png" alt="Status bar">
-  <span class="caption">Status bar with resize handle</span>
-</div>
 
-<p>Status bar are divided into parts, and each part can display text. If you
-want more than text, you can register an <tt>OnPaint</tt> callback and draw
-whatever you want in a given part. Statusbar will always be placed at the bottom
-of the window and be constrained in that area whenever the dialog is resized.</p>
 
-<p>Statusbar can only be created as a direct children of a dialog. Any attempt
-to create it elsewhere will fail. Also if you add a status bar to a dialog that
-already has one, it will be replaced by the new control. As mentioned in the
-<a href="#dialogSize">dialog</a> section, the status bar isn't considered a part
-of the client area of the window.</p>
 
-<p>Status bars have the following specific properties:</p>
+<h3 id="SIT_FILESELECT"><span>SIT_FILESELECT</span></h3>
 
-<ul>
-  <li><tt>SIT_Styles</tt> (<tt class="t">int</tt>):
-  The only supported style is <tt>SIT_HasResize</tt>, which will include a
-  sizing box on the far right of the status bar. Remember to leave a room of
-  20 pixels on the right when drawing and/or setting the part of your status
-  bar.</li>
+<p>This dialog allows you to <b>select a file</b> to load and/or save. On Windows, the dialog is actually
+a native widget:
 
-  <li><tt>SIT_LabelSize</tt> (<tt class="t">STRPTR</tt>):
-  This property will let you configure the parts of your status bar. It is a
-  tab-separated list of number and/or percentage. A number will set the width
-  of the given part to the number of pixels specified. A percentage will set
-  the width relative to the dialog's width (minus the sum of fixed width part
-  of the status bar). For example
-  <tt class="o">"100%<span class="s">\t</span>20<span class="s">\t</span>20"</tt>,
-  will divide the status bar into 3 parts: the two rightmost will be 20 pixels
-  wide, while the first one will occupy the remaining space.</li>
-</ul>
-
-<p>By default a part can only hold text, that can be set using the dedicated
-function <tt>SIT_SetStatusText()</tt>:</p>
-<pre><span class="t">void</span> SIT_SetStatusText(SIT_Widget w, <span class="t">STRPTR</span> text, <span class="t">int</span> part);</pre>
-
-<p>Where <tt>w</tt> is either the handle of the status bar or, as a permitted
-shortcut, the handle of the dialog. <tt>text</tt> is the text you want to be
-displayed on the given zero-based index <tt>part</tt>. <tt>text</tt> can be
-assigned to the special value <tt>SITV_OwnerDrawn</tt>, in order to receive
-<tt>OnPaint</tt> notifications, so that can have fancier formatting options.</p>
-
-<p>Status bars respond to 2 specific messages:</p>
-
-<ul>
-  <li><tt>SITE_OnClick</tt>: notify left and right click (button release) as
-  well as left double-click. The part being clicked can be retrieved using the
-  property <tt>SIT_StatusPart</tt> (<tt class="t">int</tt>).</li>
-
-  <li><tt>SITE_OnPaint</tt>: if one or more parts of the status bar has been
-  set owner drawn, you'll get one notification per part being set. Use
-  <tt>GFX_GetRefresh()</tt> to get the rectangle of the area to refresh, while
-  <tt>GFX_GetStage()</tt> will give the index of the part.
-  </li>
-</ul>
-
-<h3>SIT_FILESELECT</h3>
-
-<p>This dialog allows you to select a file to load and/or save:</p>
-
-<div class="imgcaption">
+<div class="image" style="display: inline-block">
   <img src="images/SIT_FILESELECT.png" alt="File chooser">
-  <span class="caption">File chooser</span>
+  <span class="caption">File chooser (windows)</span>
 </div>
 
-<p>The way this control is supposed to be used differs slightly from the
-previous types we have seen so far. Actually when managing the dialog, it
-will enter into a modal event loop, and the return code of the
-<tt>SIT_ManageWidget()</tt> function will indicate whether or not the user
-has confirmed or cancelled its selection. If confirmed, you can check some
-properties to know what the selection was.</p>
+<p>The way this control is supposed to be used differs slightly from the previous types we have seen
+so far. Actually when managing the dialog, it will enter into a modal event loop, and the return code
+of the <tt>SIT_ManageWidget()</tt> function will indicate whether or not the user has confirmed or
+cancelled its selection. If confirmed, you can check some properties to know what the selection was.
 
-<p>A few properties are available to customize this dialog:</p>
+<p><span class="n">XXX</span> that's going to mess up timer.
 
-<dl>
-  <dt><tt>SIT_Filters</tt> (<tt class="t">STRPTR</tt>)</dt>
-  <dd>Let you configure the list of available filters in the drop down list at
-  the bottom of the dialog. It is a string specifying one filter per line
-  (<tt>\n</tt> delimited). A filter is composed of a arbitrary name followed by
-  tab (ASCII code 9) and then a semi-colon separated list of DOS wildcard. For
-  example:
+<p>A few properties are available to customize this dialog:
+
+<ul>
+  <li><tt class="dt">SIT_Filters</tt> (<tt class="t">STRPTR</tt>)
+  <p>Let you configure the list of available filters in the drop down list at the bottom of the dialog.
+  It is a string specifying one filter per line (<tt>\n</tt> delimited). A filter is composed of an
+  arbitrary name followed by tab (ASCII code 9) and then a semi-colon separated list of DOS wildcard.
+  For example:
   <pre><span class="o">"C/C++ files<span class="s">\t</span>*.c;*.h;*.cpp;*.hpp<span class="s">\n</span>"
 "Any<span class="s">\t</span>*"</span></pre></dd>
 
-  <dt><tt>SIT_SelFilter</tt> (<tt class="t">int</tt>)</dt>
-  <dd>Zero-based index within filter list that will be initially selected.</dd>
+  <li><tt class="dt">SIT_SelFilter</tt> (<tt class="t">int</tt>)
+  <p>Zero-based index within filter list that will be initially selected.
 
-  <dt><tt>SIT_InitPath</tt> (<tt class="t">STRPTR</tt>)</dt>
-  <dd>Initial path whose content will be displayed (UTF-8 encoded). <strong>The last
+  <li><tt class="dt">SIT_InitPath</tt> (<tt class="t">STRPTR</tt>)
+  <p>Initial path whose content will be displayed (UTF-8 encoded). <strong>The last
   part of this path</strong> will be used to pre-fill the file selection entry. If you
-  want it to remain blank, add a final slash/anti-slash to your path.</dd>
+  want it to remain blank, add a final slash/anti-slash to your path.
 
-  <dt><tt>SIT_DlgFlags</tt> (<tt class="t">int</tt>)</dt>
-  <dd>Bit field that can be composed of the following flags:
+  <li><tt class="dt">SIT_DlgFlags</tt> (<tt class="t">int</tt>)
+  <p>Bit field that can be composed of the following flags:
   <ul>
     <li><tt>SITV_FileSave</tt>: the label of the dialog will reflect a save
     operation. Otherwise they will reflect a load operation.</li>
@@ -5681,17 +5456,15 @@ properties to know what the selection was.</p>
     be overwritten.</li>
   </ul>
   </dd>
-</dl>
+</ul>
 
-<p>Once your control created, you usually manage it just like you would
-with a normal dialog. Remember that the function will only return when
-the dialog has been closed one way or another. If the user confirmed its
-selection, you can check the properties <tt>SIT_SelPath</tt> and
-<tt>SIT_NbSelect</tt> to know which paths have been selected and how many.
-If more than one file has been selected, they will be appended one after
-the other.</p>
+<p>Once your control has been created, you usually manage it just like you would with a normal dialog.
+Remember that the function will only return when the dialog has been closed one way or another. If the
+user confirmed its selection, you can check the properties <tt>SIT_SelPath</tt> and <tt>SIT_NbSelect</tt>
+to know which paths have been selected and how many. If more than one file has been selected, they will
+be appended one after the other (separated by a 0 byte).
 
-<p>A typical usage would be:</p>
+<p>A typical usage would be:
 
 <pre><span class="t">int</span> handle_file(SIT_Widget w, <span class="t">APTR</span> cd, <span class="t">APTR</span> ud)
 {
@@ -5736,24 +5509,20 @@ dialog is displayed again, like:</p>
 <p>Memory for this control will actually be freed, when its parent dialog
 gets closed.</p>
 
-<h3>SIT_DIRSELECT</h3>
 
-<p>The directory selection control allows the user to navigate within local
-drives and choose a specific folder:</p>
 
-<div class="imgcaption">
+<h3 id="SIT_DIRSELECT"><span>SIT_DIRSELECT</span></h3>
+
+<p>The directory selection control allows the user to navigate within local drives and choose a specific
+folder. As with the <tt>SIT_FILESELECT</tt> control, this is a native widget on Windows:
+
+<div class="image" style="display: inline-block">
   <img src="images/SIT_DIRSELECT.png" alt="Dir chooser">
-  <span class="caption">Directory chooser</span>
+  <span class="caption">Directory chooser (windows)</span>
 </div>
 
-<p>Like with most common dialogs from Microsoft, their look and feel tend not to
-be very polished, but at least they are easily recognized by most users. In
-this case, the wide margin at the top is not a bug, but just the lack of
-caption. Well, that's what you got by using a poor layout manager.</p>
-
-<p>As you might expect by now, its usage is very similar to the previous stock
-dialogs. There is 2 properties you might be interested to set when creating
-this kind of control:</p>
+<p>Its usage is very similar to the <tt>SIT_FILESELECT</tt> control. There are 2 properties you might
+be interested to set when creating this kind of control:
 
 <ul>
   <li><tt>SIT_InitPath</tt>: the initial branch to display. It has to be a
@@ -6382,9 +6151,10 @@ a double-linked list might not be the right solution.
   <li><tt class="dt">void ListInsert(ListHead *, ListNode * item, ListNode * insert_after);</tt>
   <p>Insert item at an arbitrary position. <tt>insert_after</tt> must be part of the list, otherwise
   bad thing will happen (you can expect a segmentation fault at some point). If <tt>insert_after</tt>
-  is <tt class="o">NULL</tt>, insert will happen at the beginning. To do an insert before, assuming
-  <tt>insert_after</tt> is not <tt class="o">NULL</tt>, simply deference the <tt>ln_Prev</tt> field
-  of the node.
+  is <tt class="o">NULL</tt>, insert will happen at the beginning. To insert at the end, use the <tt>lh_Tail</tt>
+  field in the <tt>ListHead</tt>. To do an insert before, assuming <tt>insert_after</tt> is not <tt class="o">NULL</tt>,
+  simply deference the <tt>ln_Prev</tt> field of the node.
+
   <li><tt class="dt">void ListInsertSort(ListHead *, ListNode *, ListSortFunc);</tt>
   <p>Insert an item based on an order function.
 

@@ -117,7 +117,7 @@ DLLIMP void       SIT_ForceRefresh(void);
 DLLIMP int        SIT_NeedRefresh(void);
 DLLIMP int        SIT_InitDrag(SIT_CallProc);
 
-DLLIMP void       SIT_ListSetCell(SIT_Widget w, int row, int col, STRPTR text, APTR rowTag);
+DLLIMP Bool       SIT_ListSetCell(SIT_Widget w, int row, int col, APTR rowTag, int align, STRPTR text);
 DLLIMP Bool       SIT_ListSetColumn(SIT_Widget, int col, int width, int align, STRPTR label);
 
 DLLIMP STRPTR     SIT_GetFromClipboard(STRPTR type, int * size);

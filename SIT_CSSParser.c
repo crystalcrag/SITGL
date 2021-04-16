@@ -693,7 +693,7 @@ Bool cssParseURI(STRPTR fmt, STRPTR * pend, STRPTR * mem)
 				else p ++;
 			}
 			if (*p == 0) return False;
-			end = skipspace(p);
+			end = skipspace(p+1);
 			if (*end == ')') end ++;
 			else return False;
 		}

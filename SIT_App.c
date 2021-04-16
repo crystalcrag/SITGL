@@ -106,6 +106,16 @@ static STRPTR SIT_GetFontFile(STRPTR fmt, STRPTR dest)
 		p = next;
 	}
 
+	if (strcasecmp(fontName, "system") == 0)
+	{
+		NONCLIENTMETRICS ncm;
+		ncm.cbSize = sizeof ncm;
+		SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0);
+		int len = WideCharToMultiByte(CP_UTF8, 0, ncm.lfMessageFont.lfFaceName, -1, NULL, 0, NULL, NULL);
+		fontName = alloca(len);
+		WideCharToMultiByte(CP_UTF8, 0, ncm.lfMessageFont.lfFaceName, -1, fontName, len, NULL, NULL);
+	}
+
 	dest[0] = 0;
 	if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts", 0, KEY_QUERY_VALUE, &hkey) == 0)
 	{

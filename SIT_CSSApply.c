@@ -1686,7 +1686,7 @@ CSSImage cssAddImage(STRPTR uri, Bool mask)
 				for (end = uri; *end && *end != ')'; end ++);
 				*end = 0;
 			}
-			else cssTokenizer(uri, &end);
+			else cssTokenizer(uri, &end), uri ++;
 		}
 		else return NULL;
 	}
