@@ -284,7 +284,7 @@ static int SIT_ScrollBarArrowClick(SIT_Widget w, APTR cd, APTR ud)
 
 		if (sb->autoScroll == NULL)
 			sb->autoScroll = SIT_ActionAdd(w, sit.curTime + 500, -1, SIT_ScrollBarAutoScroll, ud);
-		break;
+		return 2;
 
 	case SITOM_ButtonReleased:
 		if (sb->autoScroll)

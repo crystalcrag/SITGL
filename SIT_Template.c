@@ -194,7 +194,7 @@ static STRPTR SIT_ParseLine(STRPTR line, va_list * list, TagList * classArgs, PL
 					if (cur->tag < SIT_TagUser) cur ++;
 					else buf = cur->key.ptr;
 				}
-				if (*p == ',' || *p == delim) p ++;
+				if (*p == ',' || (delim > 0 && *p == delim)) p ++;
 				if (tag == 0) break;
 				args -= (tag & 0xff) - ABBRBASE; tag >>= 8;
 			}

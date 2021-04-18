@@ -47,6 +47,7 @@
 		FLAG_FIXEDUNDO = 8,
 		FLAG_SETSTART  = 16,
 		FLAG_SETEND    = 32,
+		FLAG_CLEARCLIP = 64
 	};
 
 static uint32_t lastClick;
@@ -124,8 +125,15 @@ static int SIT_TextEditFinalize(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_EditBox edit = (SIT_EditBox) w;
 	if (edit->editType == SITV_Password)
+	{
+		if (edit->flags & FLAG_CLEARCLIP)
+		{
+			memset(edit->text, ' ', edit->maxText);
+			SIT_CopyToClipboard(edit->text, -1);
+		}
 		/* prevent password being kept in unused memory chunks */
 		memset(edit->text, 0, edit->maxText);
+	}
 	if ((edit->flags & FLAG_FIXEDSIZE) == 0)
 		free(edit->text);
 	if (edit->maxLines == 0)
@@ -521,8 +529,11 @@ void SIT_TextEditSetText(SIT_Widget w, STRPTR title)
 		SIT_TextEditPaste(edit, title, -1);
 		if (pos > edit->length) pos = edit->length;
 		edit->cursor = edit->selStart = edit->selEnd = pos;
-		SIT_TextEditMakeCursorVisible(edit);
-		SIT_TextEditAdjustScroll(edit);
+		if (w->layout.pos.width > 0)
+		{
+			SIT_TextEditMakeCursorVisible(edit);
+			SIT_TextEditAdjustScroll(edit);
+		}
 		if (edit->editType >= SITV_Integer)
 			edit->value.step = INVALID_STEP;
 	}
@@ -2106,6 +2117,12 @@ int SIT_TextEditKey(SIT_EditBox state, int key)
 		STRPTR text = SIT_GetFromClipboard(NULL, &size);
 		if (text && size > 1)
 			SIT_TextEditPaste(state, text, size - 1);
+		if (state->editType == SITV_Password)
+		{
+			/* password is still in clipboard: clear it when we are done */
+			state->flags |= FLAG_CLEARCLIP;
+			memset(text, 0, size);
+		}
 		free(text);
 	}	break;
 	case 25: /* Ctrl+Y: redo */

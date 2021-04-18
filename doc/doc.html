@@ -81,22 +81,23 @@
  <a class="sub2" href="#SIT_BUTTON">SIT_BUTTON</a>
  <a class="sub2" href="#SIT_FRAME">SIT_FRAME</a>
  <a class="sub2" href="#SIT_EDITBOX">SIT_EDITBOX</a>
-  <a class="sub3" href="#edittypes">Edit types</h4>
-  <a class="sub3" href="#editcss">CSS styling</h4>
-  <a class="sub3" href="#editmem">Memory management</h4>
-  <a class="sub3" href="#editprop">Editbox properties</h4>
-  <a class="sub3" href="#editevents">Events</h4>
-  <a class="sub3" href="#editkbd">Keyboard shortcuts</h4>
+  <a class="sub3" href="#edittypes">Edit types</a>
+  <a class="sub3" href="#editcss">CSS styling</a>
+  <a class="sub3" href="#editmem">Memory management</a>
+  <a class="sub3" href="#editprop">Editbox properties</a>
+  <a class="sub3" href="#editevents">Events</a>
+  <a class="sub3" href="#editkbd">Keyboard shortcuts</a>
 
  <a class="sub2" href="#SIT_COMBOBOX">SIT_COMBOBOX</a>
  <a class="sub2" href="#SIT_LISTBOX">SIT_LISTBOX</a>
-  <a class="sub3" href="#listreport">Managing columns</h4>
-  <a class="sub3" href="#listitems">Managing items</h4>
-  <a class="sub3" href="#listembed">Embedding controls</h4>
-  <a class="sub3" href="#listicon">Icon view</h4>
-  <a class="sub3" href="#listcat">Category separator</h4>
-  <a class="sub3" href="#listprop">Listbox properties</h4>
-  <a class="sub3" href="#listevents">Events</h4>
+  <a class="sub3" href="#listreport">Managing columns</a>
+  <a class="sub3" href="#listitems">Managing items</a>
+  <a class="sub3" href="#listembed">Embedding controls</a>
+  <a class="sub3" href="#listicon">Icon view</a>
+  <a class="sub3" href="#listcat">Category separator</a>
+  <a class="sub3" href="#listprop">Listbox properties</a>
+  <a class="sub3" href="#listevents">Events</a>
+  <a class="sub3" href="#listkbd">Keyboard shortcuts</a>
 
  <a class="sub2" href="#SIT_CANVAS">SIT_CANVAS</a>
  <a class="sub2" href="#SIT_SCROLLBAR">SIT_SCROLLBAR</a>
@@ -739,7 +740,7 @@ Here is its prototype:
   in the OpenGL driver.
 
   <li><tt>width</tt>, <tt>height</tt>: the initial size of the screen, in pixels. You'll be able to
-  change it later, it the window size is changed.
+  change it later, it the window size has changed.
 
   <li><tt>theme</tt>: a <tt class="o">NULL</tt>-terminated string describing either a path to a file,
   where to read CSS styles or a string containing a stylesheet. In either case, the string will not
@@ -870,8 +871,8 @@ but you can look in the "<tt>example</tt>" directory, for some popular framework
   pixels.
   
   <p><span class="n">Note</span>: this library will suppose that the OpenGL framebuffer belongs to
-  your application, therefore, if the window size is changed, <b>YOU</b> will have to change the
-  size fo the framebuffer (using <tt>glViewport()</tt>) <b>before</b> refreshing the interface using
+  your application, therefore, if the window size has changed, <b>YOU</b> will have to change the
+  size of the framebuffer (using <tt>glViewport()</tt>) <b>before</b> refreshing the interface using
   <tt>SIT_RenderNodes()</tt> (you don't have to do it before forwarding the event though). In any case,
   failure to do so, will result of a weird aspect ratio of everything drawn by <tt>SITGL</tt>/<tt>nanovg</tt>.
 </ul>
@@ -2311,10 +2312,10 @@ process the Tab key, it will be used to navigate between controls.
   <p>This event is to notify that an important state has changed with the control. It is triggered by
   3 controls:
   <ul>
-    <li><tt>SIT_TAB</tt>: triggered whenever the <b>active tab is changed</b>. <tt>call_data</tt>
+    <li><tt>SIT_TAB</tt>: triggered whenever the <b>active tab has changed</b>. <tt>call_data</tt>
 	will be an integer indicating which tab is now active (starting at 0).
 
-    <li><tt>SIT_EDITBOX</tt>: will be fired whenever the <b>content of the edit field is changed</b> one
+    <li><tt>SIT_EDITBOX</tt>: will be fired whenever the <b>content of the edit field has changed</b> one
 	way or another (by the user actions or programmatically). <tt>call_data</tt> will be a pointer to a
 	<tt class="o">NULL</tt> terminated string representing the entire content of text edit control
 	(UTF-8 encoded).
@@ -2469,14 +2470,14 @@ Some event types can be registered at the root widget (the one returned by <tt>S
 even though, at first glance, it doesn't make sense to register them at this level (like <tt>SITE_OnActivate</tt>
 or <tt>SITE_OnFocus</tt>).
 
-<p>The purpose to register them at the root widget it to trigger the registered callbakc whenever one
-of such an event happens in <b>any type of widget</b>. Even though the callback is registered at the root,
-the widget parameter will actually be the widget that generated the event.
+<p>The reason to do that is it to trigger the registered callback whenever one of such event happens in
+<b>any type of widget</b>. Even though the callback is registered at the root, the widget parameter
+will actually be the widget that generated the event.
 
 <p>The typical use case for this feature is to <b>play sounds for some actions</b>, like button press,
 key press within controls (typically edit box), focus change, and so on...
 
-<p>Tracking focus change will also be required if you have <b>disabled keyboard auto-repeat</b>. Whenever a text
+<p><b>Tracking focus change</b> will also be required if you have <b>disabled keyboard auto-repeat</b>. Whenever a text
 edit widget receive the focus, you might want to re-enable auto-repeat, otherwise text editing will
 be somewhat tedious.
 
@@ -2739,12 +2740,6 @@ points, once something has to be rendered on screen, this library with <b>conver
 Even though <tt>nanovg</tt> can handle sub-pixel positionning perfectly, more often than not, it
 will produce extremely blurry graphics, particularly when it comes to fonts, since they will be
 already anti-aliassed.
-
-<p>If you are not convinced this is the way to go, you can recompile this library to remove that
-automatic rounding by comenting the following line in the <tt>SIT_P.h</tt> file:
-<pre><span class="d">#define</span> <span class="i">SIT_AUTO_ROUND</span></pre>
-
-<p>And then quickly reactivating it, because it such a terrible idea.
 
 <p>That automatic rounding has a side effect though, especially when using the <tt>em</tt> unit: the
 <b>sum of the parts is not necessarily equal to the whole</b>. For example: when you have a border
@@ -3117,7 +3112,7 @@ backgrounds</b>:
 
 <p>Here are some examples on how to <b>resize the <tt>background-image</tt></b>. It is extremely likely you'll want
 to do that at some point: when displaying any graphics, it is recommended to use a higher resolution
-image than what it is necessary and scale it down to the device resolution (typcially using <tt>Em</tt> unit).
+image than what it is necessary and scale it down to the device resolution (typically using <tt>Em</tt> unit).
 Scaling an image up will almost always give very blurry results.
 
 <div class="image">
@@ -3128,20 +3123,22 @@ Scaling an image up will almost always give very blurry results.
 are the declarations used to produce the backgrounds</b>:
 <ul>
   <li><tt class="dt">background: url("128x64.png") 50% 50%; background-size: contain;</tt>
-  <p>
+  <p>The image will be stretched or reduced so that it is entirely visible within the padding box of
+  the element. In the image is displayed at &#xbe; of its original size.
 
   <li><tt class="dt">background: url("64x64.png") 50% 50%; background-size: cover;</tt>
-  <p>
+  <p>The image will be stretched so that the entire padidng box is covered by the image, while keeping
+  the image ratio. In this case, the image is stretched by a factor of 1.5.
 
   <li><tt class="dt">background: url("64x64.png"); background-size: 100% 100%;</tt>
-  <p>
+  <p>The image will fill the entire padding box, distorting the ratio of the image if needed.
 
   <li><tt class="dt">background: url("64x64.png") center center; background-size: 64px 32px</tt>
-  <p>
+  <p>The image is given an explicit size (in this case: half its original size).
 
 </ul>
 
-<p><tt>background-image</tt> can also be assigned to gradients. This library supports 3 types of gradients:
+<p><tt>background-image</tt> can also be <b>assigned to gradients</b>. This library supports 3 types of gradients:
 <ul>
   <li><tt class="dt">linear-gradient</tt> and
   <li><tt class="dt">repeating-linear-gradient</tt> here are a few examples:
@@ -3688,7 +3685,7 @@ You'll want to provide additonnal information, especially when it comes to font 
 other properties:
 
 <ul>
-  <li><tt class="dt">SIT_DefSBArrows</tt> (<tt class="t">enum</tt>),<br>
+  <li><tt class="dt" id="SIT_DefSBArrows">SIT_DefSBArrows</tt> (<tt class="t">enum</tt>),<br>
       <tt class="dt">SIT_DefSBSize</tt> (<tt class="t">int</tt>)
   <p>This 2 properties will give you an opportunity to configure the <b>automatic scrollbars</b> that some
   widget might have to create. The first one is an enumeration that defines where arrow buttons will
@@ -3759,6 +3756,8 @@ other properties:
 	the family name, then followed by one or more optional attributes: "/bold" or "/italic".
 	<p>For example: <tt class="o">"Arial/bold/italic"</tt> will look for the TTF file for this font.
 	On Windows, it is usually located in <tt>C:\Windows\fonts\arialbdi.ttf</tt>.
+	<p>You can also use the <b>special name</b> <tt class="o">"System"</tt> to request the same font
+	that is currently used by most applications.
   </ol>
 
   <p>Here are a few examples on how to setup font mapping in SITGL:
@@ -3844,6 +3843,7 @@ SIT_SetValues(app,
   <pre><span class="t">static int</span> exit = <span class="o">0</span>;
 
 SIT_SetValues(app, SIT_ExitCode, &exit, <span class="o">NULL</span>);
+FrameSetFPS(<span class="o">60</span>);
 
 <span class="k">while</span> (! exit)
 {
@@ -3857,6 +3857,8 @@ SIT_SetValues(app, SIT_ExitCode, &exit, <span class="o">NULL</span>);
 	}
 	
 	<span class="c">/* rendering part */</span>
+
+	FrameWaitNext();
 }
 </pre>
 
@@ -4310,6 +4312,9 @@ assigned to one of the following values:
   sensitive information all over the memory. Edit buffer will also be zeroed when the widget will be
   destroyed.
 
+  <p><span class="n">Note</span>: when finalized, the control will clear the clipboard if something was
+  pasted in the editbox.
+
   <li><tt class="dt">SITV_Integer</tt>,
       <tt class="dt">SITV_Float</tt>,
       <tt class="dt">SITV_Double</tt>
@@ -4530,7 +4535,7 @@ allocation at the start).
 	as decals for exemple), properly rendering tab character might be too much of a hassle to deal with.
 	Using space instead could be a decent compromise in that situation.
 
-	<p>Keep in mind that tab processing is done by this <tt>SITGL</tt>, and the code to render them
+	<p>Keep in mind that tab processing is done by <tt>SITGL</tt>, and the code to render them
 	is not exposed to any public functions (the rendering is way too dependant on internal structures
 	from the text edit widget anyway). Also, <tt>nanovg</tt> has no facilities to render them.
 
@@ -4597,7 +4602,7 @@ SIT_Wiget num = SIT_CreateWidget(<span class="o">"fps"</span>, SIT_EDITBOX, pare
 <h4 id="editevents">Events</h4>
 
 <p>The main event reported by text boxes that you might be interested in is <tt>SITE_OnChange</tt>.
-This event will be fired whenever the content of the edit buffer is changed. The <tt>call_data</tt>
+This event will be fired whenever the content of the edit buffer has changed. The <tt>call_data</tt>
 for this event will be the UTF-8 string that you can also get by reading the <tt>SIT_Title</tt> property.
 By the time the event is fired, the changes will have already been commited, therefore it won't be
 possible to cancel them. And, as usual, don't try to modify the content of this buffer, you'll cause
@@ -4690,7 +4695,7 @@ if you add items to a combobox/drop down list, it will select the first entry. T
 (and keep the text entry blank), explicitly set this property to <tt class="o">-1</tt>.
 
 <p>There is one specific events reported by the ComboBox: <tt>SITE_OnChange</tt>. If will be sent
-whenever the selected item is changed. The <tt>call_data</tt> can be cast to an integer, to get the
+whenever the selected item has changed. The <tt>call_data</tt> can be cast to an integer, to get the
 item number
 
 
@@ -5053,10 +5058,11 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
     <li><tt>SIT_SortAfter</tt> (<tt class="o">1</tt>): <tt>item1</tt> should be after <tt>item2</tt>.
     <li><tt>SIT_SortAlpha</tt> (<tt class="o">2</tt>): ask the library to perform a case-insensitive
     lexicographic ordering based on the current text there is in the cells of each item.
-    <li><tt>SIT_SortBinary</tt> (<tt class="o">3</tt>): same like <tt>SIT_SortAlpha</tt>, but do not
+    <li><tt>SIT_SortBinary</tt> (<tt class="o">3</tt>): like <tt>SIT_SortAlpha</tt>, but do not
     take case into consideration.
     <li><tt>SIT_SortNumeric</tt> (<tt class="o">4</tt>): consider the text of each item to be
-    decimal integers, and use them to sort the rows.
+    <b>decimal integers</b>, and use them to sort the rows (if you want to sort fractional numbers,
+	you'll have to do it manually).
     <li><tt>SIT_SortAlphaNum</tt> (<tt class="o">5</tt>): mix between alpha and numeric, this sorting
     method is best intended for filenames, where files like these (in lexicographic order):
     <pre>File1.exe     File10.exe      File2.exe     File40.exe    File5.exe</pre>
@@ -5064,7 +5070,7 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
     <pre>File1.exe     File2.exe       File5.exe     File10.exe    File40.exe</pre>
   </ul>
   <p><span class="n">Note</span>: you do not have to handle the ascending/descending order: this will
-  be taken care of automatically for you.
+  be done automatically for you.
 
   <p>The only caveat when you handle the sorting yourself is to be careful to
   return a value in the range [-1, 1]. That means you cannot use the return
@@ -5082,6 +5088,25 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
   <p><b>The default behavior</b> for sorting items is <tt>SIT_SortAlpha</tt>.
 </ul>
 
+<h4 id="listkbd"><span>Keyboard shortcuts</span></h4>
+
+<p>Just for reference, here are the keyboard shortcuts, that are built-in this control:
+
+<ul>
+  <li><span class="key">&#x25C4;</span>, <span class="key">&#x25B2;</span>, <span class="key">&#x25BA;</span>, <span class="key">&#x25BC;</span>: move selected item. Left and right keys only work in icon view.
+  <li><span class="key">Shift + &#x25C4;</span>, <span class="key">Shift + &#x25B2;</span>, <span class="key">Shift + &#x25BA;</span>, <span class="key">Shift + &#x25BC;</span>:
+  extend the selection of items, if the list has been configured to allow multiple items to be selected.
+  <li><span class="key">PgUp</span>, <span class="key">PgDown</span>: move to the selected item one page up or down.
+  <li><span class="key">Home</span>, <span class="key">End</span>: move to the selected item to the first/last in the list.
+  <li><em>text</em>: any text typed will be used to perform a look ahead search among all items, starting from current
+  item selected up to the end. If nothing is found, the search will restart at the beginning up to the cursor position.
+  <p>The look ahead text will be reset whenever the selected item has changed or when the list just received the keyboard
+  focus.
+
+</ul>
+
+
+
 <h3 id="SIT_CANVAS"><span>SIT_CANVAS</span></h3>
 
 <p>Canvas is a generic control, where you have to handle all by yourself, like keyboard, mouse and
@@ -5090,101 +5115,161 @@ handle all use cases.
 
 <h4>Handling mouse events</h4>
 
-<p>Mouse events include mouse click/release (which include mouse wheel) and
-mouse movements. Mouse clicks are reported using <tt>SITE_OnClick</tt>
-notification, which include any button pressed or released, mouse movement are
-notified by <tt>SITE_OnMouseMove</tt>. It not that unusual to use the same
-callback for both events, especially since they use the same datatype for the
-<tt>call_data</tt> parameter: a pointer to a <tt>SIT_OnMouse</tt> structure.
-It is declared as is:</p>
+<p>Mouse events include mouse click/release (which include mouse wheel) and mouse movements. Mouse clicks
+are reported using <tt>SITE_OnClick</tt> notification, which include any button pressed or released,
+mouse movement are notified by <tt>SITE_OnMouseMove</tt>. It not that unusual to use the same callback
+for both events, especially since they use the same datatype for the <tt>call_data</tt> parameter: a
+pointer to a <tt>SIT_OnMouse_t</tt> structure. It is declared this way:
 
-<pre><span class="t">typedef struct</span>
+<pre><span class="t">struct SIT_OnMouse_t</span>     <span class="c">/* note: sizeof (struct SIT_OnMouse_t) must be 8 */</span>
 {
-    <span class="t">int</span> button; <span class="c">/* 0 = left, 1 = right, 2 = middle, 3 = wheel (state = nb of lines) */</span>
-    <span class="t">int</span> state;  <span class="c">/* SITOM_* */</span>
-    <span class="t">int</span> x, y;
-    <span class="t">int</span> flags;  <span class="c">/* SITK_Flag* */</span>
-}   SIT_OnMouse;</pre>
+	<span class="t">enum</span>                 <span class="c">/* to get debug symbols, while limiting the size of this field to 8bit */</span>
+	{
+		SITOM_ButtonLeft,
+		SITOM_ButtonMiddle,
+		SITOM_ButtonRight,
+		SITOM_ButtonWheelUp,
+		SITOM_ButtonWheelDown
+	}	button:<span class="o">8</span>;
+	<span class="t">enum</span>
+	{
+		SITOM_ButtonPressed,
+		SITOM_ButtonReleased,
+		SITOM_Move,
+		SITOM_CaptureMove
+	}	state:<span class="o">8</span>;
+	<span class="t">unsigned</span> flags:<span class="o">16</span>;  <span class="c">/* SITK_Flag* : qualifier keys held before mouse event */</span>
+	<span class="t">int16_t</span>  x, y;      <span class="c">/* relative to top left corner of control */</span>
+};</pre>
 
-<p><tt>button</tt>, <tt>x</tt> and <tt>y</tt> are pretty straightforward,
-<tt>flags</tt> is a bitfield to know which qualifiers were held while generating
-the mouse event, and <tt>state</tt> can take the following values:</p>
+<p><tt>button</tt>, <tt>x</tt> and <tt>y</tt> are pretty straightforward, <tt>flags</tt> is a bitfield
+to know which qualifiers were held while generating the mouse event, and <tt>state</tt> can take the
+following values:
 
 <ul>
-  <li><tt>SITOM_ButtonPressed</tt>: the button is being pressed.</li>
+  <li><tt>SITOM_ButtonPressed</tt>: the button is being pressed.
   <li><tt>SITOM_ButtonReleased</tt>: the button is released (never reported for
-  mouse wheel).</li>
-  <li><tt>SITOM_DoubleClick</tt>: reported when user clicks twice over the same area
-  in a given amount of time (defined in control panel). This event is always
-  preceded by a <tt>SITOM_ButtonPressed</tt>, <tt>SITOM_ButtonReleased</tt> and
-  again a <tt>SITOM_ButtonPressed</tt> event.</li>
+  mouse wheel).
   <li><tt>SITOM_Move</tt>, <tt>SITOM_CaptureMove</tt>: two similar events. They
   are fired whenever the mouse has moved. <tt>SITOM_Move</tt> is only reported
   when the mouse is over the control. To get notification outside, you need to
-  initiate a captured move.</li>
-  <li><tt>SITOM_NextPage</tt>, <tt>SITOM_PrevPage</tt>: those ones are special
-  values for mouse wheel. Mouse setting within control panel can define that
-  whenever the mouse wheel is moved, a whole page should to be scrolled. It is
-  up to you to honor this setting.</li>
+  initiate a captured move.
 </ul>
 
-<p>To initiate a captured move in order to get mouse move notifications outside
-widget bounding box, you need to return a positive integer from your callback,
-and only in response to mouse button press (return code will be ignored for
-any other type).</p>
+<p>To initiate a captured move in order to get mouse move notifications outside widget bounding box,
+you need to return an integer greater than 1 from your callback, and only in response to mouse button
+press (return code will be ignored for any other type).
 
-<p>As stated in the comment, <tt>state</tt> field will report the number of
-lines to scroll when <tt>button</tt> field is set to 3 (default value from
-control panel is usually set to 3). The <tt>state</tt> can also take the
-special values <tt>SITOM_NextPage</tt> or <tt>SITOM_PrevPage</tt> to indicate
-that a whole page need to be scrolled.</p>
+<p>If the user presses a mouse button within the widget and you <b>absolutely want the release notification</b>,
+you need to start a captured move, even if you don't care about mouse move events. If you don't, whenever
+the user initiates a click, there will be no guarantee than the release notification will happen over
+your control.
+
+<!--
+<p>As stated in the comment, <tt>state</tt> field will report the number of lines to scroll when
+<tt>button</tt> field is set to <tt>SITOM_ButtonWheel*</tt> (default value from control panel is
+usually set to 3).
+-->
 
 <h4>Handling keyboard</h4>
 
-<p>Keyboard events are reported through <tt>SITE_OnVanillaKey</tt> and
-<tt>SITE_OnRawKey</tt> notifications. They were described when talking about
-<a href="#SITE_OnRawKey">dialogs</a> and work the same way for canvases,
-although the latter provides one more feature that is usually related to
-keyboard: <strong>the caret</strong>.</p>
+<p>Keyboard events are reported through <tt>SITE_OnVanillaKey</tt> and <tt>SITE_OnRawKey</tt> notifications.
+<tt>call_data</tt> will point to a <tt>SIT_OnKey</tt> structure. Its definition is:
+
+<pre><span class="t">typedef struct</span>
+{
+    <span class="t">int</span>  keycode;  <span class="c">/* Unicode code point [1 - 0x10FFFF] */</span>
+    <span class="t">int</span>  flags;    <span class="c">/* SITK_Flag* */</span>
+    <span class="t">char</span> utf8[<span class="o">6</span>];
+}   SIT_OnKey;</pre>
+
+<p><tt>utf8</tt> field will be valid only for <tt>SITE_OnVanillaKey</tt> event, it is a null-terminated
+string representing the character being produced by the combination of key pressed. <tt>flags</tt> are
+the qualifier (<tt>SITK_FlagShift</tt>, <tt>SITK_FlagCtrl</tt>, ...) that have been held while generating
+the event. <tt>keycode</tt> is either the unicode code point for a vanilla key or one of the <tt>SITK_*</tt>
+enumeration for a raw key report (because obviously there is no unicode code point for such keys).
+
+<p>Both events are subject to the auto-repeat feature, i.e: after holding a key for a while, you'll
+get repeated events at interval (if enabled by the windowing framework).
+
+<p>If you <tt class="k">return</tt> <tt class="o">1</tt> in any of your keyboard callback, the event
+will stop being processed for anything else, like cursor or tab keys for control navigation,
+<span class="shortcut">Esc</span> or <span class="shortcut">Return</span> for activating default
+push buttons. Take note that this does not include menu accelerators that are processed way
+before the event is being dispatched.
+
+
+<h4>Rendering custom elements</h4>
+
+<p>If you want to leverage some of the rendering capabilities of SITGL, when it comes to CSS styling,
+you can create hidden elements (<tt>SIT_Visible</tt> set to <tt class="o">False</tt>), then set
+their size manually and finally render them using the <tt>SIT_RenderNode(SIT_Widget);</tt>. This 
+function will ignore the <tt>SIT_Visible</tt> state and so will the CSS styling. For example, to draw
+a grid like this:
+
+<div class="image">
+  <img src="images/SIT_CANVAS_grid.png">
+</div>
+
+<p>You can allocate one cell and set its border and background, then repeats as many calls to
+<tt>SIT_RenderNode()</tt> to draw them in a grid-like pattern (you'll have to set the <tt>SIT_X</tt>,
+<tt>SIT_Y</tt> attribute before calling the function).
+
+<p>The number of geometric shapes to render will be exactly the same with this method as it is by allocating
+as many elements as there are cells.
+
+
+
 
 <h3 id="SIT_SCROLLBAR"><span>SIT_SCROLLBAR</span></h3>
 
-<p>Scroll bars are typically required when you want to display a document that
-could not fit in a given area. You can then display horizontal and/or vertical
-scroll bars along the view to allow the user to jump to other parts of the
-document.</p>
+<p>Scroll bars are typically required when you want to display a document that could not fit in a given
+area. You can then display horizontal and/or vertical scroll bars along the view to allow the user to
+jump to other parts of the document.
 
 <div class="image">
   <img src="images/SIT_SCROLLBAR.png" alt="Scroll bar">
 </div>
 
-<p>The following properties control the appearance of the scroll bar:</p>
-<dl>
-  <dt><tt>SIT_MinValue</tt>, <tt>SIT_MaxValue</tt> (<tt class="t">int</tt>)</dt>
-  <dd>Default values for these properties are 0 and 100 respectively. This is the
-  range the progress bar will report. Usually, you leave the minimal value alone
-  and set the maximum to the total length of your document.</dd>
+<p>The following properties control the behavior of the scroll bar:
+<ul>
+  <li><tt class="dt">SIT_HorizScroll</tt> (<tt class="t">Bool</tt>) <span class="ro">create-only</span>
+  <p>Scroll bar can be horizontal or vertical. By default, they are vertical, unless
+  you set the property <tt>SIT_HorizScroll</tt> to <tt class="o">True</tt>.
 
-  <dt><tt>SIT_PageSize</tt> (<tt class="t">int</tt>)</dt>
-  <dd>This is the size of the visible part of your document.
-  It will define the size of the scroll bar's thumb. Note that values reported
-  by the scroll bar, will then be: [<tt>SIT_MinValue</tt> &ndash;
-  (<tt>SIT_MaxValue</tt> - <tt>SIT_PageSize</tt> + 1)].</dd>
+  <li><tt class="dt">SIT_ArrowType</tt>  (<tt class="t">enum</tt>) <span class="ro">create-only</span>
+  <p>Let you choose where arrow buttons will appear around the scroll bar, including not appearing at
+  all. It is the same values and semantics than can be set for the property <a href="#SIT_DefSBArrows"><tt>SIT_DefSBArrows</tt></a> on
+  the <tt>SIT_APP</tt> widget. If this property is not set, the one defined at the <tt>SIT_APP</tt>
+  level will be used instead. Default value for both properties is <tt>SITV_NoArrows</tt>.
 
-  <dt><tt>SIT_LineHeight</tt> (<tt class="t">int</tt>)</dt>
-  <dd>The amount the thumb will move when clicking on one arrow. Default is 1.</dd>
+  <li><tt class="dt">SIT_MinValue</tt>, <tt class="dt">SIT_MaxValue</tt> (<tt class="t">int</tt>)
+  <p>Default values for these properties are 0 and 100 respectively. This is the range the progress bar
+  will report (minus <tt>SIT_PageSize</tt>). Usually, you leave the minimal value alone and set the
+  maximum to the total length of your document.
 
-  <dt><tt>SIT_ScrollPos</tt> (<tt class="t">int</tt>)</dt>
-  <dd>The position of the thumb.</dd>
+  <li><tt class="dt">SIT_PageSize</tt> (<tt class="t">int</tt>)
+  <p>This is the size of the visible part of your document. It will define the size of the scroll bar's
+  thumb. Note that values reported by the scroll bar, will then be: [<tt>SIT_MinValue</tt> &ndash;
+  (<tt>SIT_MaxValue</tt> - <tt>SIT_PageSize</tt> + 1)].
 
-  <dt><tt>SIT_HorizScroll</tt> (<tt class="t">Bool</tt>)</dt>
-  <dd>Scroll bar can be horizontal or vertical. By default, they are vertical, unless
-  you set the property <tt>SIT_HorizScroll</tt> to <tt class="o">True</tt>.</dd>
-</dl>
+  <li><tt class="dt">SIT_LineHeight</tt> (<tt class="t">int</tt>)
+  <p>The amount the thumb will move when clicking on an arrow button. Default is 1.
 
-<p>The event <tt>SITE_OnScroll</tt> will be fired whenever the position of the
-thumb changed. The <tt>call_data</tt> can be cast to an <tt class="t">long</tt>
-integer to get thumb's position.</p>
+  <li><tt class="dt">SIT_ScrollPos</tt> (<tt class="t">int</tt>)
+  <p>The position of the thumb.
+
+  <li><tt class="dt">SIT_WheelMult</tt> (<tt class="t">int</tt>)
+  <p>How many lines (<tt>SIT_LineHeight</tt>) the scroll position will change when using the mouse wheel.
+  Default value is 3, meaning 3 times the value given for <tt>SIT_LineHeight</tt>.
+
+</ul>
+
+<p>The event <tt>SITE_OnScroll</tt> will be fired whenever the position of the thumb has changed. The
+<tt>call_data</tt> can be cast to an <tt class="t">long</tt> integer to get thumb's position.
+
+
+
 
 <h3 id="SIT_SLIDER"><span>SIT_SLIDER</span></h3>
 
@@ -5197,53 +5282,46 @@ particular integer.
   <img src="images/SIT_SLIDER.png" alt="Slider">
 </div>
 
-<p>The slider shares most of its properties with the progress bar:</p>
+<p>The slider shares most of its properties with the scroll bar:
 <ul>
-  <li><tt>SIT_MinValue</tt>, <tt>SIT_MaxValue</tt>: work exactly like
-  with the scrollbar: it is the range of values that will be reported.
-  Default values are 0 and 100.</li>
+  <li><tt class="dt">SIT_MinValue</tt>, <tt class="dt">SIT_MaxValue</tt> (<tt class="t">int</tt>)
+  <p>Set the range of values that will be reported. Default values are 0 and 100.
 
-  <li><tt>SIT_PageSize</tt>: the amount the slider's thumb will move
-  when clicking inside the slider's channel. But unlike the scrollbar,
-  this will not modify the size of the thumb, nor reduce the range of
-  values being reported.</li>
+  <li><tt class="dt">SIT_PageSize</tt> (<tt class="t">int</tt>)
+  <p>The amount the slider's thumb will move when clicking inside the slider's gauge.
+  But unlike the scrollbar, this will not modify the size of the thumb, nor reduce the range of values
+  being reported.
 
-  <li><tt>SIT_HorizScroll</tt>: by default slider are created with an
-  horizontal slide. If you want it vertical, set this property to
-  <tt class="o">False</tt>.</li>
+  <li><tt class="dt">SIT_SliderPos</tt> (<tt class="t">int</tt>)
+  <p>The position of the thumb (it is actually an alias of the property <tt>SIT_ScrollPos</tt>).
+  
+  <li><tt class="dt">SIT_BuddyEdit</tt> (<tt>SIT_Widget</tt>)
+  <p>Pointer to an edit box or label whose content will indicate the current
+  position of the slider. Changing the value of the edit box will also update the slider position.
 
-  <li><tt>SIT_SliderPos</tt>: the position of the thumb (it is actually
-  an alias of <tt>SIT_ScrollPos</tt>). Note that setting explicitly
-  this property using <tt>SIT_SetValues()</tt> <strong>won't</strong>
-  trigger your <tt>SITE_OnScroll</tt> callbacks.</li>
+  <li><tt class="dt">SIT_ThumbThick</tt> (<tt class="t">int</tt>)
+  <p>Will set the width of the thumb. Can be specified in pixel of <tt>Em</tt> unit. Default value is
+  <tt>SITV_Em(0.5)</tt>.
+
+  <li><tt class="dt">SIT_ThumbHeight</tt> (<tt class="t">int</tt>)
+  <p>Set the height of the thumb. Default value is <tt>SITV_Em(1)</tt>.
+
+  <li><tt class="dt">SIT_GaugePadding</tt> (<tt class="t">int</tt>)
+  <p>How much padding the gauge will have on top and bottom. Half the value specified will be given
+  to the top and bottom. Default value is <tt>SITV_Em(0.5)</tt>.
+
 </ul>
 
-<p>A few more are available:</p>
-<ul>
-  <li><tt>SIT_TickStyle</tt>: allows you to configure where tick marks will
-  be set, among:
-  <ul>
-    <li><tt>SITV_TicksNone</tt>: only at beginning and ending position.</li>
-    <li><tt>SITV_TicksTop</tt> or <tt>SITV_TicksBottom</tt>: whole length with
-    thumb pointing in the given direction.</li>
-    <li><tt>SITV_TicksTop|SITV_TicksBottom</tt>: top and bottom at the same
-    time.</li>
-  </ul></li>
+<p>Sliders, like scrollbars, report any change in its value through the <tt>SITE_OnScroll</tt> event.
+And like scrollbars, <tt>call_data</tt> can be cast to an integer to get the current thumb position.
 
-  <li><tt>SIT_TickFreq</tt>: Display a tick every given unit. Unit is relative
-  to the range you gave using minimum and maximum value, ie: giving 1 for
-  TickFreq in a range of [0, 100], will draw 101 tick marks.</li>
-</ul>
 
-<p>Sliders like scrollbars report any change in its value through the
-<tt>SITE_OnScroll</tt> event. And like scrollbars, <tt>call_data</tt>
-can be cast to an integer to get the current thumb position.</p>
 
 <h3 id="SIT_PROGRESS"><span>SIT_PROGRESS</span></h3>
 
 <p>Progress are a way to let the user know about the advancement of a lengthy operation:
 
-<div class="imgcaption">
+<div class="image">
   <img src="images/SIT_PROGRESS.png" alt="Plain progress bar">
 </div>
 
@@ -5286,6 +5364,9 @@ or scroll bars:
 </ul>
 
 <p>Progress bars report no specific events.
+
+
+
 
 <h3 id="SIT_TAB"><span>SIT_TAB</span></h3>
 
@@ -5558,7 +5639,8 @@ will use backslash instead.</p>
 <ul>
   <li><tt class="dt">SIT_Widget SIT_GetFocus(void);</tt>,<br>
       <tt class="dt">void       SIT_SetFocus(SIT_Widget);</tt>
-  <p>
+  <p>Use these functions to set or get the widget that has the keyboard focus. Typical use case: if
+  your dialog has a single text edit, you might want to set the keyboard focus here.
 
   <li><tt class="dt">void SIT_Exit(int code);</tt>
   <p>
@@ -5584,13 +5666,13 @@ linked with your main program. They are implemented using no more than what has 
 explained so far, they do not make use of private datatypes from SIT. Their source
 code are also provided, if you feel you can improve them. They usually are rather
 short (around 20Kb of source), so that you can even include the source file(s) to your
-project.</p>
+project.
 
 <p>They are also a good source to get a feel of the typical design patterns used by
 this library. Keep in mind though, these are complete components and not just toy
 example. They includes lots of boiler plate code and attention to small details that
 makes the code not that easy to read. Nevertheless, a particular attention have been
-made to showcase the best practice in designing custom widgets.</p>
+made to showcase the best practice in designing custom widgets.
 
 <h3>Property factory</h3>
 

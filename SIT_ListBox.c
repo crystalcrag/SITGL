@@ -668,6 +668,140 @@ static void SIT_ListSetSelection(SIT_ListBox list, Cell cell, Bool deselectOld, 
 	}
 }
 
+
+/* used to compare filenames */
+static int alnumsort(STRPTR str1, STRPTR str2)
+{
+	while (*str1 && *str2)
+	{
+		int iswd1 = isdigit(*str1);
+		int iswd2 = isdigit(*str2);
+		if (iswd1 && iswd2)
+		{
+			int n1 = strtoul(str1, &str1, 10); /* force decimal, do not use 0 for base */
+			int n2 = strtoul(str2, &str2, 10);
+			if (n1 < n2) return -1;
+			if (n1 > n2) return  1;
+		}
+		else if (iswd1)
+		{
+			return -1;
+		}
+		else if (iswd2)
+		{
+			return 1;
+		}
+		else /* case insensitive compare */
+		{
+			int res = strncasecmp(str1, str2, 1);
+			if (res) return res;
+			str1 ++;
+			str2 ++;
+		}
+	}
+	if (*str2) return -1;
+	if (*str1) return  1;
+	return 0;
+}
+
+static STRPTR SIT_ListGetCellText(Cell cell)
+{
+	static TEXT title[64];
+
+	if (cell->flags & CELL_ISCONTROL)
+	{
+		SIT_Widget sub;
+		for (sub = cell->obj; sub; NEXT(sub))
+		{
+			layoutGetTextContent(sub, title, sizeof title);
+			if (title[0]) return title;
+		}
+		return "";
+	}
+	else return cell->obj;
+}
+
+static int SIT_ListInsertSort(SIT_ListBox list, APTR rowTag, STRPTR text)
+{
+	SIT_Callback cb;
+	Cell cell;
+	int col, cols, start, end;
+
+	if (HAS_EVT(&list->super, SITE_OnSortItem))
+		for (cb = HEAD(list->super.callbacks); cb && cb->sc_Event != SITE_OnSortItem; NEXT(cb));
+	else
+		cb = NULL;
+	col  = list->sortColumn;
+	cols = list->columnCount;
+	cell = STARTCELL(list);
+	if (col < 0) col = -col-2;
+
+	for (start = 0, end = list->cells.count / cols; start < end; )
+	{
+		int  res;
+		int  row = (end + start) >> 1;
+		Cell middle = cell + row * cols;
+		if (cb)
+		{
+			SIT_OnSort cd = {.item1 = middle->userData, .item2 = rowTag, .column = col};
+			res = cb->sc_CB(&list->super, &cd, cb->sc_UserData);
+
+			if (res > 1)
+			{
+				STRPTR item1 = SIT_ListGetCellText(middle + col);
+				switch (res) {
+				case SIT_SortAlpha:    res = strcasecmp(item1, text); break;
+				case SIT_SortBinary:   res = strcmp(item1, text); break;
+				case SIT_SortNumeric:  res = atoi(item1) - atoi(text); break;
+				case SIT_SortAlphaNum: res = alnumsort(item1, text);
+				}
+			}
+		}
+		else /* use SIT_SortAlpha */
+		{
+			STRPTR item1 = SIT_ListGetCellText(middle + col);
+			res = strcasecmp(item1, text);
+		}
+		if (list->sortColumn < 0) res = -res;
+		if (res == 0) { start = row; break; }
+		if (res <  0) start = row + 1;
+		else end = row;
+	}
+	return start;
+}
+
+/* column ordering changed */
+static void SIT_ListReorder(SIT_ListBox list)
+{
+	int  cols  = list->columnCount;
+	int  items = list->cells.count;
+	int  col   = list->sortColumn;
+	int  szRow = sizeof (struct Cell_t) * cols;
+	Cell tmp   = alloca(szRow);
+
+	if (col == -1) col = 0; else
+	if (col <   0) col = -col-2;
+
+	list->cells.count = cols;
+
+	int i;
+	for (i = cols; i < items; i += cols)
+	{
+		Cell row = STARTCELL(list) + i + col;
+		int ins = SIT_ListInsertSort(list, row->userData, row->obj) * cols;
+
+		if (ins < i)
+		{
+			Cell cell = STARTCELL(list) + ins;
+			memcpy(tmp, row - col, szRow);
+			memmove(cell + cols, cell, (i - ins) * sizeof *row);
+			memcpy(cell, tmp, szRow);
+		}
+		list->cells.count += cols;
+	}
+	SIT_ListResize(&list->super, NULL, NULL);
+}
+
 /* SITE_OnClick inside list */
 static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 {
@@ -678,41 +812,63 @@ static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 	Cell          cell;
 	int           i, j;
 
-	if (msg->button == 0 && msg->state == SITOM_ButtonPressed && (list->lbFlags & SITV_SelectNone) == 0)
+	if (msg->button == 0 && msg->state == SITOM_ButtonPressed)
 	{
 		REAL x = msg->x;
 		REAL y = msg->y;
-		int  col = list->softColumn;
-		if (col <= 0) col = 1;
-		list->msgX = 65535;
-		for (cell = list->rowTop, i = list->cells.count - (cell - STARTCELL(list)); i > 0; )
-		{
-			for (j = MIN(col, i); j > 0; i --, j --, cell ++)
-			{
-				REAL top = cell->sizeCell.top - list->scrollTop;
 
-				if (y < top || top > max) { i = 0; break; }
-				if (y > top + cell->sizeCell.height)
+		if ((list->lbFlags & SITV_NoHeaders) == 0 && (list->lbFlags & SITV_DoSort) && list->viewMode == SITV_ListViewReport && y < list->hdrHeight)
+		{
+			/* click on headers */
+			REAL left = 0;
+			for (i = list->columnCount, cell = list->columns; i > 0; i --, left += cell->sizeCell.width, cell ++)
+				if (left <= x && x < left + cell->sizeCell.width) break;
+
+			if (i > 0)
+			{
+				int cur = list->sortColumn;
+				if (cur < 0) cur = -cur-2;
+				i = list->columnCount - i;
+				if (i == cur && list->sortColumn >= 0) i = -i-2;
+				list->sortColumn = i;
+				SIT_ListReorder(list);
+				sit.dirty = 1;
+			}
+		}
+		else if ((list->lbFlags & SITV_SelectNone) == 0)
+		{
+			int  col = list->softColumn;
+			if (col <= 0) col = 1;
+			list->msgX = 65535;
+			for (cell = list->rowTop, i = list->cells.count - (cell - STARTCELL(list)); i > 0; )
+			{
+				for (j = MIN(col, i); j > 0; i --, j --, cell ++)
 				{
-					if ((cell->flags & CELL_CATEGORY) == 0)
+					REAL top = cell->sizeCell.top - list->scrollTop;
+
+					if (y < top || top > max) { i = 0; break; }
+					if (y > top + cell->sizeCell.height)
 					{
-						j = cell->colLeft;
-						i -= j;
-						cell += j;
+						if ((cell->flags & CELL_CATEGORY) == 0)
+						{
+							j = cell->colLeft;
+							i -= j;
+							cell += j;
+						}
+						else i --, cell ++;
+						break;
 					}
-					else i --, cell ++;
-					break;
-				}
-				if (cell->sizeCell.left <= x && x < cell->sizeCell.left + cell->sizeCell.width)
-				{
-					static int lastClick;
-					if (cell == vector_nth(&list->cells, list->selIndex) && TimeMS() - lastClick < sit.dblClickMS)
+					if (cell->sizeCell.left <= x && x < cell->sizeCell.left + cell->sizeCell.width)
 					{
-						SIT_ApplyCallback(w, cell->userData, SITE_OnActivate);
+						static int lastClick;
+						if (cell == vector_nth(&list->cells, list->selIndex) && TimeMS() - lastClick < sit.dblClickMS)
+						{
+							SIT_ApplyCallback(w, cell->userData, SITE_OnActivate);
+						}
+						else SIT_ListSetSelection(list, cell, (msg->flags & SITK_FlagCtrl) == 0, (msg->flags & SITK_FlagShift) > 0);
+						lastClick = TimeMS();
+						return 1;
 					}
-					else SIT_ListSetSelection(list, cell, (msg->flags & SITK_FlagCtrl) == 0, (msg->flags & SITK_FlagShift) > 0);
-					lastClick = TimeMS();
-					return 1;
 				}
 			}
 		}
@@ -970,21 +1126,7 @@ static int SIT_ListAutoComplete(SIT_Widget w, APTR cd, APTR ud)
 	for (i = 0, cell = STARTCELL(list); i < list->cells.count; i += col, cell += col)
 	{
 		if (cell->flags & CELL_CATEGORY) continue;
-		if (cell->flags & CELL_ISCONTROL)
-		{
-			SIT_Widget sub;
-			TEXT       title[32];
-			for (sub = cell->obj; sub; NEXT(sub))
-			{
-				layoutGetTextContent(sub, title, sizeof title);
-				if (strncasecmp(title, textLookAhead, textLength) == 0)
-				{
-					SIT_ListSetSelection(list, cell, True, False);
-					return 1;
-				}
-			}
-		}
-		else if (strncasecmp(cell->obj, textLookAhead, textLength) == 0)
+		if (strncasecmp(SIT_ListGetCellText(cell), textLookAhead, textLength) == 0)
 		{
 			SIT_ListSetSelection(list, cell, True, False);
 			return 1;
@@ -1140,6 +1282,7 @@ void SIT_ListGetArg(SIT_Widget w, int type, APTR arg)
 	}
 }
 
+/* SITE_OnFocus */
 static int SIT_ListResetSearch(SIT_Widget w, APTR cd, APTR ud)
 {
 	textLength = 0;
@@ -1277,59 +1420,6 @@ static void SIT_ListStartRecalc(SIT_ListBox list, int pos)
 	}
 }
 
-#if 0
-/* used to compare filenames */
-static int alnumsort(const void * e1, const void * e2)
-{
-	STRPTR str1 = (*(ArgList *)e1)->al_Array[1];
-	STRPTR str2 = (*(ArgList *)e2)->al_Array[1];
-
-	while (*str1 && *str2)
-	{
-		int iswd1 = isdigit(*str1);
-		int iswd2 = isdigit(*str2);
-		if (iswd1 && iswd2)
-		{
-			int n1 = strtoul(str1, &str1, 10); /* force decimal, do not use 0 for base */
-			int n2 = strtoul(str2, &str2, 10);
-			if (n1 < n2) return -1;
-			if (n1 > n2) return  1;
-		}
-		else if (iswd1)
-		{
-			return -1;
-		}
-		else if (iswd2)
-		{
-			return 1;
-		}
-		else /* case insensitive compare */
-		{
-			int res = strncasecmp(str1, str2, 1);
-			if (res) return res;
-			str1 ++;
-			str2 ++;
-		}
-	}
-	if (*str2) return -1;
-	if (*str1) return  1;
-	return 0;
-}
-#endif
-
-
-static int SIT_ListInsertSort(SIT_ListBox list, APTR rowTag)
-{
-	SIT_OnSort sort;
-	SIT_CallProc onsort;
-	SIT_Callback cb;
-
-	for (cb = HEAD(list->super.callbacks); cb && cb->sc_Event != SITE_OnSortItem; NEXT(cb));
-	onsort = cb ? cb->sc_CB : NULL;
-
-	//
-}
-
 #define	list        ((SIT_ListBox)w)
 DLLIMP int SIT_ListInsertItem(SIT_Widget w, int row, APTR rowTag, ...)
 {
@@ -1344,7 +1434,17 @@ DLLIMP int SIT_ListInsertItem(SIT_Widget w, int row, APTR rowTag, ...)
 
 	if (list->sortColumn != -1)
 	{
-		row = SIT_ListInsertSort(list, rowTag);
+		i = list->sortColumn;
+		if (i < 0) i = -i-2;
+		for (va_start(args, rowTag); i > 0; i --)
+		{
+			utf8 = va_arg(args, STRPTR);
+			if (utf8 == NULL) break;
+		}
+		if (utf8 && utf8 != SITV_TDSubChild)
+			row = SIT_ListInsertSort(list, rowTag, utf8);
+		else
+			row = -1; /* will have to be sorted later */
 	}
 
 	if (list->selIndex >= row)

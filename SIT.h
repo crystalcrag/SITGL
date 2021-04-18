@@ -529,7 +529,7 @@ struct SIT_OnKey_t
 
 struct SIT_OnMouse_t     /* note: sizeof (struct SIT_OnMouse_t) must be 8 */
 {
-	enum                 /* unusual construct to get debug symbols */
+	enum                 /* to get debug symbols, while limiting the size of this field to 8bit */
 	{
 		SITOM_ButtonLeft,
 		SITOM_ButtonMiddle,

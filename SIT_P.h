@@ -354,7 +354,6 @@ struct SIT_EditBox_t
 	SIT_Widget_t super;
 	SIT_Widget   spinnerUp;
 	SIT_Widget   spinnerDown;
-	SIT_Widget   buddyTB;
 	int          editType;             /* public */
 	double       minValue;             /* public */
 	double       maxValue;             /* public */

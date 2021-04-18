@@ -5,6 +5,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include "SIT_P.h"
 #include "SIT_CSSLayout.h"
@@ -77,10 +78,28 @@ static int SIT_SliderResize(SIT_Widget w, APTR cd, APTR ud)
 
 	if (ud == SEND_EVENT)
 	{
+		if (s->buddy)
+		{
+			TEXT value[16];
+			sprintf(value, "%d", s->sliderPos);
+			SIT_SetValues(s->buddy, SIT_Title, value, NULL);
+		}
 		/* too lazy to remember which event type it is responding: support both */
 		SIT_ApplyCallback(w, (APTR) s->sliderPos, HAS_EVT(w, SITE_OnChange) ? SITE_OnChange : SITE_OnScroll);
 	}
 
+	return 1;
+}
+
+static int SIT_SliderSync(SIT_Widget w, APTR cd, APTR ud)
+{
+	SIT_Slider s = ud;
+	STRPTR value;
+	int    pos;
+	SIT_GetValues(w, SIT_Title, &value, NULL);
+	pos = atoi(value);
+	if (pos != s->sliderPos)
+		SIT_SetValues(ud, SIT_SliderPos, pos, NULL);
 	return 1;
 }
 
@@ -104,9 +123,20 @@ static int SIT_SliderSetValues(SIT_Widget w, APTR call_data, APTR user_data)
 		}
 	}	break;
 	case SIT_BuddyEdit:
+		if (s->buddy)
+			SIT_DelCallback(s->buddy, SITE_OnChange, SIT_SliderSync, s);
 		w = s->buddy = value->pointer;
-		if (w->type == SIT_EDITBOX) /* it will trigger event back to TB */
-			((SIT_EditBox)w)->buddyTB = &s->super;
+		if (w)
+		{
+			TEXT value[16];
+			sprintf(value, "%d", s->sliderPos);
+			SIT_SetValues(w, SIT_Title, value, NULL);
+			if (w->type == SIT_EDITBOX) /* it will trigger event back to TB */
+			{
+				SIT_SetValues(w, SIT_MinValue, (double) s->minValue, SIT_MaxValue, (double) s->maxValue, NULL);
+				SIT_AddCallback(w, SITE_OnChange, SIT_SliderSync, s);
+			}
+		}
 		break;
 	default:
 		return SIT_SetWidgetValue(w, call_data, user_data);
