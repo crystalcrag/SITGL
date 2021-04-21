@@ -15,37 +15,32 @@
 /* private datatype */
 typedef struct Iter_t
 {
-	int x, y, xe, ye;
-	int dx, dy, err, sx, sy, oldy;
+	int x, y, xe, dy;
+	int dx, err, sx, sy;
 }	Iter;
 
+/* uncomment to use sine curves for transition between color stops (linear-gradient only) */
+//#define SINE_CURVES
+
 /* Q'n'D digital differential analyzer */
-static void ddaInit(Iter * iter, int xs, int xe, int ys, int ye)
+static void ddaInit(Iter * iter, int xe, int ys, int ye)
 {
 	/* pre-condition: xe > xs >= 0 */
-	div_t q = div(iter->dy = ye - ys, xe);
+	div_t q = div(ye - ys, xe);
 	iter->y   = ys;
-	iter->ye  = ye;
-	iter->x   = xs;
+	iter->x   = 0;
 	iter->xe  = xe;
 	iter->err = xe >> 1;
 	iter->dx  = abs(q.rem);
 	iter->sx  = q.quot;
 	iter->sy  = (ys < ye ? 1 : -1);
-	iter->oldy = -1;
-	if (xs > 0)
-	{
-		q = div(xs * iter->dy + (xe >> 1), xe);
-		iter->y   = ys + q.quot;
-		iter->err = xe - q.rem;
-	}
+	iter->dy  = ye - ys;
 }
 
 #define ISDDAEND(iter) ((iter).x >= (iter).xe)
 
 static inline void ddaIter(Iter * iter)
 {
-	iter->oldy = iter->y;
 	iter->x ++;
 	iter->y += iter->sx;
 	iter->err -= iter->dx;
@@ -91,6 +86,15 @@ Bool gradientDrawLinear(CSSImage img, Gradient * grad, REAL ratio)
 	colors = alloca(sizeof *colors * (count+2));
 	hyp    = img->width;
 
+	#ifdef SINE_CURVES
+	static uint8_t sinLUT[255];
+	if (sinLUT[255] == 0)
+	{
+		for (i = 0; i < 256; i ++)
+			sinLUT[i] = (sin(i * M_PI / 255 - M_PI_2) / 2 + 0.5) * 255;
+	}
+	#endif
+
 	/* parse input gradient */
 	for (i = 0, distrib = -1, cs = grad->colors, c = colors, dist = 0; i < count; i ++, c ++, cs ++)
 	{
@@ -135,7 +139,7 @@ Bool gradientDrawLinear(CSSImage img, Gradient * grad, REAL ratio)
 		}
 	}
 
-	/* yep, only need one scanline, nanovg will repeat and rotate the gradient after that */
+	/* only need one scanline, nanovg will repeat and rotate the gradient after that */
 	hyp *= 4;
 
 	DATA8 p = img->bitmap = malloc(hyp), end = p + hyp;
@@ -145,31 +149,47 @@ Bool gradientDrawLinear(CSSImage img, Gradient * grad, REAL ratio)
 	for (c = colors+1, i = count-1; i > 0; )
 	{
 		Iter r, g, b, a;
+		#ifdef SINE_CURVES
+		Iter L;
+		#endif
 
 		dist = c->pos - c[-1].pos;
 		if (dist > 0)
 		{
 			uint8_t cs[8];
 			gradientInitColorStops(c[-1].rgba, c->rgba, cs);
-			ddaInit(&r, 0, dist, cs[0], cs[4]);
-			ddaInit(&g, 0, dist, cs[1], cs[5]);
-			ddaInit(&b, 0, dist, cs[2], cs[6]);
-			ddaInit(&a, 0, dist, cs[3], cs[7]);
+			ddaInit(&r, dist, cs[0], cs[4]);
+			ddaInit(&g, dist, cs[1], cs[5]);
+			ddaInit(&b, dist, cs[2], cs[6]);
+			ddaInit(&a, dist, cs[3], cs[7]);
+			#ifdef SINE_CURVES
+			ddaInit(&L, dist, 0, 255);
+			#endif
 			if (p > img->bitmap)
 			{
 				ddaIter(&r);
 				ddaIter(&g);
 				ddaIter(&b);
 				ddaIter(&a);
+				#ifdef SINE_CURVES
+				ddaIter(&L);
+				#endif
 			}
 
-			/* XXX should use a sine curve from 0 to M_PI_2 instead of a linear slope */
 			while (dist > 0)
 			{
+				#ifdef SINE_CURVES
+				p[0] = cs[0] + (r.dy * sinLUT[L.y] >> 8); ddaIter(&r);
+				p[1] = cs[1] + (g.dy * sinLUT[L.y] >> 8); ddaIter(&g);
+				p[2] = cs[2] + (b.dy * sinLUT[L.y] >> 8); ddaIter(&b);
+				p[3] = cs[3] + (a.dy * sinLUT[L.y] >> 8); ddaIter(&a);
+				ddaIter(&L);
+				#else
 				p[0] = r.y; ddaIter(&r);
 				p[1] = g.y; ddaIter(&g);
 				p[2] = b.y; ddaIter(&b);
 				p[3] = a.y, ddaIter(&a);
+				#endif
 				p += 4; dist --;
 				if (p == end) return True;
 			}
@@ -311,10 +331,10 @@ Bool gradientDrawRadial(CSSImage img, Gradient * grad, REAL ratio)
 			if (i > 1) colors ++;
 			out = colors[1].pos - colors[0].pos;
 			if (out == 0) out = 1;
-			ddaInit(&r, 0, out, colors->rgba[0], colors[1].rgba[0]);
-			ddaInit(&g, 0, out, colors->rgba[1], colors[1].rgba[1]);
-			ddaInit(&b, 0, out, colors->rgba[2], colors[1].rgba[2]);
-			ddaInit(&a, 0, out, colors->rgba[3], colors[1].rgba[3]);
+			ddaInit(&r, out, colors->rgba[0], colors[1].rgba[0]);
+			ddaInit(&g, out, colors->rgba[1], colors[1].rgba[1]);
+			ddaInit(&b, out, colors->rgba[2], colors[1].rgba[2]);
+			ddaInit(&a, out, colors->rgba[3], colors[1].rgba[3]);
 		}
 
 		for (x = 0, d = rgba; x < 10; x ++)

@@ -155,19 +155,21 @@ tt.warn::after { content: url(../send-it/warning.png); background-color: white; 
 .xml arg { color: blue }
 .ro      { background-color: yellow; font-family: monospace; border: 1px solid black; padding: 0 3px }
 
-.c  { color:#2222AA }
-.i  { color:#54AAAA }
-.d  { color:#A600F7 }
-.o  { color:#FF00FF }
-.s  { color:#7700FF }
-.q  { color:#FF2020 }
-.t  { color:#1fa74d; font-weight:bold }
-.k  { color:#A62828; font-weight:bold }
-.e  { color:#FFFFFF; background-color:#FF3333 }
-.n  { color:black;   background-color:#FFFF00 }
-.ok { color:#fff;    background-color:green }
-.h  { font-weight: bold }
-dim { color: #888 }
+com  { color:#2222AA }
+inc  { color:#54AAAA }
+def  { color:#A600F7 }
+val, .o  { color:#FF00FF }
+spe  { color:#7700FF }
+dva  { color:#FF2020 }
+atr  { color:#dd00a9 }
+pse  { color:#ff5500 }
+type, .t { color:#1fa74d; font-weight:bold }
+kwd  { color:#A62828; font-weight:bold }
+err  { color:#FFFFFF; background-color:#FF3333 }
+note { color:black;   background-color:#FFFF00 }
+good { color:#fff;    background-color:green }
+bad  { font-weight: bold }
+dim  { color: #888 }
 .bgtip { background: url(images/tip.png) no-repeat 5px 5px, linear-gradient(to top, #e8e654, #ff5);
          box-shadow: 2px 2px 8px #aaa; margin: 20px 40px; padding: 1px 5px; border-radius: 0.5em }
 .preformat { display: block; background-color: white; padding: 2px; border:1px solid rgb(229, 204, 255);

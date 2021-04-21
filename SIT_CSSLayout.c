@@ -996,6 +996,7 @@ void layoutSetSize(SIT_Widget node)
 	SIT_LayoutCSSSize(node);
 }
 
+#if 0
 int layoutUpdateChildren(SIT_Widget node)
 {
 	SIT_Widget c;
@@ -1008,14 +1009,31 @@ int layoutUpdateChildren(SIT_Widget node)
 	if (ret == 0) node->layout.flags |= LAYF_NoChanges; /* no need to do that test again */
 	return ret & 3;
 }
+#endif
 
 /* class or state has changed */
-void layoutUpdateStyles(SIT_Widget node)
+int layoutUpdateStyles(SIT_Widget node)
 {
 	int changes = cssCRCChanged(node) ? cssApply(node) : 0;
 
-	if ((node->layout.flags & LAYF_NoChanges) == 0)
+	#if 0
+	if ((node->layout.flags & LAYF_NoChanges) == 0 && node->children.lh_Head)
 		changes |= layoutUpdateChildren(node);
+	#else
+	if ((node->layout.flags & LAYF_NoChanges) == 0 && (node->flags & SITF_PrivateChildren))
+	{
+		SIT_Widget c;
+		int ret = 0;
+		for (c = HEAD(node->children); c; NEXT(c))
+		{
+			c->flags |= SITF_RecalcStyles;
+			ret |= layoutUpdateStyles(c);
+			c->flags &= ~SITF_RecalcStyles;
+		}
+		if (ret == 0) node->layout.flags |= LAYF_NoChanges;
+		changes |= ret & 3;
+	}
+	#endif
 
 	if (changes)
 	{
@@ -1064,9 +1082,10 @@ void layoutUpdateStyles(SIT_Widget node)
 		if (node->style.flags & CSSF_BOXSHADOW)
 			layoutSetBoxShadow(node);
 
-		if (node->style.font.handle == 0)
+		if (node->style.font.handle < 0)
 			layoutFindFont(node);
 	}
+	return changes;
 }
 
 static Bool layoutCanBreak(SIT_Widget root, SIT_Widget node)
@@ -1116,10 +1135,15 @@ void layoutMeasureWords(SIT_Widget node, SizeF * ret)
 			for (p = node->title; (chr = *p) < 0x80 && (ignoreDescent[chr>>3] & (1<<(chr&7))); p ++);
 			if (*p == 0) nvgTextMetrics(sit.nvgCtx, NULL, &desc, NULL);
 		}
-		node->layout.wordSpacing = 0;
-		ret->width = nvgTextBounds(sit.nvgCtx, 0, 0, node->title, NULL, NULL);
+		ret->width = width = nvgTextBounds(sit.nvgCtx, 0, 0, node->title, NULL, NULL);
 		ret->height = node->style.font.size + desc;
 		node->layout.textarea = *ret;
+		switch (node->style.text.align) {
+		case TextAlignLeft:   width = 0; break;
+		case TextAlignRight:  width = node->layout.pos.width - width; break;
+		case TextAlignCenter: width = (node->layout.pos.width - width) * 0.5;
+		}
+		node->layout.wordSpacing = width;
 		return;
 	}
 

@@ -49,6 +49,26 @@ static int SIT_ProgressDraw(SIT_Widget w, APTR cd, APTR ud)
 	return 1;
 }
 
+/* SITE_OnResize */
+static int SIT_ProgressResize(SIT_Widget w, APTR cd, APTR ud)
+{
+	SIT_Progress pb  = (SIT_Progress) w;
+	SIT_Widget   bar = pb->bar;
+	int          pos = pb->max - pb->min;
+
+	if (pos <= EPSILON || bar == NULL) return 0;
+	REAL x = w->layout.pos.width * (pb->progressPos - pb->min) / pos;
+
+	bar->box.left = w->padding[0];
+	bar->box.top  = w->padding[1];
+	bar->box.right = w->padding[0] + x;
+	bar->box.bottom = w->padding[1] + w->layout.pos.height;
+
+	SIT_LayoutCSSSize(bar);
+
+	return 1;
+}
+
 static int SIT_ProgressPostProcess(SIT_Widget w, APTR cd, APTR ud)
 {
 	/* cannot process this while setting attribute: might be in a temporary invalid state */
@@ -67,6 +87,7 @@ static int SIT_ProgressPostProcess(SIT_Widget w, APTR cd, APTR ud)
 	else pb->textCache[0] = 0;
 	SizeF dummy;
 	layoutMeasureWords(w, &dummy);
+	SIT_ProgressResize(w, cd, ud);
 	return 1;
 }
 
@@ -87,29 +108,10 @@ static int SIT_ProgressSetValues(SIT_Widget w, APTR cd, APTR ud)
 	case SIT_MaxValue:
 	case SIT_ProgressPos:
 		w->postProcess = SIT_ProgressPostProcess;
+		// no break;
 	default:
 		SIT_SetWidgetValue(w, cd, ud);
 	}
-
-	return 1;
-}
-
-/* SITE_OnResize */
-static int SIT_ProgressResize(SIT_Widget w, APTR cd, APTR ud)
-{
-	SIT_Progress pb  = (SIT_Progress) w;
-	SIT_Widget   bar = pb->bar;
-	int          pos = pb->max - pb->min;
-
-	if (pos <= EPSILON) return 0;
-	REAL x = w->layout.pos.width * (pb->progressPos - pb->min) / pos;
-
-	bar->box.left = w->padding[0];
-	bar->box.top  = w->padding[1];
-	bar->box.right = w->padding[0] + x;
-	bar->box.bottom = w->padding[1] + w->layout.pos.height;
-
-	SIT_LayoutCSSSize(bar);
 
 	return 1;
 }

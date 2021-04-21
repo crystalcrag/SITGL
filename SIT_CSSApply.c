@@ -15,12 +15,6 @@
 
 vector_t styles;
 
-/*
- * List all CSS properties we care (visual media group) and the values they are
- * expected to received.
- *
- * Quoted from CSS 2.1 Appendix F
- */
 struct CSSAttr_t /* keep it private */
 {
 	STRPTR attr;
@@ -1226,6 +1220,7 @@ void cssSetDefault(SIT_Widget node)
 	uint8_t oldFlow  = node->style.overflow;
 
 	memset(&node->style, 0, offsetof(struct Style_t, shadow));
+	node->style.font.handle = -1;
 	node->style.flags = oldflags;
 	node->style.oldBgCount = oldBg;
 

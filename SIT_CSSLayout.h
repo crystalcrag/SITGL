@@ -14,7 +14,7 @@ REAL layoutCalcLineHeight(SIT_Widget);
 void layoutCalcBox(SIT_Widget);
 void layoutMeasureWords(SIT_Widget node, SizeF * ret);
 void layoutAdjustBorderRadius(SIT_Widget);
-void layoutUpdateStyles(SIT_Widget);
+int  layoutUpdateStyles(SIT_Widget);
 void layoutParseHTML(SIT_Widget, STRPTR);
 void layoutFreeTree(SIT_Widget start);
 void layoutCalc(SIT_Widget);

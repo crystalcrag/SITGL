@@ -541,7 +541,9 @@ static void SIT_ListUpdateCSS(SIT_ListBox list, Cell cell, Bool set)
 {
 	SIT_Widget node = cell->flags & CELL_SELECT ? list->tdSel : list->td;
 	SIT_ListRestoreChildren(node, cell);
+	layoutUpdateStyles(node);
 
+	#if 0
 	for (node = HEAD(node->children); node; NEXT(node))
 	{
 		if (cssApply(node) & 4)
@@ -549,6 +551,7 @@ static void SIT_ListUpdateCSS(SIT_ListBox list, Cell cell, Bool set)
 		if (node->type == SIT_LISTBOX)
 			cssApply(((SIT_ListBox)node)->td);
 	}
+	#endif
 }
 
 /* keep the last selected item in visual range */
@@ -1436,7 +1439,7 @@ DLLIMP int SIT_ListInsertItem(SIT_Widget w, int row, APTR rowTag, ...)
 	{
 		i = list->sortColumn;
 		if (i < 0) i = -i-2;
-		for (va_start(args, rowTag); i > 0; i --)
+		for (va_start(args, rowTag), utf8 = NULL; i > 0; i --)
 		{
 			utf8 = va_arg(args, STRPTR);
 			if (utf8 == NULL) break;
