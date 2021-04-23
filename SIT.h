@@ -111,6 +111,7 @@ DLLIMP int        SIT_ListInsertItem(SIT_Widget, int row, APTR rowTag, ...);
 DLLIMP void       SIT_ListDeleteRow(SIT_Widget, int row);
 DLLIMP SIT_Widget SIT_ListInsertControlIntoCell(SIT_Widget, int row, int cell);
 DLLIMP void       SIT_ListFinishInsertControl(SIT_Widget);
+DLLIMP void       SIT_ListReorgColumns(SIT_Widget);
 DLLIMP int        SIT_TextGetWithSoftline(SIT_Widget, STRPTR buffer, int max);
 DLLIMP void       SIT_MoveNearby(SIT_Widget, int XYWH[4], int defAlign);
 DLLIMP void       SIT_ForceRefresh(void);
@@ -120,7 +121,7 @@ DLLIMP int        SIT_InitDrag(SIT_CallProc);
 DLLIMP Bool       SIT_ListSetCell(SIT_Widget w, int row, int col, APTR rowTag, int align, STRPTR text);
 DLLIMP Bool       SIT_ListSetColumn(SIT_Widget, int col, int width, int align, STRPTR label);
 
-DLLIMP STRPTR     SIT_GetFromClipboard(STRPTR type, int * size);
+DLLIMP STRPTR     SIT_GetFromClipboard(int * size);
 DLLIMP Bool       SIT_CopyToClipboard(STRPTR text, int size);
 
 /* pump events to the library */
@@ -152,8 +153,7 @@ enum /* possible parameters for 'level' of SIT_Log() */
 	SIT_CRITICAL,
 	SIT_ERROR,
 	SIT_WARN,
-	SIT_INFO,
-	SIT_DEBUG
+	SIT_INFO
 };
 
 enum /* possible parameters for 'what' of SIT_Nuke() */
@@ -239,6 +239,7 @@ enum
 
 	/* Dialog tags */
 	SIT_DialogStyles     = 65,   /* C__: Bitfield */
+	// SIT_Private1      = 66,
 
 	/* Label tags */
 	SIT_Overflow         = 67,   /* C___: Enum */
@@ -264,7 +265,7 @@ enum
 	SIT_MaxUndo          = 83,   /* C__: Int */
 	SIT_MaxLines         = 84,   /* C__: Int */
 	SIT_WordWrap         = 85,   /* C__: Enum (SITV_WW*) */
-//	SIT_TabStyle         = 118,  /* _SG: Int (defined for Tab: see enum SITV_TabEdit* */
+	// SIT_TabStyle      = 118,  /* _SG: Int (defined for Tab: see enum SITV_TabEdit* */
 
 	/* List box */
 	SIT_ListBoxFlags     = 86,   /* C__: Enum */
@@ -276,8 +277,10 @@ enum
 	SIT_TargetRow        = 92,   /* ___: Int (private, use SIT_RowTag() or SIT_RowSel()) */
 	SIT_RowTagArg        = 93,   /* _SG: Pointer (private) */
 	SIT_RowSelArg        = 94,   /* _SG: Bool (private) */
+	// SIT_Private2      = 95,
 	SIT_MakeVisible      = 96,   /* _S_: Int */
-//	SIT_ItemCount        = 117,  /* __G: Int (defined in ComboBox: same datatype, same semantic) */
+	// SIT_Private4      = 97,
+	// SIT_ItemCount     = 117,  /* __G: Int (defined in ComboBox: same datatype, same semantic) */
 	SIT_ViewMode         = 98,   /* C__: Enum */
 
 	/* Scrollbar, Slider and Progress */
@@ -293,6 +296,7 @@ enum
 	SIT_GaugePadding     = 108,  /* CSG: Int */
 	SIT_BuddyEdit        = 109,  /* C__: SIT_Widget */
 	SIT_IsDragged        = 110,  /* __G: Bool */
+	// SIT_Private5      = 111,
 	SIT_ArrowType        = 112,  /* C__: Enum */
 	SIT_WheelMult        = 113,  /* CSG: Int */
 

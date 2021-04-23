@@ -2114,7 +2114,7 @@ int SIT_TextEditKey(SIT_EditBox state, int key)
 		break;
 	case 22: /* Ctrl+V: paste */
 	{	int    size = 0;
-		STRPTR text = SIT_GetFromClipboard(NULL, &size);
+		STRPTR text = SIT_GetFromClipboard(&size);
 		if (text && size > 1)
 			SIT_TextEditPaste(state, text, size - 1);
 		if (state->editType == SITV_Password)

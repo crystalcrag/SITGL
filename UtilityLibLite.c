@@ -61,57 +61,97 @@ DLLIMP ULONG TimeMS(void)
 	return GetTickCount();
 }
 
-static void AddPartW(LPWSTR path, LPWSTR file, int max)
+static void ScanDirFill(ScanDirData * ret)
 {
-	LPWSTR end = wcschr(path, 0);
+	LPWIN32_FIND_DATAW data = ret->handle;
 
-	if (strchr("/\\", end[-1]) == NULL)
-	{
-		*end++ = '/';
-		max -= end - path;
-	}
-	while (*file && max > 0) *end++ = *file++, max --;
-	if (max > 0) *end = 0;
-	else end[-1] = 0;
+	// name, type, size, isDir
+	ret->size = ((uint64_t)data->nFileSizeHigh<<32) | data->nFileSizeLow;
+	ret->isDir = data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? 1 : 0;
+
+	WideCharToMultiByte(CP_UTF8, 0, data->cFileName, -1, ret->name, MAX_PATH, NULL, NULL);
+
+	// Get file type using shell API
+	SHFILEINFOW info = {};
+	SHGetFileInfoW(data->cFileName, data->dwFileAttributes, &info, sizeof info, SHGFI_USEFILEATTRIBUTES|SHGFI_TYPENAME);
+
+	WideCharToMultiByte(CP_UTF8, 0, info.szTypeName, -1, ret->type, 80, NULL, NULL);
+
+	SYSTEMTIME sys, local;
+
+	FileTimeToSystemTime(&data->ftLastWriteTime, &sys);
+	SystemTimeToTzSpecificLocalTime(NULL, &sys, &local);
+
+	sprintf(ret->date, "%d-%02d-%02d %02d:%02d:%02d", local.wYear, local.wMonth, local.wDay,
+		local.wHour, local.wMinute, local.wSecond);
 }
 
-/* DOS/ScanDir */
-DLLIMP int ScanDir(STRPTR dirname, DirScanFunc cb, APTR data)
+DLLIMP int ScanDirInit(ScanDirData * ret, STRPTR path)
 {
-	WIN32_FIND_DATAW fdat;
-	HANDLE           fd;
-	int              len = utf8len(dirname);
-	LPWSTR           dir;
-	int              ret;
+	int sz = MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0)+2;
 
-	dir = alloca(len + 10);
-	ret = 0;
-	MultiByteToWideChar(CP_UTF8,  0, dirname, -1, dir, len + 10);
+	LPWIN32_FIND_DATAW data = malloc(sz*2 + sizeof (HANDLE) + sizeof *data + 80 + MAX_PATH);
 
-	AddPartW(dir, L"*", wcslen(dir) + 5);
-	fd = FindFirstFileW(dir, &fdat);
+	ret->handle = data;
+	ret->path   = data + 1; ret->path += sizeof (HANDLE);
+	ret->name   = ret->path + sz*2;
+	ret->type   = ret->name + MAX_PATH;
 
-	if (fd != INVALID_HANDLE_VALUE)
+	MultiByteToWideChar(CP_UTF8, 0, path, -1, ret->path, sz);
+	if (GetFileAttributesW(ret->path) & FILE_ATTRIBUTE_DIRECTORY)
+		wcscat(ret->path, L"\\*");
+
+	HANDLE hnd = FindFirstFileW(ret->path, ret->handle);
+
+	if (hnd != INVALID_HANDLE_VALUE)
 	{
-		do
+		memcpy(data + 1, &hnd, sizeof hnd);
+		/* ignore "." and ".." */
+		for (;;)
 		{
-			if (wcscmp(fdat.cFileName, L"..") && wcscmp(fdat.cFileName, L"."))
+			if (data->cFileName[0] == '.')
 			{
-				int  rc;
-				TEXT buffer[MAX_PATH * 3 / 2];
-
-				WideCharToMultiByte(CP_UTF8, 0, fdat.cFileName, -1, buffer, sizeof buffer, NULL, NULL);
-
-				rc = cb(dirname, buffer, data);
-				if (rc < 0) break;
-				ret += rc;
+				int ch = data->cFileName[1];
+				if (ch == 0 || (ch == '.' && data->cFileName[2] == 0))
+					FindNextFile(hnd, data);
+				else
+					break;
 			}
+			else break;
 		}
-		while (FindNextFileW(fd, &fdat));
-
-		FindClose(fd);
+		ScanDirFill(ret);
+		return 1;
 	}
-	return ret;
+	ret->error = GetLastError();
+	if (ret->error == ERROR_FILE_NOT_FOUND || ret->error == ERROR_PATH_NOT_FOUND)
+		ret->error = 0;
+	free(ret->handle);
+	ret->handle = NULL;
+	return 0;
+}
+
+DLLIMP int ScanDirNext(ScanDirData * ret)
+{
+	LPWIN32_FIND_DATAW data = ret->handle;
+	HANDLE hnd;
+	memcpy(&hnd, data+1, sizeof hnd);
+	while (FindNextFileW(hnd, data))
+	{
+		ScanDirFill(ret);
+		return 1;
+	}
+	FindClose(hnd);
+	free(ret->handle);
+	return 0;
+}
+
+DLLIMP void ScanDirCancel(ScanDirData * ret)
+{
+	LPWIN32_FIND_DATAW data = ret->handle;
+	HANDLE hnd;
+	memcpy(&hnd, data+1, sizeof hnd);
+	FindClose(hnd);
+	free(ret->handle);
 }
 
 /* DOS/AddPart */

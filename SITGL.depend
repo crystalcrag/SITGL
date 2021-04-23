@@ -13,7 +13,7 @@
 	"SIT_CSSLayout.h"
 	"debugMem.h"
 
-1616446727 c:\drive_e\projets\sitgl\nanovg.h
+1616446728 c:\drive_e\projets\sitgl\nanovg.h
 	<stdio.h>
 
 1594068816 c:\drive_e\projets\sitgl\glad.h
@@ -29,31 +29,31 @@
 1611199900 c:\drive_e\projets\sitgl\nanovg_gl_utils.h
 	<OpenGL/glext.h>
 
-1617308666 c:\drive_e\projets\sitgl\sit_p.h
+1619117294 c:\drive_e\projets\sitgl\sit_p.h
 	"SIT.h"
 	"SIT_CSSStyles.h"
 	<stdio.h>
 	"debugMem.h"
 
-1617158391 c:\drive_e\projets\sitgl\sit.h
+1619126080 c:\drive_e\projets\sitgl\sit.h
 	"UtilityLibLite.h"
 
-1616443161 c:\drive_e\projets\sitgl\utilityliblite.h
+1619108544 c:\drive_e\projets\sitgl\utilityliblite.h
 	<stdarg.h>
 	<stdint.h>
 
-1616635499 c:\drive_e\projets\sitgl\sit_cssstyles.h
+1616635500 c:\drive_e\projets\sitgl\sit_cssstyles.h
 	"UtilityLibLite.h"
 
-1616098298 c:\drive_e\projets\sitgl\debugmem.h
+1616098300 c:\drive_e\projets\sitgl\debugmem.h
 
-1616097290 c:\drive_e\projets\sitgl\sit_cssparser.h
+1616097292 c:\drive_e\projets\sitgl\sit_cssparser.h
 	"SIT_P.h"
 
-1616635716 c:\drive_e\projets\sitgl\sit_csslayout.h
+1618847688 c:\drive_e\projets\sitgl\sit_csslayout.h
 	"SIT_CSSParser.h"
 
-1607217032 source:c:\drive_e\projets\sitgl\sit_app.c
+1618524214 source:c:\drive_e\projets\sitgl\sit_app.c
 	<windows.h>
 	<shellapi.h>
 	<malloc.h>
@@ -62,7 +62,7 @@
 	"SIT_CSSLayout.h"
 	"nanovg.h"
 
-1614118048 source:c:\drive_e\projets\sitgl\sit_button.c
+1614118050 source:c:\drive_e\projets\sitgl\sit_button.c
 	<stdio.h>
 	<string.h>
 	<stdlib.h>
@@ -96,7 +96,7 @@
 	"SIT_CSSLayout.h"
 	"nanovg.h"
 
-1616101090 source:c:\drive_e\projets\sitgl\sit_cssparser.c
+1618346986 source:c:\drive_e\projets\sitgl\sit_cssparser.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -106,7 +106,7 @@
 	"SIT_P.h"
 	"SIT_CSSParser.h"
 
-1614637360 source:c:\drive_e\projets\sitgl\sit_combobox.c
+1614637362 source:c:\drive_e\projets\sitgl\sit_combobox.c
 	<stdio.h>
 	<string.h>
 	<malloc.h>
@@ -132,14 +132,14 @@
 	"SIT_CSSLayout.h"
 	"nanovg.h"
 
-1616098401 source:c:\drive_e\projets\sitgl\sit_event.c
+1616098402 source:c:\drive_e\projets\sitgl\sit_event.c
 	<string.h>
 	<ctype.h>
 	"SIT_P.h"
 	"SIT_CSSParser.h"
 	"SIT_CSSLayout.h"
 
-1616098884 source:c:\drive_e\projets\sitgl\sit_geometry.c
+1616098886 source:c:\drive_e\projets\sitgl\sit_geometry.c
 	<string.h>
 	<stddef.h>
 	<math.h>
@@ -155,7 +155,7 @@
 	"SIT_P.h"
 	"SIT_CSSParser.h"
 
-1616165290 source:c:\drive_e\projets\sitgl\sit_label.c
+1616165292 source:c:\drive_e\projets\sitgl\sit_label.c
 	<stdio.h>
 	<string.h>
 	<math.h>
@@ -182,7 +182,7 @@
 	"SIT_CSSLayout.h"
 	"nanovg.h"
 
-1616635809 source:c:\drive_e\projets\sitgl\sit_render.c
+1616635810 source:c:\drive_e\projets\sitgl\sit_render.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -213,7 +213,7 @@
 	<stdio.h>
 	"SIT_P.h"
 
-1604276108 source:c:\drive_e\projets\sitgl\sit_tab.c
+1604276110 source:c:\drive_e\projets\sitgl\sit_tab.c
 	<stdarg.h>
 	<stdlib.h>
 	<string.h>
@@ -458,7 +458,7 @@
 	"begin_code.h"
 	"close_code.h"
 
-1617303441 source:c:\drive_e\projets\sitgl\nanovg.c
+1617303442 source:c:\drive_e\projets\sitgl\nanovg.c
 	<stdlib.h>
 	<stdio.h>
 	<math.h>
@@ -467,7 +467,7 @@
 	"fontstash.h"
 	"stb_image.h"
 
-1613237495 c:\drive_e\projets\sitgl\fontstash.h
+1613237496 c:\drive_e\projets\sitgl\fontstash.h
 	<ft2build.h>
 	<math.h>
 	"stb_truetype.h"
@@ -486,7 +486,7 @@
 	<string.h>
 	<string.h>
 
-1594170650 c:\drive_e\projets\sitgl\stb_image.h
+1594170652 c:\drive_e\projets\sitgl\stb_image.h
 	"stb_image.h"
 	<stdio.h>
 	<stdarg.h>
@@ -500,4 +500,6 @@
 	<emmintrin.h>
 	<intrin.h>
 	<arm_neon.h>
+
+1602950346 source:c:\drive_e\projets\sitgl\sitgl.rc
 

@@ -177,8 +177,9 @@ struct SITContext_t
 	uint8_t      compoIds[MAXCOMPO+1];
 	int          compoCount;
 	uint64_t     QPCfreq;
+	uint64_t     QPCstart;
+	uint64_t     QPCpause;
 	double       QPCfreqinv;
-	double       QPCstart;
 	SIT_CallProc dragCb;
 };
 
@@ -654,7 +655,6 @@ enum /* bitfield for flags */
 	SITF_Style1Changed   = 0x00100000,
 	SITF_Style2Changed   = 0x00200000,
 	SITF_StylesChanged   = 0x00300000,
-	SITF_GeometryReflow  = 0x00400000,
 	SITF_InitDone        = 0x00800000, /* set at the end of SIT_CreateWidget() */
 	SITF_ToggleButon     = 0x01000000, /* toggle button: ignore mouse button release event */
 	SITF_ImmediateActive = 0x02000000, /* onclick = activate event */

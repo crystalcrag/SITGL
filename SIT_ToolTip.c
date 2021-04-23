@@ -127,7 +127,7 @@ Bool SIT_InitTooltip(SIT_Widget w, va_list args)
 	SIT_Tooltip tip = (SIT_Tooltip) w;
 
 	/* default values */
-	tip->displayTime = 4000;
+	tip->displayTime = 10000;
 	tip->delayTime = 1000;
 	tip->relTo = w->parent;
 	w->flags |= SITF_TopLevel | SITF_RenderChildren | SITF_FallthroughEvt;

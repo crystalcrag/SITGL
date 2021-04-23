@@ -291,18 +291,21 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 			}
 			else SIT_ListRestoreChildren(node, cell);
 			node->box.left = cell->sizeCell.left + w->padding[0];
+			REAL maxw = cell->sizeCell.width;
 			if (icon == 0)
 			{
 				Cell hdr = list->columns + j;
 				align = hdr->flags & CELL_ALIGNR ? TextAlignRight :
 				        hdr->flags & CELL_ALIGNC ? TextAlignCenter : 0;
+				if (j == col-1)
+					maxw -= list->scrollPad-node->padding[2];
 			}
 			switch (align) {
-			case TextAlignCenter: node->box.left += (cell->sizeCell.width - cell->sizeObj.width) * 0.5; break;
-			case TextAlignRight:  node->box.left += (cell->sizeCell.width - cell->sizeObj.width) - node->padding[2] - node->padding[0];
+			case TextAlignCenter: node->box.left += (maxw - cell->sizeObj.width) * 0.5; break;
+			case TextAlignRight:  node->box.left += (maxw - cell->sizeObj.width) - node->padding[2] - node->padding[0];
 			}
 			node->box.top = cell->sizeCell.top - list->scrollTop + w->padding[1];
-			node->box.right = cell->sizeCell.left + cell->sizeCell.width + w->padding[0];
+			node->box.right = cell->sizeCell.left + maxw + w->padding[0];
 			node->box.bottom = node->box.top + cell->sizeCell.height;
 			if (node->box.top > pos.height)
 				goto break_all;
@@ -351,8 +354,12 @@ static Bool SIT_ListAdjustScroll(SIT_ListBox list)
 					"top=", SITV_AttachForm, (int) list->hdrHeight, SITV_NoPad,
 					"bottom=FORM,,NOPAD right=FORM,,NOPAD>");
 				SIT_AddCallback(list->super.vscroll, SITE_OnScroll, SIT_ListScroll, NULL);
+				//fprintf(stderr, "*((SIT_Widget)0x%08x)   \n", list->super.vscroll);
 				/* hmm, want the dimension now */
-				SIT_ReflowLayout(sit.geomList); sit.geomList = NULL;
+				if (list->super.vscroll->flags & SITF_GeomNotified)
+					SIT_ReflowLayout(sit.geomList), sit.geomList = NULL;
+				else
+					list->super.vscroll->flags |= SITF_GeomNotified, SIT_ReflowLayout(list->super.vscroll);
 			}
 			else SIT_SetValues(list->super.vscroll, SIT_Visible, True, NULL);
 			list->lbFlags |= SITV_HasScroll;
@@ -1347,7 +1354,7 @@ Bool SIT_InitListBox(SIT_Widget w, va_list args)
 		list->tdSel = td = SIT_CreateWidget("td", SIT_HTMLTAG, w, NULL);
 		td->state |= STATE_CHECKED;
 		td->style.flags &= ~CSSF_APPLIED;
-		cssApply(td);
+		layoutCalcBox(td);
 		td->style.overflow = SITV_EllipsisRight;
 		ListRemove(&w->children, &td->node);
 	}
@@ -1836,4 +1843,37 @@ DLLIMP Bool SIT_ListSetColumn(SIT_Widget w, int col, int width, int align, STRPT
 	sit.dirty = 1;
 
 	return True;
+}
+
+DLLIMP void SIT_ListReorgColumns(SIT_Widget w)
+{
+	SIT_ListBox list = (SIT_ListBox) w;
+	if (w->type != SIT_LISTBOX || list->viewMode != SITV_ListViewReport) return;
+
+	int    col    = list->columnCount, i;
+	REAL * widths = alloca(sizeof *widths * col);
+	REAL   total  = 0;
+	Cell   cell, eof;
+
+	memset(widths, 0, sizeof *widths * col);
+	for (cell = STARTCELL(list), eof = cell + list->cells.count; cell < eof; cell += col)
+	{
+		for (i = 0; i < col; i ++)
+		{
+			REAL w = cell[i].sizeObj.width;
+			if (widths[i] < w)
+				widths[i] = w;
+		}
+	}
+	uint8_t hdr = (list->lbFlags & SITV_NoHeaders) == 0;
+	for (i = 0, cell = list->columns; i < col; i ++)
+	{
+		REAL w;
+		if (hdr && (w = cell[i].sizeObj.width) > widths[i])
+			widths[i] = w;
+		total += widths[i];
+	}
+	for (i = 0; i < col; i ++)
+		list->realWidths[i] = widths[i] / total;
+	sit.dirty = 1;
 }

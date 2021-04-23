@@ -28,8 +28,15 @@ static int SIT_DialogMove(SIT_Widget w, APTR cd, APTR ud)
 		if (dialog->customStyles & SITV_Resizable)
 		{
 			uint8_t corner = 0;
+			if ((dialog->customStyles & SITV_Plain) == 0)
+			{
+				/* need to ignore title */
+				SIT_Widget client = dialog->clientArea;
+				if (msg->y < w->box.bottom - w->box.top - client->box.bottom - client->box.top) corner |= 2;
+//				fprintf(stderr, "pos: %d, %d for %s\n", msg->x, msg->y, w->name);
+			}
+			else if (msg->y < 0) corner |= 2;
 			if (msg->x < 0) corner |= 1;
-			if (msg->y < 0) corner |= 2;
 			if (msg->x > w->layout.pos.width)  corner |= 4;
 			if (msg->y > w->layout.pos.height) corner |= 8;
 

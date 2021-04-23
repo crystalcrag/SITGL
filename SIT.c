@@ -293,9 +293,6 @@ DLLIMP void SIT_Log(int level, STRPTR fmt, ...)
 
 	va_start(args, fmt);
 	switch (level) {
-	case SIT_DEBUG:
-		vfprintf(stderr, fmt, args);
-		break;
 	case SIT_CRITICAL:
 	case SIT_ERROR:
 	case SIT_WARN:
@@ -340,7 +337,7 @@ DLLIMP Bool SIT_CopyToClipboard(STRPTR text, int size)
 }
 
 /* check if clipboard contains text */
-DLLIMP STRPTR SIT_GetFromClipboard(STRPTR type, int * size)
+DLLIMP STRPTR SIT_GetFromClipboard(int * size)
 {
 	STRPTR ret = NULL;
 
@@ -699,10 +696,26 @@ DLLIMP void FrameWaitNext(void)
 DLLIMP double FrameGetTime(void)
 {
 	LARGE_INTEGER time;
-	QueryPerformanceCounter(&time);
+	if (sit.QPCpause > 0)
+		time.QuadPart = sit.QPCpause;
+	else
+		QueryPerformanceCounter(&time);
 
 	/* remove start time to keep numbers low in case they are converted to integer */
 	return (time.QuadPart - sit.QPCstart) * sit.QPCfreqinv;
+}
+
+DLLIMP void FramePauseUnpause(Bool pause)
+{
+	LARGE_INTEGER time;
+	QueryPerformanceCounter(&time);
+	if (! pause)
+	{
+		/* ignore the time between pause */
+		sit.QPCstart += time.QuadPart - sit.QPCpause;
+		sit.QPCpause = 0;
+	}
+	else sit.QPCpause = time.QuadPart;
 }
 
 /*

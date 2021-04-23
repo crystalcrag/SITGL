@@ -977,7 +977,6 @@ void SIT_InitiateReflow(SIT_Widget w)
 			if (flags & SITF_GeomNotified)
 			{
 				/* reflow this control and all of its children */
-				parent->flags |= SITF_GeometryReflow;
 				SIT_GeomRemoveChildrenOf(parent);
 				return;
 			}
@@ -990,9 +989,9 @@ void SIT_InitiateReflow(SIT_Widget w)
 		/* if <w> already has a children being reflow, reflow the whole control */
 		for (parent = HEAD(w->children); parent; NEXT(parent))
 		{
-			if (parent->flags & SITF_GeomNotified) {
+			if (parent->flags & SITF_GeomNotified)
+			{
 				SIT_GeomRemoveChildrenOf(w);
-				w->flags |= SITF_GeometryReflow;
 				break;
 			}
 		}

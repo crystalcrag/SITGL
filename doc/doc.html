@@ -302,10 +302,10 @@ since they usually won't be stated anywhere else:</p>
   it will be encoded in UTF-8.
 
   <ul>
-    <li><strong>Rationale</strong>: UTF-8 is ASCII compatible, least resistance path
-    to unicode compliance, and is not endianess-sensitive.</li>
-    <li><strong>Cons</strong>: String modification, especially in C, can be a PITA.
-    Sometimes it is easier to temporarily convert the string in UTF-16.</li>
+	<li><strong>Rationale</strong>: UTF-8 is ASCII compatible, least resistance path
+	to unicode compliance, and is not endianess-sensitive.</li>
+	<li><strong>Cons</strong>: String modification, especially in C, can be a PITA.
+	Sometimes it is easier to temporarily convert the string in UTF-16.</li>
   </ul>
   </li>
 
@@ -317,14 +317,14 @@ since they usually won't be stated anywhere else:</p>
   filter unwanted symbols automatically:
 
   <ul>
-    <li><tt class="o dt">'_'</tt> : Functions and datatypes (i.e: <tt>SIT_CreateWidget()</tt>,
-    <tt>SIT_Accel</tt>).</li>
-    <li><tt class="o dt">'_'</tt> : Tag names (e.g: <tt>SIT_Title</tt>, ...)</li>
-    <li><tt class="o dt">'V'</tt> : Tag values (e.g: <tt>SITV_AttachForm</tt>, <tt>SITV_AttachWidget</tt>, ...)</li>
-    <li><tt class="o dt">'E'</tt> : Events (e.g: <tt>SITE_OnClick</tt>, <tt>SITE_OnPaint</tt>, ...)</li>
-    <li><tt class="o dt">'K'</tt> : Virtual keys (<tt>SITK_Enter</tt>, <tt>SITK_Space</tt>, ...)</li>
-    <li>A few more specialized prefixes exist like <tt>GFX_</tt> for canvas
-    related API, <tt>SITTB_</tt> for toolbar, <tt>SITOM_</tt> for OnMouse events...</li>
+	<li><tt class="o dt">'_'</tt> : Functions and datatypes (i.e: <tt>SIT_CreateWidget()</tt>,
+	<tt>SIT_Accel</tt>).</li>
+	<li><tt class="o dt">'_'</tt> : Tag names (e.g: <tt>SIT_Title</tt>, ...)</li>
+	<li><tt class="o dt">'V'</tt> : Tag values (e.g: <tt>SITV_AttachForm</tt>, <tt>SITV_AttachWidget</tt>, ...)</li>
+	<li><tt class="o dt">'E'</tt> : Events (e.g: <tt>SITE_OnClick</tt>, <tt>SITE_OnPaint</tt>, ...)</li>
+	<li><tt class="o dt">'K'</tt> : Virtual keys (<tt>SITK_Enter</tt>, <tt>SITK_Space</tt>, ...)</li>
+	<li>A few more specialized prefixes exist like <tt>GFX_</tt> for canvas
+	related API, <tt>SITTB_</tt> for toolbar, <tt>SITOM_</tt> for OnMouse events...</li>
   </ul>
   </li>
 
@@ -337,12 +337,12 @@ since they usually won't be stated anywhere else:</p>
   Keep them in mind, there are not that many:
 
   <ul>
-    <li><tt class="t dt">STRPTR</tt>: A shortcut for <tt>char *</tt>. This library does not use the const specifier
+	<li><tt class="t dt">STRPTR</tt>: A shortcut for <tt>char *</tt>. This library does not use the const specifier
 	(because most of the API makes use of vararg).</li>
-    <li><tt class="t dt">ULONG</tt>: typedef for <tt>unsigned long</tt>.</li>
-    <li><tt class="t dt">APTR</tt>: alias for <tt>void *</tt>, it means Absolute Pointer.</li>
-    <li><tt class="t dt">Bool</tt>: enumeration that can take the value of <tt>True</tt> (1) or <tt>False</tt> (0).</li>
-    <li><tt class="t dt">SIT_Widget</tt>: opaque type that identify a control within this library.</li>
+	<li><tt class="t dt">ULONG</tt>: typedef for <tt>unsigned long</tt>.</li>
+	<li><tt class="t dt">APTR</tt>: alias for <tt>void *</tt>, it means Absolute Pointer.</li>
+	<li><tt class="t dt">Bool</tt>: enumeration that can take the value of <tt>True</tt> (1) or <tt>False</tt> (0).</li>
+	<li><tt class="t dt">SIT_Widget</tt>: opaque type that identify a control within this library.</li>
   </ul>
   </li>
 
@@ -410,8 +410,8 @@ look like, here using the SDL1 framework:
 
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, <val>1</val>);
 
-    screen = SDL_SetVideoMode(SCREENWIDTH, SCREENHEIGHT, <val>32</val>, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL);
-    <kwd>if</kwd> (screen == <val>NULL</val>) {
+	screen = SDL_SetVideoMode(SCREENWIDTH, SCREENHEIGHT, <val>32</val>, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL);
+	<kwd>if</kwd> (screen == <val>NULL</val>) {
 		fprintf(<val>stderr</val>, <val>"failed to set video mode, aborting.</val><spe>\n</spe><val>"</val>);
 		<kwd>return</kwd> <val>1</val>;
 	}
@@ -726,7 +726,7 @@ Here is its prototype:
   combination of flags, you'll have to include <val>"nanovg.h"</val>. If you don't care,
   simply use the macro <tt>SITGL_NVG_FLAGS</tt>. For reference, these are the flags you can use:
   <ul>
-    <li><tt>NVG_ANTIALIAS</tt>: will draw all graphics opearations using sub-pixel anti-aliasing. Most
+	<li><tt>NVG_ANTIALIAS</tt>: will draw all graphics opearations using sub-pixel anti-aliasing. Most
 	of the times it produces way better looking graphics, but it has some caveats: attempting to draw
 	filled polygons with a thickness below 1 pixel <em>may</em> result in artifacts (c.f
 	<a href="https://github.com/memononen/nanovg/issues/571#issue-580801786">issue 571</a> or
@@ -799,7 +799,7 @@ but you can look in the "<tt>example</tt>" directory, for some popular framework
   with only one mouse button, the interface should remain extremely usable. The expected
   parameters are:
   <ul>
-    <li><tt>x</tt>, <tt>y</tt>: just like for mouse movement, this must be the <b>absolute coordinate</b>
+	<li><tt>x</tt>, <tt>y</tt>: just like for mouse movement, this must be the <b>absolute coordinate</b>
 	relative to the top left corner of the screen where the mouse button event occured.
 	<li><tt>button</tt>: which mouse buttons are pressed. You can use the following symbols:
 	  <ul>
@@ -830,14 +830,14 @@ but you can look in the "<tt>example</tt>" directory, for some popular framework
 
   <p>The parameters expect the following values:
   <ul>
-    <li><tt>key</tt>: must be enumeration from <tt>SITK_*</tt>. You'll have to manually translate values
+	<li><tt>key</tt>: must be enumeration from <tt>SITK_*</tt>. You'll have to manually translate values
 	from your windowing toolkit to the one used by <tt>SITGL</tt>. In order to have a decent keyboard
 	support, it is advised to translate as much <tt>SITK_*</tt> values as possible.
-    <li><tt>modifier</tt>: which modifier were held when the key was pressed. Supported modifier
+	<li><tt>modifier</tt>: which modifier were held when the key was pressed. Supported modifier
 	tokens start with <tt>SITK_Flag*</tt>. For example: <tt>SITK_FlagShift</tt> if the Shift key
 	was also pressed. <span class="n">Warning</span>: there is also a key named <tt>SITK_Shift</tt>:
 	this value is when the Shift key itself is pressed.
-    <li><tt>pressed</tt>: <val>1</val> if the button is pressed, <val>0</val>
+	<li><tt>pressed</tt>: <val>1</val> if the button is pressed, <val>0</val>
 	if it has just been released.
   </ul>
 
@@ -851,8 +851,8 @@ but you can look in the "<tt>example</tt>" directory, for some popular framework
   <p><b>Forward key with unicode character</b>. This is mostly used by the text edit widget. If you don't plan
   on using it, you can skip this part. The expected parameters are as follows:
   <ul>
-    <li><tt>codePoint</tt>: unicode code point generated by the key.
-    <li><tt>modifier</tt>: modifier that were held when key was generated (same values as for
+	<li><tt>codePoint</tt>: unicode code point generated by the key.
+	<li><tt>modifier</tt>: modifier that were held when key was generated (same values as for
 	<tt>SIT_ProcessKey()</tt>).
   </ul>
 
@@ -1007,23 +1007,23 @@ FILEVERSION <val>1</val>,<val>0</val>,<val>0</val>,<val>0</val>
 PRODUCTVERSION <val>1</val>,<val>0</val>,<val>0</val>,<val>0</val>
 FILETYPE <val>1</val>
 {
-    <spe><b>BLOCK</b></spe> <dim>"StringFileInfo"</dim>
-    {
-        <spe><b>BLOCK</b></spe> <dim>"040904b0"</dim>
-        {
-            <spe><b>VALUE</b></spe> <dim>"FileVersion"</dim>,      <dim>"1.0"</dim>
-            <spe><b>VALUE</b></spe> <dim>"FileDescription"</dim>,  <dim>"Simple Interface Toolkit - OpenGL edition"</dim>
-            <spe><b>VALUE</b></spe> <dim>"InternalName"</dim>,     <dim>"SITGL"</dim>
-            <spe><b>VALUE</b></spe> <dim>"LegalCopyright"</dim>,   <dim>"BSD Licensed"</dim>
-            <spe><b>VALUE</b></spe> <dim>"OriginalFilename"</dim>, <dim>"SITGL.dll"</dim>
-            <spe><b>VALUE</b></spe> <dim>"ProductName"</dim>,      <dim>"SITGL"</dim>
-            <spe><b>VALUE</b></spe> <dim>"ProductVersion"</dim>,   <dim>"1.0"</dim>
-        }
-    }
-    <spe><b>BLOCK</b></spe> <dim>"VarFileInfo"</dim>
-    {
-        <spe><b>VALUE</b></spe> <dim>"Translation"</dim>, <val>0x0409</val>, <val>1200</val>
-    }
+	<spe><b>BLOCK</b></spe> <dim>"StringFileInfo"</dim>
+	{
+		<spe><b>BLOCK</b></spe> <dim>"040904b0"</dim>
+		{
+			<spe><b>VALUE</b></spe> <dim>"FileVersion"</dim>,      <dim>"1.0"</dim>
+			<spe><b>VALUE</b></spe> <dim>"FileDescription"</dim>,  <dim>"Simple Interface Toolkit - OpenGL edition"</dim>
+			<spe><b>VALUE</b></spe> <dim>"InternalName"</dim>,     <dim>"SITGL"</dim>
+			<spe><b>VALUE</b></spe> <dim>"LegalCopyright"</dim>,   <dim>"BSD Licensed"</dim>
+			<spe><b>VALUE</b></spe> <dim>"OriginalFilename"</dim>, <dim>"SITGL.dll"</dim>
+			<spe><b>VALUE</b></spe> <dim>"ProductName"</dim>,      <dim>"SITGL"</dim>
+			<spe><b>VALUE</b></spe> <dim>"ProductVersion"</dim>,   <dim>"1.0"</dim>
+		}
+	}
+	<spe><b>BLOCK</b></spe> <dim>"VarFileInfo"</dim>
+	{
+		<spe><b>VALUE</b></spe> <dim>"Translation"</dim>, <val>0x0409</val>, <val>1200</val>
+	}
 }</pre>
 
 <p>Replace the inner block, by what is the most appropriate for your application.
@@ -1251,7 +1251,7 @@ meaning:
   <p>In the CSS userland, the name can be used as an ID in <a href="#selectors">selectors</a>. As
   a shortcut, you can add the following text after the name:
   <ul>
-    <li><tt>.<em>&lt;classname&gt;</em></tt>: where <em>&lt;classname&gt;</em> is to be replaced
+	<li><tt>.<em>&lt;classname&gt;</em></tt>: where <em>&lt;classname&gt;</em> is to be replaced
 	by an arbitrary text to setup the control class name that can then be used in CSS selectors.
 	Otherwise, you'll have to set this up manually using the property <tt>SIT_Classes</tt>.
 	<li><tt>#<em>&lt;tag&gt;</em></tt>: setup the <b>tag name</b>. The syntax is sadly backward
@@ -1697,9 +1697,9 @@ to create a linked list between controls that will shared the maximal width. For
 <pre><com>/* Create some widgets */</com>
 SIT_Widget label1 = SIT_CreateWidget(<val>"Label1:"</val>, SIT_LABEL, dialog, <val>NULL</val>);
 SIT_Widget label2 = SIT_CreateWidget(<val>"Another label:"</val>, SIT_LABEL, dialog,
-                        SIT_MaxWidth, label1, <val>NULL</val>);
+						SIT_MaxWidth, label1, <val>NULL</val>);
 SIT_Widget label3 = SIT_CreateWidget(<val>"Last:"</val>, SIT_LABEL, dialog, <val>NULL</val>,
-                        SIT_MaxWidth, label2, <val>NULL</val>);
+						SIT_MaxWidth, label2, <val>NULL</val>);
 </pre>
 
 <p>Once again, avoid circular dependencies.</p>
@@ -2056,35 +2056,35 @@ them using a comma-separated list. Missing arguments will be set to
 <tt class="o">0</tt> or <tt class="o">NULL</tt>. For example:</p>
 
 <pre>SIT_CreateWidgets(dialog,
-    <val>"&lt;label name=sep left=FORM right=FORM top=WIDGET,server,5 overflow=1&gt;"</val>);</pre>
+	<val>"&lt;label name=sep left=FORM right=FORM top=WIDGET,server,5 overflow=1&gt;"</val>);</pre>
 
 <p>That means the comma is a special character, and if you ever want to include
 it in a string, you will have to single or double quote it. When combined with
 multiple arguments, remember to leave the comma outside the quotes, like this:
 
 <pre>SIT_CreateWidgets(dialog,
-    <val>"&lt;label name=sep left=FORM right=FORM top=WIDGET,'hello, world',5 overflow=1&gt;"</val>);</pre>
+	<val>"&lt;label name=sep left=FORM right=FORM top=WIDGET,'hello, world',5 overflow=1&gt;"</val>);</pre>
 
 <p>The following table lists the available tag names that can be created:</p>
 
 <table class="listview pad">
 <thead>
   <tr><td>Tag name</td><td>SIT Type</td>
-      <td>Tag name</td><td>SIT Type</td></tr>
+	  <td>Tag name</td><td>SIT Type</td></tr>
 </thead>
 <tbody>
   <tr><td><tt>label</tt></td><td><a href="#SIT_LABEL"><tt>SIT_LABEL</tt></a></td>
-      <td><tt>button</tt></td><td><a href="#SIT_BUTTON"><tt>SIT_BUTTON</tt></a></td></tr>
+	  <td><tt>button</tt></td><td><a href="#SIT_BUTTON"><tt>SIT_BUTTON</tt></a></td></tr>
   <tr><td><tt>frame</tt></td><td><a href="#SIT_FRAME"><tt>SIT_FRAME</tt></a></td>
-      <td><tt>listbox</tt></td><td><a href="#SIT_LISTBOX"><tt>SIT_LISTBOX</tt></a></td></tr>
+	  <td><tt>listbox</tt></td><td><a href="#SIT_LISTBOX"><tt>SIT_LISTBOX</tt></a></td></tr>
   <tr><td><tt>canvas</tt></td><td><a href="#SIT_CANVAS"><tt>SIT_CANVAS</tt></a></td>
-      <td><tt>scrollbar</tt></td><td><a href="#SIT_SCROLLBAR"><tt>SIT_SCROLLBAR</tt></a></td></tr>
+	  <td><tt>scrollbar</tt></td><td><a href="#SIT_SCROLLBAR"><tt>SIT_SCROLLBAR</tt></a></td></tr>
   <tr><td><tt>slider</tt></td><td><a href="#SIT_SLIDER"><tt>SIT_SLIDER</tt></a></td>
-      <td><tt>progress</tt></td><td><a href="#SIT_PROGRESS"><tt>SIT_PROGRESS</tt></a></td></tr>
+	  <td><tt>progress</tt></td><td><a href="#SIT_PROGRESS"><tt>SIT_PROGRESS</tt></a></td></tr>
   <tr><td><tt>combobox</tt></td><td><a href="#SIT_COMBOBOX"><tt>SIT_COMBOBOX</tt></a></td>
-      <td><tt>tooltip</tt></td><td><a href="#SIT_TOOLTIP"><tt>SIT_TOOLTIP</tt></a></td></tr>
+	  <td><tt>tooltip</tt></td><td><a href="#SIT_TOOLTIP"><tt>SIT_TOOLTIP</tt></a></td></tr>
   <tr><td><tt>tab</tt></td><td><a href="#SIT_TAB"><tt>SIT_TAB</tt></a></td>
-      <td><tt>editbox</tt></td><td><a href="#SIT_EDITBOX"><tt>SIT_EDITBOX</tt></a></td>
+	  <td><tt>editbox</tt></td><td><a href="#SIT_EDITBOX"><tt>SIT_EDITBOX</tt></a></td>
 </tbody>
 </table>
 
@@ -2105,8 +2105,8 @@ after the equal sign, and then give the arguments as you would have with the
 that way:</p>
 
 <pre>SIT_CreateWidgets(dialog,
-    <val>"&lt;label name=sep left=FORM right=FORM top="</val>, SITV_AttachWidget, server, <val>5</val>,
-    <val>"overflow=&quot;</val>, SITV_Hidden, <val>"&gt;"</val>);</pre>
+	<val>"&lt;label name=sep left=FORM right=FORM top="</val>, SITV_AttachWidget, server, <val>5</val>,
+	<val>"overflow=&quot;</val>, SITV_Hidden, <val>"&gt;"</val>);</pre>
 
 <p>The only caveat is when an attribute requires more than one value. If you
 specify one argument using a <em>vararg</em>, <b>all of them must be specified
@@ -2122,17 +2122,17 @@ corresponding integer:</p>
 <table class="listview pad">
 <thead>
   <tr><td>Tag name</td><td>SIT Type</td>
-      <td>Tag name</td><td>SIT Type</td></tr>
+	  <td>Tag name</td><td>SIT Type</td></tr>
 </thead>
 <tbody>
   <tr><td><tt>NONE</tt></td><td><tt>SITV_AttachNone</tt></td>
-      <td><tt>FORM</tt></td><td><tt>SITV_AttachForm</tt></td></tr>
+	  <td><tt>FORM</tt></td><td><tt>SITV_AttachForm</tt></td></tr>
   <tr><td><tt>OPPOSITE</tt></td><td><tt>SITV_AttachOpposite</tt></td>
-      <td><tt>MIDDLE</tt></td><td><tt>SITV_AttachMiddle</tt></td></tr>
+	  <td><tt>MIDDLE</tt></td><td><tt>SITV_AttachMiddle</tt></td></tr>
   <tr><td><tt>NOOVERLAP</tt></td><td><tt>SITV_AttachNoOverlap</tt></td>
-      <td><tt>POSITION</tt></td><td><tt>SITV_AttachPosition</tt></td></tr>
+	  <td><tt>POSITION</tt></td><td><tt>SITV_AttachPosition</tt></td></tr>
   <tr><td><tt>WIDGET</tt></td><td><tt>SITV_AttachWidget</tt></td>
-      <td></td><td></td></tr>
+	  <td></td><td></td></tr>
 </tbody>
 </table>
 
@@ -2312,10 +2312,10 @@ process the Tab key, it will be used to navigate between controls.
   <p>This event is to notify that an important state has changed with the control. It is triggered by
   3 controls:
   <ul>
-    <li><tt>SIT_TAB</tt>: triggered whenever the <b>active tab has changed</b>. <tt>call_data</tt>
+	<li><tt>SIT_TAB</tt>: triggered whenever the <b>active tab has changed</b>. <tt>call_data</tt>
 	will be an integer indicating which tab is now active (starting at 0).
 
-    <li><tt>SIT_EDITBOX</tt>: will be fired whenever the <b>content of the edit field has changed</b> one
+	<li><tt>SIT_EDITBOX</tt>: will be fired whenever the <b>content of the edit field has changed</b> one
 	way or another (by the user actions or programmatically). <tt>call_data</tt> will be a pointer to a
 	<tt class="o">NULL</tt> terminated string representing the entire content of text edit control
 	(UTF-8 encoded).
@@ -2562,7 +2562,7 @@ reference to a given part (using tag name as the parameter).
   <tr><td><tt>SIT_APP</tt><td><tag>html</tag><td>No children.
   <tr><td rowspan="2"><tt>SIT_DIALOG</tt><td><tag>dialog</tag><td>Normal top level window, containing the following child widgets:
   <ul class="compact" style="margin: 0">
-    <li><tag>title</tag>: label containing the title.
+	<li><tag>title</tag>: label containing the title.
 	<li><tag>close</tag>: button for closing the dialog.
 	<li><tag>client</tag>: area where controls will be added.
   </ul>
@@ -2571,50 +2571,50 @@ reference to a given part (using tag name as the parameter).
   <tr><td rowspan="3"><tt>SIT_BUTTON</tt><td><tag>button</tag><td>Normal push button.
   <tr><td><tag>checkbox</tag><br><td><tt>SIT_ButtonType</tt> set to <tt>SITV_CheckBox</tt>. Child widget:
   <ul class="compact" style="margin: 0">
-    <li><tag>box</tag>: HTML tag use to contain the checkmark.
+	<li><tag>box</tag>: HTML tag use to contain the checkmark.
   </ul>
   <tr><td><tag>radio</tag><td><tt>SIT_ButtonType</tt> set to <tt>SITV_RadioButton</tt>.
   <ul class="compact" style="margin: 0">
-    <li><tag>box</tag>: HTML tag use to contain the radio mark.
+	<li><tag>box</tag>: HTML tag use to contain the radio mark.
   </ul>
   <tr><td><tt>SIT_FRAME</tt><td><tag>fieldset</tag><td>No children.
   <tr><td rowspan="2"><tt>SIT_LISTBOX</tt><td><tag>listbox</tag><td><tt>SIT_ViewMode</tt> set to <tt>SITV_ListViewIcon</tt>.
   <ul class="compact" style="margin: 0">
-    <li><tag>td</tag>: cell of table (one item in the list).
+	<li><tag>td</tag>: cell of table (one item in the list).
   </ul>
   <tr><td><tag>table</tag><td>If set to <tt>SITV_ListViewReport</tt>.
   <ul class="compact" style="margin: 0">
-    <li><tag>td</tag>: cell of table (several per row).
+	<li><tag>td</tag>: cell of table (several per row).
   </ul>
   <tr><td><tt>SIT_EDITBOX</tt><td><tag>editbox</tag><td>If <tt>SIT_EditType</tt> is set to <tt>SITV_Integer</tt>, <tt>SITV_Float</tt> or <tt>SITV_Double</tt>,
   the following children will be created:
   <ul class="compact" style="margin: 0">
-    <li><tag>spin.up</tag>: up arrow to increase value.
-    <li><tag>spin.down</tag>: down arrow to decrease value.
+	<li><tag>spin.up</tag>: up arrow to increase value.
+	<li><tag>spin.down</tag>: down arrow to decrease value.
   </ul>
   <tr><td><tt>SIT_COMBOBOX</tt><td><tag>combobox</tag><td>Will have the following children:
   <ul class="compact" style="margin: 0">
-    <li><tag>arrow</tag>: arrow anchored to the right that can ne clicked to open a list with entries.
-    <li><tag>popup</tag>: popup that will contain the list of items.
+	<li><tag>arrow</tag>: arrow anchored to the right that can ne clicked to open a list with entries.
+	<li><tag>popup</tag>: popup that will contain the list of items.
   </ul>
   <tr><td><tt>SIT_CANVAS</tt><td><tag>canvas</tag><td>No children.
   <tr><td rowspan="2"><tt>SIT_SCROLLBAR</tt><td><tag>vscroll</tag><td>If property <tt>SIT_HorizScroll</tt> is set to 0 (default value).
   <tr><td><tag>hscroll</tag><td>With <tt>SIT_HorizScroll</tt> set to 1.
   <p>The following children will be added:
   <ul class="compact" style="margin: 0">
-    <li><tag>thumb</tag>: clikable and draggable portion of the scrollbar.
-    <li><tag>arrow.up</tag>, <tag>arrow.down</tag>: arrows for vertical scrollbar to increase/decrease by one line.
-    <li><tag>arrow.left</tag>, <tag>arrow.right</tag>: arrows for horizontal scrollbar.
+	<li><tag>thumb</tag>: clikable and draggable portion of the scrollbar.
+	<li><tag>arrow.up</tag>, <tag>arrow.down</tag>: arrows for vertical scrollbar to increase/decrease by one line.
+	<li><tag>arrow.left</tag>, <tag>arrow.right</tag>: arrows for horizontal scrollbar.
   </ul>
   <tr><td><tt>SIT_SLIDER</tt><td><tag>slider</tag><td>The following children will be available:
   <ul class="compact" style="margin: 0">
-    <li><tag>thumb</tag>: clikable and draggable portion of the slider.
-    <li><tag>gauge</tag>: portion of the slider that shows range selected.
+	<li><tag>thumb</tag>: clikable and draggable portion of the slider.
+	<li><tag>gauge</tag>: portion of the slider that shows range selected.
   </ul>
   <tr><td><tt>SIT_PROGRESS</tt><td><tag>progress</tag><td>Contains one of the following child:
   <ul class="compact" style="margin: 0">
-    <li><tag>bar.horiz</tag>: bar that represents progress if <tt>SIT_HorizScroll</tt> is set to <tt class="o">True</tt> (default value).
-    <li><tag>bar.vert</tag>: for vertical progress bar.
+	<li><tag>bar.horiz</tag>: bar that represents progress if <tt>SIT_HorizScroll</tt> is set to <tt class="o">True</tt> (default value).
+	<li><tag>bar.vert</tag>: for vertical progress bar.
   </ul>
   <tr><td><tt>SIT_TAB</tt><td><tag>tab</tag><td>Each tab is created as label with the tag name <tag>pane</tag>.
   <tr><td><tt>SIT_TOOLTIP</tt><td><tag>tooltip</tag><td>No children.
@@ -2917,7 +2917,7 @@ well as some extensions:
   <li><b>Hex value</b>: can be specified by using a <tt>#</tt>, followed by 1, 2, 3, 4, 6 or 8 hex digits.
   Each have the following byte layout:
   <ul>
-    <li><b>1 digit</b>: will represent 16 shades of gray (e.g.: <tt>#0</tt> is black and <tt>#f</tt> is white).
+	<li><b>1 digit</b>: will represent 16 shades of gray (e.g.: <tt>#0</tt> is black and <tt>#f</tt> is white).
 	<li><b>2 digits</b>: 256 shades of gray.
 	<li><b>3 digits</b>: RGB color, with each component having 16 shades.
 	<li><b>4 digits</b>: RGBA color, each component has 16 shades.
@@ -3149,11 +3149,11 @@ are the declarations used to produce the backgrounds</b>:
   <li><tt class="dt">linear-gradient</tt> and
   <li><tt class="dt">repeating-linear-gradient</tt> here are a few examples:
   <div class="image">
-    <img src="images/linear-gradients.png" style="width: 100%">
+	<img src="images/linear-gradients.png" style="width: 100%">
   </div>
   <p>From left to right, the declarations used to produce those gradients are:
   <ul class="attachp">
-    <li><tt class="dt"><com>background</com>: <atr>linear-gradient(to bottom right, yellow, orange, red)</atr></tt>
+	<li><tt class="dt"><com>background</com>: <atr>linear-gradient(to bottom right, yellow, orange, red)</atr></tt>
 	<p>Corner gradients are rendered as a square and stretch to fill the content.
 	<li><tt class="dt"><com>background</com>: <atr>linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet)</atr></tt>
 	<p>Simple rainbow colors.
@@ -3170,14 +3170,14 @@ are the declarations used to produce the backgrounds</b>:
   </ul>
   <li><tt class="dt">radial-gradient</tt>
   <div class="image">
-    <img src="images/radial-gradients.png" style="width: 100%">
+	<img src="images/radial-gradients.png" style="width: 100%">
   </div>
   <p>From left to right, the declarations are:
   <ul class="attachp">
-    <li><tt class="dt"><com>background</com>: <atr>radial-gradient(ellipse closest-side, rgba(green,0.3), green)</atr></tt>
+	<li><tt class="dt"><com>background</com>: <atr>radial-gradient(ellipse closest-side, rgba(green,0.3), green)</atr></tt>
 	<p>Farthest or closest makes no difference with elliptical gradient, since the ellipse will fill
 	the content anyway.
-    <li><tt class="dt"><com>background</com>: <atr>radial-gradient(circle farthest-side, rgba(255,0,0,0), blue)</atr></tt>
+	<li><tt class="dt"><com>background</com>: <atr>radial-gradient(circle farthest-side, rgba(255,0,0,0), blue)</atr></tt>
 	<p>Gradient is partially clipped.
 	<li><tt class="dt"><com>background</com>: <atr>radial-gradient(circle closest-side at 30% 30%, yellow, orange, red)</atr></tt>
 	<p>Origin of the gradient will have an impact on the values used for closest and farthest parameters.
@@ -3235,7 +3235,7 @@ your elements. This area will then be reduced by the thickness of the border and
   <li><img src="images/border_simple.png" style="vertical-align: top">
   <p>From left to right, here are the CSS delarations used to produce each square:
   <ul>
-    <li><tt class="dt"><com>border</com>: <atr>0.1em solid purple</atr></tt>
+	<li><tt class="dt"><com>border</com>: <atr>0.1em solid purple</atr></tt>
 	<p>Simple uniform border declaration.
 	<p><span class="n">Note</span>: thickness keyword like <tt>thin</tt>,
 	<tt>medium</tt> or <tt>thick</tt> are not recognized, use <tt>em</tt> unit instead.
@@ -3243,23 +3243,23 @@ your elements. This area will then be reduced by the thickness of the border and
 	of the border will be 1px. Even if you specify something smaller like <tt>0.5px</tt> or <tt>0.00001em</tt>,
 	the thickness will be clamped to 1px.
 
-    <li><tt class="dt"><com>border</com>: <atr>double 1em</atr></tt>
+	<li><tt class="dt"><com>border</com>: <atr>double 1em</atr></tt>
 	<p>The thickness specified will be divided by 3, on the first and last third a solid border will
 	be drawn, the middle part remaining untouched.
 	<p><span class="n">Note</span>: by default <tt>border-color</tt> will inherit what has been set
 	to the <tt>color</tt> property. If nothing has been set, it will use its initial value, which is
 	black.
 
-    <li><tt class="dt"><com>border</com>: <atr>0.5em groove</atr>; <com>color</com>: <atr>blue</atr></tt>
+	<li><tt class="dt"><com>border</com>: <atr>0.5em groove</atr>; <com>color</com>: <atr>blue</atr></tt>
 	<p>Here the thickness will be divided by 2. The outer half will be drawn using an outset style,
 	while the inner half will have an inset style. Here the color of the border is set indirectly
 	through the <tt>color</tt> property.
 
-    <li><tt class="dt"><com>border</com>: <atr>0.5em ridge magenta</atr></tt>
+	<li><tt class="dt"><com>border</com>: <atr>0.5em ridge magenta</atr></tt>
 	<p><tt>ridge</tt> is similar to <tt>groove</tt>, but inverting the <tt>inset</tt> / <tt>outset</tt>
 	style.
 	
-    <li><tt class="dt"><com>border</com>: <atr>0.3em green inset</atr></tt>,<br>
+	<li><tt class="dt"><com>border</com>: <atr>0.3em green inset</atr></tt>,<br>
 	    <tt class="dt"><com>border</com>: <atr>0.2em outset yellow</atr></tt>
 	<p>The darker and lighter color is derived from the color specified for the border, and by blending it with
 	black (#000) or white (#fff) with a ratio of 50%.
@@ -3271,24 +3271,24 @@ your elements. This area will then be reduced by the thickness of the border and
   <li><img src="images/border_radius.png" style="vertical-align: top">
   <p>Here are a few examples on how border-radius behave, from left to right:
   <ul>
-    <li><tt class="dt"><com>border</com>: <atr>1em solid #1f72c8</atr>; <com>border-radius</com>: <atr>10px</atr></tt>
+	<li><tt class="dt"><com>border</com>: <atr>1em solid #1f72c8</atr>; <com>border-radius</com>: <atr>10px</atr></tt>
 	<p>The radius always refer to the radius of the outermost border. Then that radius is reduced by the
 	thickness to reach the inner border. If that radius becomes negative, it will be clamped to 0.
 
-    <li><tt class="dt"><com>border</com>: <atr>double 1em purple</atr>; <com>border-radius</com>: <atr>50%</atr></tt>
+	<li><tt class="dt"><com>border</com>: <atr>double 1em purple</atr>; <com>border-radius</com>: <atr>50%</atr></tt>
 	<p>Vertical radius and horizontal radius are evaluated independently when using relative unit
 	(the box is 150px wide and 100px high).
 
-    <li><tt class="dt"><com>border</com>: <atr>0.5em groove green</atr>; <com>color</com>: <atr>#888</atr>; <com>border-radius</com>: <atr>200px/500px</atr></tt>
+	<li><tt class="dt"><com>border</com>: <atr>0.5em groove green</atr>; <com>color</com>: <atr>#888</atr>; <com>border-radius</com>: <atr>200px/500px</atr></tt>
 	<p>If the radius specified is bigger than what could fit within the border box, the radius will
 	be distributed evenly among the horizontally/vertical axis.
 	<p><span class="n">Note</span>: if a corner with a radius is composed of different styles/colors,
 	the arc will always be split at 45&deg;.
 
-    <li><tt class="dt"><com>border</com>: <atr>0.5em inset cyan</atr>; <com>border-radius</com>: <atr>1em</atr></tt>
+	<li><tt class="dt"><com>border</com>: <atr>0.5em inset cyan</atr>; <com>border-radius</com>: <atr>1em</atr></tt>
 	<p>Outer radius is 1em and inner radius is 0.5em.
 
-    <li><tt class="dt"><com>border</com>: <atr>0.3em orange solid</atr>; <com>border-radius</com>: <atr>15px</atr>; <com>border-width</com>: <atr>2px 15px</atr></tt>,<br>
+	<li><tt class="dt"><com>border</com>: <atr>0.3em orange solid</atr>; <com>border-radius</com>: <atr>15px</atr>; <com>border-width</com>: <atr>2px 15px</atr></tt>,<br>
 	    <tt class="dt"><com>border</com>: <atr>0.2em red solid</atr>; <com>border-radius</com>: <atr>15px</atr>; <com>border-width</com>: <atr>15px 2px</atr></tt>
 	<p>Another example of inner radius being reduced to 0, using non-uniform border width this time.
   </ul>
@@ -3296,28 +3296,28 @@ your elements. This area will then be reduced by the thickness of the border and
   <li><img src="images/border_edge_cases.png" style="vertical-align: top">
   <p>Finally some edge cases to understand the limits of border rendering, from left to right:
   <ul>
-    <li><tt class="dt"><com>border</com>: <atr>1em solid</atr>;<br><com>border-radius</com>: <atr>2em</atr>;<br><com>border-top-width</com>: <atr>0</atr>;<br><com>border-color</com>: <atr>red orange green blue</atr></tt>
+	<li><tt class="dt"><com>border</com>: <atr>1em solid</atr>;<br><com>border-radius</com>: <atr>2em</atr>;<br><com>border-top-width</com>: <atr>0</atr>;<br><com>border-color</com>: <atr>red orange green blue</atr></tt>
 	<p>This highlight another limitation about <tt>nanovg</tt> that has been mentionned <a href="#NVGcaveats">here</a>.
 	The border forms a shape that gradually tends to a zero-width path: this is a limitation that
 	<tt>nanovg</tt> has trouble to deal with, and as a result, the border appears thicker than it should
 	be.
 
-    <li><tt class="dt"><com>border</com>: <atr>10px solid</atr>;<br><com>border-radius</com>: <atr>15px</atr>;<br><com>border-top-width</com>: <atr>0</atr>;<br><com>border-color</com>: <atr>red orange green blue</atr></tt>
+	<li><tt class="dt"><com>border</com>: <atr>10px solid</atr>;<br><com>border-radius</com>: <atr>15px</atr>;<br><com>border-top-width</com>: <atr>0</atr>;<br><com>border-color</com>: <atr>red orange green blue</atr></tt>
 	<p>Here the radius is smaller than the border width, therefore the inner border ends up as a
 	rectangular shape.
 
-    <li><tt class="dt"><com>border</com>: <atr>solid</atr>;<br><com>border-width</com>: <atr>0.1em 0.2em 0.4em 0.8em</atr>;<br><com>border-radius</com>: <atr>15px</atr>;<br><com>border-color</com>: <atr>red orange green blue</atr></tt>
+	<li><tt class="dt"><com>border</com>: <atr>solid</atr>;<br><com>border-width</com>: <atr>0.1em 0.2em 0.4em 0.8em</atr>;<br><com>border-radius</com>: <atr>15px</atr>;<br><com>border-color</com>: <atr>red orange green blue</atr></tt>
 	<p>Border radius with varying border thickness on all 4 sides. Just to mention that this library
 	can handle this case gracefully.
 
-    <li><tt class="dt"><com>border</com>: <atr>1em solid</atr>;<br><com>border-radius</com>: <atr>15px</atr>;<br><com>border-color</com>: <atr>red orange green blue</atr>;<br><com>border-top-width</com>: <atr>0</atr></tt>
+	<li><tt class="dt"><com>border</com>: <atr>1em solid</atr>;<br><com>border-radius</com>: <atr>15px</atr>;<br><com>border-color</com>: <atr>red orange green blue</atr>;<br><com>border-top-width</com>: <atr>0</atr></tt>
 	<p>Same as 2: radius smaller than border thickness, but using bigger numbers to highlight the effect.
 
-    <li><tt class="dt"><com>border</com>: <atr>solid</atr>;<br><com>border-width</com>: <atr>0.1em 0.8em 0.4em 0.8em</atr>;<br><com>border-color</com>: <atr>red orange green blue</atr></tt>
+	<li><tt class="dt"><com>border</com>: <atr>solid</atr>;<br><com>border-width</com>: <atr>0.1em 0.8em 0.4em 0.8em</atr>;<br><com>border-color</com>: <atr>red orange green blue</atr></tt>
 	<p>Non-uniform border-width, with non-uniform border colors, without radius: this use case should
 	be handled wihtout artifact.
 
-    <li><tt class="dt"><com>border</com>: <atr>2em solid green</atr>;<br><com>border-radius</com>: <atr>2em</atr></tt>
+	<li><tt class="dt"><com>border</com>: <atr>2em solid green</atr>;<br><com>border-radius</com>: <atr>2em</atr></tt>
 	<p>Here the border is so thick that it is fused as a solid polygon. You could achieve the same
 	by just specifying a <tt>border-radius</tt> and setting the <tt>background-color</tt>.
   </ul>
@@ -3329,12 +3329,12 @@ your elements. This area will then be reduced by the thickness of the border and
 <p>Border image properties can be used to generate <b>arbitrary border shapes</b>. Its syntax is a little
 bit tedious to remember, so here is a refresher:
 
-<pre>border-image: &lt;uri&gt; &lt;slice&gt; fill|content-fill / &lt;width&gt; / &lt;outset&gt; &lt;repeat&gt;
-border-image-source: &lt;uri&gt;
-border-image-slice: &lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;
-border-image-width: &lt;dimension&gt; &lt;dimension&gt; &lt;dimension&gt; &lt;dimension&gt;
-border-image-outset: &lt;dimension&gt; &lt;dimension&gt; &lt;dimension&gt; &lt;dimension&gt;
-border-image-repeat: stretch|repeat|round|space   stretch|repeat|round|space
+<pre><com>border-image</com>:        <atr>&lt;uri&gt; &lt;slice&gt; fill|content-fill / &lt;width&gt; / &lt;outset&gt; &lt;repeat&gt;</atr>
+<com>border-image-source</com>: <atr>&lt;uri&gt;</atr>
+<com>border-image-slice</com>:  <atr>&lt;integer&gt; &lt;integer&gt; &lt;integer&gt; &lt;integer&gt;</atr>
+<com>border-image-width</com>:  <atr>&lt;dimension&gt; &lt;dimension&gt; &lt;dimension&gt; &lt;dimension&gt;</atr>
+<com>border-image-outset</com>: <atr>&lt;dimension&gt; &lt;dimension&gt; &lt;dimension&gt; &lt;dimension&gt;</atr>
+<com>border-image-repeat</com>: <atr>stretch|repeat|round|space   stretch|repeat|round|space</atr>
 </pre>
 
 <p>First, the <tt>border-image</tt> property needs a image to work with. Then this image needs to be
@@ -3366,25 +3366,25 @@ an extension).
   <li><tt>stretch</tt>: the slice of the border image will be <b>stretched to fill the content</b> of the
   element. This is the default behavior if nothing is specified.
   <div class="image">
-    <img src="images/border_image_stretch.png">
+	<img src="images/border_image_stretch.png">
   </div>
   <li><tt>repeat</tt>: the edge slice will be <b>repeated until the entire border of the element is covered</b>
   by the slice. If the border does not have enough space to fill a integral amount of slice, the
   border image can appear clipped.
   <div class="image">
-    <img src="images/border_image_repeat.png">
+	<img src="images/border_image_repeat.png">
   </div>
   <li><tt>round</tt>: like repeat, but it will <b>shrink the edge slice</b> of the <tt>border-image</tt> so
   that there will always be an integral count of slice that will be drawn:
   <div class="image">
-    <img src="images/border_image_round.png">
+	<img src="images/border_image_round.png">
   </div>
   <p>Depending on the space left, the border image might appear squished by quite a bit.
 
   <li><tt>space</tt>: an integral amount of slice will be used to draw the border. Unused space will be
   distributed evenly between slices.
   <div class="image">
-    <img src="images/border_image_space.png">
+	<img src="images/border_image_space.png">
   </div>
 </ul>
 
@@ -3404,10 +3404,10 @@ element will always be the same size.
 <p>The main difference with border though, is that you <b>cannot</b> specify a different style for
 each side: all sides will always use the same style/color/width.
 
-<pre>outline: &lt;width&gt; &lt;style&gt; &lt;color&gt; &lt;offset&gt;
-outline-width: &lt;dimension&gt;
-outline-style: &lt;style&gt;
-outline-color: &lt;color&gt;
+<pre><com>outline</com>:       <atr>&lt;width&gt; &lt;style&gt; &lt;color&gt; &lt;offset&gt;</atr>
+<com>outline-width</com>: <atr>&lt;dimension&gt;</atr>
+<com>outline-style</com>: <atr>&lt;style&gt;</atr>
+<com>outline-color</com>: <atr>&lt;color&gt;</atr>
 </pre>
 
 <p>An <b>extension</b> has been added though: a 4th component can be specified for the <tt>outline</tt> property:
@@ -3420,9 +3420,9 @@ this offset can be used to push the outline border outward (positive dimension) 
 
 <p>The <b>first box</b> has a double border, with an outline offsetted by a third of the border thickness, giving
 the illusion of a triple border. The yellow background shows where the border box extends:
-<pre>border: 1em double black;
-outline: 0.3em solid black 0.3em;
-border-radius: 50%</pre>
+<pre><com>border</com>: <atr>1em double black</atr>;
+<com>outline</com>: <atr>0.3em solid black 0.3em</atr>;
+<com>border-radius</com>: <atr>50%</atr></pre>
 
 <p>The <b>second box</b> has its outline pushed inward (negative offset), reducing the radius of the
 outline accordingly.
@@ -3432,7 +3432,7 @@ outline accordingly.
 
 <h3 id="csstextshadow"><span>Text shadow</span></h3>
 
-<pre>text-shadow: &lt;offsetX&gt; &lt;offsetY&gt; &lt;blurradius&gt; &lt;color&gt;</pre>
+<pre><com>text-shadow</com>: <atr>&lt;offsetX&gt; &lt;offsetY&gt; &lt;blurradius&gt; &lt;color&gt;</atr></pre>
 
 <p><b>Text shadow behaves similarly to box shadow</b>, and has a similar purpose: add depth to the text. Multiple
 shadows can be specified, separated by comma, they will be rendered from top to bottom, layer per layer.
@@ -3442,7 +3442,7 @@ Consider the following example:
 </div>
 
 <p>The <tt>text-shadow</tt> property has been assigned to the following value:
-<pre>text-shadow: 1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;</pre>
+<pre><com>text-shadow</com>: <atr>1px 1px 2px black, 0 0 1em blue, 0 0 0.2em blue;</atr></pre>
 
 <p>The second layer has a blur radius of <tt>1em</tt>, which is way higher than the line height. This
 shadow actually overlaps the rows above and below any line of text, but since shadows are rendered layer
@@ -3454,17 +3454,17 @@ per layer (and not line per line), they will not overwrite part of previous text
 
 <p>Continuing in the rendering stack, we have all the properties that can affect <b>text appearance</b>.
 
-<pre>color: &lt;color&gt;</pre>
+<pre><com>color</com>: <atr>&lt;color&gt;</atr></pre>
 
 <p>The first one is the property defining the <b>color of the text</b>. This property will also define
 default color of borders (including outline) if none have been given.
 
 <pre>
-font: &lt;style&gt; &lt;weight&gt; &lt;size&gt; &lt;family&gt;
-font-style: &lt;style&gt;
-font-weight: &lt;weight&gt;
-font-size: &lt;dimension&gt;
-font-family: &lt;family&gt;
+<com>font</com>:        <atr>&lt;style&gt; &lt;weight&gt; &lt;size&gt; &lt;family&gt;</atr>
+<com>font-style</com>:  <atr>&lt;style&gt;</atr>
+<com>font-weight</com>: <atr>&lt;weight&gt;</atr>
+<com>font-size</com>:   <atr>&lt;dimension&gt;</atr>
+<com>font-family</com>: <atr>&lt;family&gt;</atr>
 </pre>
 
 <p>Next is <b>font management</b>. The way fonts are mapped will be described more in detail in the
@@ -3480,14 +3480,14 @@ will support as many values as you will configure for the root widget.
 <div class="image">
   <img src="images/letter_spacing.png">
 </div>
-  <li><tt class="dt" id="csslineheight">line-height: &lt;dimension&gt;</tt>
+  <li><tt class="dt" id="csslineheight"><com>line-height</com>: <atr>&lt;dimension&gt;</atr></tt>
   <p>Specify how <b>far apart individual lines will be</b>.
   By default line will be stacked on top of each other without gap. The number specified will be used as is.
   If you give an absolute number, it will use that number no matter what the pratical line height is.
   <p>Therefore, it is strongly advised to use relative unit (ie: percentage). Numbers without unit are
   also allowed, it means the ratio by which the line height will be multiplied, eg: 1.1 is like 110%.
 
-  <li><tt class="dt" id="csstabsize">tab-size: &lt;integer&gt;</tt>
+  <li><tt class="dt" id="csstabsize"><com>tab-size</com>: <atr>&lt;integer&gt;</atr></tt>
   <p>Useful only when white spaces are preserved (see <tt>white-space</tt> property). Specify the
   amount of <b>space characters</b> that the tab character (ASCII code 9) will be worth of (width wise).
   Whenever a tab character is found within the text, the text following that character will start
@@ -3496,63 +3496,63 @@ will support as many values as you will configure for the root widget.
   <p>This property is particularly useful for the widget <tt>SIT_EDITBOX</tt>: the value given for
   this property will be honored.
 
-  <li><tt class="dt" id="csstextalign">text-align: left|right|center|justify</tt>
+  <li><tt class="dt" id="csstextalign"><com>text-align</com>: <atr>left|right|center|justify</atr></tt>
   <p>How the text will be formatted. Justified text needs to have line wrapped for the effect to be
   visible (ie: last line of a paragraph will always be left aligned).
 
-  <li><tt class="dt">text-decoration: none|underline|overline|line-through &lt;color&gt; solid|double|wavy</tt>,<br>
-  <tt class="dt">text-decoration-color: &lt;color&gt;</tt>,<br>
-  <tt class="dt">text-decoration-style: solid|double|wavy</tt>
+  <li><tt class="dt"><com>text-decoration</com>: <atr>none|underline|overline|line-through &lt;color&gt; solid|double|wavy</atr></tt>,<br>
+  <tt class="dt"><com>text-decoration-color</com>: <atr>&lt;color&gt;</atr></tt>,<br>
+  <tt class="dt"><com>text-decoration-style</com>: <atr>solid|double|wavy</atr></tt>
   <p>Various decoration style you might want to apply to your text:
   <div class="photo" style="float: left; text-align: center">
-    <img src="images/text_deco_solid.png"><br>
+	<img src="images/text_deco_solid.png"><br>
 	solid
   </div>
   <div class="photo" style="float: left; text-align: center">
-    <img src="images/text_deco_double.png"><br>
+	<img src="images/text_deco_double.png"><br>
 	double
   </div>
   <div class="photo" style="float: left; text-align: center">
-    <img src="images/text_deco_wavy.png"><br>
+	<img src="images/text_deco_wavy.png"><br>
 	wavy
   </div>
   <p style="clear: left"><span class="n">Caveat</span>: <tt>text-decoration</tt> don't generate any
   shadow from <tt>text-shadow</tt>.
 
-  <li><tt class="dt" id="csstexttrans">text-transform: none|uppercase|lowercase</tt>
+  <li><tt class="dt" id="csstexttrans"><com>text-transform</com>: <atr>none|uppercase|lowercase</atr></tt>
   <p><b>Force case of text</b>. This property is also honored by the widget <tt>SIT_EDITBOX</tt>, and is
   actually a bit more than just a visual effect: characters stored in the edit buffer will also be
   converted to the specified case.
 
-  <li><tt class="dt">vertical-align: baseline|sub|super|top|middle|bottom|&lt;dimension&gt;</tt>
+  <li><tt class="dt"><com>vertical-align</com>: <atr>baseline|sub|super|top|middle|bottom|&lt;dimension&gt;</atr></tt>
   <p>Usually only applies to inlines, with the exception of <tt>vertical-align: middle</tt>. This
   can be applied to top level box elements. It will vertically center the text (SIT_Title) property
   with the container. Default value is <tt>baseline</tt> for inlines and <tt>top</tt> for block
   level.
 
-  <li><tt class="dt">word-spacing: &lt;dimension&gt;</tt>
+  <li><tt class="dt"><com>word-spacing</com>: <atr>&lt;dimension&gt;</atr></tt>
   <p><b>Space between words</b>, will be added on top of <tt>letter-spacing</tt>.
 
-  <li><tt class="dt">white-space: normal|nowrap|pre|pre-line|pre-wrap</tt>
+  <li><tt class="dt"><com>white-space</com>: <atr>normal|nowrap|pre|pre-line|pre-wrap</atr></tt>
   <p>Defines how white-space will be handled for the <tt>SIT_Title</tt> property:
   <ul>
-    <li><tt>normal</tt>: space will be collapsed, newlines will be ignored, lines will be wrapped if
+	<li><tt>normal</tt>: space will be collapsed, newlines will be ignored, lines will be wrapped if
 	there isn't enough space.
-    <li><tt>nowrap</tt>: like normal (spaces collapsed, newlines ignored), but lines will not be wrapped.
-    <li><tt>pre</tt>: keep formatting as is (spaces and newlines), don't break lines.
-    <li><tt>pre-ine</tt>: collapse space, but only use newlines as line break.
-    <li><tt>pre-wrap</tt>: keep formatting as is and break lines if necessary.
+	<li><tt>nowrap</tt>: like normal (spaces collapsed, newlines ignored), but lines will not be wrapped.
+	<li><tt>pre</tt>: keep formatting as is (spaces and newlines), don't break lines.
+	<li><tt>pre-ine</tt>: collapse space, but only use newlines as line break.
+	<li><tt>pre-wrap</tt>: keep formatting as is and break lines if necessary.
   </ul>
 </ul>
 
 <p>Finally a few <b>non-standard property</b> exists that are related to text:
 <ul>
-  <li><tt class="dt">-caret-color: &lt;color&gt;</tt>
+  <li><tt class="dt"><com>-caret-color</com>: <atr>&lt;color&gt;</atr></tt>
   <p>This property was added before the caret of text edit box were blinking. Back then, it was kind
   of hard to locate, giving it a different color from the text was kind of helpful, although nowadays
   this property is <b>kind of obsolete</b>. The default value for the caret color is the same as the text color.
 
-  <li><tt class="dt">selection: &lt;color&gt;  &lt;color&gt;</tt>
+  <li><tt class="dt"><com>selection</com>: <atr>&lt;color&gt;  &lt;color&gt;</atr></tt>
   <p>This property is mostly useful for the text edit widget: it will set the foreground and
   background <b>color of selected text</b>. By default, the colors will use the same colors used by the
   operating system.
@@ -3562,21 +3562,21 @@ will support as many values as you will configure for the root widget.
 
 <p>A few miscellaneous properties are left:
 <ul>
-  <li><tt class="dt">left: &lt;dimension&gt;</tt>,<br>
-      <tt class="dt">top: &lt;dimension&gt;</tt>
+  <li><tt class="dt"><com>left</com>: <atr>&lt;dimension&gt;</atr></tt>,<br>
+	  <tt class="dt"><com>top</com>: <atr>&lt;dimension&gt;</atr></tt>
   <p>Every top level container box has a <tt>position: relative</tt> inherently set. You can <b>nudge
   the location</b> by setting the value of these two properties.
 
-  <li><tt class="dt" style="vertical-align: top">padding: &lt;top&gt; &lt;right&gt; &lt;bottom&gt; &lt;left&gt;<br>
-padding-top: &lt;dimension&gt;<br>
-padding-right: &lt;dimension&gt;<br>
-padding-bottom: &lt;dimension&gt;<br>
-padding-left: &lt;dimension&gt;</tt>
+  <li><tt class="dt" style="vertical-align: top"><com>padding</com>: <atr>&lt;top&gt; &lt;right&gt; &lt;bottom&gt; &lt;left&gt;</atr><br>
+<com>padding-top</com>: <atr>&lt;dimension&gt;</atr><br>
+<com>padding-right</com>: <atr>&lt;dimension&gt;</atr><br>
+<com>padding-bottom</com>: <atr>&lt;dimension&gt;</atr><br>
+<com>padding-left</com>: <atr>&lt;dimension&gt;</atr></tt>
   <p>Define the amount of <b>space between the content and the border</b>. Remember that
   <a href="#geometry">geometry</a> within <tt>SITGL</tt> will defines the border-box of the element.
   Any padding and border will subtract from this box.
 
-  <li><tt class="dt">opacity: &lt;real&gt;</tt>
+  <li><tt class="dt"><com>opacity</com>: <atr>&lt;real&gt;</atr></tt>
   <p>Define alpha level of all the elements inside the container. <span class="n">XXX</span> doesn't
   handle group transparency at all, so this property is kind of useless.
 </ul>
@@ -3616,9 +3616,9 @@ when talking about <a href="#geometry">geometry management</a>. There are a few 
   <p>This property specifies in which order, controls will be scanned using
   the tab key. You can use the following values for this property (case insensitive):
   <ul>
-    <li><tt>NONE</tt>: <b>this control</b> will never receive the focus using the tab key.
-    <li><tt>FIRST</tt>: <b>this control</b> be set as the first in the list.
-    <li><tt>LAST</tt>: <b>this control</b> be set as the last in the list. <b>This is the default value</b>.
+	<li><tt>NONE</tt>: <b>this control</b> will never receive the focus using the tab key.
+	<li><tt>FIRST</tt>: <b>this control</b> be set as the first in the list.
+	<li><tt>LAST</tt>: <b>this control</b> be set as the last in the list. <b>This is the default value</b>.
 	<li><em>Anything else</em>: will look for a control with that name and use it as the next control
 	to focus when pressing the tab key from <b>this control</b>.
   </ul>
@@ -3662,12 +3662,12 @@ when talking about <a href="#geometry">geometry management</a>. There are a few 
   <tt>tag</tt> member. To initialize such a table, you can use the C99
   notation:</p>
   <pre>KeyVal_t my_args[] = {
-    {SIT_Title,   {.ptr = <val>"Options"</val>}},
-    {SIT_Margins, {.val = SITV_Em(<val>1</val>)}},
-    {<val>0</val>,           {.val = SITV_Em(<val>1</val>)}},
-    {<val>0</val>,           {.val = SITV_Em(<val>1</val>)}},
-    {<val>0</val>,           {.val = SITV_Em(<val>1</val>)}},
-    {SIT_TagEnd}
+	{SIT_Title,   {.ptr = <val>"Options"</val>}},
+	{SIT_Margins, {.val = SITV_Em(<val>1</val>)}},
+	{<val>0</val>,           {.val = SITV_Em(<val>1</val>)}},
+	{<val>0</val>,           {.val = SITV_Em(<val>1</val>)}},
+	{<val>0</val>,           {.val = SITV_Em(<val>1</val>)}},
+	{SIT_TagEnd}
 };</pre>
   <p>Take note that any arguments after a <tt>SIT_TagList</tt> will be ignored.</p>
 </ul>
@@ -3687,17 +3687,17 @@ to this property, followed by any argument needed by the format string itself. L
 
 <p>Also <b>not a proper control</b>, you will get it from the <tt>SIT_Init()</tt> function. You can create
 more if you want, but only the one provided by <tt>SIT_Init()</tt> will be useful to your application.
-You'll want to provide additonnal information, especially when it comes to font mapping, as well some
+You'll want to provide additonal information, especially when it comes to font mapping, as well some
 other properties:
 
 <ul>
   <li><tt class="dt" id="SIT_DefSBArrows">SIT_DefSBArrows</tt> (<tt class="t">enum</tt>),<br>
-      <tt class="dt">SIT_DefSBSize</tt> (<tt class="t">int</tt>)
+	  <tt class="dt">SIT_DefSBSize</tt> (<tt class="t">int</tt>)
   <p>This 2 properties will give you an opportunity to configure the <b>automatic scrollbars</b> that some
   widget might have to create. The first one is an enumeration that defines where arrow buttons will
   appear:
   <ul>
-    <li><tt>SITV_NoArrows</tt>: no buttons, only a scroll bar (this is the default value).
+	<li><tt>SITV_NoArrows</tt>: no buttons, only a scroll bar (this is the default value).
 	<li><tt>SITV_ArrowsTopBottom</tt>: up arrow will be on top, down arrow on bottom (respectively
 	left/right for horizontal scrollbar).
 	<li><tt>SITV_ArrowsTop</tt>: both up and down arrow buttons will be on top (left if horizontal).
@@ -3725,7 +3725,7 @@ other properties:
   <p>Get the <b>fully qualified path</b> of where the application has been started.
 
   <li><tt class="dt">SIT_ScreenWidth</tt> (<tt class="t">int</tt>),<br>
-      <tt class="dt">SIT_ScreenHeight</tt> (<tt class="t">int</tt>) <span class="ro">read-only</span>
+	  <tt class="dt">SIT_ScreenHeight</tt> (<tt class="t">int</tt>) <span class="ro">read-only</span>
   <p>These values contains the <b>maximum screen size</b> of the monitor where the application is about
   to start. You might want these values to get the maximum bounds for off-screen framebuffers.
 
@@ -3747,7 +3747,7 @@ other properties:
   <p>The specification is built from the parameters given to the CSS <tt>font</tt> property (or its
   derivatives). This specification is always built the same way to ensure a consistent naming:
   <ol>
-    <li>The font name (from <tt>font-family</tt>) is taken as is.
+	<li>The font name (from <tt>font-family</tt>) is taken as is.
 	<li>Then, if <tt>font-weight</tt> is set to <tt>bold</tt>, the string <tt class="o">"-bold"</tt> is appended to that name.
 	<li>At last, if <tt>font-style</tt> is set to <tt>italic</tt>, the string <tt class="o">"-italic"</tt> is added.
   </ol>
@@ -3756,7 +3756,7 @@ other properties:
 
   <p>Then you need to specify a TTF font file. There are 2 ways to do so:
   <ol>
-    <li><b>Direct link to a TTF file</b>: simply provide a path to a valid TTF file.
+	<li><b>Direct link to a TTF file</b>: simply provide a path to a valid TTF file.
 	<li><b>Operating system font</b>: if the path does not exist, it will be interpreted as a font
 	specification to look in the operating system font registry. This specification must start with
 	the family name, then followed by one or more optional attributes: "/bold" or "/italic".
@@ -3780,7 +3780,12 @@ SIT_SetValues(app,
 	SIT_AddFont, <val>"sans-serif-bold"</val>, <val>"fonts/Roboto-Bold.ttf"</val>,
 	<val>NULL</val>
 );</pre>
-  <p>To check if the mapping has been sucessful, you can grab a nanovg context and try to map the font.
+  <p>To check if the mapping has been sucessful, you can grab a nanovg context and try to map the font,
+  using a code similar to:
+  <pre><kwd>if</kwd> (nvgFindFont(nvg, <val>"sans-serif"</val>) &lt; <val>0</val>)
+{
+	<com>/* font not found ... try using "System" as a fallback */</com>
+}</pre>
   If you get an error, you might want to try with a different font (especially if you used an operating
   system font).
 
@@ -3798,7 +3803,7 @@ SIT_SetValues(app,
 };</pre>
   <p>Each fields has the following meaning:
   <ul>
-    <li><tt>key</tt>: a combination of <tt>SITK_...</tt>, representing the <b>shortcut you want to register</b>. For example
+	<li><tt>key</tt>: a combination of <tt>SITK_...</tt>, representing the <b>shortcut you want to register</b>. For example
 	<tt>SITK_FlagAlt + SITK_F4</tt> to register a callback when the key combination <span class="key">Alt+F4</span>
 	is pressed.
 	<p>Although permitted, you can register single key press as global shortcuts. Like <tt>'S'</tt> is
@@ -3810,19 +3815,19 @@ SIT_SetValues(app,
 	be checked before sending keyboard events to widgets, otherwise it will be done after (if the
 	event hasn't been processed by a widget).
 
-    <p>Therefore without <tt>SITK_FlagCapture</tt>, a global callback might not be triggered.
+	<p>Therefore without <tt>SITK_FlagCapture</tt>, a global callback might not be triggered.
 	
 	<p>The typical use case for capture flag, is to register an exit shortcut, so that you don't have to
 	worry about it in your event loop.
 
-    <li><tt>event</tt>: what <b>kind of event</b> this shortcut will trigger. Must an event type,
+	<li><tt>event</tt>: what <b>kind of event</b> this shortcut will trigger. Must an event type,
 	ie: <tt>SITE_...</tt>, like <tt>SITE_OnClose</tt> or <tt>SITE_OnActivate</tt>.
 
-    <li><tt>target</tt>: the <b>name of a widget</b>, which will receive the event. You can also set this field
+	<li><tt>target</tt>: the <b>name of a widget</b>, which will receive the event. You can also set this field
 	to <tt class="o">NULL</tt>, in which case the event will be targetted to the <tt>SIT_APP</tt>
 	widget.
 
-    <li><tt>cb</tt>: If the callback registered for the event did not process it or the <tt>target</tt>
+	<li><tt>cb</tt>: If the callback registered for the event did not process it or the <tt>target</tt>
 	field was set to <tt class="o">NULL</tt>, you can register a callback that will be called whenever
 	the shortcut is pressed.
   </ul>
@@ -3842,7 +3847,7 @@ SIT_SetValues(app,
   use a locally-allocated array (unless you are in the <tt>main()</tt> function), add the <tt>static</tt>
   keyword.
 
-  <li><tt class="dt">SIT_ExitCode</tt> (<tt><type>int</type> *</tt>)
+  <li><tt class="dt" id="SIT_ExitCode">SIT_ExitCode</tt> (<tt><type>int</type> *</tt>)
   <p>You can register an integer that will be written with the value 1 whenever the user requested to
   exit the application (be it through global shortcuts or push button that called the <tt>SIT_Exit()</tt>
   function). The typical use case is to use that variable in the outer-most loop of the main event loop, like this:
@@ -3902,19 +3907,19 @@ want your control to always be present on the screen, simply add them as childre
 <p style="clear: left">In the examples above, here are the declarations that were used:
 
 <pre>
-<span class="h">dialog</span>, <span class="h">form</span> {
+<hdr>dialog</hdr>, <hdr>form</hdr> {
 	<com>border-radius</com>:  <atr>0.5em</atr>;
 	<com>box-shadow</com>:     <atr>0 0 10px #444</atr>;
 	<com>background</com>:     <atr>#f4f4f4</atr>;
 	<com>padding</com>:        <atr>2em 0.5em 0.5em 0.5em</atr>
 }
-<span class="h">dialog</span> {
+<hdr>dialog</hdr> {
 	<com>background</com>:     <atr>#303238</atr>
 }
-<span class="h">form</span> {
+<hdr>form</hdr> {
 	<com>padding</com>:        <atr>0.5em</atr>
 }
-<span class="h">dialog title</span> {
+<hdr>dialog title</hdr> {
 	<com>text-align</com>:     <atr>center</atr>;
 	<com>color</com>:          <atr>#aaa</atr>;
 	<com>font-weight</com>:    <atr>bold</atr>;
@@ -3923,21 +3928,21 @@ want your control to always be present on the screen, simply add them as childre
 	<com>vertical-align</com>: <atr>middle</atr>;
 	<com>border-bottom</com>:  <atr>2px solid rgba(#000,0.3)</atr>
 }
-<span class="h">dialog client</span> {
+<hdr>dialog client</hdr> {
 	<com>padding</com>:        <atr>0.5em</atr>;
 	<com>background</com>:     <atr>#efefef</atr>
 }
-<span class="h">dialog close</span> {
+<hdr>dialog close</hdr> {
 	<com>font-weight</com>:    <atr>bold</atr>;
 	<com>color</com>:          <atr>#d44</atr>;
 	<com>text-shadow</com>:    <atr>2px 2px 2px black, -1px -1px 2px white</atr>;
 	<com>vertical-align</com>: <atr>middle</atr>;
 	<com>text-transform</com>: <atr>uppercase</atr>
 }
-<span class="h">dialog close</span>:<span class="ps">hover</span> {
+<hdr>dialog close</hdr>:<pse>hover</pse> {
 	<com>color</com>:          <atr>red</atr>
 }
-<span class="h">dialog close</span>:<span class="ps">hover</span>:<span class="ps">active</span> {
+<hdr>dialog close</hdr>:<pse>hover</pse>:<pse>active</pse> {
 	<com>color</com>:          <atr>red</atr>;
 	<com>text-shadow</com>:    <atr>2px 2px 2px #ccc, -1px -1px 2px black</atr>
 }
@@ -3960,9 +3965,9 @@ freely between all windows in this mode.
   <li><tt class="dt">SIT_DialogStyles</tt> (<tt class="t">int</tt>) <span class="ro">create-only</span>
   <p>This tag is a bitfield, that can be combined with the following flags:
   <ul>
-    <li><tt class="dt">SITV_Plain</tt>: this is the flag you have to use to create a plain dialog. Otherwise, the
+	<li><tt class="dt">SITV_Plain</tt>: this is the flag you have to use to create a plain dialog. Otherwise, the
 	dialog will be a normal one, with title bar and close button.
-    <li><tt class="dt">SITV_Resizable</tt>: if you want your dialog to be resizable, otherwise its
+	<li><tt class="dt">SITV_Resizable</tt>: if you want your dialog to be resizable, otherwise its
 	size will be just enough to accomodate the constraints of your child controls. The area active
 	for resizing the dialog will be the area covered by the border <b>and the padding</b>.
 	<li><tt class="dt">SITV_NoActivate</tt>: this one is can be used to display a temporary. If you
@@ -4039,7 +4044,7 @@ However, there are a few tags that have a special meaning:
   
   <p>If you do not have a callback registered, some default actions will take place:
   <ul>
-    <li>If there is an <b>href</b> attribute, it will use that string as an argument to the
+	<li>If there is an <b>href</b> attribute, it will use that string as an argument to the
 	<a href="#OpenDocument"><tt>OpenDocument()</tt></a> function. For example, an <tt>http://</tt>
 	link will be opened using the default web browser. A directory will be opened with the Windows
 	explorer, ...
@@ -4139,7 +4144,7 @@ layout, that can accomodate almost every situation, with very little effort.
   <p>Once this is done, you can select an overflow style:
 
   <ul>
-    <li><tt class="dt">SITV_Multiline</tt>: default value, overflow is disabled.
+	<li><tt class="dt">SITV_Multiline</tt>: default value, overflow is disabled.
 	<li><tt class="dt">SITV_EllipsisRight</tt>
 	<li><tt class="dt">SITV_EllipsisLeft</tt>
 	<li><tt class="dt">SITV_EllipsisPath</tt> or <tt class="dt">SITV_EllipsisMiddle</tt>
@@ -4147,7 +4152,7 @@ layout, that can accomodate almost every situation, with very little effort.
 
   <p>Here are some examples of the overflow in action:
   <div class="image">
-    <img src="images/SIT_LABEL_overflow.png">
+	<img src="images/SIT_LABEL_overflow.png">
   </div>
 
   <p><span class="n">Note</span>: text-overflow will always be <tt>...</tt>.
@@ -4164,7 +4169,7 @@ layout, that can accomodate almost every situation, with very little effort.
 
 <p>To produce those visuals, the following CSS styles were used:
 <pre>
-<span class="h">button</span> {
+<hdr>button</hdr> {
 	<com>padding</com>:         <atr>0.3em 1.5em 0.2em</atr>;
 	<com>border-radius</com>:   <atr>0.2em</atr>;
 	<com>background</com>:      <atr>linear-gradient(to bottom, #f2f2f2, #ebebeb 50%, #dbdbdb 50%, #cfcfcf)</atr>;
@@ -4172,46 +4177,46 @@ layout, that can accomodate almost every situation, with very little effort.
 	<com>color</com>:           <atr>black</atr>;
 	<com>text-align</com>:      <atr>center</atr>
 }
-<span class="h">button</span>:<span class="ps">active</span> {
+<hdr>button</hdr>:<pse>active</pse> {
 	<com>background</com>:      <atr>linear-gradient(to bottom, #c2e4f6, #c2e4f6 50%, #9ad2f0 50%, #9ad2f0)</atr>;
 	<com>box-shadow</com>:      <atr>0 2px 5px #2681af inset, 0 0 2px #333 inset</atr>
 }
-<span class="h">button</span>:<span class="ps">disabled</span> {
+<hdr>button</hdr>:<pse>disabled</pse> {
 	<com>border-color</com>:    <atr>#adb2b5</atr>;
 	<com>outline</com>:         <atr>1px solid #fafafa -2px</atr>;
 	<com>background</com>:      <atr>#efefef</atr>;
 	<com>color</com>:           <atr>#aaa</atr>
 }
-<span class="h">button</span>:<span class="ps">kbdfocus</span> {
+<hdr>button</hdr>:<pse>kbdfocus</pse> {
 	<com>outline</com>:         <atr>1px solid #48d8fb</atr>
 }
-<span class="h">checkbox, radio</span> {
+<hdr>checkbox, radio</hdr> {
 	<com>border-radius</com>:   <atr>0.2em</atr>
 }
-<span class="h">checkbox box</span> {
+<hdr>checkbox box</hdr> {
 	<com>padding</com>:         <atr>0.4em</atr>;
 	<com>background</com>:      <atr>linear-gradient(to bottom right, #aeb3b9, #f6f6f6)</atr>;
 	<com>border</com>:          <atr>1px solid #aaa</atr>;
 	<com>outline</com>:         <atr>1px solid #f8f8f8 -2px</atr>;
 	<com>vertical-align</com>:  <atr>middle</atr>
 }
-<span class="h">checkbox</span>:<span class="ps">checked</span> <span class="h">box</span> {
+<hdr>checkbox</hdr>:<pse>checked</pse> <hdr>box</hdr> {
 	<com>background</com>:      <atr>url(mask:checkmark.png) no-repeat 50% 50%,
 	                 linear-gradient(to bottom right, #aeb3b9, #f6f6f6)</atr>;
 	<com>background-size</com>: <atr>80% 80%, 100% 100%</atr>;
 	<com>color</com>: <atr>#4b6097</atr>
 }
-<span class="h">radio</span>:<span class="ps">kbdfocus</span>, <span class="h">checkbox</span>:<span class="ps">kbdfocus</span> {
+<hdr>radio</hdr>:<pse>kbdfocus</pse>, <hdr>checkbox</hdr>:<pse>kbdfocus</pse> {
 	<com>outline</com>:         <atr>2px solid #48d8fb 0.2em</atr>
 }
-<span class="h">radio box</span> {
+<hdr>radio box</hdr> {
 	<com>border-radius</com>:   <atr>1em</atr>;
 	<com>border</com>:          <atr>2px solid #888</atr>;
 	<com>padding</com>:         <atr>0.4em</atr>;
 	<com>background</com>:      <atr>white</atr>;
 	<com>vertical-align</com>:  <atr>middle</atr>
 }
-<span class="h">radio</span>:<span class="ps">checked</span> <span class="h">box</span> {
+<hdr>radio</hdr>:<pse>checked</pse> <hdr>box</hdr> {
 	<com>background</com>:      <atr>radial-gradient(circle at 50% 45%, transparent, transparent 35%, rgba(black, 0.5) 35%),
 	                 radial-gradient(circle at 30% 30%, #c7ebfd, #0c3d5d)</atr>;
 	<com>outline</com>:         <atr>2px solid #ddd -3px</atr>
@@ -4353,7 +4358,7 @@ related features. It can be seen as a label with an etched border:</p>
 
 <p>Here are the CSS styles used for this control:
 <pre>
-<span class="h">fieldset</span> {
+<hdr>fieldset</hdr> {
 	<com>border</com>:        <atr>2px solid #888</atr>;
 	<com>border-radius</com>: <atr>0.5em</atr>;
 	<com>color</com>:         <atr>#06c</atr>
@@ -4391,30 +4396,30 @@ thus can deal with user-provided memory buffer as storage.
 
 <p>Here are the styles used for this control in the screenshot above:
 <pre>
-<span class="h">editbox</span> {
+<hdr>editbox</hdr> {
 	<com>padding</com>:         <atr>0.3em 0.1em 0.3em</atr>;
 	<com>background</com>:      <atr>white</atr>;
 	<com>border</com>:          <atr>1px solid #666</atr>
 }
-<span class="h">editbox spin.up</span> {
+<hdr>editbox spin.up</hdr> {
 	<com>background</com>:      <atr>url(mask:arrowup.png) 60% 50% no-repeat, rgba(black, 0.1)</atr>;
 	<com>color</com>:           <atr>#aaa</atr>;
 	<com>background-size</com>: <atr>70% 35%, 100% 100%</atr>;
 }
-<span class="h">editbox spin.down</span> {
+<hdr>editbox spin.down</hdr> {
 	<com>background</com>:      <atr>url(mask:arrowdown.png) 60% 50% no-repeat, rgba(black, 0.1)</atr>;
 	<com>color</com>:           <atr>#aaa</atr>;
 	<com>background-size</com>: <atr>70% 35%, 100% 100%</atr>;
 }
-<span class="h">editbox spin.up</span>:<span class="ps">active</span> {
+<hdr>editbox spin.up</hdr>:<pse>active</pse> {
 	<com>background</com>:      <atr>url(mask:arrowup.png) 60% 50% no-repeat, rgba(black, 0.7)</atr>;
 	<com>color</com>:           <atr>#ccc</atr>
 }
-<span class="h">editbox spin.down</span>:<span class="ps">active</span> {
+<hdr>editbox spin.down</hdr>:<pse>active</pse> {
 	<com>background</com>:      <atr>url(mask:arrowdown.png) 60% 50% no-repeat, rgba(black, 0.7)</atr>;
 	<com>color</com>:           <atr>#ccc</atr>
 }
-<span class="h">editbox vscroll thumb</span> {
+<hdr>editbox vscroll thumb</hdr> {
 	<com>background</com>:      <atr>#ccc</atr>;
 	<com>border</com>:          <atr>0</atr>;
 	<com>outline</com>:         <atr>0</atr>;
@@ -4468,8 +4473,8 @@ assigned to one of the following values:
   pasted in the editbox.
 
   <li><tt class="dt">SITV_Integer</tt>,
-      <tt class="dt">SITV_Float</tt>,
-      <tt class="dt">SITV_Double</tt>
+	  <tt class="dt">SITV_Float</tt>,
+	  <tt class="dt">SITV_Double</tt>
   <p>A <b>single-line</b> text box for <b>numeric entry</b> that include a spin control on its right
   side. Usually this control is expecting you to provide a buffer where the binary representation of
   the number will be written, ie: either a pointer to an <tt class="t">int</tt>, <tt class="t">float</tt>
@@ -4610,7 +4615,7 @@ allocation at the start).
   permitted, that includes characters from the ASCII range 01 to 31. They will be rendered
   in reverse video, like this:
   <div class="image">
-    <img src="images/SIT_EDITBOX_specialchar.png">
+	<img src="images/SIT_EDITBOX_specialchar.png">
   </div>
 
   <p>Obviously, characters code 9 (tab) and 10 (newline) will be handled as they should. Character
@@ -4671,10 +4676,10 @@ allocation at the start).
   <p><b>How the tab character should be handled</b> (ASCII code 9). You can use one of the following
   enumeration values:
   <ul>
-    <li><tt>SITV_TabEditNormal</tt>: Tab will be <b>inserted as is</b> in the edit buffer and behave
+	<li><tt>SITV_TabEditNormal</tt>: Tab will be <b>inserted as is</b> in the edit buffer and behave
 	like you would expect from a typical text editor.
 
-    <li><tt>SITV_TabEditToSpace</tt>: Whenever a tab character is present in a text fragment, it will
+	<li><tt>SITV_TabEditToSpace</tt>: Whenever a tab character is present in a text fragment, it will
 	be <b>converted to the number of space characters</b> required to reach the next integral multiple
 	of <tt>tab-size</tt>.
 
@@ -4691,7 +4696,7 @@ allocation at the start).
 	is not exposed to any public functions (the rendering is way too dependant on internal structures
 	from the text edit widget anyway). Also, <tt>nanovg</tt> has no facilities to render them.
 
-    <li><tt>SITV_TabEditForbid</tt>: if the limitations of <tt>SITV_TabEditToSpace</tt> are too problematic,
+	<li><tt>SITV_TabEditForbid</tt>: if the limitations of <tt>SITV_TabEditToSpace</tt> are too problematic,
 	you can simply <b>forbid any tab character</b> from appearing in the edit buffer. In that case, if the
 	user presses the tab key, it will be used to move the keyboard focus to the next control in the chain.
 
@@ -4704,7 +4709,7 @@ allocation at the start).
   <p><b>How lines should be wrapped</b> if they happen to reach the limit of the horizontal space available. There
   are 3 possibile choices:
   <ul>
-    <li><tt>SITV_WWNone</tt>: no wrapping at all will be made. The content of the edit buffer will
+	<li><tt>SITV_WWNone</tt>: no wrapping at all will be made. The content of the edit buffer will
 	then scroll left and/or right to make sure the cursor remain visible.
 	<li><tt>SITV_WWChar</tt>: lines will be split at arbitrary characters position, as much as can fit
 	in the horizontal space available.
@@ -4717,8 +4722,8 @@ allocation at the start).
   to <tt>SITV_WWNone</tt>, with no way to change it.
 
   <li><tt class="dt">SIT_MinValue</tt> (<tt class="t">double</tt>),<br>
-      <tt class="dt">SIT_MaxValue</tt> (<tt class="t">double</tt>),<br>
-      <tt class="dt">SIT_StepValue</tt> (<tt class="t">double</tt>)
+	  <tt class="dt">SIT_MaxValue</tt> (<tt class="t">double</tt>),<br>
+	  <tt class="dt">SIT_StepValue</tt> (<tt class="t">double</tt>)
   <p>These properties only make sense for numeric inputs. They allow you to configure the <b>range permitted
   by the control</b>. <tt>SIT_StepValue</tt> control by what amount the spin buttons will change the value.
   Spin buttons can also be controlled using the Up/Down arrow keys. The default values for range are
@@ -4803,12 +4808,12 @@ do not want it to be given to the edit box again.
 
 <p>Here are the styles that were defined for this control:
 <pre>
-<span class="h">combobox</span> {
+<hdr>combobox</hdr> {
 	<com>background</com>:      <atr>white</atr>;
 	<com>border</com>:          <atr>0.1em solid #aaa</atr>;
 	<com>padding</com>:         <atr>0.3em 0.5em</atr>
 }
-<span class="h">combobox arrow</span> {
+<hdr>combobox arrow</hdr> {
 	<com>background</com>:      <atr>url(mask:arrowdown.png) 50% 50% no-repeat,
 	                 linear-gradient(to bottom, #f2f2f2, #ebebeb 50%, #dbdbdb 50%, #cfcfcf)</atr>;
 	<com>background-size</com>: <atr>50% 25%, 100% 100%</atr>;
@@ -4817,13 +4822,13 @@ do not want it to be given to the edit box again.
 	<com>margin</com>:          <atr>0.1em</atr>;
 	<com>padding</com>:         <atr>0 0.4em</atr>
 }
-<span class="h">combobox arrow</span>:<span class="ps">active</span> {
+<hdr>combobox arrow</hdr>:<pse>active</pse> {
 	<com>background</com>:      <atr>url(mask:arrowdown.png) 50% 50% no-repeat, #c2e4f6</atr>;
 	<com>border</com>:          <atr>0</atr>;
 	<com>box-shadow</com>:      <atr>0 2px 5px #2681af inset, 0 0 2px #333 inset</atr>;
 	<com>outline</com>:         <atr>0</atr>
 }
-<span class="h">popup</span> {
+<hdr>popup</hdr> {
 	<com>border</com>:          <atr>0.1em solid #aaa</atr>;
 	<com>background</com>:      <atr>white</atr>;
 	<com>padding</com>:         <atr>6px</atr>
@@ -4890,6 +4895,7 @@ item number
 
 <p>Listbox are a way to display a list using two display formats: report view or icon view.
 
+<div style="margin-left: 40px">
 <div class="image" style="display: inline-block; margin: 5px">
   <img src="images/SIT_LISTBOX_report.png" alt="Listbox with column header">
   <span class="caption">Report view</span>
@@ -4899,6 +4905,53 @@ item number
   <img src="images/SIT_LISTBOX_icon.jpg" alt="Listbox using icon view">
   <span class="caption">Icon view <dim>(images are from wikipedia)</dim></span>
 </div>
+</div>
+
+<p>Here are the styles used for these controls:
+<pre>
+<com>/* report view */</com>
+<hdr>table</hdr> {
+	<com>border</com>:             <atr>1px solid #aaa</atr>;
+	<com>background</com>:         <atr>white</atr>
+}
+<hdr>table td</hdr> {
+	<com>padding</com>:            <atr>2px 6px</atr>
+}
+<hdr>table td</hdr>:<pse>checked</pse> {
+	<com>background-color</com>:   <atr>selback</atr>;
+	<com>color</com>:              <atr>selfore</atr>
+}
+<hdr>table th</hdr> {
+	<com>border</com>:             <atr>1px solid #aaa</atr>;
+	<com>border-right-color</com>: <atr>white</atr>;
+	<com>padding</com>:            <atr>4px</atr>;
+	<com>background</com>:         <atr>linear-gradient(to bottom, white, white 50%, #f7f8fa 50%, #f1f2f4)</atr>;
+}
+<hdr>table th dim</hdr> {
+	<com>color</com>:              <atr>#888</atr>
+}
+
+<com>/* icon view */</com>
+<hdr>listbox</hdr> {
+	<com>border</com>:             <atr>1px solid #aaa</atr>;
+	<com>background</com>:         <atr>white</atr>;
+	<com>padding</com>:            <atr>0.3em</atr>
+}
+<hdr>listbox td label</hdr> {
+	<com>padding</com>:            <atr>0.2em</atr>;
+	<com>text-align</com>:         <atr>center</atr>
+}
+<hdr>listbox td</hdr>:<pse>checked</pse> <hdr>label</hdr> {
+	<com>background-color</com>:   <atr>selback</atr>;
+	<com>color</com>:              <atr>selfore</atr>
+}
+<hdr>listbox thead</hdr> {
+	<com>text-align</com>:         <atr>center</atr>;
+	<com>padding-bottom</com>:     <atr>5px</atr>;
+	<com>border-bottom</com>:      <atr>1px solid black</atr>;
+	<com>font-weight</com>:        <atr>bold</atr>
+}
+</pre>
 
 <p>The first thing you need to be aware, is that both mode are kind of mutually exclusive: you cannot
 switch from one to the other (at least easily), therefore the view mode is (almost) create only.
@@ -5157,15 +5210,15 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
   <li><tt class="dt">SIT_ListBoxFlags</tt> (<tt class="t">int</tt>)
   <p>A bitfield that can be initialized with the following flags:
   <ul>
-    <li><tt class="dt">SITV_SelectMultiple</tt> : mulitple items can be selected by the user. Use
+	<li><tt class="dt">SITV_SelectMultiple</tt> : mulitple items can be selected by the user. Use
 	Ctrl + click to select more of Shift + click to select a group.
-    <li><tt class="dt">SITV_SelectAlways</tt> : always try to keep at least one item selected.
-    <li><tt class="dt">SITV_SelectNone</tt> : display-only list box, no interaction possible.
-    <li><tt class="dt">SITV_NoHeaders</tt> : only meaningful when creating a list box in report view,
+	<li><tt class="dt">SITV_SelectAlways</tt> : always try to keep at least one item selected.
+	<li><tt class="dt">SITV_SelectNone</tt> : display-only list box, no interaction possible.
+	<li><tt class="dt">SITV_NoHeaders</tt> : only meaningful when creating a list box in report view,
 	it will hide the column headers of the list box. Note: you will still have to initialize the column
 	through the <tt>SIT_ColumnNames</tt> properties, but the text width will not influence the width
 	of the columns.
-    <li><tt class="dt">SITV_DoSort</tt> : only works in report view: allow user to click on headers to
+	<li><tt class="dt">SITV_DoSort</tt> : only works in report view: allow user to click on headers to
 	change the sorting of the list box. <span class="n">Note</span>: once a sort column has been set,
 	inserting new items will ignore the row number.
   </ul>
@@ -5233,27 +5286,27 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
 } SIT_OnSort;</pre>
   <p>Where each field will be initialized the following way:
   <ul>
-    <li><tt>item1</tt>, <tt>item2</tt>: the <tt>rowTag</tt> that was given when
-    items were inserted.</li>
-    <li><tt>column</tt>: the 0-based index of the column to sort.
+	<li><tt>item1</tt>, <tt>item2</tt>: the <tt>rowTag</tt> that was given when
+	items were inserted.</li>
+	<li><tt>column</tt>: the 0-based index of the column to sort.
   </ul>
   <p>The return code of the callback has to be from the following set of enums:
   <ul>
-    <li><tt>SIT_SortBefore</tt> (<tt class="o">-1</tt>): <tt>item1</tt> should be before <tt>item2</tt>.
-    <li><tt>SIT_SortEqual</tt> (<tt class="o">0</tt>): <tt>item1</tt> is equal to <tt>item2</tt>.
-    <li><tt>SIT_SortAfter</tt> (<tt class="o">1</tt>): <tt>item1</tt> should be after <tt>item2</tt>.
-    <li><tt>SIT_SortAlpha</tt> (<tt class="o">2</tt>): ask the library to perform a case-insensitive
-    lexicographic ordering based on the current text there is in the cells of each item.
-    <li><tt>SIT_SortBinary</tt> (<tt class="o">3</tt>): like <tt>SIT_SortAlpha</tt>, but do not
-    take case into consideration.
-    <li><tt>SIT_SortNumeric</tt> (<tt class="o">4</tt>): consider the text of each item to be
-    <b>decimal integers</b>, and use them to sort the rows (if you want to sort fractional numbers,
+	<li><tt>SIT_SortBefore</tt> (<tt class="o">-1</tt>): <tt>item1</tt> should be before <tt>item2</tt>.
+	<li><tt>SIT_SortEqual</tt> (<tt class="o">0</tt>): <tt>item1</tt> is equal to <tt>item2</tt>.
+	<li><tt>SIT_SortAfter</tt> (<tt class="o">1</tt>): <tt>item1</tt> should be after <tt>item2</tt>.
+	<li><tt>SIT_SortAlpha</tt> (<tt class="o">2</tt>): ask the library to perform a case-insensitive
+	lexicographic ordering based on the current text there is in the cells of each item.
+	<li><tt>SIT_SortBinary</tt> (<tt class="o">3</tt>): like <tt>SIT_SortAlpha</tt>, but do not
+	take case into consideration.
+	<li><tt>SIT_SortNumeric</tt> (<tt class="o">4</tt>): consider the text of each item to be
+	<b>decimal integers</b>, and use them to sort the rows (if you want to sort fractional numbers,
 	you'll have to do it manually).
-    <li><tt>SIT_SortAlphaNum</tt> (<tt class="o">5</tt>): mix between alpha and numeric, this sorting
-    method is best intended for filenames, where files like these (in lexicographic order):
-    <pre>File1.exe     File10.exe      File2.exe     File40.exe    File5.exe</pre>
-    Will be sorted like this:
-    <pre>File1.exe     File2.exe       File5.exe     File10.exe    File40.exe</pre>
+	<li><tt>SIT_SortAlphaNum</tt> (<tt class="o">5</tt>): mix between alpha and numeric, this sorting
+	method is best intended for filenames, where files like these (in lexicographic order):
+	<pre>File1.exe     File10.exe      File2.exe     File40.exe    File5.exe</pre>
+	Will be sorted like this:
+	<pre>File1.exe     File2.exe       File5.exe     File10.exe    File40.exe</pre>
   </ul>
   <p><span class="n">Note</span>: you do not have to handle the ascending/descending order: this will
   be done automatically for you.
@@ -5265,11 +5318,11 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
   code for each case, using something like this:
   <pre><type>static int</type> OnSortFiles(SIT_Widget w, APTR cd, APTR ud)
 {
-    SIT_OnSort * sort = cd;
-    <type>int</type>          diff = ((FileInfo)sort-&gt;item1)-&gt;ts - ((FileInfo)sort-&gt;item2)-&gt;ts;
-    <kwd>if</kwd> (diff &lt; <val>0</val>) <kwd>return</kwd> -<val>1</val>;
-    <kwd>if</kwd> (diff &gt; <val>0</val>) <kwd>return</kwd>  <val>1</val>;
-    <kwd>return</kwd> <val>0</val>;
+	SIT_OnSort * sort = cd;
+	<type>int</type>          diff = ((FileInfo)sort-&gt;item1)-&gt;ts - ((FileInfo)sort-&gt;item2)-&gt;ts;
+	<kwd>if</kwd> (diff &lt; <val>0</val>) <kwd>return</kwd> -<val>1</val>;
+	<kwd>if</kwd> (diff &gt; <val>0</val>) <kwd>return</kwd>  <val>1</val>;
+	<kwd>return</kwd> <val>0</val>;
 }</pre>
   <p><b>The default behavior</b> for sorting items is <tt>SIT_SortAlpha</tt>.
 </ul>
@@ -5364,9 +5417,9 @@ usually set to 3).
 
 <pre><type>typedef struct</type>
 {
-    <type>int</type>  keycode;  <com>/* Unicode code point [1 - 0x10FFFF] */</com>
-    <type>int</type>  flags;    <com>/* SITK_Flag* */</com>
-    <type>char</type> utf8[<val>6</val>];
+	<type>int</type>  keycode;  <com>/* Unicode code point [1 - 0x10FFFF] */</com>
+	<type>int</type>  flags;    <com>/* SITK_Flag* */</com>
+	<type>char</type> utf8[<val>6</val>];
 }   SIT_OnKey;</pre>
 
 <p><tt>utf8</tt> field will be valid only for <tt>SITE_OnVanillaKey</tt> event, it is a null-terminated
@@ -5420,40 +5473,40 @@ jump to other parts of the document.
 <p>Here are the CSS styles used for the control in the screenshot above:
 
 <pre>
-<span class="h">hscroll, vscroll</span> {
+<hdr>hscroll, vscroll</hdr> {
 	<com>background-color</com>: <atr>#efefef</atr>
 }
-<span class="h">vscroll thumb</span> {
+<hdr>vscroll thumb</hdr> {
 	<com>background</com>:       <atr>url(gripV.png) 50% 50% no-repeat,
 	                  linear-gradient(to right, #f2f2f2, #ebebeb 50%, #dbdbdb 50%, #cfcfcf)</atr>;
 	<com>outline</com>:          <atr>1px #9b9b9b solid -1px</atr>;
 	<com>border-radius</com>:    <atr>2px</atr>
 }
-<span class="h">hscroll thumb</span> {
+<hdr>hscroll thumb</hdr> {
 	<com>background</com>:       <atr>url(grip.png) 50% 50% no-repeat,
 	                  linear-gradient(to bottom, #f2f2f2, #ebebeb 50%, #dbdbdb 50%, #cfcfcf)</atr>;
 	<com>outline</com>:          <atr>1px #9b9b9b solid -1px</atr>;
 	<com>border-radius</com>:    <atr>2px</atr>
 }
-<span class="h">arrow.left</span>:<span class="ps">active</span>,
-<span class="h">arrow.right</span>:<span class="ps">active</span>,
-<span class="h">arrow.down</span>:<span class="ps">active</span>,
-<span class="h">arrow.up</span>:<span class="ps">active</span> {
+<hdr>arrow.left</hdr>:<pse>active</pse>,
+<hdr>arrow.right</hdr>:<pse>active</pse>,
+<hdr>arrow.down</hdr>:<pse>active</pse>,
+<hdr>arrow.up</hdr>:<pse>active</pse> {
 	<com>color</com>:            <atr>#ccc</atr>;
 	<com>background-color</com>: <atr>#444</atr>
 }
-<span class="h">arrow</span> {
+<hdr>arrow</hdr> {
 	<com>background</com>:       <atr>#efefef url("mask:arrowup.png") no-repeat 50% 50%</atr>;
 	<com>background-size</com>:  <atr>50% 50%</atr>;
 	<com>color</com>:            <atr>#666</atr>
 }
-<span class="h">arrow.down</span> {
+<hdr>arrow.down</hdr> {
 	<com>-bg-transform</com>:    <atr>rotate(180deg)</atr>
 }
-<span class="h">arrow.left</span> {
+<hdr>arrow.left</hdr> {
 	<com>-bg-transform</com>:    <atr>rotate(90deg)</atr>
 }
-<span class="h">arrow.right</span> {
+<hdr>arrow.right</hdr> {
 	<com>-bg-transform</com>:    <atr>rotate(-90deg)</atr>
 }
 </pre>
@@ -5511,18 +5564,18 @@ particular integer.
 
 <p>Here are the CSS styles used for this control:
 <pre>
-<span class="h">slider</span> {
+<hdr>slider</hdr> {
 	<com>box-shadow</com>:    <atr>0.1em 0.1em 0.4em #111 inset</atr>;
 }
-<span class="h">slider thumb</span> {
+<hdr>slider thumb</hdr> {
 	<com>border-radius</com>: <atr>2px</atr>;
 	<com>background</com>:    <atr>linear-gradient(to bottom, #f2f2f2, #ebebeb 50%, #dbdbdb 50%, #cfcfcf)</atr>;
 	<com>outline</com>:       <atr>1px #9b9b9b solid -1px</atr>;
 }
-<span class="h">gauge</span> {
+<hdr>gauge</hdr> {
 	<com>background</com>:    <atr>rgba(selback, 0.5)</atr>;
 }
-<span class="h">slider</span>:<span class="ps">kbdfocus</span> {
+<hdr>slider</hdr>:<pse>kbdfocus</pse> {
 	<com>outline</com>:       <atr>2px solid rgba(selback, 0.6)</atr>;
 }
 </pre>
@@ -5573,29 +5626,24 @@ And like scrollbars, <tt>call_data</tt> can be cast to an integer to get the cur
 
 <p>Here are the CSS styles used to produce the control (progress bar only):
 <pre>
-<span class="h">progress</span> {
+<hdr>progress</hdr> {
 	<com>background</com>:     <atr>linear-gradient(to bottom, #f7f7f7, #d9d9d9 50%, #cbcbcb 50%, #d3d3d3)</atr>;
 	<com>vertical-align</com>: <atr>middle</atr>;
 	<com>text-align</com>:     <atr>center</atr>;
 	<com>border</com>:         <atr>1px solid #bbb</atr>;
 	<com>color</com>:          <atr>#777</atr>;
 }
-<span class="h">progress bar</span> {
+<hdr>progress bar</hdr> {
 	<com>background</com>:     <atr>radial-gradient(ellipse, transparent, rgba(#000,0.2)),
 	                linear-gradient(to bottom, #cdffcd, #9cedab 50%, #00d128 50%, #1ce233)</atr>;
 	<com>color</com>:          <atr>white</atr>
 }
 </pre>
 
-<p><b>Notes of interest</b>:
-<ul>
-  <li>The text within the progress bar will be drawn twice: once in the background, and once for the
-  bar itself (clipped to its size). That how a different color for the part that overlaps the bar is
-  achieved.
+<p><b>Point of interest</b>: the text within the progress bar will be drawn twice: once in the background,
+and once for the bar itself (clipped to its size). That how a different color for the text that overlaps
+the bar is achieved.
 
-  <li>The text is vertically centerred using the <tt>vertical-align</tt> property. Otherwise it will
-  appear way too close to the top.
-</ul>
 
 <p>Properties associated with progress bars are not that different from sliders or scroll bars:
 
@@ -5637,70 +5685,89 @@ And like scrollbars, <tt>call_data</tt> can be cast to an integer to get the cur
 
 <h3 id="SIT_TAB"><span>SIT_TAB</span></h3>
 
-<p>Tab controls become handy when your interface grow to the point where it is hard
-to fit everything in one dialog window and where you don't want to use separate
-sub-dialog to present the options to the user:</p>
+<p>Tab controls become handy when your interface grow to the point where it is hard to fit everything
+in one dialog window and where you don't want to use separate sub-dialog to present the options to the
+user:
 
 <div class="image">
   <img src="images/SIT_TAB.png" alt="Single line tab">
 </div>
 
+<p>Here are the styles used for this control:
+<pre>
+<hdr>tab</hdr> {
+	<com>padding</com>:       <atr>5px</atr>;
+	<com>color</com>:         <atr>black</atr>;
+	<com>background</com>:    <atr>white</atr>;
+	<com>border</com>:        <atr>1px solid #898c95</atr>
+}
+<hdr>tab pane</hdr> {
+	<com>background</com>:    <atr>linear-gradient(to bottom, #f2f2f2, #ebebeb 50%, #dbdbdb 50%, #cfcfcf)</atr>;
+	<com>border</com>:        <atr>1px solid #898c95</atr>;
+	<com>border-bottom</com>: <atr>0</atr>;
+	<com>padding</com>:       <atr>3px 10px</atr>;
+	<com>outline</com>:       <atr>1px solid rgba(white, 0.5) -2px</atr>
+}
+<hdr>tab pane</hdr>:<pse>active</pse> {
+	<com>background</com>:    <atr>white</atr>;
+	<com>padding</com>:       <atr>5px 10px</atr>
+}
+</pre>
+
 <p>Placing control within a specific tab, can be done using two methods:</p>
 <ol>
-  <li><b>Automatic</b>: you can use the macro <tt>SITV_TabNum(id,nb)</tt> to
-  set the property <tt>SIT_TabOrder</tt>. Where <tt>id</tt> is the number of
-  the tab you want the control to appear (and be hidden anywhere else). A small
-  inconsistency to the usual 0-based indexing, is that the first tab is
-  numbered 1. 0 is actually a special value, that will be described below.
-  By setting this property, the layout manager will then be able to
-  automatically set the <tt>SIT_Visible</tt> property according to the selected
-  tab.</li>
+  <li><b>Automatic</b>: by setting the property <tt>SIT_TabOrder</tt> to n<sup>nth</sup> tab you want
+  the the control to appear in. <b>Tabs are numbered starting from 1</b>. A small inconsistency to the
+  usual 0-based indexing, because 0 is actually a special value, that will be described below.
 
-  <li><b>Manual</b>: visibility of controls within tab can be manually managed
-  by giving 0 as the id parameter of the <tt>SITV_TabNum</tt> macro (which is
-  the default value when creating controls as children of tabs). This special
-  value means that the control will be visible on all tabs. If you want to
-  hide it, you will have to catch the <tt>SITE_OnChanged</tt> event and
-  reorganized your controls here. A typical use case for this method is when
-  the controls within the tabs are always the same: you usually don't want
-  to duplicate all controls for each tab, you just create them once and adjust
-  their content as the selected tab change, like for example a text editor
-  with a tab to show/select opened files.</li>
+  <p>By setting this property, the layout manager will then be able to automatically set the
+  <tt>SIT_Visible</tt> property according to the selected tab.
+
+  <li><b>Manual</b>: visibility of controls within tab can be manually managed by <b>giving 0 as the
+  parameter for the <tt>SIT_TabOrder</tt> property</b> (which is the default value when creating controls
+  as children of tabs). This special value means that the control will be visible on all tabs. If you
+  want to hide it, you will have to catch the <tt>SITE_OnChanged</tt> event and reorganized your controls
+  here.
+
+  <p>A typical use case for this method is when the controls within the tabs are always the same: you
+  usually don't want to duplicate all controls for each tab, you just create them once and adjust
+  their content as the selected tab change.
 </ol>
 
-<p>It is actually possible to mix both methods: remember that using
-<tt>SITV_TabNum()</tt> macro is only a way to automatically set the <tt>SIT_Visible</tt>
-property.</p>
+<p>It is actually possible to mix both methods: remember that setting <tt>SIT_TabOrder</tt> property
+is only a way to automatically set the <tt>SIT_Visible</tt> attribute on each child controls.
 
-<p>A few more properties are available to manage tabs:</p>
-<dl>
-  <dt><tt>SIT_TabStr</tt> (<tt class="t">STRPTR</tt>)</dt>
-  <dd>Specify the initial list of tabs. It is a tab (ASCII code 9) separated
-  list of names. e.g: <tt class="o">"First&nbsp;tab<spe>\t</spe>Second&nbsp;tab<spe>\t</spe>Third&nbsp;tab"</tt>.
-  </dd>
+<p>A few more properties are available to manage tabs:
+<ul>
+  <li><tt class="dt">SIT_TabStr</tt> (<tt class="t">STRPTR</tt>) <span class="ro">create-only</span>
+  <p>Specify the initial list of tabs. It is a tab (ASCII code 9) separated list of names. e.g:
+  <tt class="o">"First&nbsp;tab<spe>\t</spe>Second&nbsp;tab<spe>\t</spe>Third&nbsp;tab"</tt>.
 
-  <dt><tt>SIT_CurTab</tt> (<tt class="t">int</tt>)</dt>
-  <dd>Get/set the current selected tab (0-based index). Note setting this property
-  won't trigger any <tt>OnChanged</tt> event.</dd>
+  <li><tt class="dt">SIT_TabActive</tt> (<tt class="t">int</tt>)</dt>
+  <p>Get/set the current selected tab (0-based index).
 
-  <dt><tt>SIT_NbTab</tt> (<tt class="t">int</tt>)</dt>
-  <dd>Read-only. Get the number of tabs currently defined in this control.</dd>
-</dl>
+  <li><tt class="dt">SIT_TabCount</tt> (<tt class="t">int</tt>)</dt> <span class="ro">read-only</span>
+  <p>Get the number of tabs currently defined in this control.
 
-<p>To alter the list of tabs, you can also use the specialized function
-<tt>SIT_TabSplice()</tt>. It's prototype is defined like this:</p>
+  <li><tt class="dt">SIT_TabSpace</tt> (<tt class="t">int</tt>)</dt>
+  <p>Define the spacing between tabs (XXX should be done using CSS though).
+</ul>
+
+<p>To alter the list of tabs, you can also use the specialized function <tt>SIT_TabSplice()</tt>. Its
+prototype is defined like this:
+
 <pre><type>void</type> SIT_TabSplice(SIT_Widget w, <type>int</type> pos, <type>int</type> del, ...)</pre>
 
-<p>It works similarly to the javascript <tt>Array.splice()</tt> method: you
-can delete some tabs, starting a given index, then add some other, by specifying
-a NULL-terminated list of strings.</p>
+<p>It works similarly to the javascript <tt>Array.splice()</tt> method: you can delete some tabs, starting
+at a given index, then add some other, by specifying a NULL-terminated list of strings.
 
-<p>The event <tt>SITE_OnChanged</tt> is fired whenever the selected tab changed. The <tt>call_data</tt>
+<p>The event <tt>SITE_OnChange</tt> is fired whenever the selected tab changed. The <tt>call_data</tt>
 can be converted into an integer to get the tab that has been selected (0-based index). Note that
 auto-visibility of chidren controls is also managed through a callback of this type.
 If you register your own callback for this event, do not return <tt class="o">1</tt>, otherwise the auto-visibility
 will not be triggered.</p>
 
+<!--
 <p>You can also trap <tt>SITE_OnClick</tt> to do actions with tabs using other mouse
 buttons. This event works like canvas, but when it is fired, the property
 <tt>SIT_TabInsertAt</tt> (<tt class="t">int</tt>) will be set to the 0-based tab
@@ -5708,49 +5775,125 @@ number where the mouse is over. Note that if the mouse is not over a tab, this e
 will not be fired. If you want to display a popup menu for a given tab, use the event
 <tt>SITE_OnCtxMenu</tt> instead. This event will provide you the coordinates where
 it is best suited to display the popup menu.
+-->
+
 
 <h3 id="SIT_TOOLTIP"><span>SIT_TOOLTIP</span></h3>
 
 <p>Tooltips are usually small popup windows that attempt to provide contextual
 help to the user:
 
-<div class="imgcaption">
+<div class="image">
   <img src="images/SIT_TOOLTIP.png" alt="Tooltip">
 </div>
+
+<p>This tooltip has been styled with the following declarations:
+<pre>
+<hdr>tooltip</hdr> {
+	<com>background</com>:  <atr>#ffffe1</atr>;
+	<com>color</com>:       <atr>black</atr>;
+	<com>padding</com>:     <atr>0.3em</atr>;
+	<com>white-space</com>: <atr>pre</atr>;
+	<com>border</com>:      <atr>1px solid black</atr>;
+	<com>box-shadow</com>:  <atr>3px 3px 4px -4px #333</atr>
+}
+</pre>
 
 <p>Tooltips can be created using two different methods:</p>
 
 <ul>
   <li><strong>Manually</strong>: using a standard <tt>SIT_CreateWidget()</tt> function
   call. That way, you will have access to all the tooltip styles/options, although you
-  will have to do a separate function call, which can be cumbersome to deal with.</li>
+  will have to do a separate function call.
+
   <li><strong>Automatically</strong>: using <tt>SIT_ToolTip</tt> property on the
   control you want to attach the tooltip. This property is actually available on the
   base <tt>SIT_Widget</tt> class, so that it can be used on every kind of control.
   It is a string that will be displayed as the body text of the tooltip. The drawback
-  is that you won't be able to customized its appearance/behavior (it will always
-  use the default style as shown above).</li>
+  is that you won't be able to customized its behavior.
 </ul>
 
-<p>If you decide to create your tooltips manually, you will be able to customize their
-through the property <tt>SIT_Styles</tt>. It is a bit field that can be combined with
-the following values:</p>
+<p>If you decide to create your tooltips manually, you will be able to customize their behavior
+using the following properties:
 
 <ul>
-  <li><tt>SITV_TooltipSquare</tt>: this is the default style, given for completeness.</li>
-  <li><tt>SITV_TooltipBalloon</tt>: tooltips created with this style will have a stem
-  pointing to the middle of the control where the tooltip is attached.</li>
-  <li><tt>SITV_TooltipSticky</tt>: tooltip usually disappears automatically after a
-  certain while. This style will make it stay on screen as long as the user didn't
-  click somewhere.</li>
-  <li><tt>SITV_TooltipHasClose</tt>: include a close button (header and icon must be
-  set though). XXX useless.</li>
+  <li><tt class="dt">SIT_DisplayTime</tt> (<tt class="t">int</tt>)
+  <p>How long the tooltip will be displayed, in <b>milliseconds</b>. Default value is 10,000.
+
+  <li><tt class="dt">SIT_DelayTime</tt> (<tt class="t">int</tt>)
+  <p>How long the mouse needs to be idle over the target for the tooltip to popup, in <b>milliseconds</b>.
+  Default value is 1,000.
+
+  <li><tt class="dt">SIT_ToolTipAnchor</tt>  (<tt class="t">int</tt>)
+  <p>An enumeration that can be assigned to one of the following values:
+  <ul>
+	<li><tt>SITV_TooltipNearParent</tt>: the tooltip will remain at a fixed position near the parent
+	object it has been assigned to. The position will depend on the space available around the control.
+
+	<li><tt>SITV_TooltipFollowMouse</tt>: usually moving the mouse ever so slightly will hide the tooltip
+	immediately. With this style the tooltip will be displayed for as long as it was specified for the
+	property <tt>SIT_DelayTime</tt>, while the position of the tooltip will follow the mouse cursor.
+  </ul>
 </ul>
+
+
+<p>Tooltips <b>can also be controlled manually</b>. For example, if you want to display a tooltip over
+an item that is currently pointed by the user within the scene of your engine, the standard mechanism
+to display them is way too simplistic to be usable.
+
+<p>If you don't want to deal with complicated text layout (and all the boilerplate related to life time
+management), it is still possible to use them in this situation. First, <b>create a tooltip</b>, with
+a sufficiently long delay before popup:
+<pre>
+SIT_Widget tooltip = SIT_CreateWidget(<val>"blockinfo"</val>, SIT_TOOLTIP, app,
+	SIT_ToolTipAnchor, SITV_TooltipFollowMouse,
+	SIT_DelayTime,     <val>360000000</val>,
+	SIT_DisplayTime,   <val>10000</val>,
+	<val>NULL</val>
+);</pre>
+
+<p>Here the delay before poping is set to 100 hours. The tooltip has been created in the root node (ie:
+the one returned by <tt>SIT_Init()</tt>). At this point the tooltip is hidden. <b>If you want it to be
+displayed</b>, you can use the following code:
+
+<pre>SIT_SetValues(tooltip,
+	SIT_Title,       <val>"This is the text of the tooltip."</val>,
+	SIT_Visible,     <val>True</val>,
+	SIT_DisplayTime, SITV_ResetTime,
+	<val>NULL</val>
+);</pre>
+
+<p>The special value <tt>SITV_ResetTime</tt> is to ensure that if this tooltip was already displayed
+somewhere else, the time it will remain on screen will be reset to what was configured at creation.
+
+<p>This code should be executed whenever the <b>object highlighted has changed</b>. It is not advised to run
+it everytime the mouse has moved. The tooltip position will be automatically updated whenever
+you provide mouse events through the <tt>SIT_ProcessMouseMove()</tt> function (and thanks to the
+<tt>SITV_TooltipFollowMouse</tt>).
+
+<p>If there are no objects being pointed, and want to <b>immediately hide the tooltip</b>, simply use the
+following code:
+<pre>
+SIT_SetValues(tooltip, SIT_Visible, <val>False</val>, <val>NULL</val>);
+</pre>
+
+<p>Also keep in mind, that at any given time, <b>only one tooltip can be displayed</b>. This is hardcoded in
+the various event processing functions, that any attempt to display a certain tooltip, will close the
+one currently displayed, if any.
+
 
 
 <h3 id="SIT_HTMLTAG"><span>SIT_HTMLTAG</span></h3>
 
+<p>This is a special type of widget, that do not have any visual output by default. The purpose is to
+reuse some rendering capabilities of <tt>SITGL</tt>, that you would have to redo entirely otherwise,
+like border/background rendering, text layout, ...
 
+<p>In some way this type is very similar to <a href="#SIT_CANVAS">SIT_CANVAS</a>, the main difference
+being that the name of the widget will also be assigned to the tag name (and thus will affect CSS selectors).
+
+<p>Check out the <a href="#annexC">Annex C: Advanced rendering API</a>, for more information on how to
+use this.
 
 
 <h3 id="SIT_FILESELECT"><span>SIT_FILESELECT</span></h3>
@@ -5792,16 +5935,16 @@ cancelled its selection. If confirmed, you can check some properties to know wha
   <li><tt class="dt">SIT_DlgFlags</tt> (<tt class="t">int</tt>)
   <p>Bit field that can be composed of the following flags:
   <ul>
-    <li><tt>SITV_FileSave</tt>: the label of the dialog will reflect a save
-    operation. Otherwise they will reflect a load operation.</li>
+	<li><tt>SITV_FileSave</tt>: the label of the dialog will reflect a save
+	operation. Otherwise they will reflect a load operation.</li>
 
-    <li><tt>SITV_FileMultiSelect</tt>: allow the user to select multiple files.</li>
+	<li><tt>SITV_FileMultiSelect</tt>: allow the user to select multiple files.</li>
 
-    <li><tt>SITV_FileMustExist</tt>: ensure the file exists before returning
-    from the event loop.</li>
+	<li><tt>SITV_FileMustExist</tt>: ensure the file exists before returning
+	from the event loop.</li>
 
-    <li><tt>SITV_FileWarnOverwrite</tt>: warn the user that the selection will
-    be overwritten.</li>
+	<li><tt>SITV_FileWarnOverwrite</tt>: warn the user that the selection will
+	be overwritten.</li>
   </ul>
   </dd>
 </ul>
@@ -5816,32 +5959,32 @@ be appended one after the other (separated by a 0 byte).
 
 <pre><type>int</type> handle_file(SIT_Widget w, <type>APTR</type> cd, <type>APTR</type> ud)
 {
-    <type>static</type> SIT_Widget file;
+	<type>static</type> SIT_Widget file;
 
-    <kwd>if</kwd> (file == <val>NULL</val>)
-        file = SIT_CreateWidget(<val>"fileselect"</val>, SIT_FILESELECT, ud,
-            SIT_Filters,   <val>"C/C++ files<spe>\t</spe>*.c;*.h;*.cpp;*.hpp<spe>\n</spe>"
-                           "Any<spe>\t</spe>*"</val>,
-            SIT_SelFilter, <val>1</val>,
-            SIT_DlgFlags,  SITV_FileMultiSelect | SITV_FileMustExist,
-            <val>NULL</val>
-        );
+	<kwd>if</kwd> (file == <val>NULL</val>)
+		file = SIT_CreateWidget(<val>"fileselect"</val>, SIT_FILESELECT, ud,
+			SIT_Filters,   <val>"C/C++ files<spe>\t</spe>*.c;*.h;*.cpp;*.hpp<spe>\n</spe>"
+			               "Any<spe>\t</spe>*"</val>,
+			SIT_SelFilter, <val>1</val>,
+			SIT_DlgFlags,  SITV_FileMultiSelect | SITV_FileMustExist,
+			<val>NULL</val>
+		);
 
-    <kwd>if</kwd> (SIT_ManageWidget(file))
-    {
-    	<type>STRPTR</type> path;
-	<type>int</type>    nb;
+	<kwd>if</kwd> (SIT_ManageWidget(file))
+	{
+		<type>STRPTR</type> path;
+		<type>int</type>    nb;
 
-        SIT_GetValues(file, SIT_SelPath, &amp;path, SIT_NbSelect, &amp;nb, <val>NULL</val>);
+		SIT_GetValues(file, SIT_SelPath, &amp;path, SIT_NbSelect, &amp;nb, <val>NULL</val>);
 
-        <kwd>while</kwd> (nb &gt; <val>0</val>)
-        {
-            fprintf(<val>stderr</val>, <val>"file selected = <spe>%s\n</val>"</spe>, path);
-            path = strchr(path, <val>0</val>) + <val>1</val>;
-            nb --;
-        }
-    }
-    <kwd>return</kwd> <val>1</val>;
+		<kwd>while</kwd> (nb &gt; <val>0</val>)
+		{
+			fprintf(<val>stderr</val>, <val>"file selected = <spe>%s\n</spe>"</val>, path);
+			path = strchr(path, <val>0</val>) + <val>1</val>;
+			nb --;
+		}
+	}
+	<kwd>return</kwd> <val>1</val>;
 }</pre>
 
 <p>Take note that the control's object has been declared as static, and
@@ -5884,17 +6027,17 @@ be interested to set when creating this kind of control:
 <pre><type>static</type> SIT_Widget dir;
 
 <kwd>if</kwd> (dir == <val>NULL</val>)
-    dir = SIT_CreateWidget(<val>"dirsel"</val>, SIT_DIRSELECT, parent,
-        SIT_Title,    <val>"Select your destination path"</val>,
-        SIT_InitPath, <val>"C:/Projects/SITGL"</val>,
-        <val>NULL</val>
-    );
+	dir = SIT_CreateWidget(<val>"dirsel"</val>, SIT_DIRSELECT, parent,
+		SIT_Title,    <val>"Select your destination path"</val>,
+		SIT_InitPath, <val>"C:/Projects/SITGL"</val>,
+		<val>NULL</val>
+	);
 
 <kwd>if</kwd> (SIT_ManageWidget(dir))
 {
-    <type>STRPTR</type> path;
-    SIT_GetValues(dir, SIT_InitPath, &amp;path, <val>NULL</val>);
-    fprintf(<val>stderr</val>, <val>"path selected = <spe>%s\n</spe>"</val>, path);
+	<type>STRPTR</type> path;
+	SIT_GetValues(dir, SIT_InitPath, &amp;path, <val>NULL</val>);
+	fprintf(<val>stderr</val>, <val>"path selected = <spe>%s\n</spe>"</val>, path);
 }</pre>
 
 <p>Note that although the <tt>SIT_InitPath</tt> has been initialized with
@@ -5903,26 +6046,63 @@ will use backslash instead.</p>
 
 <h2 id="miscfunc">Miscellaneous functions</h2>
 
+<p>There are a few functions that will be useful for your application at some point and that have not
+been mentionned so far in this document:
+
 <ul>
   <li><tt class="dt">SIT_Widget SIT_GetFocus(void);</tt>,<br>
-      <tt class="dt">void       SIT_SetFocus(SIT_Widget);</tt>
+	  <tt class="dt">void       SIT_SetFocus(SIT_Widget);</tt>
   <p>Use these functions to set or get the widget that has the keyboard focus. Typical use case: if
   your dialog has a single text edit, you might want to set the keyboard focus here.
 
   <li><tt class="dt">void SIT_Exit(int code);</tt>
-  <p>
+  <p>Initiate a graceful exit. Obviously, you will have to setup the <a href="#SIT_ExitCode"><tt>SIT_ExitCode</tt></a>
+  property in order to catch the this, otherwise this function is mostly useless.
 
   <li><tt class="dt">void SIT_Log(int level, STRPTR fmt, ...);</tt>
-  <p>
+  <p>This function will display a message in a <b>separate window</b> (from the operating system).
+  This function can actually be called very early, even before the <tt>SITGL</tt> has been initialized.
+  That's actually the main purpose of this function: notify the user of problems before you can display
+  them on screen. Once <tt>SITGL</tt> has been initialized, it is advised to display within the
+  application.
 
-  <li><tt class="dt">STRPTR SIT_GetFromClipboard(STRPTR type, int * size);</tt>
-  <p>
+  <p><tt>level</tt> can be one of the following values:
+  <ul>
+	<li><tt>SIT_CRITICAL</tt>: unrecoverable error happened, <tt>SITGL</tt> will then perform a non-graceful
+	exit after (ie: shader compilation failed).
+	<li><tt>SIT_ERROR</tt>: an error, but recoverable (typical: file being asked is not found).
+	<li><tt>SIT_INFO</tt>: not necessarily an error, but might be important enough to notify the user,
+	so that it can fix it later.
+  </ul>
+
+  <p><tt>fmt</tt> can a printf-like format strings, with potential aguments following.
+
+
+  <li><tt class="dt">STRPTR SIT_GetFromClipboard(int * size);</tt>
+  <p>Try to retrieve the text currently stored in the clipboard. The returned string will always be
+  <tt class="o">NULL</tt>-terminated and UTF-8 encoded, unless the clipboard did not contain any
+  textual information. In that case <tt class="o">NULL</tt> will be returned.
+  
+  <p><b>The string will be dynamicly allocated</b>, and you'll have to free it yourself when not
+  needed anymore. On Windows, if you are using the same runtime than <tt>SITGL</tt>, you can use
+  the standard <tt>free()</tt> function, if unsure, use <tt>SIT_Free()</tt>.
+
+  <p><tt>size</tt> is the size in bytes of buffer returned (including the final NUL byte). This
+  parameter can be <tt class="o">NULL</tt> if you don't care about this.
+
 
   <li><tt class="dt">Bool SIT_CopyToClipboard(STRPTR text, int size);</tt>
-  <p>
+  <p>Copy the supplied UTF-8 text into the clipboard. A copy of the text will be made. <tt>size</tt>
+  is the amount of bytes you want to copy from the string. You can specify <tt class="o">-1</tt> to
+  copy everything up to the NUL byte.
 
   <li><tt class="dt">void SIT_Free(APTR pointer);</tt>
-  <p>
+  <p>Memory management within <tt>SITGL</tt> has been carefully crafted so that explicitly freeing
+  memory is reduced to the absolute minimum. There are a few functions that have to return dynamicly
+  allocated resources and where the lifetime of those resources are not in the control of <tt>SITGL</tt>.
+  For these cases, you'll have to free the resources yourself using this method.
+
+  <p>As of writing this, all the resources dynamicly allocated are strings.
 
 </ul>
 
@@ -6119,23 +6299,23 @@ the main header <tt>SIT.h</tt>:</p>
 
 <pre><type>struct</type> LocaleInfo_t        <com>// Example:</com>
 {
-    STRPTR nlsLang;        <com>// Fran&ccedil;ais</com>
-    STRPTR nlsCountry;     <com>// France</com>
-    STRPTR engLang;        <com>// French</com>
-    STRPTR engCountry;     <com>// France</com>
-    STRPTR iso3166;        <com>// FR_fr</com>
-    STRPTR currency;       <com>// &euro;</com>
-    STRPTR currencyName;   <com>// Euro</com>
-    STRPTR currencyCode;   <com>// EUR</com>
-    STRPTR shortDate;      <com>// dd/MM/yyyy</com>
-    STRPTR longDate;       <com>// dddd d MMMM yyyy</com>
-    STRPTR decimalSep;     <com>// ,</com>
-    STRPTR months[<val>12</val>];     <com>// janvier, f&eacute;vrier, ...</com>
-    STRPTR abbrMonths[<val>12</val>]; <com>// janv., f&eacute;vr., ...</com>
-    STRPTR weekDays[<val>7</val>];    <com>// lundi, mardi, ...</com>
-    STRPTR abbrWeek[<val>7</val>];    <com>// lun., mar., mer., ...</com>
-    STRPTR langCode;       <com>// 040C</com>
-    STRPTR intlPrefix;     <com>// 33</com>
+	STRPTR nlsLang;        <com>// Fran&ccedil;ais</com>
+	STRPTR nlsCountry;     <com>// France</com>
+	STRPTR engLang;        <com>// French</com>
+	STRPTR engCountry;     <com>// France</com>
+	STRPTR iso3166;        <com>// FR_fr</com>
+	STRPTR currency;       <com>// &euro;</com>
+	STRPTR currencyName;   <com>// Euro</com>
+	STRPTR currencyCode;   <com>// EUR</com>
+	STRPTR shortDate;      <com>// dd/MM/yyyy</com>
+	STRPTR longDate;       <com>// dddd d MMMM yyyy</com>
+	STRPTR decimalSep;     <com>// ,</com>
+	STRPTR months[<val>12</val>];     <com>// janvier, f&eacute;vrier, ...</com>
+	STRPTR abbrMonths[<val>12</val>]; <com>// janv., f&eacute;vr., ...</com>
+	STRPTR weekDays[<val>7</val>];    <com>// lundi, mardi, ...</com>
+	STRPTR abbrWeek[<val>7</val>];    <com>// lun., mar., mer., ...</com>
+	STRPTR langCode;       <com>// 040C</com>
+	STRPTR intlPrefix;     <com>// 33</com>
 };
 </pre>
 
@@ -6304,20 +6484,20 @@ translated. A typical example would be menu structure:</p>
 
 <pre><type>static</type> SIT_MenuStruct menu[] =
 {
-    {<val>1</val>, <val>"&amp;Game"</val>},
-        {<val>2</val>, <val>"&amp;Start"</val>,    <val>"N"</val>, <val>0</val>, <val>101</val>},
-        {<val>2</val>, <val>"S&amp;ettings"</val>},
-            {<val>3</val>, <val>"Easy"</val>,      <val>NULL</val>, SITM_Toggle(<val>103</val>) | SITM_Checked, <val>102</val>},
-            {<val>3</val>, <val>"Normal"</val>,    <val>NULL</val>, SITM_Toggle(<val>104</val>), <val>103</val>},
-            {<val>3</val>, <val>"Expert"</val>,    <val>NULL</val>, SITM_Toggle(<val>105</val>), <val>104</val>},
-            {<val>3</val>, <val>"Custom..."</val>, <val>"C"</val>, <val>0</val>, <val>105</val>},
-        {<val>2</val>, <val>"&amp;Auto discover"</val>},
-            {<val>3</val>, <val>"Empty cells only"</val>, <val>NULL</val>, SITM_Toggle(<val>1081</val>), <val>1080</val>},
-            {<val>3</val>, <val>"Obvious flags"</val>,    <val>NULL</val>, SITM_Checked, <val>1081</val>},
-        {<val>2</val>, <val>"S&amp;cores..."</val>, <val>"H"</val>, SITM_Disabled, <val>106</val>},
-        {<val>2</val>, SITM_SEPARATOR},
-        {<val>2</val>, <val>"E&amp;xit"</val>,     <val>"Q"</val>,  <val>0</val>, <val>107</val>},
-    {<val>0</val>}
+	{<val>1</val>, <val>"&amp;Game"</val>},
+		{<val>2</val>, <val>"&amp;Start"</val>,    <val>"N"</val>, <val>0</val>, <val>101</val>},
+		{<val>2</val>, <val>"S&amp;ettings"</val>},
+			{<val>3</val>, <val>"Easy"</val>,      <val>NULL</val>, SITM_Toggle(<val>103</val>) | SITM_Checked, <val>102</val>},
+			{<val>3</val>, <val>"Normal"</val>,    <val>NULL</val>, SITM_Toggle(<val>104</val>), <val>103</val>},
+			{<val>3</val>, <val>"Expert"</val>,    <val>NULL</val>, SITM_Toggle(<val>105</val>), <val>104</val>},
+			{<val>3</val>, <val>"Custom..."</val>, <val>"C"</val>, <val>0</val>, <val>105</val>},
+		{<val>2</val>, <val>"&amp;Auto discover"</val>},
+			{<val>3</val>, <val>"Empty cells only"</val>, <val>NULL</val>, SITM_Toggle(<val>1081</val>), <val>1080</val>},
+			{<val>3</val>, <val>"Obvious flags"</val>,    <val>NULL</val>, SITM_Checked, <val>1081</val>},
+		{<val>2</val>, <val>"S&amp;cores..."</val>, <val>"H"</val>, SITM_Disabled, <val>106</val>},
+		{<val>2</val>, SITM_SEPARATOR},
+		{<val>2</val>, <val>"E&amp;xit"</val>,     <val>"Q"</val>,  <val>0</val>, <val>107</val>},
+	{<val>0</val>}
 };</pre>
 
 <p>The items of such tables cannot be enclosed by <tt>_()</tt>, in order to
@@ -6576,9 +6756,9 @@ are straightforward, but here is the complete list:
   <li><tt class="dt">ULONG TimeStamp(STRPTR path, int type);</tt>
   <p>Return <b>various date</b> from the given path as a timestamp, depending on what value was given to <tt>type</tt>:
   <ul>
-    <li><tt>0</tt>: creation time.
-    <li><tt>1</tt>: access time (value might not be accurate though, depending on the file system).
-    <li><tt>2</tt>: modification time.
+	<li><tt>0</tt>: creation time.
+	<li><tt>1</tt>: access time (value might not be accurate though, depending on the file system).
+	<li><tt>2</tt>: modification time.
   </ul>
   <p>Return value will be number of seconds since the unix epoch (Jan 1, 1970).
 
@@ -6592,7 +6772,7 @@ are straightforward, but here is the complete list:
   
   <p><tt>timeout</tt> can have the following values:
   <ul>
-    <li><tt>-2</tt>: don't wait for the command to finish, return immediately.
+	<li><tt>-2</tt>: don't wait for the command to finish, return immediately.
 	<li><tt>-1</tt>: wait forever.
 	<li>&gt; 0: wait the specified amount of <b>millisecond</b>. If the command hasn't finish by then, it
 	will be forcibly terminated.
@@ -6644,7 +6824,7 @@ are straightforward, but here is the complete list:
   file handle before using this function.
 
   <li><tt class="dt">STRPTR ExpandEnvVar(STRPTR str);</tt>,<br>
-      <tt class="dt">void ExpandEnvVarBuf(STRPTR str, STRPTR utf8, int max);</tt>
+	  <tt class="dt">void ExpandEnvVarBuf(STRPTR str, STRPTR utf8, int max);</tt>
   <p><b>Expand environment variables</b> within <tt>str</tt> to their actual value. The syntax for variable
   names must be <tt>%<em>varname</em>%</tt>. Names are not case sensitive, on Windows at least.
 
@@ -6666,7 +6846,7 @@ are straightforward, but here is the complete list:
   prevent including stdio header from <tt>UtilityLibLite.h</tt>.
 
   <li><tt class="dt">void GetErrorMsg(int code, STRPTR buffer, int max);</tt>,<br>
-      <tt class="dt">int GetErrorCode(void);</tt>,<br>
+	  <tt class="dt">int GetErrorCode(void);</tt>,<br>
 	  <tt class="dt">STRPTR GetError(void);</tt>
   <p>If an error occur with any of the DOS function, you can get a <b>more detailed reason</b> using one of
   these functions. <tt>GetErrorMsg()</tt> will require you to allocate the memory to hold the message,
@@ -6719,8 +6899,8 @@ with this topic in much more depth, than what is explained in here.
   variable is only read, no need to protect the access.
   
   <li><tt class="dt">void MutexEnter(Mutex);</tt>,<br>
-      <tt class="dt">void MutexLeave(Mutex);</tt>,<br>
-      <tt class="dt">Bool MutexTryEnter(Mutex);</tt>
+	  <tt class="dt">void MutexLeave(Mutex);</tt>,<br>
+	  <tt class="dt">Bool MutexTryEnter(Mutex);</tt>
   <p>Enter/leave a critical section. Be careful that every call to <tt>MutexEnter()</tt> or
   <tt>MutexTryEnter()</tt> is followed by a <tt>MutexLeave()</tt>, otherwise every subsequent thread
   that will attempt to enter the section will block indefinitely. If a mutex is currently locked,
@@ -6747,7 +6927,7 @@ with this topic in much more depth, than what is explained in here.
   quite common, a standard interface will spare you the hassle of writing that logic.
 
   <li><tt class="dt">Bool SemWait(Semaphore);</tt>,<br>
-      <tt class="dt">Bool SemWaitTimeout(Semaphore, ULONG ms);</tt>
+	  <tt class="dt">Bool SemWaitTimeout(Semaphore, ULONG ms);</tt>
   <p>Attempt to grab one resource from the semaphore. Will decrease the internal count by 1. If the
   count is zero, it will wait indefinitely. To prevent this, you can use the <tt>SemWaitTimeout()</tt>
   to periodically check if the thread need to exit prematurely.
@@ -6788,6 +6968,16 @@ API.
   should be at least 1 microsecond. The origin of the epoch is when <tt>SIT_Init()</tt> was called
   (it is not from an arbitrary fixed point in time).
 
+  <li><tt class="dt">void FramePauseUnpause(Bool pause);</tt>
+  <p>If you have to implement a pause menu, you'll need to ignore the time spent while the engine
+  is paused, otherwise any actions based on time interval will be messed up. The idea is to call this
+  function with the pause paramter set to <tt class="o">True</tt> at the start of the pause, then set
+  to <tt class="o">False</tt> at the end. That way, the <tt>FrameGetTime()</tt> function will return
+  an (almost) monotonic increase of the time, without any gap, as if the pause never happened.
+
+  <p>While pause is on, the <tt>FrameGetTime()</tt> will always report the same value. <tt>FrameWaitNext()</tt>
+  will work as normal though.
+
 </ul>
 
 <h3 class="annex" id="utility"><span>Utility functions</span></h3>
@@ -6816,7 +7006,7 @@ API.
   <p>The purpose of this function is to build a more complex string in pieces, concatenating each one,
   using a fixed size buffer, while ensuring there will be no buffer overflow. The arguments work as follows:
   <ul>
-    <li><tt>dest</tt>: must <b>always</b> point to the start of the fixed size buffer.
+	<li><tt>dest</tt>: must <b>always</b> point to the start of the fixed size buffer.
 	<li><tt>max</tt>: how many <b>bytes</b> fits in this buffer. Usually should be the result of a sizeof operator.
 	<li><tt>pos</tt>: position where to start looking for the end of <tt>&lt;dest&gt;</tt>. Usually,
 	this is the value returned by a previous call of this function. If you do not care to track that
@@ -6844,7 +7034,7 @@ API.
 
   <p>Here are a few examples of how this function works:
   <ul>
-    <li><tt>FindInList(<val>"aaa,aa,a"</val>, <val>"aa"</val>, <val>0</val>);</tt>: will return 1: words are matched fully.
+	<li><tt>FindInList(<val>"aaa,aa,a"</val>, <val>"aa"</val>, <val>0</val>);</tt>: will return 1: only whole words are matched.
 	<li><tt>FindInList(<val>"STR,URI,POS,INT,COLOR"</val>, <val>"POS POS POS COLOR"</val>, <val>3</val>);</tt>: will return 2: only the
 	first 3 characters from the word will be matched against the word list.
   </ul>
@@ -6919,19 +7109,19 @@ identical:
 
 <ul>
   <li><tt class="dt">INIFile ParseINI(STRPTR file);</tt>,<br>
-      <tt class="dt">INIFile ParseINIStr(STRPTR buf);</tt>
+	  <tt class="dt">INIFile ParseINIStr(STRPTR buf);</tt>
   <p>Parse an INI file using a UTF-8 encoded path or a memory buffer already having the entire content
   of the file. That buffer must be <val>0</val>-terminated, modifiable and have a lifespan
   that equals at least the INI object.
 
   <li><tt class="dt">STRPTR GetINIValue(INIFile, STRPTR section);</tt>,<br>
-      <tt class="dt">STRPTR GetINIValueStr(INIFile ini, STRPTR key, STRPTR def);</tt>,<br>
-      <tt class="dt">int    GetINIValueInt(INIFile ini, STRPTR key, int def);</tt>
+	  <tt class="dt">STRPTR GetINIValueStr(INIFile ini, STRPTR key, STRPTR def);</tt>,<br>
+	  <tt class="dt">int    GetINIValueInt(INIFile ini, STRPTR key, int def);</tt>
   <p>Get value value associated to key in the given ini file. Key can preceded by section name,
   separated by /, for example: <tt class="o">"Section1/Key1"</tt>.
 
   <li><tt class="dt">Bool SetINIValue(STRPTR path, STRPTR key, STRPTR val);</tt>,<br>
-      <tt class="dt">Bool SetINIValueInt(STRPTR path, STRPTR key, int val);</tt>
+	  <tt class="dt">Bool SetINIValueInt(STRPTR path, STRPTR key, int val);</tt>
   <p>These functions will modify value of given key, or add it if it does not exist. "key" can have
   the same syntax than <tt>GetINIValue()</tt>. If the section is also missing, it will be added as well
   (at the end).
@@ -7005,6 +7195,21 @@ In order to not overwrite elements, you'll need some help from this library to k
 to render your graphics.
 
 <h3 class="annex" id="composite"><span>Composited rendering</span></h3>
+
+<p>The first step to achieve this is to mark elements that will be rendered over outside of <tt>SITGL</tt>
+control as composited. You do this by assigning a positive integer to the property <tt>SIT_Composited</tt>.
+This integer has to be managed on your side. It will be given back when it is safe to render over this
+particular area. Consider the following example:
+
+<div class="image">
+  <img src="images/SIT_Composited.png">
+</div>
+
+<p>Here the grid is actually a single <tt>SIT_CANVAS</tt> widget, where a single cell using an inset
+border was copied to give the illusion of grid like pattern. Inside each cell, were graphics rendered
+using OpenGL commands, completely outside of <tt>SITGL</tt> control. On top of all this, a tooltip
+(managed by <tt>SITGL</tt>) was finally rendered (if you zoom in this image, you can also see that the
+tooltip background is partially transparent).
 
 </div>
 </body>
