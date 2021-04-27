@@ -302,6 +302,7 @@ struct SIT_ListBox_t
 {
 	SIT_Widget_t super;
 	SIT_Widget   td, tdSel, thead;
+	SIT_CallProc cellPaint;            /* public: SG */
 	int          lbFlags;              /* public: SG */
 	int          rowCount;
 	int          sortColumn;           /* public: SG */
@@ -309,7 +310,6 @@ struct SIT_ListBox_t
 	int          viewMode;             /* public: SG */
 	int          selIndex;             /* public: SG */
 	int          curRow;               /* public: G */
-	int          rowVisible;           /* public: G */
 	int          softColumn;
 	int          recalcCell;
 	uint16_t     msgX, msgY;           /* mousemove */

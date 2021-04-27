@@ -134,6 +134,9 @@ static int SIT_TextEditFinalize(SIT_Widget w, APTR cd, APTR ud)
 		/* prevent password being kept in unused memory chunks */
 		memset(edit->text, 0, edit->maxText);
 	}
+	if (edit->caretBlink)
+		SIT_ActionReschedule(edit->caretBlink, -1, -1);
+
 	if ((edit->flags & FLAG_FIXEDSIZE) == 0)
 		free(edit->text);
 	if (edit->maxLines == 0)
@@ -145,7 +148,13 @@ static int SIT_TextEditFinalize(SIT_Widget w, APTR cd, APTR ud)
 static int SIT_TextEditSetCursor(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_EditBox edit = (SIT_EditBox) w;
-	edit->cursor = edit->flags & FLAG_SETEND ? edit->selEnd : edit->selStart;
+	switch (edit->flags & (FLAG_SETEND | FLAG_SETSTART)) {
+	case 0:             return 0;
+	case FLAG_SETEND:   edit->cursor = edit->selStart = edit->selEnd; break;
+	case FLAG_SETSTART: edit->cursor = edit->selEnd = edit->selStart; break;
+	default:            edit->cursor = edit->selEnd;
+	}
+	edit->flags &= ~(FLAG_SETEND | FLAG_SETSTART);
 	SIT_TextEditMakeCursorVisible(edit);
 	return 1;
 }
@@ -164,7 +173,7 @@ static int SIT_TextEditSetValue(SIT_Widget w, APTR call_data, APTR user_data)
 		pos = val->integer;
 		if (pos < 0) pos = 0;
 		if (pos > edit->length) pos = edit->length;
-		if (pos != *cur)
+//		if (pos != *cur)
 		{
 			*cur = pos;
 			edit->flags |= tag->tl_TagID == SIT_EndSel ? FLAG_SETEND : FLAG_SETSTART;
@@ -301,6 +310,7 @@ static void SIT_TextEditRefreshCaret(SIT_EditBox edit)
 		SIT_ActionReschedule(edit->caretBlink, sit.curTime + sit.caretBlinkMS, sit.curTime + 1e6);
 }
 
+/* SITE_OnBlur/SITE_OnFocus */
 static int SIT_TextEditDirty(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_EditBox edit = (SIT_EditBox) w;
@@ -1181,10 +1191,6 @@ static void SIT_TextEditDeleteChars(SIT_EditBox state, int pos, int nb)
 		if (state->rowCount == 0)
 			state->rowCount = 1, memset(state->rows, 0, sizeof *rows);
 	}
-
-	/* notify user if required */
-	if (HAS_EVT(&state->super, SITE_OnChange))
-		SIT_ApplyCallback(&state->super, state->text, SITE_OnChange);
 }
 
 #define MAX_LINES    256
@@ -1257,9 +1263,6 @@ static int SIT_TextEditInsertChars(SIT_EditBox state, int pos, char * text, int 
 		*eof = 0;
 		if (state->editType >= SITV_Integer)
 			state->value.step = INVALID_STEP;
-
-		if (HAS_EVT(&state->super, SITE_OnChange))
-			SIT_ApplyCallback(&state->super, state->text, SITE_OnChange);
 	}
 	else /* used by resize: only recalc line pointers */
 	{
@@ -1879,6 +1882,8 @@ static int SIT_TextEditPaste(SIT_EditBox state, DATA8 text, int len)
 		state->hasPreferredX = 0;
 		SIT_TextEditMakeCursorVisible(state);
 		if (editLen > 4096) free(text);
+		if (HAS_EVT(&state->super, SITE_OnChange))
+			SIT_ApplyCallback(&state->super, state->text, SITE_OnChange);
 		return 1;
 	}
 	if (editLen > 4096) free(text);
@@ -2066,6 +2071,8 @@ int SIT_TextEditInsertText(SIT_EditBox state, DATA8 utf8)
 		SIT_TextEditMakeCursorVisible(state);
 	if (top != state->rowTop || num != state->rowCount)
 		SIT_TextEditAdjustScroll(state);
+	if (HAS_EVT(&state->super, SITE_OnChange))
+		SIT_ApplyCallback(&state->super, state->text, SITE_OnChange);
 	sit.dirty = True;
 	return True;
 }
@@ -2109,7 +2116,11 @@ int SIT_TextEditKey(SIT_EditBox state, int key)
 			int s2 = state->selEnd;
 			if (s1 > s2) swap(s1, s2);
 			if (SIT_CopyToClipboard(state->text + s1, s2 - s1) && key == 24)
+			{
 				SIT_TextEditDeleteSelect(state), sit.dirty = True;
+				if (HAS_EVT(&state->super, SITE_OnChange))
+					SIT_ApplyCallback(&state->super, state->text, SITE_OnChange);
+			}
 		}
 		break;
 	case 22: /* Ctrl+V: paste */
@@ -2292,6 +2303,9 @@ int SIT_TextEditKey(SIT_EditBox state, int key)
 			}
 		}
 		else SIT_TextEditDeleteSelect(state), sit.dirty = True;
+
+		if (sit.dirty && HAS_EVT(&state->super, SITE_OnChange))
+			SIT_ApplyCallback(&state->super, state->text, SITE_OnChange);
 		pos = state->cursor;
 		break;
 
@@ -2317,6 +2331,9 @@ int SIT_TextEditKey(SIT_EditBox state, int key)
 			}
 		}
 		else SIT_TextEditDeleteSelect(state), sit.dirty = True;
+
+		if (sit.dirty && HAS_EVT(&state->super, SITE_OnChange))
+			SIT_ApplyCallback(&state->super, state->text, SITE_OnChange);
 		pos = state->cursor;
 		break;
 
@@ -2326,8 +2343,7 @@ int SIT_TextEditKey(SIT_EditBox state, int key)
 		break;
 
 	case SITK_End | SITK_FlagCtrl:
-		state->cursor = state->length;
-		state->selStart = state->selEnd = 0;
+		state->cursor = state->selStart = state->selEnd = state->length;
 		state->hasPreferredX = 0;
 		break;
 
@@ -2682,4 +2698,6 @@ static void SIT_TextEditUndoRedo(SIT_EditBox state, int redo)
 			}
 		}
 	}
+	if (HAS_EVT(&state->super, SITE_OnChange))
+		SIT_ApplyCallback(&state->super, state->text, SITE_OnChange);
 }

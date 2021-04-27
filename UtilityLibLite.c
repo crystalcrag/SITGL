@@ -232,7 +232,7 @@ DLLIMP Bool ParentDir(STRPTR dir)
 	STRPTR p = strchr(dir, 0) - 1;
 
 	/* Ignore final slash */
-	if (p > dir && *p != '/' && *p != '\\') p --;
+	if (p > dir && (*p == '/' || *p == '\\')) p --;
 
 	while (p > dir && *p != '/' && *p != '\\') p --;
 

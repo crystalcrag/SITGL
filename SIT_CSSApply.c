@@ -1757,10 +1757,13 @@ CSSImage cssAddGradient(Gradient * grad, int w, int h, REAL fh)
 	struct CSSImage_t init = {.width = w, .height = h, .bpp = 32};
 	CSSImage img;
 	uint32_t crc;
+	int      old = grad->wxh;
 
 	/* linear gradients use a smaller bitmap than radial */
 	gradientGetParam(&init, grad);
+	grad->wxh = 0;
 	crc = crc32(crc32(0, (DATA8) &init.width, 2*sizeof (int)), (DATA8) grad, sizeof *grad);
+	grad->wxh = old;
 
 	for (img = HEAD(sit.images); img && img->crc32 != crc; NEXT(img));
 

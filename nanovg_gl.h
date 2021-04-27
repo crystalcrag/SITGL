@@ -621,8 +621,13 @@ static int glnvg__renderCreate(void* uptr)
 		"	if (type == 0) {			// Gradient\n"
 		"		// Calculate gradient color using box gradient\n"
 		"		vec2 pt = (paintMat * vec3(fpos,1.0)).xy;\n"
+		#if 1
+		"		float d = sin(clamp((sdroundrect(pt, extent, radius) + feather*0.5) / feather, 0.0, 1.0) * (3.1415926535/2));\n"
+		"		vec4 color = mix(innerCol, outerCol, d*d);\n"
+		#else
 		"		float d = clamp((sdroundrect(pt, extent, radius) + feather*0.5) / feather, 0.0, 1.0);\n"
 		"		vec4 color = mix(innerCol, outerCol, d);\n"
+		#endif
 		"		// Combine alpha\n"
 		"		color *= strokeAlpha * scissor;\n"
 		"		result = color;\n"

@@ -155,7 +155,7 @@ and decent knowledge adout <a href="https://www.w3.org/TR/CSS22/">CSS</a>.
 
 <h2 id="introduction">Introduction</h2>
 
-<p><span class="lettrine">W</span>elcome to <b>SITGL programmer's manual</b>, a comprehensive
+<p>Welcome to <b>SITGL programmer's manual</b>, a comprehensive
 guide through the Simple Interface Toolkit OpenGL edition: a simple framework to build
 graphical user interface that will be rendered using OpenGL.
 
@@ -197,16 +197,20 @@ controls.
 <p class="note">This part can be skipped for those who would like to dive directly in this framework.
 It will explain how this library came into birth.
 
-<p>As it is often the case with these projects, it usually starts by having a need for a certain
-feature in an application (in this case: adding a user interface on top of an OpenGL application),
-you look around the market for what's available, only to realize that most of the usual frameworks
-<b>don't match the compromises you want</b>: small footprint, ease of integration and productivity.
+<p>As it is often the case with these projects, it usually starts with a need to add an user interface
+on top of an OpenGL application. For something as mundane, you might think that there would a lot of
+choices to choose from. But there were 3 aspects that were critical in my eyes, to consider using any
+potential solution: <b>productivity</b>, <b>ease of integration</b> and <b>small footprint</b> (around
+300K). One aspect that I could live by if it were not that optimal, was performance.
 
-<p>Having spent a decent chunk of my career developing user interfaces, I was fortunate enough
-to have a pretty good understanding of what's needed to make a good user interface library, while
-having lots of <b>basic building blocks</b> scattered around (layout routines, drawing,
-event system, documentation, ...). At this point I thought: why not gather all those blocks into
-a single library?
+<p>Having spent a decent chunk of my career developing user interfaces, I was particularly aware of how
+much of a drag, a poorly designed API can be on your productivity. Designing a decent user-interface
+is already a complex and not particlarly fun process, the last thing you want on top of that is fighting
+against the API.
+
+<p>During these years, I had time to developped a lot of <b>basic building blocks</b> (layout routines,
+drawing, event system, documentation, ...) related to user interface. At this point I thought: why not
+gather all those blocks into a single library?
 
 <p><b>Among those blocks</b> were SIT: the Simple Interface Toolkit, which, to this day, I still use and
 where the "Simple" of its name is not just an empty word: among all the user interface libraries I
@@ -226,8 +230,7 @@ effort, and to add insult to injury, all those efforts would not have been porta
 <p><b>Another huge building block</b> I had laying around was a nearly complete library used to parse
 HTML 5/CSS 2.1, and produce PDF documents based on the CSS Paged media specification. This library
 did not support HTML form elements, but I thought this part would be simple enough, that it would
-take little to no time to implement most of the form elements (and for once, my estimate were mostly
-correct).
+take little to no time to implement most of the form elements.
 
 <p>This library definitively wasn't a toy: it has been used (and still is as of writing this) on some
 production server to generate hundreds of not-so-trivial PDF documents every day. After hacking this
@@ -358,8 +361,8 @@ it must be freed by the same runtime</b>.
 
 <h2 id="gettingstarted">Getting started</h2>
 
-<p><span class="lettrine">T</span>his section will present a broad overview of
-the framework look'n feel and how to setup your tool chain to get started.
+<p>This section will present a broad overview of the framework look'n feel and how to setup your tool
+chain to get started.
 
 <p>Like stated in the introduction, this library is usually only a tiny component of a whole application.
 <b>Its purpose is to draw controls</b> and make interaction with those controls possible with the mouse and/or
@@ -477,7 +480,7 @@ look like, here using the SDL1 framework:
 }</pre>
 
 <p><b>This example might seem overwhelming at first</b>, but don't worry, everything will be eventually
-explained in this document. To compile this program, you'll either have to compile the <tt>SITGL.dll</tt> library
+explained in this document. To compile this program, you'll have to either compile the <tt>SITGL.dll</tt> library
 by yourself or use a pre-compiled binary package (recommended).
 
 <p>Then to get a binary from this source, it can be simply done by using the following command
@@ -551,13 +554,8 @@ an existing application, whenever something change in the engine, the user inter
 refreshed too.
 
 <p>That being said, even if there is nothing to update on the screen, the main loop must still be running.
-That's the purpose of the <tt>SDL_PushTicks()</tt> function: a crude mechanism to send some events to
-the main loop at regular intervals. It is using <tt>SDL_Timer</tt> for this, which don't have a very
-high precision, but for an example like this, it is largely enough.
-
-<p>Keep in mind that some actions made by user will trigger animations: if you use a blocking event
-loop, the animation will stop, until some events are generated (key pressed, mouse moved, ...): this
-is usually not what you want.
+Because some actions made by user will trigger animations: if you use a blocking event loop, the animation
+will stop, until some events are generated (key pressed, mouse moved, ...): this is usually not what you want.
 
 <h3 id="entry"><span>Entry point</span></h3>
 
@@ -662,10 +660,10 @@ building complex user-interface will not require that much effort from this poin
 <h3 id="compiling"><span>Compiling the library</span></h3>
 
 <p>This section is a quick overview on how to compile this library. First, you'll need a gcc-compatible
-compiler, that supports at least C99 (you'll also need anonymous nested unions, part of C11), that sadly
-excludes Visual C++. As of writing this, this library <b>cannot</b> be compiled with a 64bit compiler.
+compiler, that supports at least C99 (you'll also need anonymous nested unions, part of C11). As of
+writing this, this library <b>cannot</b> be compiled with a 64bit compiler.
 
-<p>With that in mind, you'll also need some parts of the windows SDK, like the one include with
+<p>With that in mind, you'll also need some parts of the windows SDK, like the one included with
 <tt>MinGW</tt> (any SDK from the past 10 years should be enough): this library does not make use of
 advanced features of the Win32 framework. Any SDK covering at least Windows 2000 should be largely
 enough.
@@ -680,7 +678,7 @@ source files into a dynamic library, like this:
 <pre>gcc -DBUILDING_DLL -Wall -Os -shared *.c -o SITGL.dll -static-libgcc -s</pre>
 
 <p><span class="n">Note</span>: due to the use of UTF-8 strings and libc functions, your compiler might
-complain of signed/unsigned types mismatch. UTF-8 strings have to be access through an
+complain of signed/unsigned types mismatch. UTF-8 strings have to be accessed through a
 <tt class="t">unsigned char *</tt> pointer, whereas all the prototypes from the libc will use a
 <tt class="t">char *</tt> pointer. There was basically 3 possibilities to handle that problem:
 <ol>
@@ -1032,14 +1030,9 @@ FILETYPE <val>1</val>
 <h2 id="nanovg">nanovg</h2>
 
 <p><tt>nanovg</tt> is the low-level rendering library used by <tt>SITGL</tt>. This section will describe
-what needs to be known about <tt>nanovg</tt>, and especially explain the few changes that have been made.
+what needs to be known about <tt>nanovg</tt>, and the few changes that have been made.
 It <b>will not</b> go too much in detail on how to properly use this library, because its API is pretty
 straightforward, since it mimics the canvas API of javascript.
-
-<p>You might want to use <tt>nanovg</tt> API directly if the CSS styling options are not enough. You
-can even use <tt>nanovg</tt> at various stage of the rendering of a control by <tt>SITGL</tt> to
-complement what this library can do. This is an advanced feature though, described in
-<a href="#annexC">annex C: advanced rendering API</a>.
 
 <p>Also, font rendering is handled by <a href="https://github.com/nothings/stb"><tt>stb_truetype.h</tt></a> and
 image loading is handled by <tt>stb_image.h</tt>. The latter has its functions made available in <tt>nanovg.h</tt>,
@@ -1168,8 +1161,9 @@ is to render text for use as decals over your models.
  * useful if you only want to render text. In the fragment shader, you can simply recolor the text using
  * something like this:
  *	vec4 col = texture(nvgFBO, tex);
+ *  vec4 text = /* color of text */;
  *
- *	if (col.x < 0.004)
+ *	if (col.x &lt; 0.004)
  *		discard;
  *
  *	color = vec4(text.r, text.g, text.b, col.x);
@@ -2424,6 +2418,16 @@ process the Tab key, it will be used to navigate between controls.
   have a row of more than 3 controls evenly spaced along the width of the dialog
   (the standard attachment model cannot handle this case easily).
 
+  <li><tt class="dt">SITE_OnSortItem</tt>
+  <p>Only sent by Listbox, it is used to provide a <b>custom sorting method for items</b> of a list box.
+  This event will be described more in detail in the <a href="#listevents">SIT_LISTBOX</a> chapter.
+
+  <li><tt class="dt">SITE_OnSortColumn</tt>
+  <p>Another event only sent by the Listbox widget: it will notify you of a <b>new column being selected
+  as for the sorting key</b>. You can accept the selection (by returning 1 from your callback) or cancel
+  the it (by returning 0). This event will also be described more in detail in the
+  <a href="#listevents">dedicated</a> section.
+
   <li><tt class="dt" id="SITE_OnDropFiles">SITE_OnDropFiles</tt>
   <p>Triggered when files/folders are <b>dropped over the root widget</b> (it will never be
   triggered for other controls). The <tt>call_data</tt> parameter will be a
@@ -2458,6 +2462,8 @@ process the Tab key, it will be used to navigate between controls.
   <tr><td>SITE_OnVanillaKey<td><tt>SIT_OnKey *</tt><td>A key with unicode character has been preseed (no released event will be sent).
   <tr><td>SITE_OnScroll<td><tt><type>ULONG</type></tt><td>Scroll position has changed for a scrollbar or a slider.
   <tr><td>SITE_OnGeometrySet<td><tt><type>float </type>[<val>3</val>]</tt><td>Fine tune size of control during layout of forms.
+  <tr><td>SITE_OnSortItem<td><tt>SIT_OnSort *</tt><td>Compare two items to reorder rows of list box.
+  <tr><td>SITE_OnSortColumn<td><tt><type>int</type></tt><td>Notify a new column has been selected as key for sorting in a list box.
   <tr><td>SITE_OnDropFiles<td><tt><type>STRPTR </type>*</tt><td>NULL-terminated list of filenames that have been dropped on the root window.
   <tr><td>SITE_OnSetOrGet<td><tt>SIT_OnVal *</tt><td>Custom property setter/getter.
 </tbody>
@@ -3187,9 +3193,14 @@ are the declarations used to produce the backgrounds</b>:
 
 <p>There are a <b>few caveats</b> to be aware when using gradients for background:
 <ul>
-  <li>Radial gradients are a bit more expensive than linear-gradients: radial gradients will require
-  a full RGBA texture, the size of the area covered by the gradient, to be allocated. Linear gradients
-  only needs a 1px high image (and at most sqrt(width*width + height*height) pixels wide).
+  <li>Radial gradients have 2 rasterization methods: <tt>nanovg</tt> and <tt>SITGL</tt>. <tt>nanovg</tt>
+  is used when there are exactly 2 color stops. <tt>SITGL</tt> is used for everything else. The reason
+  for this, is that <tt>nanovg</tt> can render gradient on the fly, without the need of a texture. <tt>SITGL</tt>
+  will generate an RGBA texture, which is a bit more expensive.
+
+  <p>The rasterization is not completely identical though: <tt>nanovg</tt> will use a sine curve, while
+  <tt>SITGL</tt> will use linear interpolation.
+
   <li>The number of color stops is limited to 8. You can increase that value by changing the size of
   the array for the type <tt>struct Gradient_t</tt> declared in <tt>SIT_CSSStyles.h</tt>.
   <span class="n">XXX</span> should be dynamic, really.
@@ -3789,7 +3800,7 @@ SIT_SetValues(app,
   If you get an error, you might want to try with a different font (especially if you used an operating
   system font).
 
-  <li id="SIT_Accel"><tt class="dt">SIT_AccelTable</tt> (<tt>SIT_Accel *</tt>)
+  <li id="SIT_AccelTable"><tt class="dt">SIT_AccelTable</tt> (<tt>SIT_Accel *</tt>)
   <p>This property can be used to <b>register global shortcuts</b>, that can be checked way before dispatching
   keyboard events to individual widgets. The typical use case for this feature is to provide menu shortcuts
   typical of desktop applications, but without the menu. The <tt>SIT_Accel</tt> structure is declared as
@@ -3824,8 +3835,7 @@ SIT_SetValues(app,
 	ie: <tt>SITE_...</tt>, like <tt>SITE_OnClose</tt> or <tt>SITE_OnActivate</tt>.
 
 	<li><tt>target</tt>: the <b>name of a widget</b>, which will receive the event. You can also set this field
-	to <tt class="o">NULL</tt>, in which case the event will be targetted to the <tt>SIT_APP</tt>
-	widget.
+	to <tt class="o">NULL</tt>, in which case the event will be sent to the <tt>SIT_APP</tt> widget.
 
 	<li><tt>cb</tt>: If the callback registered for the event did not process it or the <tt>target</tt>
 	field was set to <tt class="o">NULL</tt>, you can register a callback that will be called whenever
@@ -3984,7 +3994,7 @@ freely between all windows in this mode.
   </ul>
 
   <li><tt class="dt">SIT_AccelTable</tt> (<tt>SIT_Accel *</tt>)
-  <p>This tag works the same as the one defined for the <a href="#SIT_Accel">SIT_APP</a> widget. The
+  <p>This tag works the same as the one defined for the <a href="#SIT_AccelTable">SIT_APP</a> widget. The
   idea to provide another accelerator table for a dialog, is that these shortcuts will temporarily override
   the one defined at the <tt>SIT_APP</tt> level.
 </ul>
@@ -4645,7 +4655,7 @@ allocation at the start).
   in bytes</b> where you want to put the selection and/or cursor. If you specify out of range values,
   they will be clamped to the length of the text.
 
-  <p>Note: to have any visual feedback, you need to set the focus on the control <b>before</b> setting
+  <p><span class="n">Note</span>: to have any visual feedback, you need to set the focus on the control <b>before</b> setting
   these properties (using <tt>SIT_SetFocus()</tt>), otherwise for single-line edit, the default
   behaviour when it gets the focus, is to select all the text and place the cursor at the end
   (undoing whatever you provided earlier).
@@ -4758,7 +4768,7 @@ SIT_Wiget num = SIT_CreateWidget(<val>"fps"</val>, SIT_EDITBOX, parent,
 
 <h4 id="editevents">Events</h4>
 
-<p>The main event reported by text boxes that you might be interested in is <tt>SITE_OnChange</tt>.
+<p>The main event reported by text boxes that you might be interested in is <tt><b>SITE_OnChange</b></tt>.
 This event will be fired whenever the content of the edit buffer has changed. The <tt>call_data</tt>
 for this event will be the UTF-8 string that you can also get by reading the <tt>SIT_Title</tt> property.
 By the time the event is fired, the changes will have already been commited, therefore it won't be
@@ -4768,11 +4778,13 @@ undefined behaviour all over the place.
 <p>If you want to change the text of the control at this point, you can do safely using the <tt>SIT_Title</tt>
 property. Keep in mind, that cursor position will be reset to 0.
 
-<p>You also might want to catch some keystrokes (like cursor keys, function
-keys, ...) while the focus is in the editbox. You can register a
-<tt>SITE_OnRawKey</tt> callback, and process events you might be interested
-in. Don't forget to return 1 to signal that you've processed the event and
-do not want it to be given to the edit box again.
+<p>You also might want to catch some keystrokes (like cursor keys, function keys, ...) while the focus
+is in the editbox. You can register a <tt>SITE_OnRawKey</tt> callback, and process events you might be
+interested in. Don't forget to return 1 to signal that you've processed the event and do not want it
+to be given to the edit box again. That being said, <b>a better way to catch certain keystrokes</b> is to
+register a global <a href="#SIT_AccelTable">accelerator table</a>, either at the dialog or at the application level.
+
+
 
 <h4 id="editkbd">Keyboard shortcuts</h4>
 
@@ -4791,8 +4803,8 @@ do not want it to be given to the edit box again.
   <li><span class="key">Insert</span>: toggle between insert/replace mode.
   <li><span class="key">Ctrl + Del</span>: delete word following cursor.
   <li><span class="key">Ctrl + Backspace</span>: delete word before cursor.
-  <li><span class="key">Ctrl + Home</span>: move cursor to the very start of text.
   <li><span class="key">PageUp</span>, <span class="key">PageDown</span>: move cursor to the previous/next page.
+  <li><span class="key">Ctrl + Home</span>: move cursor to the very start of text.
   <li><span class="key">Shift + Ctrl + Home</span>: move cursor and selection to the start of text.
   <li><span class="key">Ctrl + End</span>: move cursor to the very end of text.
   <li><span class="key">Shift + Ctrl + End</span>: move cursor and selection to the end of text.
@@ -5261,6 +5273,24 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
   <p>Can be used to retrieve the number of items in the list. For report view, this will contain the
   number of rows. For icon view, it will be all the items that has been added (<b>not including</b>
   category separators).
+
+  <li><tt class="dt">SIT_CellPaint</tt> (<tt>SIT_CallProc</tt>)
+  <p>A sort of hack to <b>quickly change the foreground/background of any cell</b> in the listbox. This trick
+  is actually quite cheap though: it requires no memory allocation or expensive parsing. The <tt>call_data</tt>
+  parameter will be a pointer to the following structure:
+  <pre><type>struct</type> SIT_OnCellPaint_t
+{
+	<type>uint8_t</type> fgColor[<val>4</val>];
+	<type>uint8_t</type> bgColor[<val>4</val>];
+	<type>int</type>     rowColumn; <com>/* 0 based */</com>
+};
+</pre>
+  <p><tt>rowColumn</tt> encodes the column and row of the cell in one field: first 8 bits encode the
+  column, next 24bits contain the row number (all 0-based).
+
+  <p>If you want to change the foreground color or background color, simply give a RGBA value in the
+  corresponding field. A color will be considered non default if the alpha value is greater than 0.
+
 </ul> 
 
 <h4 id="listevents">Events</h4>
@@ -5269,11 +5299,23 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
 
 <ul>
   <li><tt class="dt">SITE_OnActivate</tt>
-  <p>This event is triggered whenever the user <b>double-click on an item or use the <span class="key">Enter</span> key</b>. The <tt>call_data</tt> parameter
-  of the callback will be the row (0-based index) of the item being activated.
+  <p>This event is triggered whenever the user <b>double-click on an item or use the <span class="key">Enter</span>
+  key</b>. The <tt>call_data</tt> parameter will be the <tt>rowTag</tt> given when the item was inserted. If you
+  want to know the row being selected, you can read property <tt>SIT_SelectedIndex</tt> (if multi-selection
+  is enabled, this will only return the last user-selected row).
 
   <li><tt class="dt">SITE_OnChange</tt>
-  <p>This event is sent whenever the selection of the listbox <strong>has changed</strong>.
+  <p>This event is sent whenever the <b>selection</b> of the listbox <strong>has changed</strong>. The
+  <tt>call_data</tt> parameter is the same as <tt>SITE_OnActivate</tt>.
+
+  <li><tt class="dt">SITE_OnSortColumn</tt>
+  <p>If you enabled the flag <tt>SIT_DoSort</tt> for the property <tt>SIT_ListBoxFlags</tt>, you can
+  register a callback for this event to be notified whenever the sort column is about to change. If
+  you return <tt class="o">1</tt>, the list will be reordered using this column as key. If you return
+  <tt class="o">0</tt>, the sort will be cancelled and the current key column will be kept as is.
+
+  <p>The <tt>call_data</tt> parameter will be the column that <b>will be used</b> as key for sorting
+  (it is not yet set at this point).
 
   <li><tt class="dt">SITE_OnSortItem</tt>
   <p>This one is triggered whenever two items have to be compared. The <tt>call_data</tt>
@@ -5871,8 +5913,8 @@ it everytime the mouse has moved. The tooltip position will be automatically upd
 you provide mouse events through the <tt>SIT_ProcessMouseMove()</tt> function (and thanks to the
 <tt>SITV_TooltipFollowMouse</tt>).
 
-<p>If there are no objects being pointed, and want to <b>immediately hide the tooltip</b>, simply use the
-following code:
+<p>If there are no objects being pointed, and you want to <b>immediately hide the tooltip</b>, simply
+use the following code:
 <pre>
 SIT_SetValues(tooltip, SIT_Visible, <val>False</val>, <val>NULL</val>);
 </pre>
@@ -6707,25 +6749,66 @@ a double-linked list might not be the right solution.
 encoding, without having to deal with the operating system native API calls. Most of these functions
 are straightforward, but here is the complete list:
 <ul>
-  <li><tt class="dt">int ScanDir(STRPTR dir, DirScanFunc, APTR data);</tt>
-  <p>Scan (almost) all entries of a directory, by aplying a callback for each of them. The expected
-  callback prototype is:
-  <pre>int DirScanFunc(STRPTR dir, STPRTR file, APTR data);</pre>
-  <p>Where <tt>dir</tt> and <tt>data</tt> will the same value given to <tt>ScanDir()</tt>, <tt>file</tt>
-  will be an UTF-8 encoded strings representing one entry in the directory. This string will be 
-  relative to <tt>dir</tt>, so in order to get information on the file, you will have to concatenate
-  <tt>file</tt> with the <tt>dir</tt> parameter. You can use the <tt>AddPart()</tt> function for this.
+  <li><tt class="dt">int ScanDirInit(ScanDirData * ret, STRPTR path);</tt>,<br>
+  <tt class="dt">int ScanDirNext(ScanDirData * ret);</tt>,<br>
+  <tt class="dt">void ScanDirCancel(ScanDirData * ret);</tt>
 
-  <p>By "mostly" all entries, it will automatically <b>filter out two entries</b>: <tt>.</tt> and <tt>..</tt>.
-  You can assume they always exist.
+  <p>Scan (almost) all entries of a directory. By "mostly" all entries, it will automatically <b>remove
+  <tt>.</tt> and <tt>..</tt></b>. You can assume they always exist.
 
-  <p>The callback can <b>return a positive of zero number</b>, that will be added and returned from the
-  function <tt>ScanDir()</tt>. The typical use case is to return the number of files processed, and in
-  case it is zero, and a non-zero is expected, it might be wise to signal the problem to the user.
+  <p>The <tt>ScanDirData</tt> is declared this way:
+  <pre>
+<type>struct</type> ScanDirData_t
+{
+	<type>APTR</type>     path;
+	<type>int</type>      isDir;
+	<type>uint64_t</type> size;
+	<type>TEXT</type>     date[24];
+	<type>STRPTR</type>   type;
+	<type>STRPTR</type>   name;
+	<type>APTR</type>     handle;
+	<type>int</type>      error;
+};
+</pre>
+  <p>Each fields have the following meaning:
+  <ul>
+    <li><tt>path</tt>: private, do not modify.
+	<li><tt>isDir</tt>: 1 if the object returned is a directory, 0 otherwise.
+	<li><tt>size</tt>: size in bytes of the file (always 0 for directories).
+	<li><tt>date</tt>: last modification date, using ISO-8601 format (YYYY-MM-DD HH:MM:SS).
+	<li><tt>type</tt>: human readable string describing file type. UTF-8 encoded. On Windows, this is
+	the same string displayed by the file explorer "Type" column.
+	<li><tt>name</tt>: name of the object, UTF-8 encoded.
+	<li><tt>handle</tt>: private, do not modify.
+	<li><tt>error</tt>: if there was an error while reading the directory content this field will
+	contain a positive integer. Use <tt>GetErrorMsg()</tt> to get a human readable description of the
+	error.
+  </ul>
 
-  <p>The callback can also return any <b>negative number</b>, in that case the scan will stop immediately,
-  and that negative number will be returned from <tt>ScanDir()</tt>, no matter what has been
-  accumulated from the return value of the callback.
+  <p>The typical way to use these functions is:
+  <pre>ScanDirData args;
+<type>STRPTR</type> path = <val>"."</val>;
+<kwd>if</kwd> (ScanDirInit(&amp;args, path))
+{
+	<kwd>do</kwd>
+	{
+		<com>/* process args */</com>
+		...
+
+		<com>/* if something went wrong and want to immediately terminate the loop, use this function: */</com>
+		<kwd>if</kwd> (<com>/*error condition*/</com>)
+		{
+			ScanDirCancel(&amp;args);
+			<kwd>break</kwd>;
+		}
+	}
+	<kwd>while</kwd> (ScanDirNext(&amp;args));
+}
+</pre>
+
+  <p><span class="n">Note</span>: memory will be allocated by <tt>ScanDirInit()</tt> (if it returns a
+  non-zero value) and will be freed by either <tt>ScanDirCancel()</tt> or <tt>ScanDirNext()</tt> (when
+  it returns 0). <b>Do not use the content of the struct after that</b>.
 
   <li><tt class="dt">Bool AddPart(STRPTR dir, STRPTR file, int max);</tt>
   <p><b>Concatenate partial path</b> <tt>file</tt> into <tt>dir</tt>. The <tt>dir</tt> buffer must be

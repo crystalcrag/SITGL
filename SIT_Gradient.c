@@ -213,43 +213,31 @@ static void memcpy_repeat(DATA8 dst, DATA8 rgba, int len, int maxlen)
 	memcpy(dst, rgba, len);
 }
 
-/* quick'n'dirty radial rasterization function: draw a bunch of circles using midpoint elliptical algorithm */
-Bool gradientDrawRadial(CSSImage img, Gradient * grad, REAL ratio)
+void gradientGetCenter(Gradient * grad, int info[4], int width, int height, REAL ratio)
 {
-	ColorStop colors, c;
-	int       i, j, stride = img->width * 4, h = img->height;
-	DATA16    scany;
-	DATA8     s, e;
-	Iter      r, g, b, a;
-	uint8_t   rgba[40];
-	int       maxlen = 0, distrib;
-	int       xc, yc, rx, ry;
+	#define xc   info[0]
+	#define yc   info[1]
+	xc = gradientToPx(width,  grad->cx, ratio);
+	yc = gradientToPx(height, grad->cy, ratio);
 
-	i      = grad->colorStop;
-	colors = alloca(sizeof *colors * i);
-
-	img->bitmap = malloc(stride * h);
-
-	xc = gradientToPx(img->width,  grad->cx, ratio);
-	yc = gradientToPx(img->height, grad->cy, ratio);
-
+	int rx, ry;
 	/* normalize CSS input */
 	if (grad->ry == 0xff)
 	{
 		int shape  = (grad->rx >> 2) & 3;
 		int corner = (grad->rx >> 4);
-		int hw     = img->width / 2;
-		int hh     = h / 2;
+		int hw     = width  >> 1;
+		int hh     = height >> 1;
 
 		/* closest-side,closest-corner,farthest-side,farthest-corner */
 		if (corner < 2)
 		{
 			/* closest */
-			rx = (xc <= hw ? xc : img->width - xc);
-			ry = (yc <= hh ? yc : h - yc);
+			rx = (xc <= hw ? xc : width - xc);
+			ry = (yc <= hh ? yc : height - yc);
 		} else { /* farthest */
-			rx = (xc > hw ? xc : img->width - xc);
-			ry = (yc > hh ? yc : h - yc);
+			rx = (xc > hw ? xc : width - xc);
+			ry = (yc > hh ? yc : height - yc);
 		}
 		if (corner & 1) /* corner */
 		{
@@ -276,9 +264,34 @@ Bool gradientDrawRadial(CSSImage img, Gradient * grad, REAL ratio)
 	}
 	else /* direct value */
 	{
-		rx = gradientToPx(img->width,  grad->rx, ratio);
-		ry = gradientToPx(img->height, grad->ry, ratio);
+		rx = gradientToPx(width,  grad->rx, ratio);
+		ry = gradientToPx(height, grad->ry, ratio);
 	}
+	info[2] = rx;
+	info[3] = ry;
+}
+
+/* quick'n'dirty radial rasterization function: draw a bunch of circles using midpoint elliptical algorithm */
+Bool gradientDrawRadial(CSSImage img, Gradient * grad, REAL ratio)
+{
+	ColorStop colors, c;
+	int       i, j, stride = img->width * 4, h = img->height;
+	DATA16    scany;
+	DATA8     s, e;
+	Iter      r, g, b, a;
+	uint8_t   rgba[40];
+	int       maxlen = 0, distrib;
+	int       info[4];
+
+	#define rx   info[2]
+	#define ry   info[3]
+
+	i      = grad->colorStop;
+	colors = alloca(sizeof *colors * i);
+
+	img->bitmap = malloc(stride * h);
+
+	gradientGetCenter(grad, info, img->width, img->height, ratio);
 
 	if (rx < 0 || rx > img->width)  return False;
 	if (ry < 0 || ry > h) return False;
@@ -464,6 +477,11 @@ Bool gradientDrawRadial(CSSImage img, Gradient * grad, REAL ratio)
 
 	if (ry > 1023) free(scany);
 	return True;
+
+	#undef cx
+	#undef cy
+	#undef rx
+	#undef ry
 }
 
 static void gradientGetVector(REAL * v, uint16_t orient, int w, int h)
@@ -483,7 +501,7 @@ static void gradientGetVector(REAL * v, uint16_t orient, int w, int h)
 
 	switch (orient >> 14) {
 	case 0: v[0] = offx, v[1] = h+offy;   v[2] = w-offx, v[3] = -offy;  break; // [0-90]
-	case 1: v[0] = offx, v[1] = -offy;    v[2] = w-offx, v[3] = h+offy; break;  // [90-180]
+	case 1: v[0] = offx, v[1] = -offy;    v[2] = w-offx, v[3] = h+offy; break; // [90-180]
 	case 2: v[0] = w-offx, v[1] = -offy;  v[2] = offx, v[3] = h+offy;   break; // [180-270]
 	case 3: v[0] = w-offx, v[1] = h+offy; v[2] = offx, v[3] = -offy;    break; // [270-360]
 	}

@@ -338,6 +338,7 @@ static void renderCacheBorderImg(SIT_Widget node, RectF * box)
 static void renderBackground(SIT_Widget node, RectF * alt, int sides)
 {
 	Background bg = node->style.background;
+	NVGCTX     vg = sit.nvgCtx;
 	BoxF       border = node->layout.border;
 	RectF      rect;
 	int        count;
@@ -396,8 +397,8 @@ static void renderBackground(SIT_Widget node, RectF * alt, int sides)
 		if ((sides & 3) != 3) major.right = minor.right = 0;
 		if ((sides & 6) != 6) major.bottom = minor.bottom = 0;
 		if ((sides & 12) != 12) major.left = minor.left = 0;
-		nvgPathWinding(sit.nvgCtx, NVG_CCW);
-		nvgBeginPath(sit.nvgCtx);
+		nvgPathWinding(vg, NVG_CCW);
+		nvgBeginPath(vg);
 		renderRoundRect(box, &major, &minor, 0xff);
 	}
 	else renderRect(&rect);
@@ -431,12 +432,28 @@ static void renderBackground(SIT_Widget node, RectF * alt, int sides)
 
 		if (bg->color.val != 0 && rect.height > 0 && rect.width > 0)
 		{
-			nvgFillColorRGBA8(sit.nvgCtx, bg->color.rgba);
-			nvgFill(sit.nvgCtx);
+			nvgFillColorRGBA8(vg, bg->color.rgba);
+			nvgFill(vg);
 		}
 
 		sides = (int) rect.width | ((int) rect.height << 16);
-		if (bg->gradient.colorStop >= 2 && (! img || bg->gradient.wxh != sides))
+		if (bg->gradient.colorStop == 2 && bg->gradient.corner == 255)
+		{
+			/* radial-gradient with 2 color stops: use nanovg to render them directly; save quite a bit of memory */
+			int   info[4];
+			DATA8 col1  = bg->gradient.colors[0].rgba;
+			DATA8 col2  = bg->gradient.colors[1].rgba;
+			gradientGetCenter(&bg->gradient, info, rect.width, rect.height, node->style.font.size);
+
+			REAL  scale = info[2] / (float) info[3];
+			nvgSave(vg);
+			nvgScale(vg, 1, 1 / scale);
+			nvgFillPaint(vg, nvgRadialGradient(vg, info[0], info[1] * scale, 0, info[2] * 1.1,
+				nvgRGBA(col1[0], col1[1], col1[2], col1[3]), nvgRGBA(col2[0], col2[1], col2[2], col2[3])));
+			nvgFill(vg);
+			nvgRestore(vg);
+		}
+		else if (bg->gradient.colorStop >= 2 && (! img || bg->gradient.wxh != sides))
 		{
 			/* rasterize the gradient and keep it into a cache */
 			RectF sub = rect;
@@ -487,32 +504,32 @@ static void renderBackground(SIT_Widget node, RectF * alt, int sides)
 			h  = roundf(h);
 			switch (bg->repeat) {
 			case 3: /* no-repeat */
-				nvgSave(sit.nvgCtx);
-				nvgIntersectScissor(sit.nvgCtx, x, y, w, h);
+				nvgSave(vg);
+				nvgIntersectScissor(vg, x, y, w, h);
 				break;
 			case 2: /* repeat-y only */
-				nvgSave(sit.nvgCtx);
-				nvgIntersectScissor(sit.nvgCtx, x, y, w, sit.scrHeight);
+				nvgSave(vg);
+				nvgIntersectScissor(vg, x, y, w, sit.scrHeight);
 				break;
 			case 1: /* repeat-x only */
-				nvgSave(sit.nvgCtx);
-				nvgIntersectScissor(sit.nvgCtx, x, y, sit.scrWidth, h);
+				nvgSave(vg);
+				nvgIntersectScissor(vg, x, y, sit.scrWidth, h);
 			}
 			if (img->stretch) /* gradient */
 			{
 				/* corner linear-gradient: need to do transformation on our own */
-				nvgTranslate(sit.nvgCtx, x+img->rect[0], y+img->rect[1]);
-				if (img->stretch == 1) nvgScale(sit.nvgCtx, img->rect[3], 1);
-				else                   nvgScale(sit.nvgCtx, 1, img->rect[3]);
-				nvgRotate(sit.nvgCtx, img->angle);
+				nvgTranslate(vg, x+img->rect[0], y+img->rect[1]);
+				if (img->stretch == 1) nvgScale(vg, img->rect[3], 1);
+				else                   nvgScale(vg, 1, img->rect[3]);
+				nvgRotate(vg, img->angle);
 				/* they are square, but need to be stretched to fill content */
-				nvgFillPaint(sit.nvgCtx, nvgImagePattern(sit.nvgCtx, 0, 0, img->rect[2], img->rect[2], 0, img->handle, 1));
-				nvgResetTransform(sit.nvgCtx);
+				nvgFillPaint(vg, nvgImagePattern(vg, 0, 0, img->rect[2], img->rect[2], 0, img->handle, 1));
+				nvgResetTransform(vg);
 			}
 			else if (img->angle != 0)
 			{
 				/* linear-gradient */
-				nvgFillPaint(sit.nvgCtx, nvgImagePattern(sit.nvgCtx, x+img->rect[0], y+img->rect[1], img->rect[2], img->rect[3], img->angle, img->handle, 1));
+				nvgFillPaint(vg, nvgImagePattern(vg, x+img->rect[0], y+img->rect[1], img->rect[2], img->rect[3], img->angle, img->handle, 1));
 			}
 			else /* regular bitmap */
 			{
@@ -520,21 +537,21 @@ static void renderBackground(SIT_Widget node, RectF * alt, int sides)
 				{
 					float m[6];
 					if (renderParseTransform(node, bg->transform, m))
-						nvgTransform(sit.nvgCtx, m[0], m[1], m[2], m[3], x, y), x = 0, y = 0;
+						nvgTransform(vg, m[0], m[1], m[2], m[3], x, y), x = 0, y = 0;
 				}
-				NVGpaint paint = nvgImagePattern(sit.nvgCtx, x, y, w, h, img->angle, img->handle, 1);
+				NVGpaint paint = nvgImagePattern(vg, x, y, w, h, img->angle, img->handle, 1);
 				if (img->bpp == 8)
 				{
 					/* modulate bitmap with font color */
 					DATA8 col = bg->gradient.colors[0].rgba[3] == 0 ? node->style.color.rgba : bg->gradient.colors[0].rgba /* -bg-mod-color */;
 					paint.innerColor = nvgRGBA(col[0], col[1], col[2], col[3]);
 				}
-				nvgFillPaint(sit.nvgCtx, paint);
-				nvgResetTransform(sit.nvgCtx);
+				nvgFillPaint(vg, paint);
+				nvgResetTransform(vg);
 			}
-			nvgFill(sit.nvgCtx);
+			nvgFill(vg);
 			if (bg->repeat)
-				nvgRestore(sit.nvgCtx);
+				nvgRestore(vg);
 		}
 	}
 }

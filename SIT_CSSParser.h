@@ -44,6 +44,7 @@ CSSImage cssAddGradient(Gradient * grad, int w, int h, REAL fh);
 void gradientGetParam(CSSImage, Gradient * grad);
 Bool gradientDrawRadial(CSSImage, Gradient * grad, REAL ratio);
 Bool gradientDrawLinear(CSSImage img, Gradient * grad, REAL ratio);
+void gradientGetCenter(Gradient * grad, int info[4], int width, int height, REAL ratio);
 
 int    HexToBin(TEXT c);
 STRPTR skipspace(STRPTR);

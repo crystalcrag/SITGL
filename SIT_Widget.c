@@ -647,7 +647,7 @@ void SIT_ParseTags(SIT_Widget w, va_list vargs, TagList * classArgs)
 		}
 
 		/* optimization: since enum and WidgetClass are sorted: we can perform a O(1) lookup on WidgetClass */
-		if (tag < SIT_TagPrivate3 /* end of widget class tags */)
+		if (tag < SIT_EndCommonTags /* end of widget class tags */)
 		{
 			args = WidgetClass + tag - 2;
 			goto found;
@@ -1073,7 +1073,7 @@ DLLIMP void SIT_GetValues(SIT_Widget w, ...)
 			continue;
 		}
 
-		if (tag < SIT_TagPrivate3)
+		if (tag < SIT_EndCommonTags)
 		{
 			/* Direct lookup on widget class */
 			args = WidgetClass + tag - 2;
@@ -1158,6 +1158,19 @@ DLLIMP void SIT_GetValues(SIT_Widget w, ...)
 						/* direct low-level pointer access :-/ */
 						va_arg(vargs, STRPTR *)[0] = ((SIT_EditBox)w)->text;
 						continue;
+					}
+					break;
+				case SIT_StartSel:
+				case SIT_EndSel:
+					if (w->type == SIT_EDITBOX)
+					{
+						/* if nothing selected use cursor pos */
+						SIT_EditBox edit = (SIT_EditBox) w;
+						if (edit->selStart == edit->selEnd)
+						{
+							va_arg(vargs,int *)[0] = edit->cursor;
+							continue;
+						}
 					}
 				}
 				switch (args->tl_Type) {

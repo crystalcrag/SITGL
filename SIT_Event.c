@@ -118,15 +118,6 @@ static SIT_Widget SIT_NextFocusRing(SIT_Widget start, int dir)
 	return next;
 }
 
-static int SIT_Desactivate(SIT_Widget w, APTR cd, APTR ud)
-{
-	w->oldState = w->state;
-	w->state &= ~(STATE_HOVER|STATE_ACTIVATED);
-	layoutUpdateStyles(w);
-	SIT_ApplyCallback(w, NULL, SITE_OnActivate);
-	return 0;
-}
-
 #define SITK_FlagPhony    (SITK_FlagCapture | SITK_FlagUp)
 
 /* check for accelerator table */
@@ -180,15 +171,12 @@ static Bool SIT_ProcessAccel(int capture, int key)
 				case SITE_OnActivate:
 					if (w->type == SIT_BUTTON)
 					{
-						w->oldState = w->state;
-						w->state |= STATE_HOVER|STATE_ACTIVATED;
-						layoutUpdateStyles(w);
-						SIT_ActionAdd(w, sit.curTime + 150, sit.curTime + 150, SIT_Desactivate, NULL);
+						SIT_ApplyCallback(w, NULL, SITE_OnActivate);
 						break;
 					}
 				default:
 					if (! SIT_ApplyCallback(w, NULL, evt) && a->cb)
-						a->cb(w, NULL, (APTR) evt);
+						a->cb(w, (APTR) key, (APTR) evt);
 				}
 			}
 			else if (a->cb)
@@ -414,15 +402,9 @@ DLLIMP int SIT_ProcessClick(float x, float y, int button, int pressed)
 		if (! (active->type == SIT_BUTTON && ((SIT_Button)active)->type == SITV_ToggleButton && (active->state & STATE_ACTIVATED) == STATE_ACTIVATED &&
 		       ! ((SIT_Button)active)->state))
 		{
-			// why checking click in bbox ? feb 2021
-			// int mx = x - active->offsetX - active->layout.pos.left;
-			// int my = y - active->offsetY - active->layout.pos.top;
-			// if ((0 <= mx && mx <= active->layout.pos.width && 0 <= my && my <= active->layout.pos.height) || ((SIT_Button)active)->state == 0)
-			{
-				active->oldState = active->state;
-				active->state &= ~STATE_ACTIVE;
-				layoutUpdateStyles(active);
-			}
+			active->oldState = active->state;
+			active->state &= ~STATE_ACTIVE;
+			layoutUpdateStyles(active);
 		}
 		if (sit.captureEvt)
 		{
