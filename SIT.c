@@ -491,6 +491,7 @@ DLLIMP void SIT_Nuke(int what)
 	SIT_DestroyChildren(sit.root);
 	sit.hover = sit.active = sit.focus = sit.composited = sit.geomList = sit.curTooltip = NULL;
 	sit.activeDlg = sit.root;
+	sit.toolTip = NULL;
 
 	while ((act = HEAD(sit.actions)))
 		SIT_ActionReschedule(act, -1, -1);
@@ -502,6 +503,7 @@ DLLIMP void SIT_Nuke(int what)
 		{
 			cssClear(sit.root);
 			cssApply(sit.root);
+			layoutCalcBox(sit.root);
 		}
 		FOCUSRING(sit.root) = NULL;
 		sit.root->tooltip = NULL;
@@ -573,7 +575,7 @@ APTR SIT_ActionAdd(SIT_Widget w, float start, float end, SIT_CallProc proc, APTR
 	if (prev == NULL)
 		sit.nextAction = start;
 
-//	fprintf(stderr, "action add [%d]: %d - %d: %p\n", slot-sit.actionbuf, (int) start, (int) end, proc);
+	//fprintf(stderr, "action add [%d]: %d - %d: %p\n", slot-sit.actionbuf, (int) start, (int) end, proc);
 
 	return slot;
 }
@@ -585,7 +587,7 @@ void SIT_ActionReschedule(SIT_Action act, float start, float end)
 	{
 		/* remove action */
 		ListRemove(&sit.actions, &act->node);
-//		fprintf(stderr, "action rem [%d]: %g < %g: %p\n", act-sit.actionbuf, start, act->start, act->cb);
+		//fprintf(stderr, "action rem [%d]: %g < %g: %p\n", act-sit.actionbuf, start, act->start, act->cb);
 
 		/* action finished */
 		if (sit.actionbuf <= act && act < EOT(sit.actionbuf))
@@ -597,7 +599,7 @@ void SIT_ActionReschedule(SIT_Action act, float start, float end)
 	}
 	else
 	{
-//		fprintf(stderr, "action moved [%d]: %g < %g: %p\n", act-sit.actionbuf, start, act->start, act->cb);
+		//fprintf(stderr, "action moved [%d]: %g < %g: %p\n", act-sit.actionbuf, start, act->start, act->cb);
 		act->start = start;
 		act->end   = end;
 		if (next && act->start > next->start)

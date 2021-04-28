@@ -784,6 +784,7 @@ static void layoutSetTextShadow(SIT_Widget node)
 			*real = *fixed ? ToPoints(node, node, *fixed, CSS_LEFT) : 0;
 	}
 	node->style.flags &= ~CSSF_TEXTSHADOW;
+	node->style.shadowTotal = node->style.shadowCount;
 }
 
 static void layoutSetBoxShadow(SIT_Widget node)
@@ -996,30 +997,11 @@ void layoutSetSize(SIT_Widget node)
 	SIT_LayoutCSSSize(node);
 }
 
-#if 0
-int layoutUpdateChildren(SIT_Widget node)
-{
-	SIT_Widget c;
-	int ret = 0;
-	if (node->layout.flags & LAYF_NoChanges) return 0;
-	if (node->flags & SITF_PrivateChildren)
-	for (c = HEAD(node->children); c; NEXT(c))
-		ret |= cssApply(c);
-
-	if (ret == 0) node->layout.flags |= LAYF_NoChanges; /* no need to do that test again */
-	return ret & 3;
-}
-#endif
-
 /* class or state has changed */
 int layoutUpdateStyles(SIT_Widget node)
 {
 	int changes = cssCRCChanged(node) ? cssApply(node) : 0;
 
-	#if 0
-	if ((node->layout.flags & LAYF_NoChanges) == 0 && node->children.lh_Head)
-		changes |= layoutUpdateChildren(node);
-	#else
 	if ((node->layout.flags & LAYF_NoChanges) == 0 && (node->flags & SITF_PrivateChildren))
 	{
 		SIT_Widget c;
@@ -1033,7 +1015,6 @@ int layoutUpdateStyles(SIT_Widget node)
 		if (ret == 0) node->layout.flags |= LAYF_NoChanges;
 		changes |= ret & 3;
 	}
-	#endif
 
 	if (changes)
 	{

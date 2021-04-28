@@ -321,9 +321,12 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 				if (j == col-1)
 					maxw -= list->scrollPad - node->padding[2];
 			}
-			switch (align) {
-			case TextAlignCenter: node->box.left += (maxw - cell->sizeObj.width) * 0.5; break;
-			case TextAlignRight:  node->box.left += (maxw - cell->sizeObj.width) - node->padding[2] - node->padding[0];
+			if (cell->sizeObj.width <= maxw)
+			{
+				switch (align) {
+				case TextAlignCenter: node->box.left += (maxw - cell->sizeObj.width) * 0.5; break;
+				case TextAlignRight:  node->box.left += (maxw - cell->sizeObj.width) - node->padding[2] - node->padding[0];
+				}
 			}
 			node->box.top = cell->sizeCell.top - list->scrollTop + w->padding[1];
 			node->box.right = cell->sizeCell.left + maxw + w->padding[0];
@@ -545,6 +548,13 @@ static int SIT_ListResize(SIT_Widget w, APTR cd, APTR ud)
 		int   i, j, count;
 		max = w->layout.pos.width;
 		count = list->columnCount;
+
+		if (list->lbFlags & SITV_ReorgColumns)
+		{
+			SIT_ListReorgColumns(w, list->columnAlign);
+			list->lbFlags &= ~SITV_ReorgColumns;
+		}
+
 		for (cell = STARTCELL(list), hdr = list->columns, total = 0, i = 0, x = 0, top = list->hdrHeight; i < count; i ++, cell ++, hdr ++)
 		{
 			if (i < count-1)
@@ -1471,7 +1481,7 @@ static int SIT_ListRecalcItemPos(SIT_Widget w, APTR cd, APTR ud)
 	list->lbFlags &= ~(SITV_PendingRecalc | SITV_ReorgColumns);
 
 	if (count)
-		SIT_ListReorgColumns(w);
+		SIT_ListReorgColumns(w, list->columnAlign);
 
 	SIT_ListResize(w, cd, ud);
 
@@ -1936,15 +1946,17 @@ DLLIMP Bool SIT_ListSetColumn(SIT_Widget w, int col, int width, int align, STRPT
 	return True;
 }
 
-DLLIMP void SIT_ListReorgColumns(SIT_Widget w)
+/* reorganize column widths to avoid clipping items */
+DLLIMP void SIT_ListReorgColumns(SIT_Widget w, STRPTR fmt)
 {
 	SIT_ListBox list = (SIT_ListBox) w;
 	if (w->type != SIT_LISTBOX || list->viewMode != SITV_ListViewReport) return;
 
-	if (list->lbFlags & SITV_PendingRecalc)
+	if ((list->lbFlags & SITV_PendingRecalc) || (list->lbFlags & SITV_ListMeasured) == 0)
 	{
 		/* sizeObj field not set for all cells, can't do it now */
 		list->lbFlags |= SITV_ReorgColumns;
+		list->columnAlign = fmt;
 		return;
 	}
 
@@ -1964,14 +1976,34 @@ DLLIMP void SIT_ListReorgColumns(SIT_Widget w)
 		}
 	}
 	uint8_t hdr = (list->lbFlags & SITV_NoHeaders) == 0;
-	for (i = 0, cell = list->columns; i < col; i ++)
+	REAL    fixed = 0, pad = list->td->padding[0] + list->td->padding[2];
+	DATA8   keep;
+	if (! fmt)
+		memset(fmt = alloca(col), 0, col);
+	for (i = 0, cell = list->columns, keep = fmt; i < col; i ++, keep ++)
 	{
 		REAL w;
 		if (hdr && (w = cell[i].sizeObj.width) > widths[i])
 			widths[i] = w;
+		widths[i] += pad;
 		total += widths[i];
+		if (*keep == '*') fixed += widths[i];
 	}
-	for (i = 0; i < col; i ++)
+	widths[col-1] += ((SIT_App)sit.root)->defSBSize;
+	if (fixed > 0)
+	{
+		REAL remain = total - fixed;
+		if (remain < 0) remain = 0;
+		for (i = 0, keep = fmt; i < col; i ++, keep ++)
+		{
+			if (*keep != '*')
+				widths[i] = remain > 0 ? (w->layout.pos.width - fixed) * widths[i] / remain : 0;
+			list->realWidths[i] = widths[i] / w->layout.pos.width;
+		}
+	}
+	else for (i = 0, keep = fmt; i < col; i ++, keep ++)
+	{
 		list->realWidths[i] = widths[i] / total;
+	}
 	sit.dirty = 1;
 }

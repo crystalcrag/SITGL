@@ -113,7 +113,7 @@ DLLIMP void       SIT_ListDeleteRow(SIT_Widget, int row);
 DLLIMP SIT_Widget SIT_ListInsertControlIntoCell(SIT_Widget, int row, int cell);
 DLLIMP void       SIT_ListFinishInsertControl(SIT_Widget);
 DLLIMP STRPTR     SIT_ListGetCellText(SIT_Widget, int col, int row);
-DLLIMP void       SIT_ListReorgColumns(SIT_Widget);
+DLLIMP void       SIT_ListReorgColumns(SIT_Widget, STRPTR);
 DLLIMP int        SIT_TextGetWithSoftline(SIT_Widget, STRPTR buffer, int max);
 DLLIMP void       SIT_MoveNearby(SIT_Widget, int XYWH[4], int defAlign);
 DLLIMP void       SIT_ForceRefresh(void);

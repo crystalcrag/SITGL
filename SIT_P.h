@@ -147,7 +147,7 @@ struct SITContext_t
 	SIT_Widget   curTooltip;           /* tooltip being displayed (only one at a time) */
 	SIT_Widget   composited;           /* need to be rendered in another pass */
 	SIT_Action   toolTip;              /* when to display, when to hide <curTooltip> */
-	SIT_Action   imageCleanup;         /* cache clenaup async action */
+	SIT_Action   imageCleanup;         /* cache cleanup async action */
 	NVGCTX       nvgCtx;               /* main nanovg context for graphics API */
 	int          defFontHeight;        /* relative value for em unit */
 	int          scrWidth;             /* root window size */

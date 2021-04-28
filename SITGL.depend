@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1616445667 source:c:\drive_e\projets\sitgl\sit.c
+1619024040 source:c:\drive_e\projets\sitgl\sit.c
 	<windows.h>
 	<math.h>
 	<malloc.h>
@@ -19,23 +19,23 @@
 1594068816 c:\drive_e\projets\sitgl\glad.h
 	<stdint.h>
 
-1616446714 c:\drive_e\projets\sitgl\nanovg_gl.h
+1619454442 c:\drive_e\projets\sitgl\nanovg_gl.h
 	<stdlib.h>
 	<stdio.h>
 	<string.h>
 	<math.h>
 	"nanovg.h"
 
-1611199900 c:\drive_e\projets\sitgl\nanovg_gl_utils.h
+1611199902 c:\drive_e\projets\sitgl\nanovg_gl_utils.h
 	<OpenGL/glext.h>
 
-1619117294 c:\drive_e\projets\sitgl\sit_p.h
+1619189642 c:\drive_e\projets\sitgl\sit_p.h
 	"SIT.h"
 	"SIT_CSSStyles.h"
 	<stdio.h>
 	"debugMem.h"
 
-1619126080 c:\drive_e\projets\sitgl\sit.h
+1619211872 c:\drive_e\projets\sitgl\sit.h
 	"UtilityLibLite.h"
 
 1619108544 c:\drive_e\projets\sitgl\utilityliblite.h
@@ -47,7 +47,7 @@
 
 1616098300 c:\drive_e\projets\sitgl\debugmem.h
 
-1616097292 c:\drive_e\projets\sitgl\sit_cssparser.h
+1619453976 c:\drive_e\projets\sitgl\sit_cssparser.h
 	"SIT_P.h"
 
 1618847688 c:\drive_e\projets\sitgl\sit_csslayout.h
@@ -69,7 +69,7 @@
 	"SIT_P.h"
 	"SIT_CSSLayout.h"
 
-1616295857 source:c:\drive_e\projets\sitgl\sit_cssapply.c
+1619443230 source:c:\drive_e\projets\sitgl\sit_cssapply.c
 	<stdio.h>
 	<stddef.h>
 	<stdlib.h>
@@ -81,11 +81,11 @@
 	"SIT_CSSAttrs.h"
 	"SIT_CSSColors.h"
 
-1616295863 c:\drive_e\projets\sitgl\sit_cssattrs.h
+1616295864 c:\drive_e\projets\sitgl\sit_cssattrs.h
 
 1603897900 c:\drive_e\projets\sitgl\sit_csscolors.h
 
-1617070311 source:c:\drive_e\projets\sitgl\sit_csslayout.c
+1618849836 source:c:\drive_e\projets\sitgl\sit_csslayout.c
 	<math.h>
 	<string.h>
 	<stdlib.h>
@@ -116,12 +116,12 @@
 	"SIT_CSSLayout.h"
 	"nanovg.h"
 
-1615818432 source:c:\drive_e\projets\sitgl\sit_dialog.c
+1619109758 source:c:\drive_e\projets\sitgl\sit_dialog.c
 	<stdio.h>
 	"SIT_P.h"
 	"SIT_CSSLayout.h"
 
-1614447850 source:c:\drive_e\projets\sitgl\sit_editbox.c
+1619384670 source:c:\drive_e\projets\sitgl\sit_editbox.c
 	<math.h>
 	<stdio.h>
 	<stdlib.h>
@@ -132,7 +132,7 @@
 	"SIT_CSSLayout.h"
 	"nanovg.h"
 
-1616098402 source:c:\drive_e\projets\sitgl\sit_event.c
+1619382200 source:c:\drive_e\projets\sitgl\sit_event.c
 	<string.h>
 	<ctype.h>
 	"SIT_P.h"
@@ -146,7 +146,7 @@
 	"SIT_P.h"
 	"SIT_CSSLayout.h"
 
-1611159072 source:c:\drive_e\projets\sitgl\sit_gradient.c
+1619454088 source:c:\drive_e\projets\sitgl\sit_gradient.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -163,7 +163,7 @@
 	"SIT_P.h"
 	"SIT_CSSLayout.h"
 
-1617314327 source:c:\drive_e\projets\sitgl\sit_listbox.c
+1619466632 source:c:\drive_e\projets\sitgl\sit_listbox.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -175,14 +175,14 @@
 	"SIT_CSSLayout.h"
 	"nanovg.h"
 
-1614571959 source:c:\drive_e\projets\sitgl\sit_progress.c
+1618847710 source:c:\drive_e\projets\sitgl\sit_progress.c
 	<stdio.h>
 	<string.h>
 	"SIT_P.h"
 	"SIT_CSSLayout.h"
 	"nanovg.h"
 
-1616635810 source:c:\drive_e\projets\sitgl\sit_render.c
+1619454610 source:c:\drive_e\projets\sitgl\sit_render.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -193,15 +193,16 @@
 	"SIT_CSSParser.h"
 	"nanovg.h"
 
-1604008186 source:c:\drive_e\projets\sitgl\sit_scrollbar.c
+1618690470 source:c:\drive_e\projets\sitgl\sit_scrollbar.c
 	<windows.h>
 	<stdio.h>
 	<math.h>
 	"SIT_P.h"
 	"SIT_CSSLayout.h"
 
-1604276081 source:c:\drive_e\projets\sitgl\sit_slider.c
+1618700116 source:c:\drive_e\projets\sitgl\sit_slider.c
 	<stdio.h>
+	<stdlib.h>
 	<math.h>
 	"SIT_P.h"
 	"SIT_CSSLayout.h"
@@ -221,7 +222,7 @@
 	"SIT_P.h"
 	"SIT_CSSLayout.h"
 
-1615998884 source:c:\drive_e\projets\sitgl\sit_template.c
+1618687092 source:c:\drive_e\projets\sitgl\sit_template.c
 	<stdio.h>
 	<stdarg.h>
 	<stdlib.h>
@@ -230,14 +231,14 @@
 	<ctype.h>
 	"SIT_P.h"
 
-1614529803 source:c:\drive_e\projets\sitgl\sit_tooltip.c
+1619019074 source:c:\drive_e\projets\sitgl\sit_tooltip.c
 	<stdio.h>
 	<string.h>
 	<malloc.h>
 	"SIT_P.h"
 	"SIT_CSSLayout.h"
 
-1617158860 source:c:\drive_e\projets\sitgl\sit_widget.c
+1619205632 source:c:\drive_e\projets\sitgl\sit_widget.c
 	<windows.h>
 	<stdlib.h>
 	<string.h>
@@ -246,7 +247,7 @@
 	"SIT_P.h"
 	"SIT_CSSLayout.h"
 
-1616099376 source:c:\drive_e\projets\sitgl\utilityliblite.c
+1619303006 source:c:\drive_e\projets\sitgl\utilityliblite.c
 	<malloc.h>
 	<stdio.h>
 	<windows.h>
@@ -258,7 +259,7 @@
 	"UtilityLibLite.h"
 	"debugMem.h"
 
-1617314002 source:c:\drive_e\projets\sitgl\examplesdl.c
+1619495271 source:c:\drive_e\projets\sitgl\examplesdl.c
 	<stdio.h>
 	<SDL/SDL.h>
 	"nanovg.h"
@@ -268,7 +269,7 @@
 	"glad.h"
 	<windows.h>
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl.h
 	"SDL_main.h"
 	"SDL_stdinc.h"
 	"SDL_audio.h"
@@ -287,14 +288,14 @@
 	"begin_code.h"
 	"close_code.h"
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_main.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_main.h
 	"SDL_stdinc.h"
 	"begin_code.h"
 	"close_code.h"
 	"begin_code.h"
 	"close_code.h"
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_stdinc.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_stdinc.h
 	"SDL_config.h"
 	<sys/types.h>
 	<stdio.h>
@@ -320,26 +321,20 @@
 	<stdlib.h>
 	"close_code.h"
 
-1326114587 c:\drive_e\projets\external\includes\sdl\sdl_config.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_config.h
 	"SDL_platform.h"
-	"SDL_config_dreamcast.h"
-	"SDL_config_macos.h"
-	"SDL_config_macosx.h"
-	"SDL_config_symbian.h"
-	"SDL_config_win32.h"
-	"SDL_config_os2.h"
-	"SDL_config_minimal.h"
+	<stdarg.h>
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_platform.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_platform.h
 
 1326114594 c:\drive_e\projets\external\includes\sdl\sdl_config_win32.h
 	"SDL_platform.h"
 
-1326114600 c:\drive_e\projets\external\includes\sdl\begin_code.h
+1199055973 c:\drive_e\projets\external\includes\sdl\begin_code.h
 
-1325742239 c:\drive_e\projets\external\includes\sdl\close_code.h
+1199055973 c:\drive_e\projets\external\includes\sdl\close_code.h
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_audio.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_audio.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"SDL_endian.h"
@@ -349,24 +344,23 @@
 	"begin_code.h"
 	"close_code.h"
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_error.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_error.h
 	"SDL_stdinc.h"
 	"begin_code.h"
 	"close_code.h"
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_endian.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_endian.h
 	"SDL_stdinc.h"
-	<endian.h>
 	"begin_code.h"
 	"close_code.h"
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_mutex.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_mutex.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"begin_code.h"
 	"close_code.h"
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_thread.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_thread.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"SDL_mutex.h"
@@ -374,24 +368,24 @@
 	<process.h>
 	"close_code.h"
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_rwops.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_rwops.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"begin_code.h"
 	"close_code.h"
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_cdrom.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_cdrom.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"begin_code.h"
 	"close_code.h"
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_cpuinfo.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_cpuinfo.h
 	"SDL_stdinc.h"
 	"begin_code.h"
 	"close_code.h"
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_events.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_events.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"SDL_active.h"
@@ -402,58 +396,58 @@
 	"begin_code.h"
 	"close_code.h"
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_active.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_active.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"begin_code.h"
 	"close_code.h"
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_keyboard.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_keyboard.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"SDL_keysym.h"
 	"begin_code.h"
 	"close_code.h"
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_keysym.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_keysym.h
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_mouse.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_mouse.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"SDL_video.h"
 	"begin_code.h"
 	"close_code.h"
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_video.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_video.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"SDL_rwops.h"
 	"begin_code.h"
 	"close_code.h"
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_joystick.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_joystick.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"begin_code.h"
 	"close_code.h"
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_quit.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_quit.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_loadso.h
-	"SDL_stdinc.h"
-	"SDL_error.h"
-	"begin_code.h"
-	"close_code.h"
-
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_timer.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_loadso.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"begin_code.h"
 	"close_code.h"
 
-1325742239 c:\drive_e\projets\external\includes\sdl\sdl_version.h
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_timer.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1199055973 c:\drive_e\projets\external\includes\sdl\sdl_version.h
 	"SDL_stdinc.h"
 	"begin_code.h"
 	"close_code.h"

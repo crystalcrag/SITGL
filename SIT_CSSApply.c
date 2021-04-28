@@ -1529,12 +1529,6 @@ int cssApply(SIT_Widget node)
 		if (sep) *sep = old;
 	}
 
-	if (node->style.reflow & 6)
-	{
-		/* background-image changed: need to recompute CRC */
-		node->layout.curCRC32 = node->layout.crc32[state] = cssCRC32(&styles);
-	}
-
 	/* check for layout change: has to be done after everything has been processed */
 	if (applied)
 	{
