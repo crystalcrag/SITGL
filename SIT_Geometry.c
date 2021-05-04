@@ -83,7 +83,7 @@ static int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz,
 	SIT_Widget   s; /* sibling */
 	SIT_Attach * a;
 	REAL *       p; /* positions */
-	int          i, inc;
+	int          i, inc, hasPos;
 	REAL         padTL, padBR, pad, sz, margin;
 	REAL         percent[2];
 	REAL         chldsz = (adjust == FitUsingOptimalBox ? &w->optimalBox.width : &w->currentBox.width)[side];
@@ -96,6 +96,7 @@ static int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz,
 	padTL = root->padding[side];
 	padBR = root->padding[side+2];
 	pad   = padTL+padBR;
+	hasPos = 0;
 	sz = (&root->box.right)[side] - (&root->box.left)[side];
 	percent[0] = SIT_PercentMovable(w, side);
 	percent[1] = SIT_PercentMovable(w, side+2);
@@ -145,6 +146,7 @@ static int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz,
 			}
 			break;
 		case SITV_AttachPosition: /* % of container */
+			hasPos = 1;
 			root->flags |= SITF_Style1Changed << side;
 			root->layout.flags |= sideBoth[i&1];
 			if (margin == SITV_OffsetCenter)
@@ -262,22 +264,8 @@ static int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz,
 	else if ((sz = (&root->maxBox.width)[side]) <= 0)
 		sz = (&sit.scrWidth)[side] * 2;
 
-	// XXX gap when container has a left=FORM right=FORM attachment
-	// sz -= pad;
-
-	#if 0
-	// XXX make toolbar with right=FORM have margin on right side
-	if (*cside >= sz) {
-		*cside = sz;
-		return 1;
-	}
-
-	/* XXX infinite loop */
-	if (percent[0] >= 1 || margin <= 0) /* XXX will never complete otherwise */
-		return 1;
-	#endif
-
-	if (p[2] > margin)
+	/* hasPos: if left/top is set to be relative pos, only check that size fits the control, not position */
+	if (hasPos == 0 && p[2] > margin)
 		ret = 0, *cside += p[2] - margin;
 
 	if (p[2] - p[0] < chldsz /*(&w->optimalBox.width)[side]*/ && percent[1] > percent[0])
@@ -538,8 +526,10 @@ static int SIT_LayoutOptimal(SIT_Widget root)
 	}
 
 	memset(&root->box, 0, sizeof root->box);
+	/*
 	if (root->flags & SITF_FixedWidth)  root->box.right  = root->fixed.width;
 	if (root->flags & SITF_FixedHeight) root->box.bottom = root->fixed.height;
+	*/
 
 	/* reset children box dimension */
 	for (list = HEAD(root->children); list; NEXT(list))
@@ -853,7 +843,7 @@ void SIT_LayoutCSSSize(SIT_Widget root)
 	root->layout.pos.width  = root->box.right  - pad[2] - root->layout.pos.left;
 	root->layout.pos.height = root->box.bottom - pad[3] - root->layout.pos.top;
 	c = root->parent;
-	if (c)
+	if (c && root->type != SIT_DIALOG)
 	{
 		root->offsetX = c->offsetX + c->box.left;
 		root->offsetY = c->offsetY + c->box.top;
@@ -927,7 +917,11 @@ Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode)
 			root->box.top  += box[1]; root->box.bottom += box[1];
 		}
 		#ifdef DEBUG_GEOM
-		fprintf(stderr, "layout initial %s: %fx%f\n", root->name, root->box.right-root->box.left, root->box.bottom-root->box.top);
+		fprintf(stderr, "layout initial %s: %gx%g", root->name, root->box.right-root->box.left, root->box.bottom-root->box.top);
+		if (root->type == SIT_DIALOG)
+			fprintf(stderr, " min: [%g, %g]\n", ((SIT_Dialog)root)->minSize.width, ((SIT_Dialog)root)->minSize.height);
+		else
+			fputc('\n', stderr);
 		#endif
 		#if 0
 		if (root->parent == NULL)
@@ -938,7 +932,8 @@ Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode)
 
 	root->flags &= ~SITF_StylesChanged;
 
-	SIT_LayoutCSSSize(root);
+	if (mode != FitUsingOptimalBox && (root->flags & SITF_TopLevel))
+		SIT_LayoutCSSSize(root);
 
 	return True;
 }

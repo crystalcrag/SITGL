@@ -114,6 +114,9 @@ static int SIT_ListMeasure(SIT_Widget w, APTR cd, APTR ud)
 	SIT_Widget td = list->td;
 	SizeF * pref = cd;
 
+	if (w->children.lh_Head)
+		SIT_LayoutWidgets(w, (ULONG) ud);
+
 	if (list->viewMode == SITV_ListViewReport)
 	{
 		SizeF size = {0, 0};
@@ -234,6 +237,7 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 	nvgSave(sit.nvgCtx);
 	pos.top += w->offsetY - w->layout.padding.top;
 	pos.height += w->layout.padding.bottom + w->layout.padding.top;
+	list->lbFlags &= ~SITV_ReorgColumns;
 
 	if (icon == 0)
 	{
@@ -375,26 +379,14 @@ static Bool SIT_ListAdjustScroll(SIT_ListBox list)
 			if (list->super.vscroll == NULL)
 			{
 				SIT_CreateWidgets(&list->super, "<scrollbar name=vscroll lineHeight=", (int) list->super.style.font.size,
-					"top=", SITV_AttachForm, (int) list->hdrHeight, SITV_NoPad,
-					"bottom=FORM,,NOPAD right=FORM,,NOPAD>");
+					"top=", SITV_AttachForm, (int) list->hdrHeight, SITV_NoPad, "bottom=FORM,,NOPAD right=FORM,,NOPAD>");
 				SIT_AddCallback(list->super.vscroll, SITE_OnScroll, SIT_ListScroll, NULL);
-				/* hmm, want the dimension now */
-				if (list->super.vscroll->flags & SITF_GeomNotified)
-					SIT_ReflowLayout(sit.geomList), sit.geomList = NULL;
-				else
-					list->super.vscroll->flags |= SITF_GeomNotified, SIT_ReflowLayout(list->super.vscroll);
-			}
-			else
-			{
-				SIT_SetValues(list->super.vscroll, SIT_Visible, True, NULL);
-				SIT_ReflowLayout(sit.geomList);
-				sit.geomList = NULL;
 			}
 			list->lbFlags |= SITV_HasScroll;
-			list->scrollPad = layoutSize(list->super.vscroll, CSS_WIDTH);
+			list->scrollPad = ((SIT_App)sit.root)->defSBSize;
 			ret = True;
 		}
-		SIT_SetValues(list->super.vscroll, SIT_ScrollPos, (int) list->scrollTop, SIT_MaxValue, (int) list->scrollHeight,
+		SIT_SetValues(list->super.vscroll, SIT_Visible, True, SIT_ScrollPos, (int) list->scrollTop, SIT_MaxValue, (int) list->scrollHeight,
 			SIT_PageSize, (int) max, NULL);
 	}
 	else if (list->lbFlags & SITV_HasScroll)
@@ -552,7 +544,6 @@ static int SIT_ListResize(SIT_Widget w, APTR cd, APTR ud)
 		if (list->lbFlags & SITV_ReorgColumns)
 		{
 			SIT_ListReorgColumns(w, list->columnAlign);
-			list->lbFlags &= ~SITV_ReorgColumns;
 		}
 
 		for (cell = STARTCELL(list), hdr = list->columns, total = 0, i = 0, x = 0, top = list->hdrHeight; i < count; i ++, cell ++, hdr ++)

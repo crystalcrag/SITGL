@@ -496,6 +496,13 @@ DLLIMP void SIT_Nuke(int what)
 	while ((act = HEAD(sit.actions)))
 		SIT_ActionReschedule(act, -1, -1);
 
+	while (sit.pendingDel.lh_Head)
+	{
+		SIT_Widget w = (SIT_Widget) ListRemHead(&sit.pendingDel);
+		w->flags &= ~ SITF_IsLocked;
+		SIT_DestroyWidget(w);
+	}
+
 	switch (what) {
 	case SITV_NukeCtrl:
 		/* remove inline styles */

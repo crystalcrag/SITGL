@@ -212,12 +212,19 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 		w->composited = val->boolean;
 		break;
 	case SIT_Visible:
-		if (val->boolean == 0 && sit.curTooltip == w)
+		if (w->type == SIT_TOOLTIP)
 		{
-			if (sit.toolTip)
-				SIT_ActionReschedule(sit.toolTip, -1, -1);
-			sit.curTooltip = NULL;
-			sit.toolTip = NULL;
+			if (val->boolean == 0 && sit.curTooltip == w)
+			{
+				if (sit.toolTip)
+					SIT_ActionReschedule(sit.toolTip, -1, -1);
+				sit.curTooltip = NULL;
+				sit.toolTip = NULL;
+			}
+			else if (val->boolean)
+			{
+				SIT_SetValues(w, SIT_DisplayTime, SITV_ResetTime, NULL);
+			}
 		}
 		break;
 	case SIT_Enabled:
@@ -850,6 +857,14 @@ void SIT_FreeCSS(SIT_Widget node)
 	free(node);
 }
 
+static void SIT_RemoveFromFocus(SIT_Widget w)
+{
+	SIT_Widget * prev;
+	SIT_Widget   list;
+	for (list = w->parent; (list->flags & SITF_TopLevel) == 0; list = list->parent);
+	for (prev = &FOCUSRING(list), list = *prev; list && list != w; prev = &list->nextCtrl, list = *prev);
+	if (list) *prev = list->nextCtrl;
+}
 
 /* free memory and resources allocated for widget */
 void SIT_DestroyWidget(SIT_Widget w)
@@ -858,13 +873,20 @@ void SIT_DestroyWidget(SIT_Widget w)
 
 	if (w->flags & SITF_IsLocked)
 	{
+		SIT_Widget parent = w->parent;
 		w->flags |= SITF_BeingDestroyed;
 		/*
 		 * if parent is being also destroyed, we need to unlink from it now, because when we
-		 * got back here later, memory referenced by parent would have been already freed.
+		 * got back here later, memory referenced by parent will be freed.
 		 */
-		if (w->parent && (w->parent->flags & SITF_BeingDestroyed))
+		if (parent)
+		{
+			if (w->flags & SITF_InFocusRing)
+				SIT_RemoveFromFocus(w);
 			w->parent = NULL;
+			ListRemove(&parent->children, &w->node);
+			ListAddTail(&sit.pendingDel, &w->node);
+		}
 		return;
 	}
 
@@ -909,17 +931,8 @@ void SIT_DestroyWidget(SIT_Widget w)
 		SIT_Widget parent = w->parent;
 		/* remove from focus ring chain */
 		if (w->flags & SITF_InFocusRing)
-		{
-			SIT_Widget * prev;
-			SIT_Widget   list;
-			while ((parent->flags & SITF_TopLevel) == 0)
-				parent = parent->parent;
+			SIT_RemoveFromFocus(w);
 
-			for (prev = &FOCUSRING(parent), list = *prev; list && list != w; prev = &list->nextCtrl, list = *prev);
-			if (list) *prev = list->nextCtrl;
-
-			parent = w->parent;
-		}
 		if (w->type == SIT_TOOLTIP && parent->tooltip == w)
 			parent->tooltip = NULL;
 		ListRemove(&parent->children, &w->node);

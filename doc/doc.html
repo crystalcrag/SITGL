@@ -112,6 +112,8 @@
 <a class="sub1" href="#miscfunc"><span>Miscellaneous functions</span></a>
 
 <a class="sub1" href="#extractrl"><span>Extra widgets</span></a>
+<a class="sub2" href="#propfactory">Property factory</h3>
+<a class="sub2" href="#filechooser">File chooser</h3>
 
 <a class="sub1" href="#i18n"><span>Internationalization</span></a>
  <a class="sub2" href="#localeinfo">Locale information</a>
@@ -5974,7 +5976,7 @@ cancelled its selection. If confirmed, you can check some properties to know wha
   part of this path</strong> will be used to pre-fill the file selection entry. If you
   want it to remain blank, add a final slash/anti-slash to your path.
 
-  <li><tt class="dt">SIT_DlgFlags</tt> (<tt class="t">int</tt>)
+  <li><tt class="dt" id="SIT_DlgFlags">SIT_DlgFlags</tt> (<tt class="t">int</tt>)
   <p>Bit field that can be composed of the following flags:
   <ul>
 	<li><tt>SITV_FileSave</tt>: the label of the dialog will reflect a save
@@ -5988,7 +5990,6 @@ cancelled its selection. If confirmed, you can check some properties to know wha
 	<li><tt>SITV_FileWarnOverwrite</tt>: warn the user that the selection will
 	be overwritten.</li>
   </ul>
-  </dd>
 </ul>
 
 <p>Once your control has been created, you usually manage it just like you would with a normal dialog.
@@ -6105,8 +6106,8 @@ been mentionned so far in this document:
   <p>This function will display a message in a <b>separate window</b> (from the operating system).
   This function can actually be called very early, even before the <tt>SITGL</tt> has been initialized.
   That's actually the main purpose of this function: notify the user of problems before you can display
-  them on screen. Once <tt>SITGL</tt> has been initialized, it is advised to display within the
-  application.
+  them on screen. Once <tt>SITGL</tt> has been initialized, it is advised to display the message within
+  the application.
 
   <p><tt>level</tt> can be one of the following values:
   <ul>
@@ -6117,7 +6118,7 @@ been mentionned so far in this document:
 	so that it can fix it later.
   </ul>
 
-  <p><tt>fmt</tt> can a printf-like format strings, with potential aguments following.
+  <p><tt>fmt</tt> can be a printf-like format strings, with potential aguments following.
 
 
   <li><tt class="dt">STRPTR SIT_GetFromClipboard(int * size);</tt>
@@ -6150,47 +6151,35 @@ been mentionned so far in this document:
 
 <h2 id="extractrl">Extra widgets</h2>
 
-<p>This section will list a few widgets that are available as separate module to be
-linked with your main program. They are implemented using no more than what has been
-explained so far, they do not make use of private datatypes from SIT. Their source
-code are also provided, if you feel you can improve them. They usually are rather
-short (around 20Kb of source), so that you can even include the source file(s) to your
-project.
+<p>This section will list a few widgets that are available as separate source files to be compiled with
+your main program. They are implemented using no more than what has been explained so far, they do not
+make use of private datatypes from SIT. They are also a good source to get a feel of the typical design
+patterns used by this library.
 
-<p>They are also a good source to get a feel of the typical design patterns used by
-this library. Keep in mind though, these are complete components and not just toy
-example. They includes lots of boiler plate code and attention to small details that
-makes the code not that easy to read. Nevertheless, a particular attention have been
-made to showcase the best practice in designing custom widgets.
+<h3 id="propfactory"><span>Property factory</span></h3>
 
-<h3>Property factory</h3>
-
-<p>This library has a crude but small mechanism to add extra properties that can be
-recognized by the functions <tt>SIT_SetValues()</tt> and <tt>SIT_GetValues()</tt>. The
-problem when designing custom controls, is that it is usually quite common to have
-lots of parameters for the user/programmer to fiddle with. You can still write your
-own functions for handling this part, but you'll quickly find out that the only
-easy way to deal with lots of properties is using a <em>vararg</em> interface, similar to
-the <tt>SIT_SetValues()</tt> or <tt>SIT_GetValues()</tt> functions, because:</p>
+<p>This library has a crude but small mechanism to <b>add extra properties</b> that can be recognized
+by the functions <tt>SIT_SetValues()</tt> and <tt>SIT_GetValues()</tt>. The problem when designing custom
+controls, is that it is usually quite common to have lots of parameters for the user/programmer to fiddle
+with. You can still write your own functions for handling this part, but you'll quickly find out that
+the only easy way to deal with lots of properties is using a <em>vararg</em> interface, similar to the
+<tt>SIT_SetValues()</tt> or <tt>SIT_GetValues()</tt> functions, because:
 
 <ul>
   <li>You do not have to remember the order in which to pass arguments.</li>
   <li>You can set/get any subset of all the available properties.</li>
   <li>There is provision to "bufferize" modification of properties (ie:
-  setting several properties can still result in a single visual update,
-  to avoid flickering problems).</li>
+  setting several properties can still result in a single internal update).</li>
 </ul>
 
-<p>The drawback of this mechanism is that it does not work with the functions
-<tt>SIT_CreateWidget()</tt>, <tt>SIT_CreateWidgets()</tt> and
-<tt>SIT_SetAttributes()</tt>, although it is still better than nothing, or having
-to write your own mechanism.</p>
+<p>The drawback of this mechanism is that it does not work with the functions <tt>SIT_CreateWidget()</tt>,
+<tt>SIT_CreateWidgets()</tt> and <tt>SIT_SetAttributes()</tt>, although it is still better than nothing,
+or having to write your own mechanism.
 
-<p>To implement custom attributes for your control, you'll first have to define
-custom tags, that will be recognized as such by functions <tt>SIT_SetValues()</tt>
-and <tt>SIT_GetValues()</tt>. User-defined tags starts with the value
-<strong><tt>SIT_TagUser</tt></strong> or higher. Usually, you just have to
-declare your attributes that way:</p>
+<p>To implement custom attributes for your control, you'll first have to <b>define custom tags</b>, that
+will be recognized as such by functions <tt>SIT_SetValues()</tt> and <tt>SIT_GetValues()</tt>. User-defined
+tags starts with the value <b><tt>SIT_TagUser</tt></b> or higher. Usually, you just have to declare
+your attributes that way:
 <pre><type>enum</type>
 {
 	MyAttribute1 = SIT_TagUser,
@@ -6199,10 +6188,9 @@ declare your attributes that way:</p>
 	<com>/* ... */</com>
 };</pre>
 
-<p>Then you have to register a callback for a <tt>SITE_OnSetOrGet</tt> notification.
-It will be triggered whenever the user wants to get <strong>or</strong> set a custom
-attribute (both actions are directed to the same callback). The call data is defined
-this way:</p>
+<p>Then you have to <b>register a callback</b> for a <tt>SITE_OnSetOrGet</tt> notification. It will be
+triggered whenever the user wants to get <strong>or</strong> set a custom attribute (both actions are
+directed to the same callback). The call data is defined this way:
 <pre><type>struct</type> SIT_OnVal_t
 {
 	<type>int</type>       stage;
@@ -6211,56 +6199,49 @@ this way:</p>
 	<type>va_list</type> * vararg;
 };</pre>
 
-<p>There is only two fields you might be interested in:</p>
+<p>There are only two fields you might be interested in:
 <ul>
   <li><tt>stage</tt>: what action is requested by user. Either <tt>SITV_Set</tt>,
   <tt>SITV_Get</tt> or <tt>SITV_PostProcess</tt> (more on these later).</li>
   <li><tt>tag</tt>: the tag id.</li>
 </ul>
 
-<p><tt>ptr</tt> and <tt>vararg</tt> are managed through the use of macros. Let's first
-see what the callback is expected to do according to current stage:</p>
+<p><tt>ptr</tt> and <tt>vararg</tt> are managed through the use of macros. Let's first see what the
+callback is expected to do according to current stage:
 
-<dl>
-  <dt><tt>SITV_Get</tt></dt>
-  <dd>User wants to get value of an attribute. You will have to use the macro
-  <tt>SIT_SET(cd, val, type);</tt> (meaning you have to set the user variable).
-  Where <tt>cd</tt> is the second argument (<tt>call_data</tt>) of your callback,
-  <tt>val</tt> is the value you want to return to the user (and not a pointer to it).
-  <tt>type</tt> is the type of the value. Note: <tt>val</tt> will only be evaluated
-  once, you can use complex expression, even though it is a macro.
+<ul>
+  <li><tt class="dt">SITV_Get</tt>
+  <p>The user wants to <b>get the value of an attribute</b>. You will have to use the macro <tt>SIT_SET(cd, val, type);</tt>
+  (meaning you have to set the user variable). Where <tt>cd</tt> is the second argument (<tt>call_data</tt>)
+  of your callback, <tt>val</tt> is the value you want to return to the user (and not a pointer to it).
+  <tt>type</tt> is the type of the value. Note: <tt>val</tt> will only be evaluated once, you can use
+  complex expression, even though it is a macro.
 
   <p>If resources must be allocated for the value, it is strongly recommended to not let the user
   handle the deallocation of it. Since it is your control that allocates the memory, it is best if
   it is also yours that frees it. This can be implemented by some sort of caching mechanism,
-  with the added benefit of being able the return later the same value if asked again.</p>
+  with the added benefit of being able the return later the same value if asked again.
 
-  <p>Return code is not meaningful for this stage.</p>
-  </dd>
+  <p>Return code is not meaningful for this stage.
 
-  <dt><tt>SITV_Set</tt></dt>
-  <dd>The user ask to modify the value of a given tag. You can use the macro
-  <tt>SIT_GET(cd, type);</tt> to get the value given by the user (this will be
-  the actual value, not a pointer to it). Be careful with strings, this will be
-  the original buffer provided by the user, it is strongly advised to make a copy.
-  
+  <li><tt class="dt">SITV_Set</tt>
+  <p>The user ask to <b>modify the value of a given tag</b>. You can use the macro <tt>SIT_GET(cd, type);</tt>
+  to get the value given by the user (this will be the actual value, not a pointer to it). Be careful
+  with strings, this will be the original buffer provided by the user, it is strongly advised to make a copy.
+
   <p>Also, even if your property is read-only, it is advised to use the <tt>SIT_GET</tt> macro,
-  to prevent user error, because of the way vararg works in C.<p>
+  to prevent user error, because of the way vararg works in C.
 
-  <p>If return code is positive, it will mean that you want to be notified once
-  all arguments to <tt>SIT_SetValues()</tt> have been processed. That way, you
-  can process modifications in one shot, reducing potential flickering problems.</p>
-  </dd>
+  <p>If the return code is positive, it will mean that you want to be notified once all arguments to
+  <tt>SIT_SetValues()</tt> have been processed. That way, you can process modifications in one pass.
 
-  <dt><tt>SITV_PostProcess</tt></dt>
-  <dd>If you returned a positive integer during a <tt>SITV_Set</tt> stage, another
-  one will be triggered. If you ever intend to do some post-processing, the easiest
-  way to handle this is to modify your internal datatypes along with a bitfield
-  that give some hints as to what part has been modified during the <tt>SITV_Set</tt>
-  stage. Once in the post-process stage, analyze that bitfield and modify part of
+  <li><tt class="dt">SITV_PostProcess</tt>
+  <p>If you returned a positive integer during a <tt>SITV_Set</tt> stage, another one will be triggered.
+  If you ever intend to do some post-processing, the easiest way to handle this is to modify your internal
+  datatypes along with a bitfield that give some hints as to what part has been modified during the
+  <tt>SITV_Set</tt> stage. Once in the post-process stage, analyze that bitfield and modify part of
   the interface that need refresh. Return value is ignored for this stage.
-  </dd>
-</dl>
+</ul>
 
 <h4>Managing related properties</h4>
 
@@ -6300,6 +6281,71 @@ on the order in which arguments are passed. It would be quite error prone to int
 constraint this late in the game. Also, use the method best suited for the job: no need to
 implement a 2-stage property processing, if there is nothing that can be done if all properties
 have not been set. In this case, a macro is probably the way to go.
+
+<h3 id="filechooser"><span>File chooser</span></h3>
+
+<p>The stock <a href="#SIT_FILESELECT">file chooser</a> dialog is based on a native widget. If you want
+to have a more integrated solution, you might be interested in this implementation. As you can see,
+it is implemented using nothing more than stock widgets from this library:
+
+<div class="image">
+  <img src="images/SIT_FILECHOOSER.png">
+</div>
+
+<p>Its usage is pretty straightforward, there is only one public functions:
+<pre>SIT_Widget FSOpen(SIT_Widget parent, STRPTR initdir, SIT_CallProc cb, APTR ud, int flags);</pre>
+
+<p>Each arguments have the following meaning:
+<ul>
+  <li><tt>parent</tt>: which dialog the file chooser will be the child of.
+  <li><tt>initdir</tt>: initial directory to display. If <tt class="o">NULL</tt>, the current working
+  directory will be used. If the path provided is relative, it will be made absolute.
+  <li><tt>cb</tt>: a callback triggered when the user confirm or cancel its selection.
+  <li><tt>ud</tt>: the user data parameter that will be transmitted to the callback.
+  <li><tt>flags</tt>: the same flags that can be specified for the <a href="#SIT_DlgFlags">SIT_DlgFlags</a>
+  property.
+</ul>
+
+<p>The return value will be the pointer to the top level dialog containing all the controls of the
+file chooser. At this point, the dialog has not been managed yet. This is to give you a chance to modify
+the layout and/or content of some of the control (see below).
+
+<p>If not <tt class="o">NULL</tt>, you have to call the function <tt>SIT_MangeWidget()</tt> on the
+returned value at some point in order for the dialog to appear on screen.
+
+<p>The callback will receive the fully qualified path (or paths) as for the <tt>call_data</tt> parameter.
+Here is how you can retrieve all the paths with the <tt>SIT_FileMultiSelect</tt> flag set:
+<pre><type>static int</type> selectFile(SIT_Widget w, <type>APTR</type> cd, <type>APTR</type> ud)
+{
+	<kwd>if</kwd> (cd)
+	{
+		<type>STRPTR</type> p;
+		<com>/* this will work even without the SIT_FileMultiSelect flag */</com>
+		<kwd>for</kwd> (p = cd; *p; p = strchr(p, <val>0</val>) + <val>1</val>)
+			fprintf(stderr, <val>"file selected = <spe>%s\n</spe>"</val>, p);
+	}
+	<kwd>else</kwd> fprintf(stderr, <val>"cancelled<spe>\n</spe></val>");
+	<kwd>return</kwd> <val>1</val>;
+}</pre>
+
+<p>In this callback, it is up to you to save some parameters from this dialog. The typical information
+you might want to get is:
+<ul>
+  <li><b>Current directory</b>: you can retrieve the current directory, so that you can provide it again
+  the next time you call <tt>FSOpen()</tt>, using a code like this:
+  <pre><type>STRPTR</type> curdir;
+SIT_GetValues(SIT_GetById(w, <val>"curdir"</val>), SIT_Title, &amp;curdir, <val>NULL</val>);</pre>
+  <p>Where <tt>w</tt> is the first parameter of the callback. <span class="n">Note</span>: the memory
+  containing the path will be free()'ed right after your callback finishes. <b>You have to copy the
+  content of this buffer elsewhere</b>.
+  <li><b>Dialog dimension</b>: you might want to save the dimension and/or position of the dialog.
+  It is advised to let the library position the dialog, in case the screen dimension have changed since
+  it was retrieved. To get the dimension, simply use a code similar to:
+  <pre><type>int</type> with, height;
+SIT_GetValues(w, SIT_Width, &amp;width, SIT_Height, &amp;height, <val>NULL</val>);</pre>
+  <p>And save those somewhere safe, and apply them back on the value returned by <tt>FSOpen</tt>, just
+  before calling <tt>SIT_ManageWidget()</tt>.
+</ul>
 
 <h2 id="i18n">Internationalization</h2>
 
@@ -7030,7 +7076,7 @@ with this topic in much more depth, than what is explained in here.
 <p>This will provide a set of functions to implement high precision timer: wait for a specified amount
 of time down to the millisecond range and get current time down to the microsecond range.
 
-<p><span class="n">Note</span>: on Windows, these functions are base on the <tt>QueryPerformanceCounter()</tt>
+<p><span class="n">Note</span>: on Windows, these functions are based on the <tt>QueryPerformanceCounter()</tt>
 API.
 
 <ul>
@@ -7054,7 +7100,7 @@ API.
   <li><tt class="dt">void FramePauseUnpause(Bool pause);</tt>
   <p>If you have to implement a pause menu, you'll need to ignore the time spent while the engine
   is paused, otherwise any actions based on time interval will be messed up. The idea is to call this
-  function with the pause paramter set to <tt class="o">True</tt> at the start of the pause, then set
+  function with the pause parameter set to <tt class="o">True</tt> at the start of the pause, then set
   to <tt class="o">False</tt> at the end. That way, the <tt>FrameGetTime()</tt> function will return
   an (almost) monotonic increase of the time, without any gap, as if the pause never happened.
 

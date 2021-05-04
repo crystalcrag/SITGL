@@ -128,8 +128,10 @@ static int SIT_TextEditFinalize(SIT_Widget w, APTR cd, APTR ud)
 	{
 		if (edit->flags & FLAG_CLEARCLIP)
 		{
-			memset(edit->text, ' ', edit->maxText);
+			memset(edit->text, ' ', edit->length);
+			/* first, overwrite with blank, then clear content */
 			SIT_CopyToClipboard(edit->text, -1);
+			SIT_CopyToClipboard("", -1);
 		}
 		/* prevent password being kept in unused memory chunks */
 		memset(edit->text, 0, edit->maxText);
@@ -137,6 +139,8 @@ static int SIT_TextEditFinalize(SIT_Widget w, APTR cd, APTR ud)
 	if (edit->caretBlink)
 		SIT_ActionReschedule(edit->caretBlink, -1, -1);
 
+	if ((edit->flags & FLAG_FIXEDUNDO) == 0)
+		free(edit->undoBuffer);
 	if ((edit->flags & FLAG_FIXEDSIZE) == 0)
 		free(edit->text);
 	if (edit->maxLines == 0)
@@ -536,7 +540,7 @@ void SIT_TextEditSetText(SIT_Widget w, STRPTR title)
 		edit->ypos = 0;
 		/* text */
 		edit->length = 0;
-		SIT_TextEditPaste(edit, title, -1);
+		SIT_TextEditPaste(edit, title ? title : "", -1);
 		if (pos > edit->length) pos = edit->length;
 		edit->cursor = edit->selStart = edit->selEnd = pos;
 		if (w->layout.pos.width > 0)

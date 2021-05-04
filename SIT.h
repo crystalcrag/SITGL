@@ -482,6 +482,9 @@ enum         /* SIT_ToolTipAnchor */
 	SITV_TooltipFollowMouse
 };
 
+/* special value for SIT_DisplayTime and SIT_DelayTime */
+#define SITV_TooltipManualTrigger       100000000
+
 enum         /* SIT_WordWrap */
 {
 	SITV_WWNone,

@@ -163,8 +163,11 @@ DLLIMP void SIT_CloseDialog(SIT_Widget w)
 
 	if (w == sit.activeDlg)
 	{
+		SIT_Widget parent = w->parent;
+		while ((parent->flags & SITF_TopLevel) == 0)
+			parent = parent->parent;
 		sit.active = sit.hover = sit.focus = NULL;
-		sit.activeDlg = sit.root;
+		sit.activeDlg = parent;
 	}
 	if (w->type == SIT_APP)
 	{

@@ -208,6 +208,11 @@ DLLIMP Bool AddPart(STRPTR path, STRPTR src, int max)
 			p = path + n;
 			if (*file == 0) file --;
 		}
+		else if (file[0] == '.' && strchr("/\\", file[1]))
+		{
+			file ++;
+			if (file[0]) file ++;
+		}
 		else /* Append part */
 		{
 			if (p > path && p[-1] != sep && n < max)

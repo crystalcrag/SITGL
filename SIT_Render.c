@@ -1936,6 +1936,13 @@ DLLIMP SIT_RENDER SIT_RenderNodes(float time)
 	if (sit.root->flags & SITF_GeometryChanged)
 		SIT_LayoutWidgets(sit.root, FitUsingCurrentBox);
 
+	while (sit.pendingDel.lh_Head)
+	{
+		SIT_Widget w = (SIT_Widget) ListRemHead(&sit.pendingDel);
+		w->flags &= ~ SITF_IsLocked;
+		SIT_DestroyWidget(w);
+	}
+
 	sit.root->visible = 1;
 	sit.curTime = time;
 

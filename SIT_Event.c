@@ -640,9 +640,12 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 			if (hover && hover->tooltip)
 			{
 				SIT_Tooltip tip = (SIT_Tooltip) hover->tooltip;
-				sit.curTooltip = &tip->super;
-				sit.toolTip = SIT_ActionAdd(&tip->super, sit.curTime + tip->delayTime, sit.curTime + tip->delayTime + tip->displayTime,
-					SIT_TooltipTimer, NULL);
+				if (tip->delayTime < SITV_TooltipManualTrigger)
+				{
+					sit.curTooltip = &tip->super;
+					sit.toolTip = SIT_ActionAdd(&tip->super, sit.curTime + tip->delayTime, sit.curTime + tip->delayTime + tip->displayTime,
+						SIT_TooltipTimer, NULL);
+				}
 			}
 			#if 0
 			fprintf(stderr, "entering %s: [%d]", hover->name, hover->state);
@@ -657,7 +660,11 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 		{
 			c = stack[count];
 			if (c->state != c->oldState)
+			{
+				if (strcmp(c->tagName, "close") == 0)
+					puts("here");
 				layoutUpdateStyles(c);
+			}
 		}
 		sit.hover = hover;
 	}

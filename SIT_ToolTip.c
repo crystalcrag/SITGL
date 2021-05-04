@@ -100,21 +100,21 @@ static int SIT_TooltipSetValue(SIT_Widget w, APTR cd, APTR ud)
 		if (sit.curTooltip == w)
 		{
 			/* already displayed: extend delay (else is about to) */
-			if (w->visible)
+			if (w->visible && tip->displayTime < SITV_TooltipManualTrigger)
 				SIT_ActionReschedule(sit.toolTip, sit.curTime, sit.curTime + tip->displayTime);
 		}
 		else
 		{
 			/* cancel current tooltip */
-			if (sit.toolTip)
-			{
-				SIT_ActionReschedule(sit.toolTip, -1, -1);
+			if (sit.curTooltip)
 				SIT_SetValues(sit.curTooltip, SIT_Visible, False, NULL);
-			}
+			if (sit.toolTip)
+				SIT_ActionReschedule(sit.toolTip, -1, -1), sit.toolTip = NULL;
 
 			/* ignore delay though */
 			sit.curTooltip = w;
-			sit.toolTip = SIT_ActionAdd(w, sit.curTime, sit.curTime + tip->displayTime, SIT_TooltipTimer, NULL);
+			if (tip->displayTime < SITV_TooltipManualTrigger)
+				sit.toolTip = SIT_ActionAdd(w, sit.curTime, sit.curTime + tip->displayTime, SIT_TooltipTimer, NULL);
 		}
 	}
 	else SIT_SetWidgetValue(w, cd, ud);

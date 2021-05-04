@@ -171,6 +171,7 @@ struct SITContext_t
 	int          lastRule;
 	ListHead     images;               /* CSSImage: keep in a cache, free after a while */
 	ListHead     actions;              /* SIT_Action */
+	ListHead     pendingDel;           /* SIT_Widget */
 	TEXT         relPath[128];         /* external resources from CSS will be relative to where CSS file is */
 	SIT_ActBuf   actionbuf[10];        /* pre-alloc some, malloc more if needed */
 	REAL         compoArea[4*MAXCOMPO];
