@@ -1873,10 +1873,16 @@ static void renderNode(SIT_Widget node)
 	if (HAS_EVT(node, SITE_OnPaint))
 	{
 		SIT_OnPaint paint = {
-			.x = box.left, .w = box.width, .nvg = sit.nvgCtx,
-			.y = box.top,  .h = box.height
+			.x = box.left, .w = box.width, .nvg = sit.nvgCtx, .fontId = node->style.font.handle,
+			.y = box.top,  .h = box.height, .fontSize = node->style.font.size
 		};
+		nvgSave(paint.nvg);
+		nvgFillColorRGBA8(paint.nvg, node->style.color.rgba);
+		nvgTextLetterSpacing(paint.nvg, node->layout.letterSpacing);
+		nvgFontFaceId(paint.nvg, node->style.font.handle);
+		nvgFontSize(paint.nvg, node->style.font.size);
 		SIT_ApplyCallback(node, &paint, SITE_OnPaint);
+		nvgRestore(paint.nvg);
 	}
 }
 

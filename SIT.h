@@ -119,6 +119,7 @@ DLLIMP void       SIT_MoveNearby(SIT_Widget, int XYWH[4], int defAlign);
 DLLIMP void       SIT_ForceRefresh(void);
 DLLIMP int        SIT_NeedRefresh(void);
 DLLIMP int        SIT_InitDrag(SIT_CallProc);
+DLLIMP Bool       SIT_ParseCSSColor(STRPTR cssColor, uint8_t ret[4]);
 
 DLLIMP Bool       SIT_ListSetCell(SIT_Widget w, int row, int col, APTR rowTag, int align, STRPTR text);
 DLLIMP Bool       SIT_ListSetColumn(SIT_Widget, int col, int width, int align, STRPTR label);
@@ -569,6 +570,8 @@ struct SIT_OnPaint_t
 {
 	float x, y;    /* recommended area to refresh */
 	float w, h;
+	float fontSize;
+	int   fontId;
 	APTR  nvg;     /* nanovg context */
 };
 

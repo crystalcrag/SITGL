@@ -862,74 +862,121 @@ DATA8 cssAllocThemeBytes(int size, APTR data)
 	return sit.theme + pos;
 }
 
+#define SZATTRS     (2 * sizeof (STRPTR))
+static STRPTR * cssAllocAttrs(DATA16 offsets)
+{
+	STRPTR * ret;
+	uint16_t off;
+	switch (offsets[2]) {
+	case 0:
+		/* alloc at end of array */
+		ret = (STRPTR *) cssAllocThemeBytes(SZATTRS, NULL);
+		offsets[1] ++;
+		break;
+	case 0xffff:
+		/* existing list full, relocate */
+		off = sit.themeSize;
+		ret = (STRPTR *) cssAllocThemeBytes((offsets[1] + 1) * SZATTRS, NULL);
+		memcpy(ret, sit.theme + offsets[0], offsets[1] * SZATTRS);
+		ret += offsets[1] * 2;
+		offsets[0] = off;
+		offsets[1] ++;
+		offsets[2] = 0;
+		break;
+
+	default:
+		/* reuse existing array */
+		ret = (STRPTR *) (sit.theme + offsets[0] + (offsets[1] - offsets[2]) * SZATTRS);
+		offsets[2] --;
+		if (offsets[2] == 0)
+			offsets[2] = 0xffff;
+	}
+	return ret;
+}
+
+static void cssAllocInit(uint16_t alloc[3], DATA16 offsets)
+{
+	if (offsets[0] > 0)
+	{
+		/* already allocated some bytes before: reuse the array, it is extremely likely it will have enough space */
+		memcpy(alloc, offsets, 4);
+		alloc[2] = offsets[1];
+		/* clear previous entries though */
+		memset(sit.theme + offsets[0], 0, SZATTRS * alloc[1]);
+	}
+	else alloc[0] = sit.themeSize, alloc[1] = alloc[2] = 0;
+}
+#undef SZATTRS
+
 /*
  * parse CSS block attributes
  * transform them into table of key/value pairs (NULL-terminated)
  */
 STRPTR cssParseStyles(STRPTR start, uint16_t offsets[2])
 {
-	STRPTR * a;
-	STRPTR   p = skipspace(start);
-	int      m = sit.themeSize;
-	int      n = 0;
+	STRPTR * attr = NULL;
+	STRPTR   fmt = skipspace(start);
+	uint16_t alloc[3];
 
-	offsets[0] = m;
+	cssAllocInit(alloc, offsets);
 
-	while (*p && *p != '}')
+	while (*fmt && *fmt != '}')
 	{
-		a = (STRPTR *) cssAllocThemeBytes(sizeof p, &p);
-		p = cssIdent(p);
-		if (*p == ':')
+		if (attr == NULL)
+			attr = cssAllocAttrs(alloc);
+		attr[0] = fmt;
+		fmt  = cssIdent(fmt);
+
+		if (*fmt == ':')
 		{
 			/* attribute name, followed by attribute value */
-			*p++ = 0;
-			start = p = skipspace(p);
-			while (*p && *p != '}' && *p != ';')
+			*fmt++ = 0;
+			start = fmt = skipspace(fmt);
+			while (*fmt && *fmt != '}' && *fmt != ';')
 			{
-				TEXT chr = *p;
-				if (chr == '\\' && p[1]) p += 2; else
-				if (chr == '/' && p[1] == '*') p = skipspace(p); else
-				if (strncasecmp(p, "url(", 4) == 0) p = cssSkipURL(p); else
-				if (strncasecmp(p, "linear-gradient(", 16) == 0 ||
-				    strncasecmp(p, "repeating-linear-gradient(", 26) == 0)
+				TEXT chr = *fmt;
+				if (chr == '\\' && fmt[1]) fmt += 2; else
+				if (chr == '/' && fmt[1] == '*') fmt = skipspace(fmt); else
+				if (strncasecmp(fmt, "url(", 4) == 0) fmt = cssSkipURL(fmt); else
+				if (strncasecmp(fmt, "linear-gradient(", 16) == 0 ||
+				    strncasecmp(fmt, "repeating-linear-gradient(", 26) == 0)
 				{
 					struct Gradient_t dummy = {};
-					if (!cssParseGradient(p, &p, &dummy))
+					if (!cssParseGradient(fmt, &fmt, &dummy))
 						goto error;
 				}
 				else if (chr == '\"' || chr == '\'')
 				{
-					p = cssSkipString(p);
+					fmt = cssSkipString(fmt);
 					/* unterminated literal not at end of stream */
-					if (p[-1] != chr && *p)
+					if (fmt[-1] != chr && *fmt)
 						goto error;
 				}
-				else p ++;
+				else fmt ++;
 			}
-			if (start < p)
+			if (start < fmt)
 			{
-				StrToLower(a[0], -1);
-				cssAllocThemeBytes(sizeof start, &start);
-				m = sit.themeSize; n ++;
-				if (*p == '}') { *p = 0; cssNormalizeSpace(start); *p = '}'; break; }
-				if (*p == ';') { *p++ = 0; }
+				StrToLower(attr[0], -1);
+				attr[1] = start;
+				if (*fmt == '}') { *fmt = 0; cssNormalizeSpace(start); *fmt = '}'; break; }
+				if (*fmt == ';') { *fmt++ = 0; }
 				cssNormalizeSpace(start);
+				/* if there is an error, we'll reuse our previous allocation */
+				attr = NULL;
 			}
 			else goto error;
 		}
 		else
 		{
 			error:
-			p = cssSkipBogus(p, '}');
-			if (*p == ';') *p++ = 0;
-			/* clear bogus property (no value) */
-			sit.themeSize = m;
+			fmt = cssSkipBogus(fmt, '}');
+			if (*fmt == ';') *fmt++ = 0;
 		}
-		p = skipspace(p);
+		fmt = skipspace(fmt);
 	}
-	if (*p == '}') *p ++ = 0;
-	offsets[1] = n;
-	return p;
+	if (*fmt == '}') *fmt ++ = 0;
+	memcpy(offsets, alloc, 4);
+	return fmt;
 }
 
 /* transform selector string into something more easily parsable */
@@ -1100,7 +1147,7 @@ static void cssParseString(STRPTR rules, STRPTR rel)
 
 		if (! fail)
 		{
-			uint16_t offsets[2];
+			uint16_t offsets[2] = {0, 0};
 
 			p = cssParseStyles(p, offsets);
 			if (offsets[1] > 0)

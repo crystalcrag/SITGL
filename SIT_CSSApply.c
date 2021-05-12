@@ -1263,6 +1263,8 @@ void cssSetDefault(SIT_Widget node)
 		memset(bg, 0, offsetp(Background, dim));
 	}
 
+	if (node->type == SIT_EDITBOX)
+		((SIT_EditBox)node)->caret.val = 0;
 	if (parent == NULL)
 	{
 		node->style.font.size = cssApplyFontSize(NULL, node->style.fontSize);
@@ -1281,14 +1283,14 @@ void cssSetDefault(SIT_Widget node)
 static void cssAddStyles(vector v, STRPTR * styles, int count, int specif, int specif_important)
 {
 	static int i = 0; /* used to sort rules with same specif: last declared takes precedence over first */
-	while (count > 0)
+	while (count > 0 && styles[0])
 	{
 		/* filter !important rules */
 		STRPTR sep = strchr(styles[1], '!');
 
 		if (sep)
 		{
-			/* anything other than "important" must discard the style */
+			/* anything other than "important" must discard the entire declaration */
 			if (strcasecmp(skipspace(sep+1), "important"))
 			{
 				styles += 2;
@@ -1511,7 +1513,7 @@ int cssApply(SIT_Widget node)
 	node->layout.top = 0;
 
 	#if 0
-	if (strcmp(node->name, "text") == 0)
+	if (strcmp(node->name, "color") == 0)
 	{
 		fprintf(stderr, "*** styles for state %d [%d] = %x\n", node->state, state, i);
 		for (i = 0, style = vector_first(styles); i < styles.count; i ++, style ++)

@@ -158,8 +158,7 @@ static STRPTR SIT_ParseLine(STRPTR line, va_list * list, TagList * classArgs, PL
 					if (SIT_LeftAttachment   <= args->tl_TagID &&
 					    SIT_BottomAttachment >= args->tl_TagID && isalpha(*e))
 					{
-						cur->key.val = FindInList("NONE,FORM,POSITION,WIDGET,OPPOSITE,MIDDLE,NOOVERLAP",
-							e, p - e);
+						cur->key.val = FindInList("NONE,FORM,POSITION,WIDGET,OPPOSITE,MIDDLE,NOOVERLAP", e, p - e);
 						if (cur->key.val == (ULONG) -1)
 							cur->key.val = strtoul(e, NULL, 0);
 						break;

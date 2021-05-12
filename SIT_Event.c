@@ -660,11 +660,7 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 		{
 			c = stack[count];
 			if (c->state != c->oldState)
-			{
-				if (strcmp(c->tagName, "close") == 0)
-					puts("here");
 				layoutUpdateStyles(c);
-			}
 		}
 		sit.hover = hover;
 	}

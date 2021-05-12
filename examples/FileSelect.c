@@ -40,14 +40,12 @@ static void FSFillList(STRPTR path, SIT_Widget list)
 		do
 		{
 			TEXT size[64];
-			if (! args.isDir)
+			if (args.isDir)
 			{
-				int kb = args.size >> 10;
-				if (kb == 0 && args.size > 0)
-					kb = 1;
-				sprintf(size, "%d KB", kb);
+				size[0] = 0;
+				StrCat(args.name, 256, 0, "/");
 			}
-			else size[0] = 0, StrCat(args.name, 256, 0, "/");
+			else sprintf(size, "%d KB", (args.size+1023) >> 10);
 			SIT_ListInsertItem(list, -1, (APTR) args.isDir, args.name, args.type, args.date, size);
 		}
 		while (ScanDirNext(&args));

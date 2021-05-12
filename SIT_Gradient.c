@@ -204,8 +204,6 @@ Bool gradientDrawLinear(CSSImage img, Gradient * grad, REAL ratio)
 	return True;
 }
 
-typedef uint16_t * DATA16;
-
 static void memcpy_repeat(DATA8 dst, DATA8 rgba, int len, int maxlen)
 {
 	while (len > maxlen)

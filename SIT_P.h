@@ -49,6 +49,7 @@ typedef struct CSSImage_t *       CSSImage;
 typedef struct SIT_Action_t *     SIT_Action;
 typedef struct SIT_Action_t       SIT_ActBuf;
 typedef struct Cell_t *           Cell;
+typedef uint16_t *                DATA16;
 
 enum ResizePolicy_t /* values for 'adjust' parameter of SIT_LayoutWidgets() */
 {
@@ -428,7 +429,7 @@ struct SIT_ScrollBar_t
 	SIT_Widget   arrowUp, arrowDown, thumb;
 	SIT_Action   autoScroll;
 	uint8_t      isHoriz;              /* public */
-	uint8_t      isInThumb;
+	uint8_t      checkPos;
 	uint16_t     isDragged;
 	int          arrowType;            /* public */
 	int          min, max;             /* public */

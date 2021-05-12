@@ -534,6 +534,12 @@ DLLIMP void SIT_Nuke(int what)
 	}
 }
 
+/* utility function */
+DLLIMP Bool SIT_ParseCSSColor(STRPTR cssColor, uint8_t ret[4])
+{
+	return cssParseColor(&cssColor, (CSSColor *) ret);
+}
+
 #if 0
 static int SIT_CalcFade(SIT_Widget w, APTR cd, APTR ud)
 {

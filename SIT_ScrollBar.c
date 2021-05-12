@@ -78,6 +78,18 @@ static int SIT_ScrollBarResize(SIT_Widget w, APTR cd, APTR ud)
 	SIT_Widget thumb = sb->thumb;
 	REAL range = sb->oldRange;
 
+	if (sb->checkPos)
+	{
+		int pos = sb->scrollPos;
+		int max = sb->max - sb->pageSize;
+		if (pos > max) pos = max;
+		if (pos < sb->min) pos = sb->min;
+		sb->scrollPos = pos;
+		sb->checkPos = 0;
+		if (w->layout.pos.width > 0)
+			SIT_ApplyCallback(w, (APTR) pos, SITE_OnScroll);
+	}
+
 	if (range == 0)
 	{
 		range = sb->max - sb->min;
@@ -296,17 +308,23 @@ static int SIT_ScrollBarArrowClick(SIT_Widget w, APTR cd, APTR ud)
 
 static int SIT_ScrollBarSetValue(SIT_Widget w, APTR cd, APTR ud)
 {
+	#define sb     ((SIT_ScrollBar)w)
 	switch (((TagList *)cd)->tl_TagID) {
+	case SIT_ScrollPos:
+		if (sb->scrollPos == ((SIT_Variant *)ud)->integer)
+			return 0;
 	case SIT_MinValue:
 	case SIT_MaxValue:
 	case SIT_PageSize:
 	case SIT_LineHeight:
-	case SIT_ScrollPos:
+		sb->checkPos = 1;
 		w->postProcess = SIT_ScrollBarResize;
+		// no break;
 	default:
 		SIT_SetWidgetValue(w, cd, ud);
 	}
 	return 1;
+	#undef sb
 }
 
 /* control creation */

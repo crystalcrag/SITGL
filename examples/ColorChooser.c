@@ -1,7 +1,7 @@
 /*
- * ColorChooser.c : simple RGB color chooser using HSV color space.
+ * ColorChooser.h : simple widget to select an RGB color
  *
- * written by T.Pierron, may 2021.
+ * Written by T.Pierron, May 2021
  */
 
 #include <stdio.h>
@@ -16,13 +16,15 @@ typedef uint16_t *                   DATA16;
 
 struct ColorChooser_t
 {
-	SIT_Widget SV;
-	SIT_Widget hue;
-	SIT_Widget val;
-	SIT_Widget SVindic;
-	SIT_Widget Hindic;
-	uint8_t    rgb[4];
-	uint16_t   hsv[3];
+	SIT_CallProc cb;
+	SIT_Widget   SV;
+	SIT_Widget   hue;
+	SIT_Widget   val;
+	SIT_Widget   SVindic;
+	SIT_Widget   Hindic;
+	uint8_t      rgb[4];
+	uint16_t     hsv[3];
+	APTR         userData;
 };
 
 
@@ -69,7 +71,7 @@ static void RGB_to_HSV(DATA16 rgb, DATA16 hsv)
 		{
 			if (max == rgb[0]) {
 				hsv[0] = 60 * (rgb[1] - rgb[2]) / diff;
-				if (hsv[0] < 0) hsv[0] += 360;
+				if ((short) hsv[0] < 0) hsv[0] += 360;
 			} else if (max == rgb[1]) {
 				hsv[0] = 120 + 60 * (rgb[2] - rgb[0]) / diff;
 			} else {
@@ -79,10 +81,20 @@ static void RGB_to_HSV(DATA16 rgb, DATA16 hsv)
 	}
 }
 
+static void CCSetColorRGB(ColorChooser cc, DATA8 rgb)
+{
+	TEXT styles[128];
+	TEXT rgbtxt[8];
+
+	sprintf(rgbtxt, "#%02x%02x%02x", rgb[0], rgb[1], rgb[2]);
+	sprintf(styles, "background: %s; color: %s", rgbtxt, ((77*rgb[0]+151*rgb[1]+28*rgb[2]) >> 8) < 140 ? "white" : "black");
+
+	SIT_SetValues(cc->val, SIT_Title, rgbtxt, SIT_Style, styles, NULL);
+}
+
 static void CCSetColor(ColorChooser cc, DATA8 rgb)
 {
 	TEXT     bg[128];
-	TEXT     rgbtxt[8];
 	uint16_t rgb16[3];
 	uint8_t  rgb8[3];
 
@@ -92,19 +104,19 @@ static void CCSetColor(ColorChooser cc, DATA8 rgb)
 	rgb16[2] = rgb[2];
 	RGB_to_HSV(rgb16, cc->hsv);
 
-	SIT_SetValues(cc->Hindic,  SIT_TopObject, SITV_AttachPos(100 - cc->hsv[0] / 3.60), NULL);
-	SIT_SetValues(cc->SVindic, SIT_TopObject, SITV_AttachPos(100 - cc->hsv[1]), SIT_LeftObject, SITV_AttachPos(cc->hsv[2]), NULL);
+	fprintf(stderr, "hue = %f, satvat = %f, %f\n", 100 - cc->hsv[0] / 3.60, (double) cc->hsv[2], 100. - cc->hsv[1]);
 
 	uint16_t hsv[] = {cc->hsv[0], 100, 100};
 	HSV_to_RGB(hsv, rgb8);
 
-	sprintf(rgbtxt, "#%02x%02x%02x", rgb[0], rgb[1], rgb[2]);
 	sprintf(bg,
-		"background: linear-gradient(to right, black, rgba(0,0,0,0)), "
-		"linear-gradient(to bottom, %s, white)", rgbtxt
+		"background: linear-gradient(to right, black, transparent), "
+		"linear-gradient(to bottom, #%02x%02x%02x, white)", rgb8[0], rgb8[1], rgb8[2]
 	);
 	SIT_SetValues(cc->SV, SIT_Style, bg, NULL);
-	SIT_SetValues(cc->val, SIT_Title, rgbtxt, NULL);
+	SIT_SetValues(cc->Hindic,  SIT_TopObject, SITV_AttachPos(100 - cc->hsv[0] / 3.60), NULL);
+	SIT_SetValues(cc->SVindic, SIT_TopObject, SITV_AttachPos(100 - cc->hsv[1]), SIT_LeftObject, SITV_AttachPos(cc->hsv[2]), NULL);
+	CCSetColorRGB(cc, rgb);
 }
 
 static void CCSetSVCursor(ColorChooser cc, int x, int y)
@@ -118,18 +130,28 @@ static void CCSetSVCursor(ColorChooser cc, int x, int y)
 	cc->hsv[1] = 100 - (y / height) * 100;
 	cc->hsv[2] = (x / width) * 100;
 
-	TEXT    rgbtxt[8];
 	uint8_t rgb[4];
 	HSV_to_RGB(cc->hsv, rgb);
-	sprintf(rgbtxt, "#%02x%02x%02x", rgb[0], rgb[1], rgb[2]);
-	SIT_SetValues(cc->val, SIT_Title, rgbtxt, NULL);
+	CCSetColorRGB(cc, rgb);
 	SIT_SetValues(cc->SVindic, SIT_TopObject, SITV_AttachPos(y * 100 / height), SIT_LeftObject, SITV_AttachPos(x * 100 / width), NULL);
+}
+
+static void CCSetHueCursor(ColorChooser cc, int y)
+{
+	float height;
+	SIT_GetValues(cc->hue, SIT_Height, &height, NULL);
+	if (y < 0) y = 0;
+	if (y >= height) y = height-1;
+
+	cc->hsv[0] = 360 - (y * 360 / height);
+	HSV_to_RGB(cc->hsv, cc->rgb);
+
+	CCSetColor(cc, cc->rgb);
 }
 
 static int CCMoveHS(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_OnMouse * msg = cd;
-
 	switch (msg->state) {
 	case SITOM_ButtonPressed:
 		if (msg->button == SITOM_ButtonLeft)
@@ -146,7 +168,52 @@ static int CCMoveHS(SIT_Widget w, APTR cd, APTR ud)
 	return 1;
 }
 
-SIT_Widget CCOpen(SIT_Widget app, DATA8 rgb)
+static int CCMoveHue(SIT_Widget w, APTR cd, APTR ud)
+{
+	SIT_OnMouse * msg = cd;
+	switch (msg->state) {
+	case SITOM_ButtonPressed:
+		if (msg->button == SITOM_ButtonLeft)
+		{
+			CCSetHueCursor(ud, msg->y);
+			return 2;
+		}
+		break;
+	case SITOM_CaptureMove:
+		CCSetHueCursor(ud, msg->y);
+	default:
+		break;
+	}
+	return 1;
+}
+
+static int CCParseColor(SIT_Widget w, APTR cd, APTR ud)
+{
+	STRPTR str;
+	uint8_t rgb[4];
+	SIT_GetValues(w, SIT_Title, &str, NULL);
+	if (SIT_ParseCSSColor(str, rgb))
+		CCSetColor(ud, rgb);
+	return 0;
+}
+
+static int CCSelect(SIT_Widget w, APTR cd, APTR ud)
+{
+	ColorChooser cc = ud;
+	STRPTR       color;
+	uint8_t      rgb[4];
+
+	SIT_GetValues(cc->val, SIT_Title, &color, SIT_Parent, &w, NULL);
+	if (SIT_ParseCSSColor(color, rgb))
+	{
+		rgb[3] = 255;
+		cc->cb(w, rgb, cc->userData);
+		SIT_CloseDialog(w);
+	}
+	return 1;
+}
+
+SIT_Widget CCOpen(SIT_Widget app, DATA8 rgb, SIT_CallProc cb, APTR ud)
 {
 	static TEXT bgSV[] =
 		"background: linear-gradient(to bottom, #f00, #f0f 17%, #00f 33%, #0ff 50%, #0f0 67%, #ff0 83%, #f00)";
@@ -173,18 +240,24 @@ SIT_Widget CCOpen(SIT_Widget app, DATA8 rgb)
 		" <canvas name=Hindic width=7 height=11 top=POSITION style=", bgCursorHue, "/>"
 		"</canvas>"
 		"<editbox name=color width=5em bottom=FORM>"
-		"<button name=ko title=Cancel top=MIDDLE,color left=WIDGET,color,0.3em>"
-		"<button name=ok title=Select top=MIDDLE,color left=WIDGET,ko,0.3em>"
+		"<button name=ok title=Select top=MIDDLE,color left=WIDGET,color,0.3em buttonType=", SITV_DefaultButton, ">"
+		"<button name=ko title=Cancel top=MIDDLE,color left=WIDGET,ok,0.3em buttonType=", SITV_CancelButton, ">"
 	);
 	SIT_SetAttributes(diag, "<SV left=FORM top=FORM right=WIDGET,hue,0.8em bottom=WIDGET,color,0.3em>");
 
-	cc->SV  = SIT_GetById(diag, "SV");
-	cc->hue = SIT_GetById(diag, "hue");
-	cc->val = SIT_GetById(diag, "color");
-	cc->SVindic = SIT_GetById(diag, "SVindic");
-	cc->Hindic  = SIT_GetById(diag, "Hindic");
+	cc->SV       = SIT_GetById(diag, "SV");
+	cc->hue      = SIT_GetById(diag, "hue");
+	cc->val      = SIT_GetById(diag, "color");
+	cc->SVindic  = SIT_GetById(diag, "SVindic");
+	cc->Hindic   = SIT_GetById(diag, "Hindic");
+	cc->cb       = cb;
+	cc->userData = ud;
 
-	SIT_AddCallback(cc->SV, SITE_OnClickMove, CCMoveHS, cc);
+	SIT_AddCallback(cc->SV,  SITE_OnClickMove, CCMoveHS, cc);
+	SIT_AddCallback(cc->hue, SITE_OnClickMove, CCMoveHue, cc);
+	SIT_AddCallback(cc->val, SITE_OnBlur,      CCParseColor, cc);
+
+	SIT_AddCallback(SIT_GetById(diag, "ok"), SITE_OnActivate, CCSelect, cc);
 
 	CCSetColor(cc, rgb);
 
