@@ -33,11 +33,11 @@ enum /* extra properties that can be set on <canvas> after VTInit has been calle
 /* private stuff below */
 #ifdef VT_IMPL
 typedef struct VirtualTerm_t *  VirtualTerm;
-typedef struct VTLines_t *      VTLines;
 typedef struct VTCoord_t *      VTCoord;
 typedef struct VTCoord_t        VTCoord_t;
+typedef struct VTIter_t *       VTIter;
+typedef struct VTIter_t         VTIter_t;
 typedef uint16_t *              DATA16;
-typedef uint32_t *              DATA32;
 
 struct VTCoord_t
 {
@@ -50,26 +50,25 @@ struct VirtualTerm_t
 	SIT_Widget canvas;
 	SIT_Widget scroll;
 	DATA8      palette;
-	DATA8      buffer;
-	DATA16     styles;
-	DATA32     lines;
-	APTR       ctx;
-	uint16_t   curAttr;         /* running attribute when adding text */
-	uint16_t   defAttr;         /* */
-	uint16_t   lineAttr;
+	DATA8      buffer;          /* ring buffer */
+	uint16_t * styles;          /* VT_ATTR* | VT_SEL* */
+	uint32_t * lines;           /* absolute offsets within <buffer>, array is <totalLines> items */
+	uint16_t   curAttr;         /* running attribute when parsing text */
+	uint16_t   lineAttr;        /* running attribute when rendering */
+	uint16_t   defAttr;
 	uint16_t   tabSizePx;
 
-	uint16_t   startx;
+	uint16_t   startx;          /* absolute column (px) to start rendering */
 	uint8_t    tabSize;
 	uint8_t    hasScroll;
 
 	uint8_t    hasSelect;
-	int8_t     dx, dy;
+	int8_t     dx, dy;          /* used to render text-shadow */
 	int8_t     autoScrollDir;
 
 	uint8_t    wordSelect;
 	uint8_t    waitConf;
-	uint8_t    fakeBold;
+	uint8_t    fakeBold;        /* overwrite text if no bold font is found */
 	uint8_t    wordWrap;
 
 	uint8_t    spaceLen;
@@ -78,24 +77,42 @@ struct VirtualTerm_t
 	uint8_t    selColors[8];
 	VTCoord_t  selStart, selCur, selEnd;
 	uint16_t   colStart, colEnd;
-	int        bufUsage;
-	int        bufMax;
-	int        allocLines;
+	int        bufUsage;        /* bytes currently stored in VTerm (including attributes) */
+	int        bufMax;          /* max bytes that can be stored */
+	int        bufStart;        /* start of content within the ring buffer */
+	int        allocLines;      /* max capacity on <styles> and <lines> array */
 	int        topLine;
 	int        topTarget;
-	int        topOffset;
-	int        totalLines;
-	int        maxBuffer;
-	int        formatWidth;
-	int        width, height;
-	int        fontSize;
-	int        scrollPad;
-	int        reformat;
+	int        topOffset;       /* pixel offset to shift lines in content area */
+	int        totalLines;      /* number of items in <styles> and <lines> array */
+	int        maxTotalBytes;
+	int        formatWidth;     /* need to redo word wrapping if it differs */
+	int        width, height;   /* size of content area in px */
+	int        fontSize;        /* font height in px */
+	int        scrollPad;       /* width of scrollbar */
+	int        reformat;        /* line to start reformating */
 	int        fontId;
 	int        fontBoldId;
 };
 
+struct VTIter_t
+{
+	DATA8    line;
+	uint8_t  split;
+	uint16_t size;
+	uint16_t endChr;
+	uint16_t curChr;
+	int      endLine;
+	int      curLine;
+};
+
+#ifdef VT_UNITTEST
+#define VT_DEFMAX     16
+#define VT_CHUNK      16
+#else
+#define VT_DEFMAX     65536
 #define VT_CHUNK      2048
+#endif
 #define VT_LINES      128
 
 #define VT_SELSTART   0x1000

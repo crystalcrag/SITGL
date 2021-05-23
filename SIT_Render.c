@@ -1876,6 +1876,15 @@ static void renderNode(SIT_Widget node)
 			.x = box.left, .w = box.width, .nvg = sit.nvgCtx, .fontId = node->style.font.handle,
 			.y = box.top,  .h = box.height, .fontSize = node->style.font.size
 		};
+		/* retrieve text-shadow in case cb want to handle it */
+		paint.shadow = (APTR) node->style.shadow;
+		paint.shadowCount = node->style.shadowCount;
+		if (paint.shadow == NULL && node->style.shadowInherit)
+		{
+			SIT_Widget parent = node->style.shadowInherit;
+			paint.shadow = (APTR) parent->style.shadow;
+			paint.shadowCount = parent->style.shadowCount;
+		}
 		nvgSave(paint.nvg);
 		nvgFillColorRGBA8(paint.nvg, node->style.color.rgba);
 		nvgTextLetterSpacing(paint.nvg, node->layout.letterSpacing);
@@ -1913,7 +1922,7 @@ DLLIMP void SIT_RenderNode(SIT_Widget root)
 void SIT_ClearGL(void);
 
 /* render all visible nodes in the hierarchy */
-DLLIMP SIT_RENDER SIT_RenderNodes(float time)
+DLLIMP SIT_RENDER SIT_RenderNodes(double time)
 {
 	sit.compoCount = 0;
 	sit.compoIds[0] = 0;

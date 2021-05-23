@@ -903,7 +903,7 @@ static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 					}
 					if (cell->sizeCell.left <= x && x < cell->sizeCell.left + cell->sizeCell.width)
 					{
-						static int lastClick;
+						static uint32_t lastClick;
 						if (cell == vector_nth(&list->cells, list->selIndex) && TimeMS() - lastClick < sit.dblClickMS)
 						{
 							SIT_ApplyCallback(w, cell->userData, SITE_OnActivate);

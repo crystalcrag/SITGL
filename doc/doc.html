@@ -112,8 +112,10 @@
 <a class="sub1" href="#miscfunc"><span>Miscellaneous functions</span></a>
 
 <a class="sub1" href="#extractrl"><span>Extra widgets</span></a>
-<a class="sub2" href="#propfactory">Property factory</h3>
-<a class="sub2" href="#filechooser">File chooser</h3>
+ <a class="sub2" href="#propfactory">Property factory</a>
+ <a class="sub2" href="#filechooser">File chooser</a>
+ <a class="sub2" href="#colorchooser">Color chooser</a>
+ <a class="sub2" href="#vt100">Console window</a>
 
 <a class="sub1" href="#i18n"><span>Internationalization</span></a>
  <a class="sub2" href="#localeinfo">Locale information</a>
@@ -179,8 +181,9 @@ footprint and ease of integration:
   order to keep the project away from feature creep: only basic controls with room to build more complex
   one from this basic building blocks.
   <li><b>Ease of integration</b>: these kind of libraries always require some boilerplate code
-  in order to integrate it with existing system. Care has been taken for this part to not be as
-  big and complex as this library itself.
+  in order to integrate it with existing system. This part has been designed to limit the amount of
+  code needed to get something on the screen, while still allowing a decent amount of freedom in the
+  way rendering is done (at the cost of more boilerplate, the more complex your needs are).
 </ul>
 
 <p>Inspiration for this library comes from various frameworks from the industry than spans several
@@ -188,11 +191,13 @@ decades: the API of SITGL is strongly inspired by <a href="https://en.wikipedia.
 layout of the controls within forms and screen is inspired by <a href="https://en.wikipedia.org/wiki/Motif_%28software%29">Motif</a>
 <tt>XmForm</tt> widget, and theming is done using 99% standard-compliant CSS.
 
-<p>That being said, OpenGL and user-interface will always imply lots of boilerplate code and careful
-consideration on how to properly use this library. Care has been taken for this to be as painless as
-possible, but don't expect miraculously dropping a few files on your project and start coding your
-interface right after. You'll have to read this documentation further, at least until chapter 11:
-controls.
+<p>That being said, OpenGL and user-interface will always imply a decent amount of boilerplate code
+and careful consideration on how to properly use this library. Care has been taken for this to be as
+painless as possible, but don't expect miraculously dropping a few files on your project and start
+coding your interface right after. You'll have to read this documentation further, at least until
+chapter 11: controls.
+
+
 
 <h2 id="history">History</h2>
 
@@ -312,7 +317,6 @@ since they usually won't be stated anywhere else:</p>
 	<li><strong>Cons</strong>: String modification, especially in C, can be a PITA.
 	Sometimes it is easier to temporarily convert the string in UTF-16.</li>
   </ul>
-  </li>
 
   <li>This library makes use of mandatory <strong>namespace</strong>, using traditional
   underscore-separated
@@ -323,15 +327,14 @@ since they usually won't be stated anywhere else:</p>
 
   <ul>
 	<li><tt class="o dt">'_'</tt> : Functions and datatypes (i.e: <tt>SIT_CreateWidget()</tt>,
-	<tt>SIT_Accel</tt>).</li>
-	<li><tt class="o dt">'_'</tt> : Tag names (e.g: <tt>SIT_Title</tt>, ...)</li>
-	<li><tt class="o dt">'V'</tt> : Tag values (e.g: <tt>SITV_AttachForm</tt>, <tt>SITV_AttachWidget</tt>, ...)</li>
-	<li><tt class="o dt">'E'</tt> : Events (e.g: <tt>SITE_OnClick</tt>, <tt>SITE_OnPaint</tt>, ...)</li>
-	<li><tt class="o dt">'K'</tt> : Virtual keys (<tt>SITK_Enter</tt>, <tt>SITK_Space</tt>, ...)</li>
+	<tt>SIT_Accel</tt>).
+	<li><tt class="o dt">'_'</tt> : Tag names (e.g: <tt>SIT_Title</tt>, ...)
+	<li><tt class="o dt">'V'</tt> : Tag values (e.g: <tt>SITV_AttachForm</tt>, <tt>SITV_AttachWidget</tt>, ...)
+	<li><tt class="o dt">'E'</tt> : Events (e.g: <tt>SITE_OnClick</tt>, <tt>SITE_OnPaint</tt>, ...)
+	<li><tt class="o dt">'K'</tt> : Virtual keys (<tt>SITK_Enter</tt>, <tt>SITK_Space</tt>, ...)
 	<li>A few more specialized prefixes exist like <tt>GFX_</tt> for canvas
-	related API, <tt>SITTB_</tt> for toolbar, <tt>SITOM_</tt> for OnMouse events...</li>
+	related API, <tt>SITTB_</tt> for toolbar, <tt>SITOM_</tt> for OnMouse events...
   </ul>
-  </li>
 
   <li>Unless explicitly stated, every objects given to this library <b>will not be modified</b>, nor be
   taken ownership. That means if you allocate a string, you'll have to free it yourself. You can
@@ -343,23 +346,27 @@ since they usually won't be stated anywhere else:</p>
 
   <ul>
 	<li><tt class="t dt">STRPTR</tt>: A shortcut for <tt>char *</tt>. This library does not use the const specifier
-	(because most of the API makes use of vararg).</li>
-	<li><tt class="t dt">ULONG</tt>: typedef for <tt>unsigned long</tt>.</li>
-	<li><tt class="t dt">APTR</tt>: alias for <tt>void *</tt>, it means Absolute Pointer.</li>
-	<li><tt class="t dt">Bool</tt>: enumeration that can take the value of <tt>True</tt> (1) or <tt>False</tt> (0).</li>
-	<li><tt class="t dt">SIT_Widget</tt>: opaque type that identify a control within this library.</li>
+	(because most of the API makes use of vararg).
+	<li><tt class="t dt">ULONG</tt>: typedef for <tt>unsigned long</tt>.
+	<li><tt class="t dt">APTR</tt>: alias for <tt>void *</tt>, it means Absolute Pointer.
+	<li><tt class="t dt">Bool</tt>: enumeration that can take the value of <tt>True</tt> (1) or <tt>False</tt> (0).
+	<li><tt class="t dt">SIT_Widget</tt>: opaque type that identify a control within this library.
   </ul>
-  </li>
 
   <li>Minimal version of OpenGL required to use this library is v3. You'll also need a C99 compiler in
-  order to build this library.</li>
+  order to build this library.
 </ul>
 
 <p>If you are using the <b>pre-built binaries for Windows</b>, keep in mind that those were built with
 <a href="http://mingw.org/">MinGW</a>, <tt>gcc</tt> 4.7.1, linked against the <tt>msvcrt.dll</tt> from
-Windows. If you are using this with a different compiler (especially one with a different C runtime),
-you'll have to strictly avoid cross-boundary memory deallocation: <b>if an object is allocated by one runtime,
+Windows (and since this library is written entirely in C, you don't have to worry about the C++ runtime).
+If you are using this with a different compiler (especially one with a different C runtime), you'll have
+to strictly avoid cross-boundary memory deallocation: <b>if an object is allocated by one runtime,
 it must be freed by the same runtime</b>.
+
+<p>Other than the C runtime, this library has no other dependencies.
+
+
 
 <h2 id="gettingstarted">Getting started</h2>
 
@@ -391,7 +398,7 @@ and GLFW. These examples are a much better starting point, if you want to begin 
 <p>No programming guide can pretend to be complete without showing what a "<b>Hello world</b>" program might
 look like, here using the SDL1 framework:
 
-<pre><com>/*
+<pre id="helloworld"><com>/*
  * exampleSDL.c : small example showing how to integrate SITGL with SDL
  *
  * Written by T.Pierron, May 2020
@@ -2985,6 +2992,13 @@ directory if you use a string as a stylesheet).
 <p>The following sections will describe how those datatypes are used within CSS attributes. These
 sections are ordered in the way rendering stack is ordered in this library: from bottom to top.
 
+<p>URI can also be used to embed inline images, using the <tt>data:</tt> prefix. For example:
+<pre>url(data:image/gif;base64,R0lGODlhDwAPAKEBAAAAAP///////////yH5BAEKAAIALAAAAAAPAA8AAAIklB8Qx53b4otSUWcvyiz4/4AeQJbmKY4p1HHapBlwPL/uVRsFADs=);</pre>
+<p>Will embed a 15x15px image, using the GIF image format. You can use <a href="dataURI.html" target="_blank">this
+page</a> to generate such URI. Also, check out <a href="#annexB">Annex B</a> to know which file formats are supported.
+
+<p>Even though there are no limits to how long those URI can be in <tt>SITGL</tt>, it is recommended
+to keep them short (around a few kilobytes).
 
 <h4 id="cssparsing">Parsing</h4>
 
@@ -4406,7 +4420,7 @@ thus can deal with user-provided memory buffer as storage.
   <img src="images/SIT_EDITBOX.png" alt="Plain edit box">
 </div>
 
-<p>Here are the styles used for this control in the screenshot above:
+<p>Here are the styles used for the controls in the screenshot above:
 <pre>
 <hdr>editbox</hdr> {
 	<com>padding</com>:         <atr>0.3em 0.1em 0.3em</atr>;
@@ -4497,7 +4511,7 @@ assigned to one of the following values:
   and converting it manually. This will be required, if you want to enter more fancy numbers (like
   monetary amount, using unusual decimal/thousands separators).
 
-  <p>Intenally, all numeric inputs use a <tt class="t">double</tt> to represent the number. Remember
+  <p>Internally, all numeric inputs use a <tt class="t">double</tt> to represent the number. Remember
   that double precision datatype can be mapped <b>without loss of precision</b> to all the integers
   between 0 and around +/- 10<sup>15</sup> (2<sup>53</sup>), which largely covers 32bit integers and even
   a good chunk of 64bit integers. The conversion will be done through the <tt>strtod()</tt> function,
@@ -4640,16 +4654,6 @@ allocation at the start).
   was given as arguments to this function. If you want to be sure to get everything, you should call
   this function a first time with <tt>max</tt> set to <val>0</val>.
 
-<!--
-  <dt><tt>SIT_HotKey</tt> (<tt class="t">int</tt>)</dt>
-  <dd>This property is used to set or get the "text" within HotKey control type.
-  It is a combination of <tt>SITK_*</tt> flags. For example:
-  <tt>SITK_FlagCtrl + SITK_FlagShift + <span class='o'>'A'</span></tt>,
-  will set the current hot key to <tt>CTRL + MAJ + A</tt> (French locale). Also,
-  be careful to not confuse this property with the enumeration <tt>SITV_HotKey</tt>,
-  used by the property <tt>SIT_EditType</tt>.</dd>
--->
-
   <li><tt class="dt">SIT_StartSel</tt>, <tt class="dt">SIT_EndSel</tt> (<tt class="t">int</tt>)
   <p>These properties allow you to set the cursor (if you specify only one of them) or the part of
   text being selected (if you specify both, with different values). If you select text, the position
@@ -4674,6 +4678,16 @@ allocation at the start).
   <p><span class="n">Note</span>: the conversion to text will use a <tt>printf()</tt> derived function
   with the <tt class="s">"%f"</tt> format specifier. That means: no localization support and numbers
   will be written with all digits (no exponent).
+
+  <li><tt class="dt">SIT_RoundTo</tt> (<tt class="t">int</tt>)
+  <p>Only useful for numeric types and especially <tt>SITV_Float</tt> or <tt>SITV_Double</tt>. Due to
+  limited precision of <tt class="t">float</tt> and <tt class="t">double</tt> types, you very rarely
+  want to display all the fractional digits encoded in those types, because it will be mostly rounding
+  error.
+  
+  <p>For example, if you create a <tt>SITV_Float</tt> edit box with a <tt>SIT_ScrollPos</tt> containing the
+  value <tt class="o">0.1</tt>, the value displayed without rounding will be <tt class="o">0.100000001490116</tt>.
+  To prevent this, you can set this property to round the number at the specified number of fractionnal digits.
 
   <li><tt class="dt">SIT_PlaceHolder</tt> (<tt class="t">STRPTR</tt>)
   <p>This property will <b>display a grayed text</b> over the box if nothing is entered by the user yet.
@@ -6347,43 +6361,87 @@ SIT_GetValues(w, SIT_Width, &amp;width, SIT_Height, &amp;height, <val>NULL</val>
   before calling <tt>SIT_ManageWidget()</tt>.
 </ul>
 
+<p>If you need more fancy features, the easiest way is to simply hack directly the source code.
+
+<h3 id="colorchooser"><span>Color chooser</span></h3>
+
+<p>There are no color chooser is the list of stock widgets, but it is relatively easy to develop one.
+Here is a simple implemention, that will <b>allow you to select an RGB color</b> using the HSV color space:
+
+<div class="image">
+  <img src="images/SIT_COLORCHOOSER.png">
+</div>
+
+<p>This utility will display the HSV color space split into 2 parts: left part show a slice of the 
+saturation/value space, and right part is the hue selection. The input button let you copy/paste color
+name/value: it uses the same function that is used by <tt>SITGL</tt> to parse color value, therefore
+you can enter value like: <tt>blue</tt>, <tt>pink</tt>, <tt>#123456</tt>, <tt>rgb(255,20,20)</tt>, ...
+If the value was parsed successfully, it will always be converted to <tt>#RRGGBB</tt> format.
+
+<p>Its usage is very similar to the <a href="#filechooser">file chooser</a> widget. There is only one
+public function to instanciate this control:
+<pre>SIT_Widget CCOpen(SIT_Widget parent, DATA8 rgb, SIT_CallProc cb, <type>APTR</type> ud);</pre>
+
+<p>Where each parameters have the following meaning:
+<ul>
+  <li><tt>parent</tt>: which dialog it will be derived from.
+  <li><tt>rgb</tt>: initial color that will be displayed.
+  <li><tt>cb</tt>: a callback triggered when the user confirm its selection. <tt>call_data</tt> will
+  point to an array of 4 <tt class="t">uint8_t</tt>, containing, in that order, the red, green, blue
+  and the value 255 of the selected color.
+  <li><tt>ud</tt>: the user data parameter that will be transmitted to the callback.
+</ul>
+
+<p>Like with the file chooser, the return value is the pointer to the dialog containing all the controls
+of the color chooser. At this point you can change some values and/or use <tt>SIT_ManageWidget()</tt>
+to immediately display the window.
+
+
+<h3 id="vt100"><span>Console window</span></h3>
+
+<p>This widget can be seen as a <b>read-only version of the <tt>SIT_EDITBOX</tt> control</b>, with some extra
+styling support (colors and fonts). The typical use case for this control is to implement a console output
+for your engine. Usually, when building your application for release, the standard output (ie:
+<tt>printf</tt> or <tt>cout</tt>) will be unavailable. If you still want to keep a log accessible
+somewhere, you might be interested by this widget.
+
+
+
+
+
 <h2 id="i18n">Internationalization</h2>
 
-<p>Internationalization refers to everything required for an application
-to <em>speak</em> in a different language than the one it was originally
-written for. This includes lots of concepts, like date and number formatting,
-currency, left-to-right or right-to-left writtings, input methods, and
-of course, messages displayed by your application. For the sake of
-simplicity, we will only explain the latter point: translating messages
-of your application.</p>
+<p>Internationalization refers to everything required for an application to <em>speak</em> in a different
+language than the one it was originally written for. This includes lots of concepts, like date and number
+formatting, currency, left-to-right or right-to-left writtings, input methods, and of course, messages
+displayed by your application. For the sake of simplicity, we will only explain the latter point:
+translating messages of your application.
 
-<p>The UtilityLib library that <tt>SITGL</tt> uses a method similar to the <tt>gettext()</tt>
-interface, but with some simplifications. You can read an extensive documentation of gettext on
-<a href="http://www.gnu.org/software/gettext/manual/gettext.html">FSF website</a>,
+<p><tt>SITGL</tt> uses a method similar to the <tt>gettext()</tt> interface, but with some simplifications.
+You can read an extensive documentation of gettext on <a href="http://www.gnu.org/software/gettext/manual/gettext.html">FSF website</a>,
 especially chapters 1, 3, 4 and 11.</p>
 
-<p>To quickly sum up: <tt>gettext</tt> acts as a dictionary, but instead of
-words, it will be entire sentences (messages) from your program. The core of
-the API is composed of one function: <tt>char * gettext(char * msg);</tt>.
-You give it one message and it returns the translated version using the current
-locale (or in case of the UtilityLib, the catalogue you loaded prior to translate
-any message). If the translation was not found, it will simply return the first
-argument you provided. So without further action, gettext act as a light-weight
-no-op.</p>
+<p>To quickly sum up: <tt>gettext</tt> acts as a dictionary, but instead of words, it will be entire
+sentences (messages) from your program. The core of the API is composed of one function:
 
-<h3 id="localeinfo">Locale information</h3>
+<pre><type>char</type> * gettext(<type>char</type> * msg);</pre>
 
-<p>Before you can translate anything, you'll first need to know what
-is the current language of the operating system your application is on. You
-can always later provide a menu to let the user select its own language, but
-the first time the application is launched, it is advised to use the preferred
-language. Also take note that changing messages of an application after it
-has started is usually way too much work, not really worth the effort.</p>
+<p>You give it one message and it returns the translated version using the current locale (or in case
+of the <tt>SITGL</tt>: the translation file you loaded prior to translate any message). If the translation
+was not found, it will simply return the first argument you provided. So without further action, gettext
+act as a light-weight no-op.
 
-<p>The locale information is actually stored in the <tt>SIT_App</tt> widget,
-into the property <tt>SIT_LocaleInfo</tt>. The content of this property is a
-pointer to a <tt>LocaleInfo</tt> structure. You can find its definition in
-the main header <tt>SIT.h</tt>:</p>
+<h3 id="localeinfo"><span>Locale information</span></h3>
+
+<p>Before you can translate anything, you'll first need to know what is the current language of the
+operating system. You can always later provide a menu to let the user select its own language, but
+the first time the application is launched, it is advised to use the preferred language. Also take
+note that changing messages of an application after it has started is usually way too much work,
+not really worth the effort.
+
+<p>The locale information is actually stored in the <tt>SIT_App</tt> widget, into the property
+<tt>SIT_LocaleInfo</tt>. The content of this property is a pointer to a <tt>LocaleInfo</tt> structure.
+You can find its definition in the main header <tt>SIT.h</tt>:
 
 <pre><type>struct</type> LocaleInfo_t        <com>// Example:</com>
 {
@@ -6407,36 +6465,35 @@ the main header <tt>SIT.h</tt>:</p>
 };
 </pre>
 
-<p>This structure is particularly important to know how to uniquely get the
-name of the language, in order to name your language file accordingly. In this
-case, it is advised to use the ISO 3166 country code, since it is guaranteed to be
-unique and only use ASCII charset. The other fields might contain unicode
-characters.</p>
+<p>This structure is particularly important to know how to uniquely get the name of the language, in
+order to name your language file accordingly. In this case, it is advised to use the ISO 3166 country
+code, since it is guaranteed to be unique and only use ASCII charset. The other fields might contain
+unicode characters.
 
-<h3 id="msgextract">Automating message extraction</h3>
+<h3 id="msgextract"><span>Automating message extraction</span></h3>
 
-<p>Maintaining multiple translation files is usually a tedious process, so it
-better has to be automated as much as possible. The first step into translating
-an application is to prepare the messages of your program as described in
-<a href="http://www.gnu.org/software/gettext/manual/gettext.html#Preparing-Strings">section
-4.3: Preparing Translatable Strings</a>.</p>
+<p>Maintaining multiple translation files is usually a tedious process, so it better has to be automated
+as much as possible. The first step into translating an application is to prepare the messages of your
+program as described in <a href="http://www.gnu.org/software/gettext/manual/gettext.html#Preparing-Strings">section
+4.3: Preparing Translatable Strings</a>.
 
-<p>The only difference is that the function to extract a message from the
-catalog is named <tt>LangStr()</tt> instead of <tt>gettext()</tt>, and both are
-usually abridged <tt>_()</tt> to limit the overhead of translation.</p>
+<p>The only difference is that the function to extract a message from the catalog is named <tt>LangStr()</tt>
+instead of <tt>gettext()</tt>, and both are usually abridged <tt>_()</tt> to limit the overhead of
+translation.
 
-<p>For example, to translate the Hello world program given in
-<a href="#chapter4">chapter IV: Getting Started</a>, you only have to
-modify the label creation, with the following line:</p>
+<p>For example, to translate the Hello world program given in <a href="#helloworld">chapter 4: Getting Started</a>,
+you only have to modify the label creation, with the following line:
 
-<pre>SIT_CreateWidget(_(<val>"hello, world"</val>), SIT_LABEL, dialog, <val>NULL</val>);</pre>
+<pre>SIT_CreateWidgets(app, <val>"&lt;label name=hello title="</val> _(<val>"Hello, world!"</val>), <val>">"</val>);</pre>
 
-<p>You'll have to mark all of your message that way. Once it is done, you
-can use the <tt>msgextract</tt> utility to extract them in one shot, and
-update/create every translation file. You can find it in the <tt>Tools</tt>
-folder of the SIT distribution. The way this utility works is through an INI
-configuration file. A typical configuration for extracting messages from C
-source files is:</p>
+<p><span class="n">Note</span>: since you'll need locale information to load the correct language file,
+and since this information is only available at the <tt>SIT_APP</tt> level, that means any errors occuring
+before a successful <tt>SIT_Init()</tt> cannot be translated with this module.
+
+<p>You'll have to mark all of your message that way. Once it is done, you can use the <tt>msgextract</tt>
+utility to extract them in one shot, and update/create every translation file. You can find it in the
+<tt>examples</tt> folder of the SIT distribution. The way this utility works is through an INI configuration
+file. A typical configuration for extracting messages from C source files is:
 
 <pre><type>Lang</type>=lang
 <spe>[1]</spe>
@@ -6444,21 +6501,17 @@ source files is:</p>
 <type>Prefix</type>=_("
 <type>Suffix</type>=<val>"<spe>\"</spe>)"</val></pre>
 
-<p>The following keywords can be specified:</p>
+<p>The following keywords can be specified:
 <ul>
-  <li><tt>Lang</tt>: must the first keyword of this file. Indicate where
-  catalog (dictionnary) files will be updated.</li>
-  <li><tt>Folder</tt>: an optional path followed by a MS-DOS wildcard, use to filter
-  files to be scanned for messages to be extracted and merged with language
-  files.</li>
-  <li><tt>Prefix</tt>: the starting string that mark the beginning of a
-  message to extract.</li>
-  <li><tt>Suffix</tt>: the string that mark the end of the message.</li>
+  <li><tt>Lang</tt>: must the first keyword of this file. Indicate where language files will be updated.
+  <li><tt>Folder</tt>: an optional path followed by a MS-DOS wildcard, use to filter files to be scanned
+  for messages to be extracted and merged with language files.
+  <li><tt>Prefix</tt>: the starting string that mark the beginning of a message to extract.
+  <li><tt>Suffix</tt>: the string that mark the end of the message.
 </ul>
 
-<p>If your configuration was named "<tt>msgextract.ini</tt>", you can then
-simply initiate message extraction with the following commands (otherwise
-you'll have to provide the configuration file as the first argument):</p>
+<p>If your configuration was named "<tt>msgextract.ini</tt>", you can then simply initiate message extraction
+with the following commands (otherwise you'll have to provide the configuration file as the first argument):
 
 <pre><com>C:\Project\HelloWorld&gt;</com>mkdir lang
 
@@ -6472,94 +6525,90 @@ FR_fr.po updated: 1 added, 0 commented, 0 untouched.
 <com>C:\Project\HelloWorld&gt;</com>
 </pre>
 
-<p>The way <tt>msgextract</tt> works is to extract every strings from each
-folder directive of every section within the configuration file (in case
-your application is spread over multiple directories). It will
-then load each catalogue from the <tt class="t">Lang</tt> folder, and add
-messages that are missing in catalog and comment those that are no more
-referenced. That's why we created an empty language file before starting
-the extraction. The resulting file <tt>lang\FR_fr.po</tt> looks like:</p>
+<p>The way <tt>msgextract</tt> works is to extract every strings from each folder directive of every
+section within the configuration file (in case your application is spread over multiple directories).
+It will then load each translation files from the <tt class="t">Lang</tt> folder, and add messages that
+are missing in catalog and comment those that are no more referenced. That's why we created an empty
+language file before starting the extraction. The resulting file <tt>lang\FR_fr.po</tt> looks like:
 
 <pre><com># NEW MESSAGES</com>
 <kwd>msgid</kwd> <val>"hello, world"</val>
 <kwd>msgstr</kwd> <val>""</val></pre>
 
-<p>Which is basically empty. You'll now have to fill every <tt class="k">msgstr</tt>
-directive that have an empty string associated (remember to have your file
-encoded in UTF-8). Here we choose to use the ISO 3166 code for french, so a
-possible translation would be:</p>
+<p>Which is basically empty. You'll now have to fill every <tt class="k">msgstr</tt> directive that have
+an empty string associated (remember to have your file encoded in UTF-8). Here we choose to use the
+ISO 3166 code for french, so a possible translation would be:
 
 <pre><kwd>msgid</kwd> <val>"hello, world"</val>
 <kwd>msgstr</kwd> <val>"bonjour, tout le monde"</val></pre>
 
-<p>For the <tt>LangStr()</tt> function, an empty string is the same as a
-missing string: the original pointer you provided will be returned in
-that case. Once this language file has been filled, you can then load
-it at the beginning of the application (or at least, before calling
-the <tt>LangStr()</tt> function).</p>
+<p>For the <tt>LangStr()</tt> function, an empty string is the same as a missing string: the original
+pointer you provided will be returned in that case. Once this language file has been filled, you can
+then load it at the beginning of the application (or at least, before calling the <tt>LangStr()</tt>
+function).
 
-<p>Note that PO files parsed by the <tt>UtilityLib</tt> provide an
-extension: it allows you to include another translation file through the
-<tt>#include</tt> directive. This directive must be followed by the path
-of the file, without quote, relatively to language file where the
-directive is in. A over-typical application for this is to have
-catalogs for countries with the same basic language, but with small
-variations, like british english versus american english, or
-french versus canadian french, etc...</p>
+<p>Note that PO files parsed by the <tt>UtilityLib</tt> provide an extension: it allows you to include
+another translation file through the <tt>#include</tt> directive. This directive must be followed by
+the path of the file, without quote, relatively to language file where the directive is in. A over-typical
+application for this is to have catalogs for countries with the same basic language, but with small
+variations, like british english versus american english, or french versus canadian french, etc...
 
-<h3 id="loadmsgs">Loading translation file</h3>
+<h3 id="loadmsgs"><span>Loading translation file</span></h3>
 
-<p>Once your language file is done, you can load it. Here, there is a little
-simplification compared to the original <tt>gettext()</tt>: <tt>gettext</tt>
-package handle two file formats: the portable object format
-(PO: the one you edit to translate your messages) and the machine object
-(MO: the one loaded by your application), which is a compiled form of the PO
-file. The utility library can actually load PO files directly, there is no
-need for MO files at all. This is done through this function:</p>
+<p>Once your language file is done, you can load it. Here, there is a little simplification compared
+to the original <tt>gettext()</tt>: <tt>gettext</tt> package handle two file formats: the portable
+object format (PO: the one you edit to translate your messages) and the machine object (MO: the one
+loaded by your application), which is a compiled form of the PO file. The utility library can actually
+load PO files directly, there is no need for MO files at all. This is done through this function:
 
 <pre>Lang LangParse(STRPTR path);</pre>
 
-<p>The path (UTF-8 encoded) will have to be built using the locale information
-from the <tt>SIT_APP</tt> widget and the convention you use earlier to create
-your translation file. Since we use the ISO 3166 code, the hello world
-application can now be updated that way to include full support for
-internationalization:</p>
+<p>The path (UTF-8 encoded) will have to be built using the locale information from the <tt>SIT_APP</tt>
+widget and the convention you use earlier to create your translation file. Since we use the ISO 3166 code,
+the hello world application can now be updated that way to include full support for internationalization:
 
-<pre><def>#include</span> <val>&lt;SIT.h&gt;</val>
+<pre><com>/*
+ * exampleSDL.c : small example showing how to integrate SITGL with SDL
+ *
+ * Written by T.Pierron, May 2020
+ */</com>
 
+<def>#include </def><val>&lt;stdio.h&gt;</val><def>
+#include </def><val>&lt;SDL/SDL.h&gt;</val><def>
+#include </def><val>"nanovg.h"</val><def>
+#include </def><val>"SIT.h"</val>
+
+<def>#define</def><inc> SCREENWIDTH  500</inc><def>
+#define</def><inc> SCREENHEIGHT 200</inc>
 <type>int</type> main(<type>int</type> nb, <type>char</type> * argv[])
 {
-	SIT_Widget app = SIT_CreateWidget(<val>"HelloWorld"</val>, SIT_APP, <val>NULL</val>, <val>NULL</val>);
+	<com>/* initialization is identical */
+	/* ... */
+
+	/* this is what is needed to activate translation */</com>
 	LocaleInfo info;
-	TEXT path[<val>32</val>];
+	<type>char</type> path[<val>32</val>];
 
 	SIT_GetValues(app, SIT_LocaleInfo, &amp;info, <val>NULL</val>);
-	sprinf(path, <val>"lang/<spe>%s</spe>.po"</val>, info-&gt;iso3166);
+	sprinf(path, <val>"lang/<spe>%s</spe>.po"</val>, info->iso3166);
 	LangParse(path);
 
-	SIT_Widget dialog = SIT_CreateWidget(<val>"Hello"</val>, SIT_DIALOG, app,
-		SIT_Font,    <val>"System/30"</val>,
-		SIT_Margins, <val>10</val>, <val>10</val>, <val>10</val>, <val>10</val>,
-		<val>NULL</val>
-	);
-	SIT_CreateWidget(_(<val>"hello, world"</val>), SIT_LABEL, dialog, <val>NULL</val>);
-	SIT_ManageWidget(dialog);
+	SIT_CreateWidgets(app, <val>"&lt;label name=hello title='Hello, world!'&gt;"</val>);
 
-	<kwd>return</kwd> SIT_Main();
-}</pre>
+	<com>/* remaining is identical */
+	/* ... */</com>
+}
+</pre>
 
-<p>In that case, we don't care about the return code of <tt>LangParse</tt>,
-because if it succeeds, the <tt>UtilityLib</tt> will keep a reference, and
-if it fails, all function call to <tt>LangStr()</tt> will return the 
-first argument. We used the abridged form of this function in the example
-above: the <tt>_</tt> function is defined like this:</p>
+<p>In that case, we don't care about the return code of <tt>LangParse</tt>, because if it succeeds,
+<tt>SITGL</tt> will keep a reference, and if it fails, all function call to <tt>LangStr()</tt> will
+return the  first argument. We used the abridged form of this function in the example above: the
+<tt>_</tt> function is defined like this:
 
 <pre>#define _(str)              LangStr(NULL, str)</pre>
 
-<p>Also note that the <tt>LangParse()</tt> can only read regular files, not resources or
-inline blob like <tt>GFX_LoadImage()</tt>.</p>
 
-<h3 id="advi18n">Advanced features</h3>
+<h3 id="advi18n"><span>Advanced features</span></h3>
 
 <p>There are a few more features to be aware in order to be to able to handle
 real world applications.</p>
@@ -7076,6 +7125,14 @@ with this topic in much more depth, than what is explained in here.
 <p>This will provide a set of functions to implement high precision timer: wait for a specified amount
 of time down to the millisecond range and get current time down to the microsecond range.
 
+<p><span class="n">Note</span>: avoid storing timestamp in <tt class="t">float</tt> datatype. You'll only
+have 4 hours and 40 minutes before running out of precision (at the milisecond range, after that time
+the precision will drop to 2 miliseconds). You can store them in integer (and losing the fractional part):
+a timestamp down to the milisecond range is not too bad for timing purpose. Using this type, you'll have
+between about 25 days (<tt class="t">signed</tt>) and 50 days (<tt class="t">unsigned</tt>) before timer
+wraps around. The recommended datatype is <tt class="t">double</tt> though (with 285616 years before
+there will be a loss of precision at the milisecond range).
+
 <p><span class="n">Note</span>: on Windows, these functions are based on the <tt>QueryPerformanceCounter()</tt>
 API.
 
@@ -7325,8 +7382,8 @@ to render your graphics.
 
 <h3 class="annex" id="composite"><span>Composited rendering</span></h3>
 
-<p>The first step to achieve this is to mark elements that will be rendered over outside of <tt>SITGL</tt>
-control as composited. You do this by assigning a positive integer to the property <tt>SIT_Composited</tt>.
+<p>The first step to achieve this is to mark elements that will be rendered over (outside of <tt>SITGL</tt>
+control) as composited. You do this by assigning a positive integer to the property <tt>SIT_Composited</tt>.
 This integer has to be managed on your side. It will be given back when it is safe to render over this
 particular area. Consider the following example:
 
@@ -7335,10 +7392,22 @@ particular area. Consider the following example:
 </div>
 
 <p>Here the grid is actually a single <tt>SIT_CANVAS</tt> widget, where a single cell using an inset
-border was copied to give the illusion of grid like pattern. Inside each cell, were graphics rendered
+border was copied to give the illusion of grid like pattern. Inside each cell, graphics were rendered
 using OpenGL commands, completely outside of <tt>SITGL</tt> control. On top of all this, a tooltip
 (managed by <tt>SITGL</tt>) was finally rendered (if you zoom in this image, you can also see that the
-tooltip background is partially transparent).
+tooltip background is partially transparent). Both have been created this way:
+
+<pre>SIT_CreateWidgets(diag,
+	<com>/* some declaractions have been removed for clarity */</com>
+	<val>"&lt;canvas composited=1 name=tb.inv left=FORM top=WIDGET,player,0.5em/&gt;"
+	"&lt;tooltip name=info delayTime="</val>, SITV_TooltipManualTrigger, <val>" displayTime=10000 "
+	" toolTipAnchor="</val>, SITV_TooltipFollowMouse, <val>">"</val>
+);</pre>
+
+<p>Note that the tooltip is not a child of the canvas element: overlapping will take rendereing order
+and coordinates into account, to be sure that if any element overlaps a composited area, it will be
+refreshed at a later time.
+
 
 </div>
 </body>

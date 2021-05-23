@@ -2454,6 +2454,11 @@ DLLIMP int nvgFindFont(NVGcontext* ctx, const char* name)
 	return fonsGetFontByName(ctx->fs, name);
 }
 
+DLLIMP char * nvgGetFontName(NVGcontext* ctx, int id)
+{
+	if (id < 0) return NULL;
+	return fonsGetFontName(ctx->fs, id);
+}
 
 DLLIMP int nvgAddFallbackFontId(NVGcontext* ctx, int baseFont, int fallbackFont)
 {

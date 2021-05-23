@@ -46,7 +46,6 @@ typedef union  SIT_Variant_t      SIT_Variant;
 typedef struct SIT_Widget_t       SIT_Widget_t;
 typedef struct SIT_CBRow_t *      SIT_CBRow;
 typedef struct CSSImage_t *       CSSImage;
-typedef struct SIT_Action_t *     SIT_Action;
 typedef struct SIT_Action_t       SIT_ActBuf;
 typedef struct Cell_t *           Cell;
 typedef uint16_t *                DATA16;
@@ -88,8 +87,6 @@ int  SIT_SetWidgetValue(SIT_Widget, APTR cd, APTR ud);
 void SIT_LayoutCSSSize(SIT_Widget);
 void SIT_RenderNode(SIT_Widget);
 Bool SIT_ReassignAttachments(SIT_Widget);
-APTR SIT_ActionAdd(SIT_Widget, float start, float end, SIT_CallProc, APTR ud);
-void SIT_ActionReschedule(SIT_Action act, float start, float end);
 void SIT_ActionDispatch(float time);
 void SIT_InitiateReflow(SIT_Widget);
 void SIT_FreeCSS(SIT_Widget);
@@ -127,7 +124,7 @@ struct SIT_Action_t
 {
 	ListNode     node;
 	SIT_Widget   ctrl;
-	float        start, end;
+	double       start, end;
 	SIT_CallProc cb;
 	APTR         ud;
 };
@@ -162,8 +159,8 @@ struct SITContext_t
 	uint8_t      dirty;                /* need redraw */
 	uint8_t      refreshMode;
 	uint8_t      errorCode;            /* error at init (INIT_ERR_*) */
-	float        nextAction;           /* time in ms to wait before grabbing first item in <actions> field */
-	float        curTime;
+	double       nextAction;           /* time in ms to wait before grabbing first item in <actions> field */
+	double       curTime;
 	STRPTR       cssFile;              /* keep memory we alloc */
 	DATA8        theme;                /* CSSRule, CSSSel, STRPTR */
 	uint16_t     themeMax;             /* mem allocated in <theme> */
@@ -368,6 +365,7 @@ struct SIT_EditBox_t
 	int          fixedSize;            /* public */
 	int          maxLines;             /* public */
 	int          tabStyle;             /* public */
+	int          roundTo;              /* public */
 	CSSColor     caret;
 	CSSColor     bgSel;
 	int16_t      msgX, msgY;           /* last clicked pos */

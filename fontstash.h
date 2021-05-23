@@ -988,6 +988,12 @@ int fonsGetFontByName(FONScontext* s, const char* name)
 	return FONS_INVALID;
 }
 
+char * fonsGetFontName(FONScontext* s, int id)
+{
+	if (id < 0 || id >= s->nfonts) return NULL;
+	return s->fonts[id]->name;
+}
+
 
 static FONSglyph* fons__allocGlyph(FONSfont* font)
 {

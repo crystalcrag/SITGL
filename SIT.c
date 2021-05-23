@@ -564,7 +564,7 @@ DLLIMP void SIT_InitFade(DATA8 rgb, float time_in_ms)
 /*
  * async actions
  */
-APTR SIT_ActionAdd(SIT_Widget w, float start, float end, SIT_CallProc proc, APTR ud)
+DLLIMP SIT_Action SIT_ActionAdd(SIT_Widget w, double start, double end, SIT_CallProc proc, APTR ud)
 {
 	SIT_Action act, prev;
 	SIT_Action slot = NULL;
@@ -593,7 +593,7 @@ APTR SIT_ActionAdd(SIT_Widget w, float start, float end, SIT_CallProc proc, APTR
 	return slot;
 }
 
-void SIT_ActionReschedule(SIT_Action act, float start, float end)
+DLLIMP void SIT_ActionReschedule(SIT_Action act, double start, double end)
 {
 	SIT_Action next = (SIT_Action) act->node.ln_Next;
 	if (start < act->start)

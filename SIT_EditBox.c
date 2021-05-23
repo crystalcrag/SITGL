@@ -36,6 +36,7 @@
 		{ SIT_MaxLines,    "maxLines",    C__, SIT_INT,  OFFSET(SIT_EditBox, maxLines) },
 		{ SIT_WordWrap,    "wordWrap",    C__, SIT_INT,  OFFSET(SIT_EditBox, wordWrap) },
 		{ SIT_TabStyle,    "tabStyle",    _SG, SIT_INT,  OFFSET(SIT_EditBox, tabStyle) },
+		{ SIT_RoundTo,     "roundTo",     _SG, SIT_INT,  OFFSET(SIT_EditBox, roundTo) },
 		{ SIT_TagEnd }
 	};
 
@@ -184,6 +185,12 @@ static int SIT_TextEditSetValue(SIT_Widget w, APTR call_data, APTR user_data)
 			w->postProcess = SIT_TextEditSetCursor;
 		}
 		break;
+	case SIT_RoundTo:
+		pos = val->integer;
+		if (pos < 0)  pos = 0;
+		if (pos > 16) pos = 16;
+		edit->roundTo = pos;
+		break;
 	default:
 		SIT_SetWidgetValue(w, call_data, user_data);
 	}
@@ -191,27 +198,30 @@ static int SIT_TextEditSetValue(SIT_Widget w, APTR call_data, APTR user_data)
 }
 
 /* damn floatting point formatting */
-static int SIT_TextEditFormatDouble(STRPTR buffer, int max, double val)
+static int SIT_TextEditFormatDouble(STRPTR buffer, int max, double val, int roundTo)
 {
 	if (fabs(val) < 1e16)
 	{
 		/* all of this is to make sure we don't lose precision when displaying number, while not printing garbage either */
 		char * p = buffer;
 		int    n, digit;
-		snprintf(buffer, max, "%.16f", val);
+		snprintf(buffer, max, "%.*f", roundTo, val);
 		if (*p == '-') p ++;
 		for (digit = 0; *p && *p != '.'; p ++, digit ++);
 		/* assume 16 significant decimal digits for a double */
-		n = 16 - digit;
-		while (n > 0 && *p) p ++, n --;
-		if (*p && *p >= '5')
+		if (roundTo == 16)
 		{
-			/* argh need rounding from "%f" (e.g. with num -10766.5627312075) */
-			p = buffer + snprintf(buffer, max, "%.*f", 16-digit, val);
+			n = 16 - digit;
+			while (n > 0 && *p) p ++, n --;
+			if (*p && *p >= '5')
+			{
+				/* argh need rounding from "%f" (e.g. with num -10766.5627312075) */
+				p = buffer + snprintf(buffer, max, "%.*f", 16-digit, val);
+			}
+			else *p = 0;
+			for (p --; p >= buffer && *p == '0'; *p-- = 0);
+			if (p >= buffer && *p == '.') *p = 0;
 		}
-		else *p = 0;
-		for (p --; p >= buffer && *p == '0'; *p-- = 0);
-		if (p >= buffer && *p == '.') *p = 0;
 		return p - buffer;
 	}
 	else return snprintf(buffer, max, "%.0f", val);
@@ -230,9 +240,9 @@ static void SIT_TextEditCheckNumber(SIT_EditBox edit, STRPTR buf)
 	if (*eof) *eof = 0, edit->length = eof - buf;
 	edit->value.step = 0;
 	if (edit->value.ref < edit->minValue)
-		edit->length = SIT_TextEditFormatDouble(edit->text, edit->maxText, edit->value.ref = edit->minValue);
+		edit->length = SIT_TextEditFormatDouble(edit->text, edit->maxText, edit->value.ref = edit->minValue, edit->roundTo);
 	else if (edit->value.ref > edit->maxValue)
-		edit->length = SIT_TextEditFormatDouble(edit->text, edit->maxText, edit->value.ref = edit->maxValue);
+		edit->length = SIT_TextEditFormatDouble(edit->text, edit->maxText, edit->value.ref = edit->maxValue, edit->roundTo);
 
 	if (edit->curValue)
 	{
@@ -243,6 +253,28 @@ static void SIT_TextEditCheckNumber(SIT_EditBox edit, STRPTR buf)
 		case SITV_Double:  * (double *) edit->curValue = edit->value.ref;
 		}
 	}
+}
+
+static int SIT_TextEditSyncValue(SIT_Widget w, APTR cd, APTR ud)
+{
+	SIT_EditBox edit = (SIT_EditBox) w;
+	switch (edit->editType) {
+	case SITV_Integer: edit->value.ref = round(strtod(edit->text, NULL)); break;
+	case SITV_Float:
+	case SITV_Double:  edit->value.ref = strtod(edit->text, NULL); break;
+	default: return 0;
+	}
+
+	if (edit->curValue)
+	{
+		/* int and float conversion will be lossless */
+		switch (edit->editType) {
+		case SITV_Integer: * (int *)    edit->curValue = edit->value.ref; break;
+		case SITV_Float:   * (float *)  edit->curValue = edit->value.ref; break;
+		case SITV_Double:  * (double *) edit->curValue = edit->value.ref;
+		}
+	}
+	return 0;
 }
 
 /* click on number inc/dec button */
@@ -279,7 +311,7 @@ static int SIT_TextEditSpinnerClick(SIT_Widget w, APTR cd, APTR ud)
 			edit->value.ref = val;
 			edit->value.step = off;
 			edit->cursor = 1e6;
-			SIT_TextEditFormatDouble(edit->text, edit->maxText, val);
+			SIT_TextEditFormatDouble(edit->text, edit->maxText, val, edit->roundTo);
 			SIT_TextEditSetText(&edit->super, edit->text);
 			if (msg && edit->autoScroll == NULL)
 				edit->autoScroll = SIT_ActionAdd(w, sit.curTime + 500, -1, SIT_TextEditSpinnerClick, ud);
@@ -365,6 +397,7 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 	edit->tabStyle  = -1;
 	edit->undoSize  = -1;
 	edit->stepValue =  1;
+	edit->roundTo   =  16;
 	edit->maxValue  =  1/0.; /* + INF */
 	edit->minValue  = -1/0.; /* - INF */
 
@@ -374,6 +407,9 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 	SIT_AddCallback(w, SITE_OnMouseMove, SIT_TextEditDrag, NULL);
 	SIT_AddCallback(w, SITE_OnBlur,      SIT_TextEditDirty, NULL);
 	SIT_AddCallback(w, SITE_OnFocus,     SIT_TextEditDirty, NULL);
+
+	if (edit->editType >= SITV_Integer && edit->curValue)
+		SIT_AddCallback(w, SITE_OnChange, SIT_TextEditSyncValue, NULL);
 
 	if (edit->tabStyle < 0)
 		edit->tabStyle = edit->editType == SITV_Multiline ? SITV_TabEditNormal : SITV_TabEditForbid;
@@ -491,7 +527,7 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 			case SITV_Float:   edit->value.ref = * (float  *) edit->curValue; break;
 			case SITV_Double:  edit->value.ref = * (double *) edit->curValue;
 			}
-			SIT_TextEditFormatDouble(edit->text, edit->maxText, edit->value.ref);
+			SIT_TextEditFormatDouble(edit->text, edit->maxText, edit->value.ref, edit->roundTo);
 			init = edit->text;
 		}
 	}

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>File to data URI</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <style type="text/css">
+  html { font-family: sans-serif }
+  #drop { background: #eee; border: 2px solid #888; font-size: 2em; width: 50%; margin: 1em auto; padding: 1em; text-align: center }
+  #result { width: 50%; display: block; margin: 1em auto; height: 200px }
+  p { text-align: center }
+  </style>
+</head>
+<body>
+<div id="drop">Drop files to convert to data URI</div>
+<p>Then, copy and paste the following string in a url() CSS declaration:
+<textarea id="result" width="120" height="10" autocomplete="off"></textarea>
+
+<script type="text/javascript">
+function $(x) { return document.getElementById(x) }
+var dataURI = {
+	init: function() {
+		var drop = $("drop")
+
+		drop.addEventListener('dragenter', this.allowDnD)
+		drop.addEventListener('dragover',  this.allowDnD)
+		drop.addEventListener('drop',      this.drop)
+	},
+
+	allowDnD: function(evt) {
+		evt.stopPropagation()
+		evt.preventDefault()
+	},
+
+	drop: function(evt) {
+		evt.stopPropagation()
+		evt.preventDefault()
+		if (evt.dataTransfer && evt.dataTransfer.files.length > 0)
+		{
+			var file = evt.dataTransfer.files[0]
+			var reader = new FileReader()
+			reader.onload = function(evt) {
+				$("result").value = evt.target.result
+			}
+			$("drop").innerHTML = "File dropped: " + file.name + " (" + Math.ceil(file.size/1024).toLocaleString() + " Kb)"
+			reader.readAsDataURL(file)
+		}
+		else alert("You need to drop a file into this area")
+	},
+}
+dataURI.init()
+</script>
+</body>
+</html>
