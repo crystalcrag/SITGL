@@ -121,8 +121,10 @@ DLLIMP void       SIT_ForceRefresh(void);
 DLLIMP int        SIT_NeedRefresh(void);
 DLLIMP int        SIT_InitDrag(SIT_CallProc);
 DLLIMP Bool       SIT_ParseCSSColor(STRPTR cssColor, uint8_t ret[4]);
+DLLIMP Bool       SIT_GetCSSValue(SIT_Widget, STRPTR property, APTR mem);
+DLLIMP float      SIT_EmToReal(SIT_Widget, uint32_t val);
 
-DLLIMP Bool       SIT_ListSetCell(SIT_Widget w, int row, int col, APTR rowTag, int align, STRPTR text);
+DLLIMP Bool       SIT_ListSetCell(SIT_Widget, int row, int col, APTR rowTag, int align, STRPTR text);
 DLLIMP Bool       SIT_ListSetColumn(SIT_Widget, int col, int width, int align, STRPTR label);
 
 DLLIMP STRPTR     SIT_GetFromClipboard(int * size);

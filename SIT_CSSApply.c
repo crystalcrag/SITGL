@@ -24,7 +24,8 @@ struct CSSAttr_t /* keep it private */
 	char   sz;              /* in bytes, 0 for sizeof (ULONG) */
 	char   objtype;         /* 0: style, 1: background, 2: shadow */
 	char   reflow;          /* reflow node if property changed */
-	ULONG  arg1;            /* offset of arg with style struct (in bytes) */
+	ULONG  get;             /* offset of field to get its real value (if > 0) */
+	ULONG  arg1;            /* offset of properties within style struct (in bytes) */
 	ULONG  arg2;
 	ULONG  arg3;
 	ULONG  arg4;
@@ -310,6 +311,44 @@ uint32_t crc32(uint32_t crc, DATA8 buf, int max)
 void cssFreeGlobals(void)
 {
 	vector_free(styles);
+}
+
+DLLIMP Bool SIT_GetCSSValue(SIT_Widget w, STRPTR property, APTR mem)
+{
+	CSSAttr attr = cssAttrSearch(property);
+
+	/* if you are a rust developper, please close your eyes */
+	if (attr)
+	{
+		if (attr == GET(cssAttrLineHeight))
+		{
+			REAL layoutCalcLineHeight(SIT_Widget);
+			/* there got to be a special case :-/ */
+			* (float *) mem = layoutCalcLineHeight(w);
+		}
+		else if (attr->get > 0)
+		{
+			/* yes, completely safe as long a mem can hold 4 bytes */
+			* (float *) mem = * (REAL *) ((DATA8)w + attr->get);
+		}
+		else if (attr->format && StrCount(attr->format, ' ') == 0)
+		{
+			/* only single arg property */
+			if (attr->sz == 1)
+			{
+				/* single byte arg: retrieve them as int though */
+				* (int *) mem = ((DATA8)w)[attr->arg1];
+			}
+			else if (strcmp(attr->format, "COLOR") == 0)
+			{
+				/* 4 bytes: RGBA values */
+				memcpy(mem, (DATA8)w + attr->arg1, 4);
+			}
+			else return False;
+			return True;
+		}
+	}
+	return False;
 }
 
 /* CSS class selector match */

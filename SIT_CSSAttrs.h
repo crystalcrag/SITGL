@@ -46,6 +46,7 @@
 	#define OFFBOX(field)   (int) &((BoxShadow)0L)->field
 	#define OFFLIST(field)  (int) &((SIT_ListBox)0L)->field
 	#define OFFBI(field)    (int) &((BorderImg)0L)->field
+	#define OFFREAL(field)  (int) &((SIT_Widget)0L)->layout.field
 
 	/* dummy properties for background-position (need defval) */
 	{.defval  = AUTO,                    .format  = "|auto=3|left=0|center=50%|right=100%|POS",
@@ -95,19 +96,19 @@
 
 	/* border-radius related properties */
 	{.attr    = "border-top-left-radius",     .format  = BORDER_WIDTH " " BORDER_WIDTH,
-	 .defval  = NULL,                         .inherit = 0,
+	 .defval  = NULL,                         .get     = OFFREAL(majorRadius.top),
 	 .arg1    = OFF(majorRadius.top),         .arg2    = OFF(minorRadius.top)},
 
 	{.attr    = "border-top-right-radius",    .format  = BORDER_WIDTH " " BORDER_WIDTH,
-	 .defval  = NULL,                         .inherit = 0,
+	 .defval  = NULL,                         .get     = OFFREAL(majorRadius.right),
 	 .arg1    = OFF(majorRadius.right),       .arg2    = OFF(minorRadius.right)},
 
 	{.attr    = "border-bottom-right-radius", .format  = BORDER_WIDTH " " BORDER_WIDTH,
-	 .defval  = NULL,                         .inherit = 0,
+	 .defval  = NULL,                         .get     = OFFREAL(majorRadius.bottom),
 	 .arg1    = OFF(majorRadius.bottom),      .arg2    = OFF(minorRadius.bottom)},
 
 	{.attr    = "border-bottom-left-radius",  .format  = BORDER_WIDTH " " BORDER_WIDTH,
-	 .defval  = NULL,                         .inherit = 0,
+	 .defval  = NULL,                         .get     = OFFREAL(majorRadius.left),
 	 .arg1    = OFF(majorRadius.left),        .arg2    = OFF(minorRadius.left)},
 
 	{.attr    = "border-radius",         .format  = BORDER_WIDTH " " BORDER_WIDTH " " BORDER_WIDTH " " BORDER_WIDTH,
@@ -191,19 +192,19 @@
 	 .arg1    = OFF(borderTop.width)},
 
 	/* border widths */
-	{.attr    = "border-top-width",      .inherit = 0, .reflow = ReflowLayout,
+	{.attr    = "border-top-width",      .get     = OFFREAL(border.top), .reflow = ReflowLayout,
 	 .defval  = NULL,                    .format  = BORDER_WIDTH,
 	 .arg1    = OFF(borderTop.width)},
 
-	{.attr    = "border-right-width",    .inherit = 0, .reflow = ReflowLayout,
+	{.attr    = "border-right-width",    .get     = OFFREAL(border.right), .reflow = ReflowLayout,
 	 .defval  = NULL,                    .format  = BORDER_WIDTH,
 	 .arg1    = OFF(borderRight.width)},
 
-	{.attr    = "border-bottom-width",   .inherit = 0, .reflow = ReflowLayout,
+	{.attr    = "border-bottom-width",   .get     = OFFREAL(border.bottom), .reflow = ReflowLayout,
 	 .defval  = NULL,                    .format  = BORDER_WIDTH,
 	 .arg1    = OFF(borderBottom.width)},
 
-	{.attr    = "border-left-width",     .inherit = 0, .reflow = ReflowLayout,
+	{.attr    = "border-left-width",     .get     = OFFREAL(border.left), .reflow = ReflowLayout,
 	 .defval  = NULL,                    .format  = BORDER_WIDTH,
 	 .arg1    = OFF(borderLeft.width)},
 
@@ -276,12 +277,12 @@
 	/* font face */
 	{.attr    = "font-family",         .inherit = 1, .reflow = ReflowLayout,
 	 .defval  = NULL,                  .format  = "FONT",
-	 .arg1    = OFF(font.family)},
+	 .arg1    = OFF(font.family),      .get     = OFF(font.handle)},
 
 	{.attr    = "font-size",           .inherit = INHERIT(2, cssAttrFontSize), .reflow = ReflowLayout,
 	 .defval  = "=16pt",               .format  = "|xx-small=6pt|x-small=8pt|small=10pt|medium=14pt|large=20pt"
 	                                              "|x-large=28pt|xx-large=32pt|smaller=7|larger=11|POS",
-	 .arg1    = OFF(fontSize)},
+	 .arg1    = OFF(fontSize),         .get     = OFF(font.size)},
 
 	{.attr    = "font-style",          .inherit = 1, .sz = 1, .reflow = ReflowLayout,
 	 .defval  = NULL,                  .format  = "|normal|italic|oblique",
@@ -304,13 +305,13 @@
 	 .arg1    = OFF(height)},
 
 	/* positioned elements only */
-	{.attr    = "left",                .inherit = 0, .reflow = ReflowOffset,
+	{.attr    = "left",                .reflow  = ReflowOffset,
 	 .defval  = NULL,                  .format  = AUTOPOS,
-	 .arg1    = OFF(left)},
+	 .arg1    = OFF(left),             .get     = OFFREAL(left)},
 
-	{.attr    = "letter-spacing",      .inherit = 2, .reflow = ReflowLayout,
+	{.attr    = "letter-spacing",      .reflow  = ReflowLayout, .inherit = 2,
 	 .defval  = AUTO,                  .format  = "|normal="AUTO"|POS",
-	 .arg1    = OFF(letterSpacing)},
+	 .arg1    = OFF(letterSpacing),    .get     = OFFREAL(letterSpacing)},
 
 	/* refer to font-size */
 	{.attr    = "line-height",         .inherit = INHERIT(2, cssAttrLineHeight), .reflow = ReflowLayout,
@@ -318,7 +319,7 @@
 	 .arg1    = OFF(lineHeight)},
 
 	/* hack(TM): only one component supported */
-	{.attr    = "margin",              .inherit = 0, .reflow = ReflowLayout,
+	{.attr    = "margin",              .get     = OFFREAL(margin), .reflow = ReflowLayout,
 	 .arg1    = OFF(margin),           .format  = "POS"},
 
 	#if 0
@@ -370,12 +371,12 @@
 	 .defval  = NULL,                  .format  = BORDER,
 	 .arg1    = OFF(outline.style)},
 
-	{.attr    = "outline-width",       .inherit = 0, .reflow = ReflowOutline,
+	{.attr    = "outline-width",       .get     = OFFREAL(outlineWidth), .reflow = ReflowOutline,
 	 .defval  = "7",                   .format  = BORDER_WIDTH,
 	 .arg1    = OFF(outline.width)},
 
 	/* extension */
-	{.attr    = NULL,                  .inherit = 0, .reflow = ReflowOutline,
+	{.attr    = NULL,                  .get     = OFFREAL(outlineOffset), .reflow = ReflowOutline,
 	 .defval  = NULL,                  .format  = "POS",
 	 .arg1    = OFF(outlineOffset)},
 
@@ -394,19 +395,19 @@
 //	 .arg1    = OFF(overflowWrap)},
 
 	/* 4 padding widths */
-	{.attr    = "padding-top",         .inherit = 0, .reflow = ReflowLayout,
+	{.attr    = "padding-top",         .get     = OFFREAL(padding.top), .reflow = ReflowLayout,
 	 .defval  = NULL,                  .format  = "POS",
 	 .arg1    = OFF(padding.top)},
 
-	{.attr    = "padding-right",       .inherit = 0, .reflow = ReflowLayout,
+	{.attr    = "padding-right",       .get     = OFFREAL(padding.right), .reflow = ReflowLayout,
 	 .defval  = NULL,                  .format  = "POS",
 	 .arg1    = OFF(padding.right)},
 
-	{.attr    = "padding-bottom",      .inherit = 0, .reflow = ReflowLayout,
+	{.attr    = "padding-bottom",      .get     = OFFREAL(padding.bottom), .reflow = ReflowLayout,
 	 .defval  = NULL,                  .format  = "POS",
 	 .arg1    = OFF(padding.bottom)},
 
-	{.attr    = "padding-left",        .inherit = 0, .reflow = ReflowLayout,
+	{.attr    = "padding-left",        .get     = OFFREAL(padding.left), .reflow = ReflowLayout,
 	 .defval  = NULL,                  .format  = "POS",
 	 .arg1    = OFF(padding.left)},
 
@@ -443,7 +444,7 @@
 	 .defval  = NULL,                    .format  = "|solid|double|wavy",
 	 .arg1    = OFF(decoStyle)},
 
-	/* block level */
+	/* XXX unused */
 	{.attr    = "text-indent",         .inherit = 2, .reflow = ReflowLayout,
 	 .defval  = NULL,                  .format  = "POS",
 	 .arg1    = OFF(text.indent)},
@@ -463,7 +464,7 @@
 	 .arg1    = OFF(text.transform)},
 
 	/* positioned elements */
-	{.attr    = "top",                 .inherit = 0, .reflow = ReflowOffset,
+	{.attr    = "top",                 .get     = OFFREAL(top), .reflow = ReflowOffset,
 	 .defval  = NULL,                  .format  = AUTOPOS,
 	 .arg1    = OFF(top)},
 
@@ -492,10 +493,10 @@
 	 .arg1    = OFF(whiteSpace)},
 
 	/* only used for <img> tag */
-	{.attr    = "width",               .inherit = 0, .reflow = ReflowLayout,
+	{.attr    = "width",               .reflow  = ReflowLayout,
 	 .defval  = AUTO,                  .format  = AUTOPOS,
 	 .arg1    = OFF(width)},
 
-	{.attr    = "word-spacing",        .inherit = 2, .reflow = ReflowLayout,
+	{.attr    = "word-spacing",        .reflow  = ReflowLayout, .inherit = 2,
 	 .defval  = AUTO,                  .format  = "|normal="AUTO"|POS",
-	 .arg1    = OFF(wordSpacing)},
+	 .arg1    = OFF(wordSpacing),      .get     = OFFREAL(wordSpacing)},

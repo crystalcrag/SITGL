@@ -108,8 +108,6 @@ int  SIT_TextEditKey(SIT_EditBox, int key);
 int  SIT_TextEditInsertText(SIT_EditBox, DATA8 utf8);
 void SIT_TextEditSetText(SIT_Widget, STRPTR title);
 
-float SIT_EmToReal(SIT_Widget w, uint32_t val);
-
 int  CP2UTF8(DATA8 dest, int cp);
 
 Bool renderWords(SIT_Widget, RectF * box, int shadowLayer);
@@ -261,6 +259,8 @@ struct SIT_Dialog_t
 	SIT_Accel *  accel;                /* public */
 	SIT_Widget   clientArea;
 	SIT_Widget   closeButton;
+	SIT_Widget   defButton;
+	SIT_Widget   cancelButton;
 	SizeF        minSize;
 	SizeF        maxSize;
 	int          customStyles;         /* public: SITV_DialogStyles */
@@ -390,6 +390,7 @@ struct SIT_EditBox_t
 	REAL         offsetAlign;          /* right/center align */
 	REAL         scrollX;              /* horizontal "scroll" */
 	REAL         padLineY;
+	REAL         extendT, extendB;     /* single edit: extend selection on top and bottom */
 	union {
 		struct {
 			double ref;                /* used by numeric text field */

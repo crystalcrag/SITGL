@@ -219,9 +219,10 @@ static int SIT_TextEditFormatDouble(STRPTR buffer, int max, double val, int roun
 				p = buffer + snprintf(buffer, max, "%.*f", 16-digit, val);
 			}
 			else *p = 0;
-			for (p --; p >= buffer && *p == '0'; *p-- = 0);
-			if (p >= buffer && *p == '.') *p = 0;
 		}
+		else p = strchr(buffer, 0);
+		for (p --; p >= buffer && *p == '0'; *p-- = 0);
+		if (p >= buffer && *p == '.') *p = 0;
 		return p - buffer;
 	}
 	else return snprintf(buffer, max, "%.0f", val);
@@ -544,6 +545,12 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 	}
 	else edit->fh = w->style.font.size;
 
+	if (edit->editType != SITV_Multiline)
+	{
+		edit->extendT = MIN(w->layout.padding.top, 2);
+		edit->extendB = MIN(w->layout.padding.bottom, 2) + edit->extendT;
+	}
+
 	edit->fh = roundf(edit->fh);
 	edit->padLineY = roundf((edit->fh - w->style.font.size) * 0.5); /* for selection */
 
@@ -769,7 +776,7 @@ static REAL SIT_TextEditRenderLine(SIT_EditBox state, DATA8 str, int length, REA
 			REAL sz = length * w;
 			nvgFillColorRGBA8(vg, state->bgSel.rgba);
 			nvgBeginPath(vg);
-			nvgRect(vg, x + off, y-1, sz, state->fh);
+			nvgRect(vg, x + off, y-1-state->extendT, sz, state->fh+state->extendB);
 			nvgFill(vg);
 			nvgFillColorRGBA8(vg, state->super.style.fgSel.rgba);
 		}
@@ -793,7 +800,7 @@ static REAL SIT_TextEditRenderLine(SIT_EditBox state, DATA8 str, int length, REA
 				w = nvgTextBounds(vg, 0, 0, str, p, NULL);
 				nvgFillColorRGBA8(vg, state->bgSel.rgba);
 				nvgBeginPath(vg);
-				nvgRect(vg, x + off, y-1, w, state->fh);
+				nvgRect(vg, x + off, y-1-state->extendT, w, state->fh+state->extendB);
 				nvgFill(vg);
 				nvgFillColorRGBA8(vg, state->super.style.fgSel.rgba);
 			}
@@ -911,7 +918,7 @@ static int SIT_TextEditRender(SIT_Widget w, APTR unused1, APTR unused2)
 	nvgFontFaceId(vg, w->style.font.handle);
 	nvgFontSize(vg, w->style.font.size);
 	nvgTextLetterSpacing(vg, 0);
-	nvgScissor(vg, x, y, state->width, w->layout.pos.height);
+	nvgScissor(vg, x, y - state->extendT, state->width, w->layout.pos.height + state->extendB);
 
 	if (state->length == 0 && IsDef(state->cueBanner))
 	{
@@ -1032,7 +1039,7 @@ static int SIT_TextEditRender(SIT_Widget w, APTR unused1, APTR unused2)
 		ycursor = y;
 	}
 	nvgResetScissor(vg);
-	nvgScissor(vg, w->offsetX + w->layout.pos.left-2, w->offsetY + w->layout.pos.top, state->width+4, w->layout.pos.height);
+	nvgScissor(vg, w->offsetX + w->layout.pos.left-2, w->offsetY + w->layout.pos.top - state->extendT, state->width+4, w->layout.pos.height + state->extendB);
 
 	if (ycursor >= 0 && (state->super.state & (STATE_FOCUS|STATE_KBDFOCUS)) && state->caretVisible && ! state->readOnly)
 	{
@@ -1083,15 +1090,15 @@ static int SIT_TextEditRender(SIT_Widget w, APTR unused1, APTR unused2)
 					nvgBeginPath(vg);
 					REAL x2 = x + shadow->pos.XYfloat[0];
 					REAL y2 = ycursor + shadow->pos.XYfloat[1];
-					nvgMoveTo(vg, x2, y2 - 1);
-					nvgLineTo(vg, x2, y2 + state->fh);
+					nvgMoveTo(vg, x2, y2 - 1 - state->extendT);
+					nvgLineTo(vg, x2, y2 - 1 + state->fh + state->extendB - state->extendT);
 					nvgStroke(vg);
 				}
 				nvgStrokeColorRGBA8(vg, col);
 			}
 			nvgBeginPath(vg); x ++;
-			nvgMoveTo(vg, x, ycursor - 1);
-			nvgLineTo(vg, x, ycursor + state->fh);
+			nvgMoveTo(vg, x, ycursor - 1 - state->extendT);
+			nvgLineTo(vg, x, ycursor - 1 + state->fh + state->extendB - state->extendT);
 			nvgStroke(vg);
 		}
 		nvgStrokeWidth(vg, 1);
@@ -2196,9 +2203,12 @@ int SIT_TextEditKey(SIT_EditBox state, int key)
 		break;
 
 	case SITK_Return:
-		SIT_TextEditInsertText(state, defChr + 2);
-		sit.dirty = True;
-		return 1;
+		if (SIT_TextEditInsertText(state, defChr + 2))
+		{
+			sit.dirty = True;
+			return 1;
+		}
+		return 0;
 
 	case SITK_Up:
 		if (type == SITV_Multiline)

@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <math.h>
+#include "nanovg.h"
 #include "SIT_P.h"
 #include "SIT_CSSLayout.h"
 
@@ -602,7 +603,7 @@ void SIT_AddTitle(SIT_Widget w, STRPTR text, int pos)
 	w->title = cur;
 }
 
-float SIT_EmToReal(SIT_Widget w, uint32_t val)
+DLLIMP float SIT_EmToReal(SIT_Widget w, uint32_t val)
 {
 	REAL size = w->parent ? w->parent->style.font.size : sit.defFontHeight;
 
@@ -1132,7 +1133,14 @@ DLLIMP void SIT_GetValues(SIT_Widget w, ...)
 				case SIT_Width:
 				case SIT_Height:      va_arg(vargs, REAL *)[0] = (&w->box.right)[SIT_Width - args->tl_TagID] - (&w->box.left)[SIT_Width - args->tl_TagID]; continue;
 				case SIT_Visible:     va_arg(vargs, Bool *)[0] = IsVisible(w); continue;
-				case SIT_NVGcontext:  va_arg(vargs, APTR *)[0] = sit.nvgCtx; continue;
+				case SIT_NVGcontext:
+					field = sit.nvgCtx;
+					nvgFillColorRGBA8(field, w->style.color.rgba);
+					nvgTextLetterSpacing(field, w->layout.letterSpacing);
+					nvgFontFaceId(field, w->style.font.handle);
+					nvgFontSize(field, w->style.font.size);
+					va_arg(vargs, APTR *)[0] = field;
+					continue;
 				case SIT_Padding:
 				{	int * padding = va_arg(vargs, int *);
 					padding[0] = w->padding[0];

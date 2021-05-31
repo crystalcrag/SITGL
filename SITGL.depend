@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1620159598 source:c:\drive_e\projets\sitgl\sit.c
+1620832960 source:c:\drive_e\projets\sitgl\sit.c
 	<windows.h>
 	<math.h>
 	<malloc.h>
@@ -29,7 +29,7 @@
 1611199902 c:\drive_e\projets\sitgl\nanovg_gl_utils.h
 	<OpenGL/glext.h>
 
-1621717762 c:\drive_e\projets\sitgl\sit_p.h
+1621776036 c:\drive_e\projets\sitgl\sit_p.h
 	"SIT.h"
 	"SIT_CSSStyles.h"
 	<stdio.h>
@@ -62,7 +62,7 @@
 	"SIT_CSSLayout.h"
 	"nanovg.h"
 
-1614118050 source:c:\drive_e\projets\sitgl\sit_button.c
+1621735599 source:c:\drive_e\projets\sitgl\sit_button.c
 	<stdio.h>
 	<string.h>
 	<stdlib.h>
@@ -121,7 +121,7 @@
 	"SIT_P.h"
 	"SIT_CSSLayout.h"
 
-1620749746 source:c:\drive_e\projets\sitgl\sit_editbox.c
+1621776342 source:c:\drive_e\projets\sitgl\sit_editbox.c
 	<math.h>
 	<stdio.h>
 	<stdlib.h>
@@ -132,7 +132,7 @@
 	"SIT_CSSLayout.h"
 	"nanovg.h"
 
-1620249216 source:c:\drive_e\projets\sitgl\sit_event.c
+1621737932 source:c:\drive_e\projets\sitgl\sit_event.c
 	<string.h>
 	<ctype.h>
 	"SIT_P.h"
@@ -163,7 +163,7 @@
 	"SIT_P.h"
 	"SIT_CSSLayout.h"
 
-1619642160 source:c:\drive_e\projets\sitgl\sit_listbox.c
+1620851200 source:c:\drive_e\projets\sitgl\sit_listbox.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -182,7 +182,7 @@
 	"SIT_CSSLayout.h"
 	"nanovg.h"
 
-1620749758 source:c:\drive_e\projets\sitgl\sit_render.c
+1621257220 source:c:\drive_e\projets\sitgl\sit_render.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -259,7 +259,7 @@
 	"UtilityLibLite.h"
 	"debugMem.h"
 
-1621701797 source:c:\drive_e\projets\sitgl\examplesdl.c
+1621737438 source:c:\drive_e\projets\sitgl\examplesdl.c
 	<stdio.h>
 	<SDL/SDL.h>
 	"nanovg.h"
@@ -267,6 +267,8 @@
 	<math.h>
 	"SIT.h"
 	"glad.h"
+	"extra.h"
+	<assert.h>
 	<windows.h>
 
 1199055973 c:\drive_e\projets\external\includes\sdl\sdl.h
@@ -452,7 +454,7 @@
 	"begin_code.h"
 	"close_code.h"
 
-1620749728 source:c:\drive_e\projets\sitgl\nanovg.c
+1621734762 source:c:\drive_e\projets\sitgl\nanovg.c
 	<stdlib.h>
 	<stdio.h>
 	<math.h>
@@ -461,7 +463,7 @@
 	"fontstash.h"
 	"stb_image.h"
 
-1613237496 c:\drive_e\projets\sitgl\fontstash.h
+1621002392 c:\drive_e\projets\sitgl\fontstash.h
 	<ft2build.h>
 	<math.h>
 	"stb_truetype.h"
@@ -496,4 +498,6 @@
 	<arm_neon.h>
 
 1602950346 source:c:\drive_e\projets\sitgl\sitgl.rc
+
+1621621580 c:\drive_e\projets\sitgl\extra.h
 

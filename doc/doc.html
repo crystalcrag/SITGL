@@ -116,6 +116,10 @@
  <a class="sub2" href="#filechooser">File chooser</a>
  <a class="sub2" href="#colorchooser">Color chooser</a>
  <a class="sub2" href="#vt100">Console window</a>
+  <a class="sub3" href="#vt100init">Initialization</a>
+  <a class="sub3" href="#vt100prop">Custom properties</a>
+  <a class="sub3" href="#vt100css">Styling</a>
+  <a class="sub3" href="#vt100kbd">Keyboard shortcuts</a>
 
 <a class="sub1" href="#i18n"><span>Internationalization</span></a>
  <a class="sub2" href="#localeinfo">Locale information</a>
@@ -4407,7 +4411,7 @@ remember that margins can be overridden using negative offset for <tt>SITV_Attac
 
 <h3 id="SIT_EDITBOX"><span>SIT_EDITBOX</span></h3>
 
-<p>Edit box can be used to enter almost any form form of text. The capabilities of this widget is very
+<p>Edit box can be used to enter almost any form of text. The capabilities of this widget is very
 close to what you would expect from a typical <b>text editor</b>: support for multi-line text, selection
 using mouse and keyboard, clipboard, undo/redo, word/character wrapping, insert/replace mode, tab can
 be used as character, right/left/center/justified alignment, ...
@@ -6388,7 +6392,7 @@ public function to instanciate this control:
   <li><tt>rgb</tt>: initial color that will be displayed.
   <li><tt>cb</tt>: a callback triggered when the user confirm its selection. <tt>call_data</tt> will
   point to an array of 4 <tt class="t">uint8_t</tt>, containing, in that order, the red, green, blue
-  and the value 255 of the selected color.
+  and the value 255 (ie: fully opaque) of the selected color.
   <li><tt>ud</tt>: the user data parameter that will be transmitted to the callback.
 </ul>
 
@@ -6402,12 +6406,195 @@ to immediately display the window.
 <p>This widget can be seen as a <b>read-only version of the <tt>SIT_EDITBOX</tt> control</b>, with some extra
 styling support (colors and fonts). The typical use case for this control is to implement a console output
 for your engine. Usually, when building your application for release, the standard output (ie:
-<tt>printf</tt> or <tt>cout</tt>) will be unavailable. If you still want to keep a log accessible
+<tt>printf</tt> or <tt>cout</tt>) will not be available. If you still want to keep a log accessible
 somewhere, you might be interested by this widget.
 
+<div class="image">
+  <img src="images/VT100.png">
+</div>
+
+<h4 id="vt100init">Initialization</h4>
+
+<p>One of the key aspect of this widget is that the amount of bytes used for the content buffer is <b>fixed</b>: at some point
+after adding enough text, earlier lines will be automatically discarded. Unbound growth is never desirable
+for a widget like this.
+
+<p>Text is actually stored in a ring buffer, so that when earlier entries have to be discarded, the whole
+buffer don't need to be shifted. Therefore adding text should be done at a constant speed, no matter how
+big the content buffer is or how many bytes have been added so far.
+
+<p>This widget has to be derived from a <a href="#SIT_CANVAS"><tt>SIT_CANVAS</tt></a>, that <b>you have
+to create beforehand</b>. Additionnally, you can also create a <a href="#SIT_SCROLLBAR"><tt>SIT_SCROLLBAR</tt></a>,
+<b>as a child of the <tt>SIT_CANVAS</tt></b>, in order to scroll the content, in case there is more than
+what can be displayed on screen. This scroll bar need to be created in a vertical orientation, since
+text will be wordwrapped (or, at your choice, character wrapped), a horizontal scrollbar will be
+completely useless.
+
+<p>Scrollbar is optional though, you are free to implement your own scrolling behavior, since there is
+an API to manually set the top visible line.
+
+<p>This is the typical code to create the necessary widgets:
+
+<pre>SIT_CreateWidgets(diag,
+	<val>"&lt;canvas name=output left=FORM right=FORM top=FORM bottom=FORM&gt;"
+	"  &lt;scrollbar name=scroll top=FORM bottom=FORM right=FORM visible=0&gt;"
+	"&lt;/canvas&gt;"</val>
+);</pre>
+
+<p>Take note, that the scrollbar has been initially set to hidden and anchor on the right side of the
+canvas. There are only 2 ways to position the scroll bar though: on the right side or left side. If placed
+anywhere else, the scrollbar will overwrite some content at some point.
+
+<p>Once the widgets have been created, you need to <b>give their ownership to the console widget</b>, using
+the following function:
+<pre><type>void</type> VTInit(SIT_Widget canvas, SIT_Widget scroll);</pre>
+
+<h4 id="vt100prop">Custom properties</h4>
+
+<p>After that, the widget will be ready to receive text and/or configured using the custom properties.
+These properties can be set/retrieved <b>on the canvas widget</b> (not the scrollbar though):
+
+<ul>
+  <li><tt class="dt">VT_AddText</tt> (<tt class="t">STRPTR</tt>) <span class="ro">write-only</span>
+  <p>This is the property you can use to add text to the console. It only accepts a <tt class="o">NULL</tt>-terminated
+  string as input. <tt>printf</tt>-like format are not supported, although creating a wrapper is simple
+  enough as to be left as a exercise for the user.
+  
+  <p>The text can have format specifiers to change the text color, background or font. A format specifier
+  uses the following syntax:
+  <pre><val>"<spe>\x1b</spe>["</val> <em>FORMAT</em> <val>"m"</val></pre>
+  <p>Where <tt>FORMAT</tt> is a semi-colon separated list of numbers. The numbers that can be used are:
+  <ul>
+    <li>0: cancel all custom styles and colors.
+    <li>1: start text in bold.
+    <li>2: stop using bold font.
+    <li>4: start underline style.
+    <li>24: stop underline.
+    <li>30~37: change foreground color to color index 0~7 (from <tt>VT_Palette</tt>).
+    <li>90~97: change background color to color index 0~7.
+    <li>40~47: change foreground color to color index 8~15.
+    <li>100~107: change background color to color index 8~15.
+  </ul>
+  <p>In case you are wondering where this syntax comes from, they are a subset of the
+  <a href="https://www2.ccs.neu.edu/research/gpc/VonaUtils/vona/terminal/vtansi.htm#colors">VT100
+  escape sequences</a>. For example:
+  <pre><val>"<spe>\x1b</spe>[1mHello<spe>\x1b</spe>[0m <spe>\x1b</spe>[36;4mworld<spe>\x1b</spe>[0m !"</val></pre>
+  <p>Will generate something similar to:
+  <div class="image">
+    <img src="images/VT100_output.png">
+  </div>
+  <p>Whenever a format specifier is added to the text, that format will be used until another format
+  cancels it.
+
+  <p>There are 2 other format specifiers available:
+  <ol>
+    <li><tt class="dt"><val>"<spe>\x1b</spe>["</val> <em>NUMBER</em> <val>"s"</val></tt>
+
+    <p>This form is used to add a variable space width. The width of the character will be <b>number
+    of pixels</b> specified in the format. The typical use case is to right/center align text. In the
+	first screenshot, the first column of numbers (with an orange background) were aligned this way.
+	It will require some work on your side though: you'll have to measure the text using <tt>nanovg</tt>
+	before being able to add it.
+
+    <li><tt class="dt"><val>"<spe>\x1b</spe>["</val> <em>NUMBER</em> <val>"i"</val></tt>
+    <p>The second form is to add an indent <b>after a soft line-break</b>. It is similar to the CSS
+	<tt>text-indent</tt> attribute, except it will be applied on subsequent lines instead on the first.
+	The typical use case for this feature is to group content that is related. In the first screenshot,
+	the indent has been setup so that the text is wrapped just after the timestamp: that way it is very
+	clear when a line is the continuation of another.
+
+	<p>Again, you'll have to do some work on your side beforehand, even though it should be no more
+	than a few lines of code.
+  </ol>
+
+  <p><span class="n">Caveat</span>: When adding text, format specifier needs to be added in one chunk.
+  For example:
+  <pre><com>/* this won't switch the text to bold blue color */</com>
+SIT_SetValues(canvas, VT_AddText, <val>"<spe>\x1b</spe>["</val>);
+SIT_SetValues(canvas, VT_AddText, <val>"1;31mHello world"</val>);
+
+<com>/* this will work */</com>
+SIT_SetValues(canvas, VT_AddText, <val>"<spe>\x1b</spe>[1;31mHello world"</val>);</pre>
 
 
+  <li><tt class="dt">VT_Palette</tt> (<tt><type>uint8_t</type> [<val>64</val>]</tt>)
+  <p>An array of 64 bytes, specifying 16 colors using the RGBA notation. The default palette should
+  be good enough for a dark background. If you want to use it on a light background, you should swap
+  the first and last color. Remember, that it is still possible to specify some <tt>text-shadow</tt>
+  to be sure the text remains readable on any background.
 
+  <li><tt class="dt">VT_MaxBuffer</tt> (<tt class="t">int</tt>) <span class="ro">create-only</span>
+  <p><b>How many bytes the content buffer will hold</b> before reusing older bytes once it is full. Default
+  value is <b>64Kb</b>. On a typical log file, lines are between 50 to 100 bytes, therefore that buffer
+  size should be enough for about 1000 lines (<span class="n">Note</span>: keep in mind that format
+  specifiers are also stored in this buffer).
+
+  <p>That buffer won't be allocated in one chunk. Actually, if you never add any text, nothing will be
+  allocated at all.
+
+  <li><tt class="dt">VT_TabSize</tt> (<tt class="t">int</tt>)
+  <p>This will set the <b>width of tab character</b> (ASCII code 9) in multiple of space character
+  (ASCII code 32). Default value is <b>4</b>. Valid values are between 2 and 100.
+
+  <li><tt class="dt">VT_TopLine</tt> (<tt class="t">int</tt>)
+  <p><b>Set the top visible line</b>. Whatever value is given, they will be clamped to what is physically
+  possible with the console. It means, that if you want to always display the bottom of the log, simply
+  give a very large number.
+
+  <li><tt class="dt">VT_TotalLines</tt> (<tt class="t">int</tt>) <span class="ro">read-only</span>
+  <p>Retrieve the <b>total number of lines</b> currently stored in the content buffer. That number will
+  also include the number of soft-lines due to character/word wrapping. This property is useful if you
+  want to implement your own scrolling behavior.
+
+  <li><tt class="dt">VT_SelLength</tt> (<tt class="t">int</tt>) <span class="ro">read-only</span>
+  <p><b>Length of text currently selected</b>, including <tt class="o">NULL</tt> byte. Therefore, if
+  length is less or equal to 1, nothing is selected.
+
+  <li><tt class="dt">VT_SelBuffer(max)</tt> (<tt class="t">STRPTR</tt>) <span class="ro">write-only</span>
+  <p><b>Copy current text selected</b> into the buffer provided. This macro require an argument that specify
+  the amount of bytes the buffer can hold. If the buffer is too small, the text will be truncated. As
+  long as there is at least one byte available, the buffer will always be <tt class="o">NULL</tt>-terminated.
+
+  <p><span class="n">Note</span>: formatting attributes <b>will not</b> be copied, only the text will.
+
+  <li><tt class="dt">VT_LinePadding</tt> (<tt class="t">int</tt>)
+  <p>You can specify how far part apart each lines will be. By default lines are stack on top of each other
+  without any gap.
+
+  <li><tt class="dt">VT_WordWrap</tt> (<tt class="t">int</tt>)
+  <p>How lines should be wrapped: 0 for character wrapping or 1 for word wrapping (default).
+</ul>
+
+<h4 id="vt100css">Styling</h4>
+
+<p>The content area is mostly managed by this control, however, it will honor a few CSS properties:
+<ul>
+  <li><tt class="dt">text-shadow</tt>
+  <p>Shadow text will be rendered layer per layer, which means you can use shadow that overlaps both
+  top or bottom line without having the risk to overwrite text.
+
+  <li><tt class="dt">line-height</tt>
+  <p>Use this property to make thicker lines. The difference between <tt>line-height</tt> and
+  <tt>VT_LinePadding</tt> is that <tt>line-height</tt> will also affect background color (including
+  selection), whereas line padding won't. In the first screenshot, <tt>line-height</tt> was set to
+  <tt class="o">1.1</tt> and <tt>VT_LinePadding</tt> to <tt class="o">1</tt>.
+</ul>
+
+<h4 id="vt100kbd">Keyboard shortcuts</h4>
+
+<p>If the canvas has the keyboard focus, the following shortcuts will be available. Remember that you
+can also use the function <tt><a href="#SIT_ApplyCallback">SIT_ApplyCallback()</a></tt>, to redirect
+keyboard events to this control (typical use case: redirect some events from a single line edit box).
+
+<ul>
+  <li><span class="key">Home</span>, <span class="key">End</span>: move visible area to top/bottom.
+  <li><span class="key">PgUp</span>, <span class="key">PgDown</span>: scroll up/down one page.
+  <li><span class="key">&#x25b2;</span>, <span class="key">&#x25bc;</span>: scroll up/down one line.
+  <li><span class="key">Ctrl+A</span>: select all text.
+  <li><span class="key">Ctrl+C</span>: copy selection to clipboard.
+  <li><span class="key">Ctrl+L</span>: clear entire content.
+  <li><span class="key">Ctrl+V</span>: paste clipboard into content buffer.
+</ul>
 
 <h2 id="i18n">Internationalization</h2>
 
@@ -7392,7 +7579,7 @@ particular area. Consider the following example:
 </div>
 
 <p>Here the grid is actually a single <tt>SIT_CANVAS</tt> widget, where a single cell using an inset
-border was copied to give the illusion of grid like pattern. Inside each cell, graphics were rendered
+border was copied to give the illusion of a grid like pattern. Inside each cell, graphics were rendered
 using OpenGL commands, completely outside of <tt>SITGL</tt> control. On top of all this, a tooltip
 (managed by <tt>SITGL</tt>) was finally rendered (if you zoom in this image, you can also see that the
 tooltip background is partially transparent). Both have been created this way:
@@ -7404,7 +7591,7 @@ tooltip background is partially transparent). Both have been created this way:
 	" toolTipAnchor="</val>, SITV_TooltipFollowMouse, <val>">"</val>
 );</pre>
 
-<p>Note that the tooltip is not a child of the canvas element: overlapping will take rendereing order
+<p>Note that the tooltip is not a child of the canvas element: overlapping will take rendering order
 and coordinates into account, to be sure that if any element overlaps a composited area, it will be
 refreshed at a later time.
 

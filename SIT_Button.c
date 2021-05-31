@@ -140,6 +140,22 @@ static int SIT_ButtonToggle(SIT_Widget w, APTR cd, APTR ud)
 	return 0;
 }
 
+static int SIT_ButtonRemPtr(SIT_Widget w, APTR cd, APTR ud)
+{
+	SIT_Button button = (SIT_Button) w;
+	SIT_Dialog dialog = ud;
+	switch (button->type) {
+	case SITV_DefaultButton:
+		if (dialog->defButton == w)
+			dialog->defButton = NULL;
+		break;
+	case SITV_CancelButton:
+		if (dialog->cancelButton == w)
+			dialog->cancelButton = NULL;
+	}
+	return 1;
+}
+
 /* initialize a button, check box or radio button */
 Bool SIT_InitButton(SIT_Widget w, va_list args)
 {
@@ -147,7 +163,6 @@ Bool SIT_InitButton(SIT_Widget w, va_list args)
 
 	w->optimalWidth = SIT_ButtonMeasure;
 	w->setValue     = SIT_ButtonSetValues;
-//	w->finalize     = SIT_ButtonFinalize;
 	button->radioID = 0xdeadbeef;
 
 	SIT_ParseTags(w, args, w->attrs = ButtonClass);
@@ -157,6 +172,21 @@ Bool SIT_InitButton(SIT_Widget w, va_list args)
 	case SITV_ToggleButton:
 		w->flags |= SITF_ToggleButon;
 		if (button->group > 0) w->flags |= SITF_ImmediateActive;
+		break;
+	case SITV_DefaultButton:
+	case SITV_CancelButton:
+		{
+			SIT_Widget diag;
+			for (diag = w->parent; diag && diag->type != SIT_DIALOG; diag = diag->parent);
+			if (diag)
+			{
+				if (button->type == SITV_DefaultButton)
+					((SIT_Dialog)diag)->defButton = w;
+				else
+					((SIT_Dialog)diag)->cancelButton = w;
+				SIT_AddCallback(w, SITE_OnFinalize, SIT_ButtonRemPtr, diag);
+			}
+		}
 		break;
 	case SITV_CheckBox:
 	case SITV_3StateCB:

@@ -230,7 +230,7 @@ DLLIMP int SIT_ProcessKey(int key, int modifier, int pressed)
 				if (SIT_TextEditKey((SIT_EditBox) sit.focus, key | modifier))
 					return 1;
 			}
-			else if ((key == SITK_Space || key == SITK_Return) && (focus->state & STATE_KBDFOCUS))
+			if ((key == SITK_Space || key == SITK_Return) && focus->type == SIT_BUTTON && (focus->state & STATE_KBDFOCUS))
 			{
 				focus->oldState = focus->state;
 				focus->state   |= STATE_ACTIVE|STATE_HOVER;
@@ -249,6 +249,20 @@ DLLIMP int SIT_ProcessKey(int key, int modifier, int pressed)
 					if (SIT_ApplyCallback(target, &msg, SITE_OnRawKey))
 						return 1;
 				}
+			}
+		}
+		/* still not processed: look for default control */
+		if (sit.activeDlg && sit.activeDlg->type == SIT_DIALOG)
+		{
+			SIT_Dialog diag = (SIT_Dialog) sit.activeDlg;
+
+			if (key == SITK_Escape && diag->cancelButton)
+			{
+				SIT_ApplyCallback(diag->cancelButton, diag->cancelButton, SITE_OnActivate);
+			}
+			else if (key == SITK_Return && diag->defButton)
+			{
+				SIT_ApplyCallback(diag->defButton, diag->defButton, SITE_OnActivate);
 			}
 		}
 	}
@@ -537,7 +551,6 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 	if (sit.curTooltip && sit.curTooltip->visible && ((SIT_Tooltip)sit.curTooltip)->anchor == SITV_TooltipFollowMouse)
 	{
 		int XYWH[4] = {x, y, 20, 20};
-		//SIT_MoveNearby(sit.curTooltip, XYWH, SITV_AlignBottom);
 		SIT_MoveNearby(sit.curTooltip, XYWH, TOOLTIP_DEFALIGN);
 		sit.dirty = 1;
 	}
@@ -648,11 +661,14 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 				}
 			}
 			#if 0
-			fprintf(stderr, "entering %s: [%d]", hover->name, hover->state);
-			if (hover->state & STATE_HOVER)  fprintf(stderr, " HOVER");
-			if (hover->state & STATE_ACTIVE) fprintf(stderr, " ACTIVE");
-			if (hover->state & STATE_FOCUS)  fprintf(stderr, " FOCUS");
-			fputc('\n', stderr);
+			if (hover)
+			{
+				fprintf(stderr, "entering %s: [%d]", hover->name, hover->state);
+				if (hover->state & STATE_HOVER)  fprintf(stderr, " HOVER");
+				if (hover->state & STATE_ACTIVE) fprintf(stderr, " ACTIVE");
+				if (hover->state & STATE_FOCUS)  fprintf(stderr, " FOCUS");
+				fputc('\n', stderr);
+			}
 			#endif
 		}
 		/* update CSS from control where state has changed */
