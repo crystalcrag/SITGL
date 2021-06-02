@@ -60,6 +60,7 @@ enum /* attributes that needs special processing */
 	cssAttrBoxShadow,
 	cssAttrTransform,
 	cssAttrCaret,
+	cssAttrSelection,
 	cssAttrLast
 };
 
@@ -320,7 +321,12 @@ DLLIMP Bool SIT_GetCSSValue(SIT_Widget w, STRPTR property, APTR mem)
 	/* if you are a rust developper, please close your eyes */
 	if (attr)
 	{
-		if (attr == GET(cssAttrLineHeight))
+		if (attr == GET(cssAttrSelection))
+		{
+			/* retrieve both fg and bg at the same time (in that order) */
+			memcpy(mem, &w->style.fgSel, 8);
+		}
+		else if (attr == GET(cssAttrLineHeight))
 		{
 			REAL layoutCalcLineHeight(SIT_Widget);
 			/* there got to be a special case :-/ */
@@ -398,7 +404,7 @@ static Bool cssMatchSelector(SIT_Widget * stack, int level, CSSRule rule)
 
 			switch (s->type) {
 			case CSSR_NONE:
-				fprintf(stderr, "invalid 'NONE' transition for rule.\n");
+				// fprintf(stderr, "invalid 'NONE' transition for rule.\n");
 				break;
 			case CSSR_TAG:
 				match = strcmp(s->item, "*") == 0 || strcasecmp(node->tagName, s->item) == 0;

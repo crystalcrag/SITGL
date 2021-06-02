@@ -197,8 +197,8 @@ Bool gradientDrawLinear(CSSImage img, Gradient * grad, REAL ratio)
 		i --; c ++;
 		if (i == 0 && grad->repeat)
 		{
-			c = colors;
-			i = count;
+			c = colors+1;
+			i = count-1;
 		}
 	}
 	return True;

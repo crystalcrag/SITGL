@@ -168,8 +168,6 @@ static STRPTR SIT_ParseLine(STRPTR line, va_list * list, TagList * classArgs, PL
 				case SIT_BOOL: cur->key.val = e < p ? strtol(e, &e, 0) : 0; break;
 				case SIT_CTRL:
 					cur->key.ptr = e < p ? SIT_FindControl(cd->parent, e, p - e + 1, False) : NULL;
-					if (cur->key.ptr == NULL && e < p)
-						fprintf(stderr, "can't find control %.*s\n", p - e + 1, e);
 					break;
 				case SIT_UNIT:
 					if (strncasecmp(p-2, "em", 2) == 0)
@@ -322,7 +320,6 @@ DLLIMP void SIT_SetAttributes(SIT_Widget parent, STRPTR fmt, ...)
 			while (*p && isspace(*p)) p ++;
 			if (buf.closing < 2) fmt = SIT_ParseLine(p, &args, ((SIT_Widget)buf.w)->attrs, &buf);
 		}
-		else fprintf(stderr, "%.*s: control not found\n", p - fmt, fmt);
 	}
 	va_end(args);
 }

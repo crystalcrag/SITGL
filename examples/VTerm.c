@@ -173,7 +173,7 @@ static int VTTextFit(VirtualTerm vt, NVGcontext * vg, float max, DATA8 start, DA
 	eof = vt->buffer + vt->bufMax;
 
 	/* try to fit as many characters into <max> width */
-	for (x = start > vt->buffer + vt->bufStart && start[-1] != '\n' ? attr[1] : 0, len = 0, next = start; next != end; )
+	for (x = start != vt->buffer + vt->bufStart && start[start == vt->buffer ? vt->bufMax-1 : -1] != '\n' ? attr[1] : 0, len = 0, next = start; next != end; )
 	{
 		/* note: cannot use iterators at this point, since we are in the process of building line ptr (which are needed by iterators) */
 		DATA8   frag;
@@ -198,11 +198,11 @@ static int VTTextFit(VirtualTerm vt, NVGcontext * vg, float max, DATA8 start, DA
 				if (eol == eof) eol = vt->buffer, split = 1;
 			}
 		}
-		if (eol >= eof) eol -= vt->bufMax, split = 1;
+		if (eol > eof) eol -= vt->bufMax, split = 1;
 
 		if (split)
 		{
-			/* duplicate for easier parsing */
+			/* unsplit for easier parsing */
 			frag = alloca(fit);
 			int remain = eof - next;
 			memcpy(frag, next, remain);
@@ -234,17 +234,17 @@ static int VTTextFit(VirtualTerm vt, NVGcontext * vg, float max, DATA8 start, DA
 			len ++;
 			break;
 		default:
-			fit = nvgTextFit(vg, frag, frag + fit, max - x, &width);
+			fit = nvgTextFit(vg, frag, next = frag + fit, max - x, &width);
 			frag += fit;
 			len  += fit;
-			if (*frag >= 32)
+			if (frag != next)
 			{
 				if (round)
 				{
-					eol = NEXTCHAR(frag);
+					next = NEXTCHAR(frag);
 					x += width;
-					width = *frag == '\t' ? vt->tabSizePx - (int) x % vt->tabSizePx : nvgTextBounds(vg, 0, 0, frag, eol, NULL);
-					if (x + width * 0.5 < max) len += eol - frag;
+					width = *frag == '\t' ? vt->tabSizePx - (int) x % vt->tabSizePx : nvgTextBounds(vg, 0, 0, frag, next, NULL);
+					if (x + width * 0.5 < max) len += next - frag;
 				}
 				goto break_all;
 			}
@@ -254,7 +254,7 @@ static int VTTextFit(VirtualTerm vt, NVGcontext * vg, float max, DATA8 start, DA
 	}
 	break_all:
 	next = start + len;
-	if (next >= eof) next -= vt->bufMax;
+	if (next > eof) next -= vt->bufMax;
 	if (! round && next != end && (*next == '\n' || next == start))
 	{
 		/* wrap at least one character to avoid infinite loop */
@@ -303,11 +303,12 @@ static void VTReformat(VirtualTerm vt, NVGcontext * vg)
 		/* character added at the end: don't reformat the whole content buffer */
 		VTLine line = vt->lines + total;
 		memcpy(attrs, &line->styles, 4);
+		attrs[0] &= ~VT_PRIMARY;
 		start = next = vt->buffer + line->offset;
 		total = vt->totalLines-1;
 		if (total < 0) total = 0;
 	}
-	else total = 0, start = vt->buffer + vt->bufStart, memset(attrs, 0, 4);
+	else total = 0, start = next = vt->buffer + vt->bufStart, memset(attrs, 0, 4);
 
 	while (next != eof)
 	{
@@ -350,7 +351,7 @@ static void VTReformat(VirtualTerm vt, NVGcontext * vg)
 		line->offset = start - vt->buffer;
 		line->styles = curAttrs[0];
 		line->indent = curAttrs[1];
-		if (line->offset == vt->bufStart || vt->buffer[line->offset-1] == '\n')
+		if (line->offset == vt->bufStart || vt->buffer[line->offset > 0 ? line->offset-1 : vt->bufMax-1] == '\n')
 			line->styles |= VT_PRIMARY;
 		total ++;
 		if (next == end)
@@ -523,6 +524,7 @@ static int VTPaint(SIT_Widget w, APTR cd, APTR ud)
 			TEXT fontBold[64];
 			float lineHeight;
 			SIT_GetCSSValue(w, "line-height", &lineHeight);
+			SIT_GetCSSValue(w, "selection",   &vt->selColors);
 			CopyString(fontBold, nvgGetFontName(vg, paint->fontId), sizeof fontBold);
 			StrCat(fontBold, sizeof fontBold, 0, "-bold");
 			vt->fontSize = paint->fontSize;
@@ -1187,22 +1189,20 @@ static Bool VTMarkSelection(VirtualTerm vt)
 	line = vt->lines + vt->selEnd.line;
 	line->styles = (line->styles & VT_SELCLEAR) | (vt->selEnd.line < vt->selStart.line ? VT_SELSTART : VT_SELEND);
 
-	int end;
-	/* XXX word selection will fail if line is wrapped around buffer */
-	if (vt->selStart.line <= vt->selEnd.line)
+	if (vt->selStart.line < vt->selEnd.line || (vt->selStart.line == vt->selEnd.line && vt->selStart.chr <= vt->selEnd.chr))
 	{
 		vt->colStart = vt->wordSelect ? VTAdjustCoordPrevWord(vt, &vt->selStart) : vt->selStart.chr;
 		vt->colEnd   = vt->wordSelect ? VTAdjustCoordNextWord(vt, &vt->selEnd)   : vt->selEnd.chr;
-		end = VT_SELSTART;
+		start = VT_SELSTART;
 	}
 	else
 	{
 		vt->colStart = vt->wordSelect ? VTAdjustCoordPrevWord(vt, &vt->selEnd)   : vt->selEnd.chr;
 		vt->colEnd   = vt->wordSelect ? VTAdjustCoordNextWord(vt, &vt->selStart) : vt->selStart.chr;
-		end = VT_SELEND;
+		start = VT_SELEND;
 	}
 	line = vt->lines + vt->selStart.line;
-	line->styles = (line->styles & VT_SELCLEAR) | (vt->selEnd.line == vt->selStart.line ? VT_SELSTART | VT_SELEND : end);
+	line->styles = (line->styles & VT_SELCLEAR) | (vt->selEnd.line == vt->selStart.line ? VT_SELSTART | VT_SELEND : start);
 
 	vt->hasSelect |= 1;
 	vt->selCur = vt->selEnd;
@@ -1336,23 +1336,6 @@ static int VTMouse(SIT_Widget w, APTR cd, APTR ud)
 	return 1;
 }
 
-static void debugLines(VirtualTerm vt)
-{
-	VTLine line;
-	int    i;
-	for (i = 0, line = vt->lines; i < vt->totalLines; i ++, line ++)
-	{
-		STRPTR sel = "--";
-		switch (line->styles & VT_SELWHOLE) {
-		case VT_SELSTART: sel = "S-"; break;
-		case VT_SELEND:   sel = "-E"; break;
-		case VT_SELBOTH:  sel = "SE"; break;
-		case VT_SELWHOLE: sel = "AA"; break;
-		}
-		fprintf(stderr, "%2d: %c%s: %2d - %d\n", i, line->styles & VT_PRIMARY ? 'P' : ' ', sel, line->indent, line->offset);
-	}
-}
-
 static int VTRawKey(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_OnKey * msg = cd;
@@ -1366,7 +1349,6 @@ static int VTRawKey(SIT_Widget w, APTR cd, APTR ud)
 	case SITK_End:      scroll  = max; break;
 	case SITK_Up:       scroll -= vt->lineHeight; break;
 	case SITK_Down:     scroll += vt->lineHeight; break;
-	case SITK_F7:       debugLines(vt);
 	default: return 0;
 	}
 	if (scroll < 0)   scroll = 0;
@@ -1478,8 +1460,6 @@ void VTInit(SIT_Widget canvas, SIT_Widget scroll)
 	vt->reformat   = -1;
 	vt->waitConf   = 1;
 	vt->wordWrap   = 1;
-
-	GetSelectionColor(vt->selColors, vt->selColors+4);
 
 	SIT_AddCallback(canvas, SITE_OnSetOrGet,   VTSetOrGet,  vt);
 	SIT_AddCallback(canvas, SITE_OnPaint,      VTPaint,     vt);

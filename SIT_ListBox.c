@@ -1802,16 +1802,17 @@ DLLIMP Bool SIT_ListSetCell(SIT_Widget w, int row, int col, APTR rowTag, int ali
 		cell->userData = rowTag;
 	cell += col;
 
-	switch (align & 0xff) {
-	case 'R': cell->flags &= ~(CELL_ALIGNR | CELL_ALIGNC); cell->flags |= CELL_ALIGNR; break;
-	case 'C': cell->flags &= ~(CELL_ALIGNR | CELL_ALIGNC); cell->flags |= CELL_ALIGNC; break;
-	case 'L': cell->flags &= ~(CELL_ALIGNR | CELL_ALIGNC); break;
-	}
-
-	switch ((align >> 8) & 0xff) {
-	case 'B': cell->flags &= ~(CELL_VALIGNB | CELL_VALIGNC); cell->flags |= CELL_VALIGNB; break;
-	case 'C': cell->flags &= ~(CELL_VALIGNB | CELL_VALIGNC); cell->flags |= CELL_VALIGNC; break;
-	case 'T': cell->flags &= ~(CELL_VALIGNB | CELL_VALIGNC); break;
+	while (align & 0xff)
+	{
+		switch (align & 0xff) {
+		case 'R': cell->flags &= ~(CELL_ALIGNR | CELL_ALIGNC); cell->flags |= CELL_ALIGNR; break;
+		case 'C': cell->flags &= ~(CELL_ALIGNR | CELL_ALIGNC); cell->flags |= CELL_ALIGNC; break;
+		case 'L': cell->flags &= ~(CELL_ALIGNR | CELL_ALIGNC); break;
+		case 'B': cell->flags &= ~(CELL_VALIGNB | CELL_VALIGNC); cell->flags |= CELL_VALIGNB; break;
+		case 'M': cell->flags &= ~(CELL_VALIGNB | CELL_VALIGNC); cell->flags |= CELL_VALIGNC; break;
+		case 'T': cell->flags &= ~(CELL_VALIGNB | CELL_VALIGNC); break;
+		}
+		align >>= 8;
 	}
 
 	if (text != DontChangePtr)

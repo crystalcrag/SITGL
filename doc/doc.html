@@ -9,7 +9,7 @@
 <body>
 <div id="toc">
 <a class="sub1" href="#introduction"><span>Introduction</span></a>
-<a class="sub1" href="#history">History</a>
+<a class="sub1" href="#history"><span>History</span></a>
 <a class="sub1" href="#conventions"><span>Conventions</span></a>
 <a class="sub1" href="#gettingstarted"><span>Getting started</span></a>
   <a class="sub2" href="#includes">Includes</a>
@@ -53,6 +53,7 @@
 <a class="sub1" href="#events"><span>Events/callbacks</span></a>
  <a class="sub2" href="#evtreg">Registration</a>
  <a class="sub2" href="#evttype">Event types</a>
+ <a class="sub2" href="#evtredirect">Redirecting events</a>
  <a class="sub2" href="#evtsummary">Summary of events and call data</a>
  <a class="sub2" href="#evtglobal">Global events</a>
 
@@ -137,6 +138,9 @@
 
 <a class="annex" href="#annexB"><span>stb_image API</span></a>
 <a class="annex" href="#annexC"><span>Advanced rendering API</span></a>
+ <a class="annex sub2" href="#composite">Composited rendering</a>
+ <a class="annex sub2" href="#rendernode">Rendering individual widget</a>
+
 <a class="annex" href="#annexD"><span>Internal: border rendering</span></a>
 
 <br>
@@ -384,9 +388,8 @@ part missing</b> is the interface between this library and the operating system.
 
 <p>While <b>it is possible to use native operating system call</b>, you'll quickly realize that doing so is
 extremely tedious and require arcane knowledge of API way past their prime. If you are interested,
-in the "<tt>example</tt>" directory of the source distribution of this library, you can find a working program to
-use this library with nothing more than the Win32 API. This example has been kept as bare
-as possible, because no one in its right mind should use this as a starting point.
+in the "<tt>examples</tt>" directory of the source distribution of this library, you can find a working
+program to use this library with nothing more than the Win32 API (<tt>exampleWIN32.c</tt>).
 
 <p>The more likely scenario is to <b>use an existing framework</b> for this: there are a lot of high quality
 framework dedicated to this task, that's why it was pointless to (badly) reinvent the wheel for this
@@ -396,8 +399,8 @@ is extremely stable, have good documentation, have been ported to almost anythin
 raster graphics (consoles, mobile phones, Windows, Linux, Mac OS X, ...) and have a pretty straightforward
 API.
 
-<p>In this same "<tt>example</tt>" folder, you'll find source code for interfacing this library with SDL1, SDL2
-and GLFW. These examples are a much better starting point, if you want to begin a project from scratch.
+<p>In this same "<tt>examples</tt>" folder, you'll find source code for interfacing this library with SDL1,
+SDL2 and GLFW. These examples are a much better starting point, if you want to begin a project from scratch.
 
 <p>No programming guide can pretend to be complete without showing what a "<b>Hello world</b>" program might
 look like, here using the SDL1 framework:
@@ -433,7 +436,7 @@ look like, here using the SDL1 framework:
 	}
 	SDL_WM_SetCaption(<val>"SITGL Test"</val>, <val>"SITGL Test"</val>);
 
-	app = SIT_Init(SITGL_NVG_FLAGS, SCREENWIDTH, SCREENHEIGHT,
+	app = SIT_Init(SIT_NVG_FLAGS, SCREENWIDTH, SCREENHEIGHT,
 		<val>"html { font-size: 30px; background: #eee; color: black; padding: 20px }"</val>, <val>0</val>);
 
 	<kwd>if</kwd> (app == <val>NULL</val>)
@@ -500,8 +503,10 @@ by yourself or use a pre-compiled binary package (recommended).
 line (here, using <tt>MinGW</tt>):
 <pre>gcc.exe -Wall example.c -I<em>&lt;SITGL_includes&gt;</em> -I<em>&lt;SDL_includes&gt;</em> SDL.dll SITGL.dll -o example.exe</pre>
 
-<p>One of the advantage of using <tt>MinGW</tt> is that DLL files can be used as linkable objects. The program should
-compile without errors or warnings, and it should look like this if you try to run it:
+<p>One of the advantage of using <tt>MinGW</tt> is that DLL files can be used as linkable objects. They
+must be available in the source directory though, but since the application will be built here, you'll
+also need those DLLs to run the program. The program should compile without errors or warnings, and it
+should look like this if you try to run it:
 
 <div class="image">
   <img src="images/hello-world.png">
@@ -572,7 +577,7 @@ will stop, until some events are generated (key pressed, mouse moved, ...): this
 
 <h3 id="entry"><span>Entry point</span></h3>
 
-<p>At the beginning of the <tt>main()</tt> function, the first thing that need to be done is to initialize
+<p>At the beginning of the <tt>main()</tt> function, the first thing that needs to be done is to initialize
 your windowing system (SDL, GLFW, ...). Before you can initialize <tt>SITGL</tt>, <b>an OpenGL context
 needs to be created first</b>. If you try to initialize this library too early, it will fail. In case
 of SDL, the OpenGL context is created with the function <tt>SDL_SetVideoMode()</tt>. If you are using
@@ -594,7 +599,8 @@ value for <tt>GLFW_STENCIL_BITS</tt>), the function to enable the stencil buffer
 <ol>
   <li><tt>nanovg</tt>: this is the <b>low-level rendering library</b>. Even though there is GL in its name, SITGL
   does not deal directly with OpenGL, <b>everything</b> goes through <tt>nanovg</tt>. The first parameter
-  is a bitfield that will be transmitted as is to the function <tt>nvgCreateContext()</tt>.
+  is a bitfield that will be transmitted as is to the function <tt>nvgCreateContext()</tt>. If you don't
+  care about this parameter, simply use <tt>SIT_NVG_FLAGS</tt>.
 
   <li><b>CSS</b>: <tt>nanovg</tt> is a bit too low-level to be used directly, that's why this sub-system
   has been added on top of <tt>nanovg</tt>. Most of the properties related to appearance can be used (the
@@ -608,7 +614,7 @@ value for <tt>GLFW_STENCIL_BITS</tt>), the function to enable the stencil buffer
   be nice, but ultimately, those default values will always be replaced sooner or later.
 
   <p>That being said, writing a stylesheet for all the different controls and their states is a difficult
-  and tedious process, that's why it is strongly advised to look in the "<tt>example</tt>" folder for
+  and tedious process, that's why it is strongly advised to look in the "<tt>examples/css</tt>" folder for
   some <b>pre-made stylesheets</b> and iterate on these, instead of starting from scratch.
 
   <li>The last, but not least, component is the <b>user-interface library</b>. The return value from
@@ -662,7 +668,7 @@ should be no more than a single line of code.
 <p>Once events have been transmitted to <tt>SITGL</tt>, you might want to refresh the screen to take
 user actions into account. Depending on which refreshing mode you activated, the <tt>SIT_RefreshNodes()</tt>
 might be a no-op if it returns <tt class="o">False</tt>. If it returned <tt class="o">True</tt>, that
-means something has been drawn in OpenGL back buffer, and you should use your windowing toolkit to
+means something has been drawn on the OpenGL back buffer, and you should use your windowing toolkit to
 swap the buffer. In case of <tt>SDL</tt>, the function is simply <tt>SDL_GL_SwapBuffers()</tt>.
 
 <p>And that's it for this example. Keep in mind this was just a quick overview. The next sections will
@@ -677,9 +683,8 @@ compiler, that supports at least C99 (you'll also need anonymous nested unions, 
 writing this, this library <b>cannot</b> be compiled with a 64bit compiler.
 
 <p>With that in mind, you'll also need some parts of the windows SDK, like the one included with
-<tt>MinGW</tt> (any SDK from the past 10 years should be enough): this library does not make use of
-advanced features of the Win32 framework. Any SDK covering at least Windows 2000 should be largely
-enough.
+<tt>MinGW</tt>: this library does not make use of advanced features of the Win32 API. Any SDK
+covering at least Windows 2000 should be largely enough.
 
 <p>Basically what you need is a <tt>MinGW</tt> compiler, you can get from <a href="http://mingw.org/">mingw.org</a>
 (but development seems to have stalled, even though for compiling <tt>SITGL</tt> the development
@@ -898,7 +903,7 @@ for how to handle this using various frameworks (Win32, SDL1, SDL2 and GLFW).
 to the user. That's the purpose of this function: <b>render all the controls you've created so far</b>.
 The prototype of this function is as follows:
 
-<p><tt class="dt">SIT_RENDER SIT_RenderNodes(<type>float</type> time);</tt>
+<p><tt class="dt">SIT_RENDER SIT_RenderNodes(<type>double</type> time);</tt>
 
 <p>The only parameter needed is the time in millisecond, <b>since the application was started</b>
 <span class="n">Note</span>: this parameter doesn't need a sub-millisecond precision, but should
@@ -2452,6 +2457,22 @@ process the Tab key, it will be used to navigate between controls.
   <li><tt class="dt">SITE_OnSetOrGet</tt>
   <p>Will be described in the <a href="#">extra widgets</a> chapter.
 </ul>
+
+<h3 id="evtredirect"><span>Redirecting events</span></h3>
+
+<p>One feature you'll need at some point is redirecting one event received from a particular widget to
+another one. The over typical use case is to redirect keyboard events: if you have an <tt>SIT_EDITBOX</tt>
+and a <tt>SIT_LISTBOX</tt> in your interface, you might want to redirect some keys from the edit box
+to the listbox when the former has the focus, like up and down arrow to select another item.
+
+<p>The function to do this is:
+<pre id="SIT_ApplyCallback"><type>int</type> SIT_ApplyCallback(SIT_Widget, <type>APTR</type> call_data, <type>int</type> type);</pre>
+
+<p>The return code will be the first positive value returned by the callback that processed the event.
+
+<p>Of course, this function can also be used to create events from scratch: you do not need an existing
+event to redirect it to another widget. As long as you respect the datatype (<tt>call_data</tt>) for
+the event, the targetted widget will see no difference from a user-generated event.
 
 <h3 id="evtsummary"><span>Summary of events and call data</span></h3>
 
@@ -5190,12 +5211,16 @@ left corner, but you can select another one, using one of these methods:
   <li>For a finer control, you can use the function <tt>SIT_ListSetCell()</tt>. The align parameter
   can also be used to specify both the horizontal and vertical centering in icon view. The first 8bit
   of this parameter will specify the horizontal alignment, the next 8bit can be filled with the vertical
-  alignment using the character <tt class="o">T</tt>, <tt class="o">C</tt>, <tt class="o">B</tt>. For
+  alignment using the character <tt class="o">T</tt>, <tt class="o">M</tt>, <tt class="o">B</tt>. For
   example:
   <pre>SIT_ListSetCell(list, row, col, DontChangePtr, (<val>'B'</val> &lt;&lt; <val>8</val>) | <val>'R'</val>, DontchangePtr);</pre>
-  <p>This will set the alignment for this cell to bottom right.
+  <p>This will set the alignment for this cell to bottom right. <span class="n">Note</span>: the order
+  for the alignment letters does not matter actually. You could have used
+  <tt>(<val>'R'</val> &lt;&lt; <val>8</val>) | <val>'B'</val></tt>, and it would have worked too.
+
   <p>Technically, you could use multi-character constant for this parameter, but their use has been
-  discouraged by most compilers for whatever reasons (ie: alignment could be simplified as <tt class="o">'BR'</tt>).
+  discouraged by most compilers for whatever reasons (ie: alignment could be simplified as <tt class="o">'BR'</tt>,
+  but you'll probably get a warning from the compiler).
 </ul>
 
 <h4 id="listcat">Category separator</h4>
@@ -5281,7 +5306,7 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
   <pre>SIT_SetValues(list, SIT_RowSel(<val>0</val>), True, <val>NULL</val>);</pre>
 
   <li><tt class="dt">SIT_RowTag(row)</tt> (<tt class="t">APTR</tt>)
-  <p>this tag allows you to set or get an arbitrary pointer to the given row. It works like the previous
+  <p>This tag allows you to set or get an arbitrary pointer to the given row. It works like the previous
   one: you have to specify the row you want to modify as argument to the tag name.
 
   <li><tt class="dt">SIT_MakeVisible</tt> (<tt class="t">int</tt>) <span class="ro">write-only</span>
@@ -5466,12 +5491,6 @@ you need to start a captured move, even if you don't care about mouse move event
 the user initiates a click, there will be no guarantee than the release notification will happen over
 your control.
 
-<!--
-<p>As stated in the comment, <tt>state</tt> field will report the number of lines to scroll when
-<tt>button</tt> field is set to <tt>SITOM_ButtonWheel*</tt> (default value from control panel is
-usually set to 3).
--->
-
 <h4>Handling keyboard</h4>
 
 <p>Keyboard events are reported through <tt>SITE_OnVanillaKey</tt> and <tt>SITE_OnRawKey</tt> notifications.
@@ -5519,6 +5538,8 @@ a grid like this:
 <p>The number of geometric shapes to render will be exactly the same with this method as it is by allocating
 as many elements as there are cells.
 
+<p>Check out the <a href="#annexC">Annex C: Advanced rendering API</a>, for more information on how to
+use this.
 
 
 
@@ -5712,11 +5733,7 @@ the bar is achieved.
 <ul>
   <li><tt class="dt">SIT_MinValue</tt>, <tt class="dt">SIT_MaxValue</tt> (<tt class="t">int</tt>)
   <p>The range of values you want to set the progress bar. Default values are 0 and 100.
-<!--
-  <li><tt class="dt">SIT_HorizScroll</tt> (<tt class="t">Bool</tt>)
-  <p>By default progress bar are created horizontal. If you want a vertical
-  progress bar, set this property to <tt class="o">False</tt>.
--->
+
   <li><tt class="dt">SIT_ProgressPos</tt> (<tt class="t">int</tt>)
   <p>Will set the progress indicator at the specified position. Like with slider it is an alias for
   <tt>SIT_ScrollPos</tt> (if you are using the serialized interface, you must use <tt class="o">"progressPos"</tt>
@@ -5829,15 +5846,7 @@ auto-visibility of chidren controls is also managed through a callback of this t
 If you register your own callback for this event, do not return <tt class="o">1</tt>, otherwise the auto-visibility
 will not be triggered.</p>
 
-<!--
-<p>You can also trap <tt>SITE_OnClick</tt> to do actions with tabs using other mouse
-buttons. This event works like canvas, but when it is fired, the property
-<tt>SIT_TabInsertAt</tt> (<tt class="t">int</tt>) will be set to the 0-based tab
-number where the mouse is over. Note that if the mouse is not over a tab, this event
-will not be fired. If you want to display a popup menu for a given tab, use the event
-<tt>SITE_OnCtxMenu</tt> instead. This event will provide you the coordinates where
-it is best suited to display the popup menu.
--->
+
 
 
 <h3 id="SIT_TOOLTIP"><span>SIT_TOOLTIP</span></h3>
@@ -5884,7 +5893,8 @@ using the following properties:
 
   <li><tt class="dt">SIT_DelayTime</tt> (<tt class="t">int</tt>)
   <p>How long the mouse needs to be idle over the target for the tooltip to popup, in <b>milliseconds</b>.
-  Default value is 1,000.
+  Default value is 1,000. You can use the special value <tt>SITV_TooltipManualTrigger</tt>: the tooltip
+  can only be showed by explicitely setting its <tt>SIT_Visible</tt> property to <tt class="o">True</tt>.
 
   <li><tt class="dt">SIT_ToolTipAnchor</tt>  (<tt class="t">int</tt>)
   <p>An enumeration that can be assigned to one of the following values:
@@ -5905,18 +5915,17 @@ to display them is way too simplistic to be usable.
 
 <p>If you don't want to deal with complicated text layout (and all the boilerplate related to life time
 management), it is still possible to use them in this situation. First, <b>create a tooltip</b>, with
-a sufficiently long delay before popup:
+a delay time set to <tt>SITV_TooltipManualTrigger</tt>:
 <pre>
 SIT_Widget tooltip = SIT_CreateWidget(<val>"blockinfo"</val>, SIT_TOOLTIP, app,
 	SIT_ToolTipAnchor, SITV_TooltipFollowMouse,
-	SIT_DelayTime,     <val>360000000</val>,
+	SIT_DelayTime,     SITV_TooltipManualTrigger,
 	SIT_DisplayTime,   <val>10000</val>,
 	<val>NULL</val>
 );</pre>
 
-<p>Here the delay before poping is set to 100 hours. The tooltip has been created in the root node (ie:
-the one returned by <tt>SIT_Init()</tt>). At this point the tooltip is hidden. <b>If you want it to be
-displayed</b>, you can use the following code:
+<p>The tooltip has been created in the root node (ie: the one returned by <tt>SIT_Init()</tt>). At this
+point the tooltip is hidden. <b>If you want it to be displayed</b>, you can use the following code:
 
 <pre>SIT_SetValues(tooltip,
 	SIT_Title,       <val>"This is the text of the tooltip."</val>,
@@ -5928,8 +5937,8 @@ displayed</b>, you can use the following code:
 <p>The special value <tt>SITV_ResetTime</tt> is to ensure that if this tooltip was already displayed
 somewhere else, the time it will remain on screen will be reset to what was configured at creation.
 
-<p>This code should be executed whenever the <b>object highlighted has changed</b>. It is not advised to run
-it everytime the mouse has moved. The tooltip position will be automatically updated whenever
+<p>This code should be executed whenever the <b>object highlighted has changed</b>. It is not necessary
+to run it everytime the mouse has moved. The tooltip position will be automatically updated whenever
 you provide mouse events through the <tt>SIT_ProcessMouseMove()</tt> function (and thanks to the
 <tt>SITV_TooltipFollowMouse</tt>).
 
@@ -6111,16 +6120,16 @@ will use backslash instead.</p>
 been mentionned so far in this document:
 
 <ul>
-  <li><tt class="dt">SIT_Widget SIT_GetFocus(void);</tt>,<br>
-	  <tt class="dt">void       SIT_SetFocus(SIT_Widget);</tt>
+  <li><tt class="dt">SIT_Widget SIT_GetFocus(<type>void</type>);</tt>,<br>
+	  <tt class="dt"><type>void</type>       SIT_SetFocus(SIT_Widget);</tt>
   <p>Use these functions to set or get the widget that has the keyboard focus. Typical use case: if
   your dialog has a single text edit, you might want to set the keyboard focus here.
 
-  <li><tt class="dt">void SIT_Exit(int code);</tt>
+  <li><tt class="dt"><type>void</type> SIT_Exit(<type>int</type> code);</tt>
   <p>Initiate a graceful exit. Obviously, you will have to setup the <a href="#SIT_ExitCode"><tt>SIT_ExitCode</tt></a>
   property in order to catch the this, otherwise this function is mostly useless.
 
-  <li><tt class="dt">void SIT_Log(int level, STRPTR fmt, ...);</tt>
+  <li><tt class="dt"><type>void</type> SIT_Log(<type>int</type> level, <type>STRPTR</type> fmt, ...);</tt>
   <p>This function will display a message in a <b>separate window</b> (from the operating system).
   This function can actually be called very early, even before the <tt>SITGL</tt> has been initialized.
   That's actually the main purpose of this function: notify the user of problems before you can display
@@ -6139,7 +6148,7 @@ been mentionned so far in this document:
   <p><tt>fmt</tt> can be a printf-like format strings, with potential aguments following.
 
 
-  <li><tt class="dt">STRPTR SIT_GetFromClipboard(int * size);</tt>
+  <li><tt class="dt"><type>STRPTR</type> SIT_GetFromClipboard(<type>int</type> * size);</tt>
   <p>Try to retrieve the text currently stored in the clipboard. The returned string will always be
   <tt class="o">NULL</tt>-terminated and UTF-8 encoded, unless the clipboard did not contain any
   textual information. In that case <tt class="o">NULL</tt> will be returned.
@@ -6152,12 +6161,12 @@ been mentionned so far in this document:
   parameter can be <tt class="o">NULL</tt> if you don't care about this.
 
 
-  <li><tt class="dt">Bool SIT_CopyToClipboard(STRPTR text, int size);</tt>
+  <li><tt class="dt"><type>Bool</type> SIT_CopyToClipboard(<type>STRPTR</type> text, <type>int</type> size);</tt>
   <p>Copy the supplied UTF-8 text into the clipboard. A copy of the text will be made. <tt>size</tt>
-  is the amount of bytes you want to copy from the string. You can specify <tt class="o">-1</tt> to
-  copy everything up to the NUL byte.
+  is the <b>amount of bytes</b> you want to copy from the string. You can specify <tt class="o">-1</tt> to
+  copy everything up to the <tt class="o">NULL</tt> byte.
 
-  <li><tt class="dt">void SIT_Free(APTR pointer);</tt>
+  <li><tt class="dt"><type>void</type> SIT_Free(<type>APTR</type> pointer);</tt>
   <p>Memory management within <tt>SITGL</tt> has been carefully crafted so that explicitly freeing
   memory is reduced to the absolute minimum. There are a few functions that have to return dynamicly
   allocated resources and where the lifetime of those resources are not in the control of <tt>SITGL</tt>.
@@ -6173,6 +6182,9 @@ been mentionned so far in this document:
 your main program. They are implemented using no more than what has been explained so far, they do not
 make use of private datatypes from SIT. They are also a good source to get a feel of the typical design
 patterns used by this library.
+
+<p>The source code for these widgets is located in the <tt>examples</tt> directory. They have the same
+requirement as for compiler support than <tt>SITGL</tt>.
 
 <h3 id="propfactory"><span>Property factory</span></h3>
 
@@ -6258,7 +6270,7 @@ callback is expected to do according to current stage:
   If you ever intend to do some post-processing, the easiest way to handle this is to modify your internal
   datatypes along with a bitfield that give some hints as to what part has been modified during the
   <tt>SITV_Set</tt> stage. Once in the post-process stage, analyze that bitfield and modify part of
-  the interface that need refresh. Return value is ignored for this stage.
+  the interface that needs refresh. Return value is ignored for this stage.
 </ul>
 
 <h4>Managing related properties</h4>
@@ -6510,11 +6522,11 @@ These properties can be set/retrieved <b>on the canvas widget</b> (not the scrol
   <p><span class="n">Caveat</span>: When adding text, format specifier needs to be added in one chunk.
   For example:
   <pre><com>/* this won't switch the text to bold blue color */</com>
-SIT_SetValues(canvas, VT_AddText, <val>"<spe>\x1b</spe>["</val>);
-SIT_SetValues(canvas, VT_AddText, <val>"1;31mHello world"</val>);
+SIT_SetValues(canvas, VT_AddText, <val>"<spe>\x1b</spe>["</val>, <val>NULL</val>);
+SIT_SetValues(canvas, VT_AddText, <val>"1;31mHello world"</val>, <val>NULL</val>);
 
 <com>/* this will work */</com>
-SIT_SetValues(canvas, VT_AddText, <val>"<spe>\x1b</spe>[1;31mHello world"</val>);</pre>
+SIT_SetValues(canvas, VT_AddText, <val>"<spe>\x1b</spe>[1;31mHello world"</val>, <val>NULL</val>);</pre>
 
 
   <li><tt class="dt">VT_Palette</tt> (<tt><type>uint8_t</type> [<val>64</val>]</tt>)
@@ -6537,7 +6549,7 @@ SIT_SetValues(canvas, VT_AddText, <val>"<spe>\x1b</spe>[1;31mHello world"</val>)
   (ASCII code 32). Default value is <b>4</b>. Valid values are between 2 and 100.
 
   <li><tt class="dt">VT_TopLine</tt> (<tt class="t">int</tt>)
-  <p><b>Set the top visible line</b>. Whatever value is given, they will be clamped to what is physically
+  <p><b>Set the top visible line</b>. Whatever value is given, it will be clamped to what is physically
   possible with the console. It means, that if you want to always display the bottom of the log, simply
   give a very large number.
 
@@ -6571,7 +6583,7 @@ SIT_SetValues(canvas, VT_AddText, <val>"<spe>\x1b</spe>[1;31mHello world"</val>)
 <ul>
   <li><tt class="dt">text-shadow</tt>
   <p>Shadow text will be rendered layer per layer, which means you can use shadow that overlaps both
-  top or bottom line without having the risk to overwrite text.
+  the top or the bottom line without overwriting any text.
 
   <li><tt class="dt">line-height</tt>
   <p>Use this property to make thicker lines. The difference between <tt>line-height</tt> and
@@ -6671,11 +6683,12 @@ translation.
 <p>For example, to translate the Hello world program given in <a href="#helloworld">chapter 4: Getting Started</a>,
 you only have to modify the label creation, with the following line:
 
-<pre>SIT_CreateWidgets(app, <val>"&lt;label name=hello title="</val> _(<val>"Hello, world!"</val>), <val>">"</val>);</pre>
+<pre>SIT_CreateWidgets(app, <val>"&lt;label name=hello title="</val> _(<val>"Hello, world!"</val>), <val>"&gt;"</val>);</pre>
 
 <p><span class="n">Note</span>: since you'll need locale information to load the correct language file,
 and since this information is only available at the <tt>SIT_APP</tt> level, that means any errors occuring
-before a successful <tt>SIT_Init()</tt> cannot be translated with this module.
+before a successful <tt>SIT_Init()</tt> cannot be translated with this module. <span class="n">XXX</span>
+should be decoupled really.
 
 <p>You'll have to mark all of your message that way. Once it is done, you can use the <tt>msgextract</tt>
 utility to extract them in one shot, and update/create every translation file. You can find it in the
@@ -6780,7 +6793,7 @@ the hello world application can now be updated that way to include full support 
 	sprinf(path, <val>"lang/<spe>%s</spe>.po"</val>, info->iso3166);
 	LangParse(path);
 
-	SIT_CreateWidgets(app, <val>"&lt;label name=hello title='Hello, world!'&gt;"</val>);
+	SIT_CreateWidgets(app, <val>"&lt;label name=hello title="</val>, _(<val>"Hello, world!"</val>), <val>"&gt;"</val>);
 
 	<com>/* remaining is identical */
 	/* ... */</com>
@@ -6797,78 +6810,58 @@ return the  first argument. We used the abridged form of this function in the ex
 
 <h3 id="advi18n"><span>Advanced features</span></h3>
 
-<p>There are a few more features to be aware in order to be to able to handle
-real world applications.</p>
+<p>There are a few more features to be aware in order to be to able to handle real world applications.
 
 <h4>Dummy strings</h4>
 
-<p>When writing an application, it often arrives that a few static tables are
-declared in the global scope, that contains some strings that you want to be
-translated. A typical example would be menu structure:</p>
+<p>When writing an application, it often arrives that a few static tables are declared in the global
+scope, that contains some strings that you want to be translated:
 
-<pre><type>static</type> SIT_MenuStruct menu[] =
-{
-	{<val>1</val>, <val>"&amp;Game"</val>},
-		{<val>2</val>, <val>"&amp;Start"</val>,    <val>"N"</val>, <val>0</val>, <val>101</val>},
-		{<val>2</val>, <val>"S&amp;ettings"</val>},
-			{<val>3</val>, <val>"Easy"</val>,      <val>NULL</val>, SITM_Toggle(<val>103</val>) | SITM_Checked, <val>102</val>},
-			{<val>3</val>, <val>"Normal"</val>,    <val>NULL</val>, SITM_Toggle(<val>104</val>), <val>103</val>},
-			{<val>3</val>, <val>"Expert"</val>,    <val>NULL</val>, SITM_Toggle(<val>105</val>), <val>104</val>},
-			{<val>3</val>, <val>"Custom..."</val>, <val>"C"</val>, <val>0</val>, <val>105</val>},
-		{<val>2</val>, <val>"&amp;Auto discover"</val>},
-			{<val>3</val>, <val>"Empty cells only"</val>, <val>NULL</val>, SITM_Toggle(<val>1081</val>), <val>1080</val>},
-			{<val>3</val>, <val>"Obvious flags"</val>,    <val>NULL</val>, SITM_Checked, <val>1081</val>},
-		{<val>2</val>, <val>"S&amp;cores..."</val>, <val>"H"</val>, SITM_Disabled, <val>106</val>},
-		{<val>2</val>, SITM_SEPARATOR},
-		{<val>2</val>, <val>"E&amp;xit"</val>,     <val>"Q"</val>,  <val>0</val>, <val>107</val>},
-	{<val>0</val>}
-};</pre>
+<pre><type>static STRPTR</type> errorMsgs[] = {
+	<val>"<spe>%s</spe> cannot be loaded"</val>,
+	<val>"need opengl 3+, missing function <spe>%s</spe>"</val>,
+	<val>"nanovg context creation failed"</val>,
+	<val>"cannot locate file <spe>%s</spe>"</val>
+};
+</pre>
 
-<p>The items of such tables cannot be enclosed by <tt>_()</tt>, in order to
-be automatically recognized by the <tt>msgextract</tt> tool. To still allow
-this tool to extract all messages to be translated, there is a special macro
-that actually does nothing but permits the <tt>msgextract</tt> tool to do its
-work:</p>
+<p>The items of such tables cannot be enclosed by <tt>_()</tt>, in order to be automatically recognized
+by the <tt>msgextract</tt> tool. To still allow this tool to extract all messages to be translated,
+there is a special macro that actually does nothing but permits the <tt>msgextract</tt> tool to do its
+work:
 
 <pre><spe>#define	D_(str)             str</spe></pre>
 
-<p>Since a typical configuration for <tt>msgextract</tt> is to extract
-everything between <tt>_("</tt> and <tt>")</tt>, this simple macro does the
-job. However, your structure won't be translated: after reading your language
-file, you'll have to manually modify each field that got marked. You usually
-only have to do this at startup. For menu structure, like the one above, you
-can use the following code:</p>
+<p>Since a typical configuration for <tt>msgextract</tt> is to extract everything between <tt>_("</tt>
+and <tt>")</tt>, this simple macro does the job. However, your structure won't be translated: after
+reading your language file, you'll have to manually modify each field that got marked. You usually
+only have to do this at startup. For menu structure, like the one above, you can use the following code:
 
-<pre><kwd>for</kwd> (i = <val>0</val>; menu[i].level; i ++)
-	menu[i].label = _(menu[i].label);</pre>
+<pre><kwd>for</kwd> (i = <val>0</val>; DIM(errorMsgs); i ++)
+	errorMsgs[i] = _(errorMsgs[i]);</pre>
 
-<p>Remember that despite we used the abridged version of <tt>LangStr()</tt>, it
-won't be recognized by the <tt>msgextract</tt> utility, because it has been
-configured to extract everything between <tt>_("</tt> and <tt>")</tt>. You
-might also notice that since we are overwriting the global structure, this
-type of construct does not allow changing the language at runtime.</p>
+<p>Remember that despite we used the abridged version of <tt>LangStr()</tt>, it won't be recognized by
+the <tt>msgextract</tt> utility, because it has been configured to extract everything between <tt>_("</tt>
+and <tt>")</tt>. You might also notice that since we are overwriting the global structure, this type
+of construct does not allow changing the language at runtime.
 
 <h4>Handling plural form</h4>
 
-<p>Plural usually involve displaying a quantified noun, while trying to have
-a grammatically correct sentence for every possible values. Back in the days
-nobody gave a damn about plural form, you got something along the line:
-<tt>"%d file(s) processed"</tt> for every values of <tt>%d</tt>, and usually
-something even worse for other languages. If you want to display something
-more user-friendly, a little bit of work is needed.</p>
+<p>Plural usually involve displaying a quantified noun, while trying to have a grammatically correct
+sentence for every possible values. Back in the days nobody gave a damn about plural form, you got
+something along the line: <tt>"%d file(s) processed"</tt> for every values of <tt>%d</tt>, and usually
+something even worse for other languages. If you want to display something more user-friendly, a little
+bit of work is needed.</p>
 
-<p>We used to distinguish 3 cases for handling plural form: no quantity,
-singular and plural. Each of these cases mean they will have a dedicated
-message. If the quantity to display is zero, it might be wise to consider
-removing the message completely if the message does not have any value.
-For example if you want to display some information on selected items
-and if there is nothing selected, just don't display anything. On the
-other hand, if this message is the result of a lengthy operation, it might
-still be interesting to display it, just to signal to the user that
-something has been done, but there is no results to display.</p>
+<p>We used to distinguish 3 cases for handling plural form: no quantity, singular and plural. Each of
+these cases mean they will have a dedicated message. If the quantity to display is zero, it might be
+wise to consider removing the message completely if the message does not have any value. For example
+if you want to display some information on selected items and if there is nothing selected, just don't
+display anything. On the other hand, if this message is the result of a lengthy operation, it might
+still be interesting to display it, just to signal to the user that something has been done, but there
+is no results to display.
 
-<p>Also don't try to programmatically build sentences to accommodate plural
-form, like this:</p>
+<p>Also don't try to programmatically build sentences to accommodate plural form, like this:
 
 <pre>fprintf(<val>stderr</val>, <val>"<spe>%d</spe> file<spe>%s</spe> processed.<spe>\n</spe>"</val>, n, n == <val>1</val> ? <val>""</val> : <val>"s"</val>);</pre>
 
@@ -7045,7 +7038,7 @@ are straightforward, but here is the complete list:
 	<type>APTR</type>     path;
 	<type>int</type>      isDir;
 	<type>uint64_t</type> size;
-	<type>TEXT</type>     date[24];
+	<type>TEXT</type>     date[<val>24</val>];
 	<type>STRPTR</type>   type;
 	<type>STRPTR</type>   name;
 	<type>APTR</type>     handle;
@@ -7444,8 +7437,9 @@ API.
   <p>Counts the occurences of <tt>chr</tt> within <tt>list</tt> (only works with ASCII range).
 
   <li><tt class="dt">STRDUPA(str)</tt>
-  <p>Copy <val>NULL</val>-terminated string <tt>str</tt> onto the stack. If you know you have
-  a small string, and don't want to declare an arbitrary large temporary buffer, you can use this macro.
+  <p>Copy <val>NULL</val>-terminated string <tt>str</tt> onto the stack. If you know you have a small
+  string, and don't want to declare an arbitrary large temporary buffer, you can use this macro.
+  <p>Obviously that string <b>cannot</b> be used as return value.
 
 </ul>
 
@@ -7546,12 +7540,12 @@ of channel the image has.
 <p><tt>req_comp</tt> allows you to force the number of channel returned. It can be assigned to the following
 values:
 <ul>
-  <li><tt class="o">0</tt>: try to use the same number of channels than the image. Use <tt>comp</tt>
+  <li>0: try to use the same number of channels than the image. Use <tt>comp</tt>
   parameter, to get how many channels there are in the buffer.
-  <li><tt class="o">1</tt>: force the image to be grayscale.
-  <li><tt class="o">2</tt>: grayscale + alpha.
-  <li><tt class="o">3</tt>: RGB only.
-  <li><tt class="o">4</tt>: RGBA.
+  <li>1: force the image to be grayscale.
+  <li>2: grayscale + alpha.
+  <li>3: RGB only.
+  <li>4: RGBA.
 </ul>
 
 <p>Any other value will cause these function to fail. If you forced the number of channel, the value
@@ -7587,7 +7581,7 @@ tooltip background is partially transparent). Both have been created this way:
 <pre>SIT_CreateWidgets(diag,
 	<com>/* some declaractions have been removed for clarity */</com>
 	<val>"&lt;canvas composited=1 name=tb.inv left=FORM top=WIDGET,player,0.5em/&gt;"
-	"&lt;tooltip name=info delayTime="</val>, SITV_TooltipManualTrigger, <val>" displayTime=10000 "
+	"&lt;tooltip name=info delayTime="</val>, SITV_TooltipManualTrigger, <val>" displayTime=10000"
 	" toolTipAnchor="</val>, SITV_TooltipFollowMouse, <val>">"</val>
 );</pre>
 
@@ -7595,6 +7589,172 @@ tooltip background is partially transparent). Both have been created this way:
 and coordinates into account, to be sure that if any element overlaps a composited area, it will be
 refreshed at a later time.
 
+
+<p>This is where the return code of <tt>SIT_RenderNodes()</tt> matters. If it is <tt>SIT_RenderComposite</tt>,
+that means you should render the areas marked as ready. This is the typical loop you want to use:
+
+<pre><type>int</type> code = SIT_RenderNodes(FrameGetTime());
+<kwd>while</kwd> (code == SIT_RenderComposite)
+{
+	DATA8 areas;
+	<type>int</type>   i;
+	SIT_GetValues(app, SIT_CompositedAreas, &amp;areas, <val>NULL</val>);
+	for (i = areas[<val>0</val>]; i &gt; <val>0</val>; i --)
+	{
+		<com>/* refresh widget whose SIT_Composited value is areas[i] */
+		/* ... */</com>
+	}
+	<com>/* note: in composited rendering time parameter is ignored */</com>
+	code = SIT_RenderNodes(<val>0</val>);
+}
+<kwd>if</kwd> (code == SIT_RenderDone)
+	SDL_GL_SwapBuffers();
+</pre>
+
+<p>This loop can be a bit simplified, if there are only one composited area, or if you 100% sure that
+those areas <b>cannot</b> overlap each other:
+<pre><kwd>switch</kwd> (SIT_RenderNodes(FrameGetTime())) {
+<kwd>case</kwd> SIT_RenderComposite:
+	<com>/* refresh required widgets with your own commands */
+	/* ... */
+
+	/* required if there are widgets that are overlapping a composited area */</com>
+	SIT_RenderNodes(<val>0</val>);
+	SDL_GL_SwapBuffers();
+	<kwd>break</kwd>;
+<kwd>case</kwd> SIT_RenderDone:
+	<com>/* refresh required widgets with your own commands */
+	/* ... */</com>
+
+	SDL_GL_SwapBuffers();
+<kwd>default</kwd>: <kwd>break</kwd>;
+}</pre>
+
+<h3 class="annex" id="rendernode"><span>Rendering individual widget</span></h3>
+
+<p>You might also be interested in reusing some of the rendering capabilities of <tt>SITGL</tt>. Sadly,
+the low level rendering functions (like border or background) are not exposed in public API, because they
+rely heavily on internal datatypes.
+
+<p>You can take advantage of these functions indirectly though: that's the purpose of <tt>SIT_HTMLTAG</tt>
+widget type. There are not expected to receive any user input, just to be displayed. By creating them
+normally, you'll be able to use all the CSS styling options, be it inline or through the main stylesheet
+file.
+
+<p>The important aspect is to <b>create them hidden</b>, by setting the <tt>SIT_Visible</tt> property
+to <tt class="o">False</tt>.
+
+<p>Once in a <tt>SITE_OnPaint</tt> callback, you can set their position manually by setting the
+properties <tt>SIT_X</tt>, <tt>SIT_Y</tt>, <tt>SIT_Width</tt> and <tt>SIT_Height</tt>. Keep in mind that
+the X/Y property will be relative to the parent widget.
+
+<p>Once this is done, you can simply render the node using the following function:
+<pre><type>void</type> SIT_RenderNode(SIT_Widget);</pre>
+
+<p>This can be particularly useful, if you want to repeat an element a decent number of times, without
+needing to allocate one item for each. Because as far as rendering instructions are concerned, using
+an existing item to repeatedly render it over multiple place will be exactly the same as allocating
+one item per render.
+
+
+
+
+
+
+<h2 class="annex" id="annexD"><span>Border rendering</h2>
+
+<p>This part will describe the algorithm used to handle the CSS <tt>border:</tt> property, because the
+code is not particularly clear as how this is achieved, and given how difficult it was getting that
+information, being the author of the code <b>and</b> the documentation. The source is located in
+<tt>SIT_Render.c:renderBorder()</tt>.
+
+<p>To understand this, you need to have this schema in mind:
+<div class="photo">
+  <img src="images/schema-border.png">
+</div>
+
+<p>The numbers circled in green indicate the order in which each part of the border is rendered: top,
+right, bottom, left: which is the standard CSS order. The numbers in blue refer to offset within 2 tables:
+<tt>shape</tt> and <tt>inner</tt>. Each indices represent a dimension highlighted in this schema: there
+are 16 numbers:
+<ul>
+  <li>0, 3, 6, 9: horizontal radius of the <tt>border-radius</tt> property.
+  <li>1, 4, 7, 10: vertical radius.
+  <li>2: width of top horizontal segment, which is outer width minus segment 0 and 3.
+  <li>5: height of right vertical segment, which is outer height minus length of segment 4 and 7.
+  <li>8, 11: same for bottom/left segment.
+  <li>12, 13: top/left screen position where to draw the border.
+  <li>14, 15: total width/height of the outer border.
+</ul>
+
+<p>Once all those values are extracted, we can <b>push this shape inward</b> by the amount of the border
+thickness to get the shape of the inner border. Of course, if one of the number becomes negative, it
+will be clamped to 0. That simple trick is what alllows to handle nearly all use cases, including
+degenerate cases with variable/null border width and/or weird rounded corner values.
+
+<p>At this point, <b>we could draw each part (left, top, right, bottom) of the border individually</b>,
+using a bunch of arcs and lines to draw a polygon and filling it with whatever color was specified for
+this segment. Sadly, due to the way anti-aliasing works, the result will not look so good, especially
+if the border color is uniform (which, admittedly, happens quite often):
+
+<div class="photo">
+  <img src="images/border-0width.png">
+</div>
+
+<p><span class="n">Note</span>: this image has been enlarged 3 times, without interpolation. You can see
+there are <b>faint lines</b> that shows how the border was split during the rendering phase. It doesn't
+look that bad, but once you see them, they stand out like a sore thumb. This is a problem inherent to
+anti-aliasing: when you have 2 polygons that share an edge, it is difficult to not let the background
+color bleeds between the edge.
+
+<p>The only way to <b>prevent this, is to render the border as one polygon</b>. Sadly <tt>nanovg</tt>
+has another limitation: you need to avoid 0-width path. Otherwise, you could just create a bunch of
+paths for each part of the border that have identical styles, and issue a single fill command. Doing
+so, you'll need a vector drawing library that knows how to handle 0-width path (ie: merge polygon,
+which is not trivial).
+
+<p>This is the purpose of the <tt>merge</tt> variable in the <tt>renderBorder()</tt> function: it
+encodes the borders to draw and borders that have been drawn, using a bitfield. The first 8bit encodes
+the border parts to draw as a single polygon (assuming they have the same style). The parts are encoded
+using the CSS order: bit1 is top border, bit2 is right, bit3 is bottom and bit4 is left. Bit4 to 7 are
+actually a copy of bit0 to 3. This is a cheap trick to avoid doing complicated bit rotation: if we want
+to know if the next border segment is drawn in the same pass, we just have to test the next bit.
+
+<p>Bit8 to 11 encodes borders that have been drawn, therefore these parts must be skipped no matter what.
+Inlines with borders can be split, that's why the <tt>merge</tt> variable is set to the reverse
+bitfield of the border to draw (<tt>flags</tt> parameter to <tt>renderBorder()</tt>). For block elements,
+this parameter will always be 15 (ie: draw all border parts).
+
+<p>While checking which borders are contiguous, we only want parts that form a single border: if the
+top and bottom parts use the same style (but left and right use something different), the two borders
+will still be rendered indidually because they do not form a single polygon. This is the purpose of
+this test:
+<pre><kwd>if</kwd> (b->color.val == <val>0</val> || (&amp;borders.top)[j] &lt;= <val>0</val> || (merge &amp; (<val>0x100</val>&lt;&lt;j)) || (merge &amp; (<val>5</val><<(j-<val>1</val>))) == <val>0</val>)
+	<kwd>continue</kwd>;</pre>
+
+<p>This test is divided into 4 parts:
+<ol>
+  <li>Check if the border part is completely transparent, in which case there is no point in rendering anything.
+  <li>Check if the border width is 0, is which case there will be nothing to render.
+  <li>Check if the border part has already been rendered.
+  <li>Check if the border <b>before or after</b> the current part (<tt>j</tt>) is part of the merge.
+  If neither of these are, it means the current part will form a standalone polygon. Technically, <tt>nanovg</tt>
+  can render this, the problem is issuing the right path drawing commands to achieve this (which current
+  code base does not support at all).
+
+  <p>This is where duplicating the bitfield helps a little bit: we can check if left border part (<tt>j == <val>3</val></tt>)
+  has to be rendered with top border part (<tt>j == <val>0</val></tt>) simply by looking at bit4. No
+  need to do any bit rotation.
+</ol>
+
+<p>Once we know which border parts need to be rendered at once, time to issue the drawing commands.
+First, the inner part of the border path is rendered in counter-clockwise order, then the outer path
+is done in clockwise order. At the start and at the end of the path, if there is a border-radius at
+this location, the arc needs to span 45&deg;, otherwise, in the middle of the loop, it will span
+90&deg;.
+
+<p>At this point, it is a lot of tedious house-keeping, but hopefully the code should be more straightforward
+as to what it is doing.
 
 </div>
 </body>

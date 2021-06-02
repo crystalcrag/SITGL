@@ -15,7 +15,9 @@
 #include <ctype.h>
 #include <process.h>
 #include "UtilityLibLite.h"
+#include "SIT_P.h"
 
+#undef UTF8ToUTF16
 #ifdef DEBUG_MALLOC
 #include "debugMem.h"
 #endif
@@ -113,9 +115,11 @@ DLLIMP int ScanDirInit(ScanDirData * ret, STRPTR path)
 			{
 				int ch = data->cFileName[1];
 				if (ch == 0 || (ch == '.' && data->cFileName[2] == 0))
-					FindNextFile(hnd, data);
-				else
-					break;
+				{
+					if (! FindNextFile(hnd, data))
+						break;
+				}
+				else break;
 			}
 			else break;
 		}
@@ -331,7 +335,7 @@ DLLIMP ULONG TimeStamp(STRPTR path, int type)
 
 
 /* DOS/FileSize  */
-ULLONG FileSize(STRPTR file)
+DLLIMP ULLONG FileSize(STRPTR file)
 {
 	LPWSTR path;
 	HANDLE hFile;
@@ -1650,7 +1654,7 @@ DLLIMP Lang LangParse(STRPTR path)
 	}
 
 	static uint16_t primes[] = {
-		23, 53, 97, 149, 193, 251, 307, 353, 401, 457, 769, 1543, 3079, 6151, 12289, 24593
+		11, 23, 53, 97, 149, 193, 251, 307, 353, 401, 457, 769, 1543, 3079, 6151, 12289, 24593
 	};
 
 	/* get nearest prime number */
@@ -1706,7 +1710,7 @@ DLLIMP Lang LangParse(STRPTR path)
 			strings = *(STRPTR **)strings, lang.count = 0;
 	}
 
-	return ret;
+	return sit.curLang = ret;
 }
 
 static void UnescapeAntiSlash(STRPTR src)
@@ -1777,6 +1781,9 @@ DLLIMP STRPTR LangStr(Lang lang, STRPTR msg, int max)
 {
 	STRPTR trans = NULL;
 
+	if (lang == NULL)
+		lang = sit.curLang;
+
 	if (lang)
 	{
 		trans = LangSearch(lang, msg);
@@ -1817,6 +1824,9 @@ DLLIMP STRPTR LangStrPlural(Lang lang, int nb, STRPTR sing, STRPTR plur)
 
 DLLIMP void LangFree(Lang lang)
 {
+	if (lang == NULL)
+		lang = sit.curLang;
+
 	if (lang)
 	{
 		LangStack * ls;
@@ -1824,5 +1834,7 @@ DLLIMP void LangFree(Lang lang)
 
 		for (ls = lang->files + DIM(lang->files) - 1, i = lang->count; i < DIM(lang->files); free(ls->buffer), i ++, ls --);
 		free(lang);
+		if (sit.curLang == lang)
+			sit.curLang = NULL;
 	}
 }

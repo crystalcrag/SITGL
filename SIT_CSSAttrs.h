@@ -416,9 +416,9 @@
 	 .defval  = NULL,                  .format  = "-4 -3 -2 -1"},
 
 	/* selection color/bg (text) */
-	{.attr    = "selection",           .inherit = 1, .sz = 4,
+	{.attr    = "selection",           .inherit = INHERIT(1, cssAttrSelection), .sz = 4,
 	 .defval  = NULL,                  .format  = "COLOR COLOR",
-	 .arg1    = OFF(fgSel),            .arg1    = OFF(bgSel)},
+	 .arg1    = OFF(fgSel),            .arg2    = OFF(bgSel)},
 
 	/* CSS3 - only useful with <textarea> */
 	{.attr    = "tab-size",            .inherit = 1, .sz = 1, .reflow = ReflowLayout,

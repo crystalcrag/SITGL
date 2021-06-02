@@ -401,6 +401,7 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 	edit->roundTo   =  16;
 	edit->maxValue  =  1/0.; /* + INF */
 	edit->minValue  = -1/0.; /* - INF */
+	edit->wordWrap  = SITV_WWWord;
 
 	SIT_ParseTags(w, args, w->attrs = EditBoxClass);
 	SIT_AddCallback(w, SITE_OnResize,    SIT_TextEditResize, NULL);
@@ -1180,7 +1181,12 @@ static void SIT_TextEditDeleteChars(SIT_EditBox state, int pos, int nb)
 	uint8_t wrap = state->wordWrap;
 
 	/* what line to start? */
-	for (i = state->rowTop, rows = state->rows, rem = state->charTop, p = state->text; i < state->rowCount && rem + rows[i].bytes <= pos; rem += rows[i].bytes, i ++);
+	if (pos < state->charTop)
+		for (i = 0, rows = state->rows, rem = 0, p = state->text;
+		     i < state->rowCount && rem + rows[i].bytes <= pos; rem += rows[i].bytes, i ++);
+	else
+		for (i = state->rowTop, rows = state->rows, rem = state->charTop, p = state->text;
+		     i < state->rowCount && rem + rows[i].bytes <= pos; rem += rows[i].bytes, i ++);
 
 	/* if wordwrapped: grab previous line if wrapped */
 	if (wrap && i > 0 && p[rem-1] != '\n')
@@ -1308,6 +1314,8 @@ static int SIT_TextEditInsertChars(SIT_EditBox state, int pos, char * text, int 
 		memcpy(p, text, len);
 		eof = state->text + state->length;
 		*eof = 0;
+		i = state->rowTop;
+		add = state->charTop;
 		if (state->editType >= SITV_Integer)
 			state->value.step = INVALID_STEP;
 	}
@@ -1318,6 +1326,7 @@ static int SIT_TextEditInsertChars(SIT_EditBox state, int pos, char * text, int 
 		end = eof + len;
 		memset(state->rows, 0, sizeof *rows);
 		state->rowCount = 1;
+		i = add = 0;
 	}
 	#ifdef DEBUG_SIT
 	/* gdb will not mess up local watch point :-/ */
@@ -1330,7 +1339,7 @@ static int SIT_TextEditInsertChars(SIT_EditBox state, int pos, char * text, int 
 	next = last = NULL;
 
 	/* which row is the text inserted? */
-	for (i = state->rowTop, rows = state->rows, add = state->charTop, modif = state->rowCount-1, start = state->text;
+	for (rows = state->rows, modif = state->rowCount-1, start = state->text;
 	     i < modif && add+rows[i].bytes <= pos; add += rows[i].bytes, i ++);
 
 	/* grab previous line if wordwrapped */
@@ -2679,7 +2688,6 @@ static void SIT_TextEditUndoRedo(SIT_EditBox state, int redo)
 	loc = BE24(undo+1);
 	len = BE24(undo+4);
 	state->cursor = loc;
-	SIT_TextEditMakeCursorVisible(state);
 	off = undo + 8 - state->undoBuffer;
 	state->hasPreferredX = 0;
 	memcpy(op, undo, 8);
@@ -2748,6 +2756,7 @@ static void SIT_TextEditUndoRedo(SIT_EditBox state, int redo)
 			}
 		}
 	}
+	SIT_TextEditMakeCursorVisible(state);
 	if (HAS_EVT(&state->super, SITE_OnChange))
 		SIT_ApplyCallback(&state->super, state->text, SITE_OnChange);
 }

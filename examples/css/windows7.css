@@ -1,0 +1,97 @@
+/* stylesheet that somewhat mimics the style of nanovg */
+html {
+	color: black; font-size: 1.7vw;
+	background:
+		repeating-linear-gradient(to bottom, transparent, transparent 2px, rgba(255,255,255,0.2) 2px, rgba(255,255,255,0.2) 4px),
+		linear-gradient(336deg, #000030, rgba(0,0,255,0) 70%),
+		linear-gradient(to bottom, #0874e37f, rgba(0,0,0,0)),
+		radial-gradient(ellipse closest-side, #0874e3, #0e1670) fixed
+}
+
+form.warning { background: white; border: 0.3em solid #a00 }
+form.warning #text { background: #efefef; padding: 1em; border-radius: 0.5em 0.5em 0 0 }
+
+dialog, form { border-radius: 0.5em; box-shadow: 0 0 10px #444; background: #f4f4f4; padding: 2em 0.5em 0.5em 0.5em }
+dialog { background: #303238 }
+form { padding: 0.5em }
+dialog title { text-align: center; color: #aaa; font-weight: bold; background: linear-gradient(to bottom, #666, #303238 50%, #303238);
+               border-radius: 0.5em 0.5em 0 0; vertical-align: middle; border-bottom: 2px solid rgba(#000,0.3) }
+dialog client { padding: 0.5em; background-color: #efefef }
+dialog close { font-weight: bold; color: #d44; text-shadow: 2px 2px 2px black, -1px -1px 2px white; vertical-align: middle; text-transform: uppercase }
+dialog close:hover { color: #f88 }
+dialog close:hover:active { color: red; text-shadow: 2px 2px 2px #ccc, -1px -1px 2px black }
+
+label { color: #333 }
+
+button { padding: 0.3em 1.5em 0.2em; border-radius: 0.2em; background: linear-gradient(to bottom, #f2f2f2, #ebebeb 50%, #dbdbdb 50%, #cfcfcf);
+		 border: 1px solid #707070; color: black; text-align: center }
+
+button:active { background: linear-gradient(to bottom, #c2e4f6, #c2e4f6 50%, #9ad2f0 50%, #9ad2f0); box-shadow: 0 2px 5px #2681af inset, 0 0 2px #333 inset }
+
+button:disabled { border-color: #adb2b5; outline: 1px solid #fafafa -2px; background: #efefef; color: #aaa }
+
+editbox { padding: 0.3em 0.1em 0.3em; background: white; border: 1px solid #666 }
+editbox spin.up { background: url(mask:arrowup.png) 60% 50% no-repeat, rgba(black, 0.1); color: #aaa; background-size: 70% 35%, 100% 100%  }
+editbox spin.down { background: url(mask:arrowdown.png) 60% 50% no-repeat, rgba(black, 0.1); color: #aaa; background-size: 70% 35%, 100% 100%  }
+editbox spin.up:active { background: url(mask:arrowup.png) 60% 50% no-repeat, rgba(black, 0.7); color: #ccc }
+editbox spin.down:active { background: url(mask:arrowdown.png) 60% 50% no-repeat, rgba(black, 0.7); color: #ccc }
+editbox vscroll thumb { background: #ccc; border: 0; outline: 0; border-radius: 0 }
+
+checkbox, radio { border-radius: 0.2em }
+checkbox box { padding: 0.4em; background: linear-gradient(to bottom right, #aeb3b9, #f6f6f6); border: 1px solid #aaa; outline: 1px solid #f8f8f8 -2px; vertical-align: middle }
+checkbox:checked box { background: url(mask:checkmark.png) no-repeat 50% 50%, linear-gradient(to bottom right, #aeb3b9, #f6f6f6); background-size: 80% 80%, 100% 100%; color: #4b6097 }
+radio:kbdfocus, checkbox:kbdfocus { outline: 2px solid #48d8fb 0.2em }
+
+radio box { border-radius: 1em; border: 2px solid #888; padding: 0.4em; background-color: white; vertical-align: middle }
+radio:checked box { background: radial-gradient(circle at 50% 45%, transparent, transparent 35%, rgba(black, 0.5) 35%),
+	radial-gradient(circle at 30% 30%, #c7ebfd, #0c3d5d); outline: 2px solid #ddd -3px }
+
+button:kbdfocus { outline: 1px solid #48d8fb }
+
+hscroll, vscroll { background-color: #efefef }
+vscroll thumb { background: url(gripV.png) 50% 50% no-repeat, linear-gradient(to right,  #f2f2f2, #ebebeb 50%, #dbdbdb 50%, #cfcfcf); outline: 1px #9b9b9b solid -1px; border-radius: 2px }
+hscroll thumb { background: url(grip.png) 50% 50% no-repeat, linear-gradient(to bottom, #f2f2f2, #ebebeb 50%, #dbdbdb 50%, #cfcfcf); outline: 1px #9b9b9b solid -1px; border-radius: 2px }
+arrow.left:active,
+arrow.right:active,
+arrow.down:active,
+arrow.up:active { color: #ccc; background-color: #444 }
+arrow       { background: #efefef url("mask:arrowup.png") no-repeat 50% 50%; background-size: 50% 50%; color: #666 }
+arrow.down  { -bg-transform: rotate(180deg) }
+arrow.left  { -bg-transform: rotate(90deg) }
+arrow.right { -bg-transform: rotate(-90deg) }
+
+slider thumb { border-radius: 2px; background: linear-gradient(to bottom,  #f2f2f2, #ebebeb 50%, #dbdbdb 50%, #cfcfcf); outline: 1px #9b9b9b solid -1px; }
+slider { box-shadow: 0.1em 0.1em 0.4em #111 inset }
+gauge { background-color: rgba(selback, 0.5) }
+slider:kbdfocus { outline: 2px solid rgba(selback, 0.6) }
+
+progress { background: linear-gradient(to bottom, #f7f7f7, #d9d9d9 50%, #cbcbcb 50%, #d3d3d3); text-align: center; border: 1px solid #bbb; color: #777; vertical-align: middle }
+progress bar { background: radial-gradient(ellipse, transparent, rgba(#000,0.2)), linear-gradient(to bottom, #cdffcd, #9cedab 50%, #00d128 50%, #1ce233); color: white }
+
+combobox { border: 0.1em solid #aaa; background: white; padding: 0.3em 0.5em }
+combobox arrow { background: url(mask:arrowdown.png) 50% 50% no-repeat, linear-gradient(to bottom, #f2f2f2, #ebebeb 50%, #dbdbdb 50%, #cfcfcf);
+	background-size: 50% 25%, 100% 100%; border: 0.1em solid #aaa; outline: rgba(white, 0.5) 0.1em solid -0.2em; margin: 0.1em; padding: 0 0.4em }
+combobox arrow:active { background: url(mask:arrowdown.png) 50% 50% no-repeat, #c2e4f6;
+	border: 0; box-shadow: 0 2px 5px #2681af inset, 0 0 2px #333 inset; outline: 0 }
+popup { border: 0.1em solid #aaa; background-color: white; padding: 6px }
+
+table { border: 1px solid #aaa; background: white }
+table td { padding: 2px 6px }
+listbox { border: 1px solid #aaa; background: white; padding: 0.3em }
+listbox td label { padding: 0.2em; text-align: center }
+listbox td:checked label { background-color: selback; color: selfore }
+table td:checked { background-color: selback; color: selfore }
+table th { border: 1px solid #aaa; border-right-color: white; padding: 4px; background: linear-gradient(to bottom, white, white 50%, #f7f8fa 50%, #f1f2f4); }
+table th dim { color: #888 }
+listbox thead { text-align: center; padding-bottom: 5px; border-bottom: 1px solid black; font-weight: bold }
+
+fieldset { border: 2px solid #888; border-radius: 0.5em; color: #06c }
+
+tooltip { background-color: #ffffe1; color: black; padding: 0.3em; white-space: pre; border: 1px solid black; box-shadow: 3px 3px 4px -4px #333 }
+
+tab { padding: 5px; color: black; background-color: white; border: 1px solid #898c95 }
+tab pane { background: linear-gradient(to bottom, #f2f2f2, #ebebeb 50%, #dbdbdb 50%, #cfcfcf); border: 1px solid #898c95; border-bottom: 0; padding: 3px 10px;
+	outline: 1px solid rgba(white, 0.5) -2px }
+tab pane:active { background: white; padding: 5px 10px }
+
+::link { color: #55f }

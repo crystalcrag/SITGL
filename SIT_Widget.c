@@ -1148,7 +1148,7 @@ DLLIMP void SIT_GetValues(SIT_Widget w, ...)
 					padding[2] = w->padding[2];
 					padding[3] = w->padding[3];
 				}	continue;
-				case SIT_CompositedArea:
+				case SIT_CompositedAreas:
 					va_arg(vargs, DATA8 *)[0] = sit.compoIds;
 					continue;
 				/* yeah, virtual functions would be better, but there are too few properties that require special processing */

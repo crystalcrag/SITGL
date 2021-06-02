@@ -177,6 +177,7 @@ struct SITContext_t
 	uint64_t     QPCstart;
 	uint64_t     QPCpause;
 	double       QPCfreqinv;
+	Lang         curLang;
 	SIT_CallProc dragCb;
 };
 
@@ -404,7 +405,7 @@ struct SIT_EditBox_t
 	uint8_t      readOnly;             /* public */
 	uint8_t      init;
 	uint8_t      selectWord;           /* select text by word if >0 */
-	uint8_t      wordWrap;             /* 0: none, 1: break at character, 2: break at word */
+	uint8_t      wordWrap;             /* public: 0: none, 1: break at character, 2: break at word */
 	uint8_t      flags;                /* FLAG_* bitfield */
 	uint8_t      hasPreferredX;
 	uint8_t      caretVisible;

@@ -593,10 +593,10 @@ DLLIMP SIT_Action SIT_ActionAdd(SIT_Widget w, double start, double end, SIT_Call
 	return slot;
 }
 
-DLLIMP void SIT_ActionReschedule(SIT_Action act, double start, double end)
+DLLIMP Bool SIT_ActionReschedule(SIT_Action act, double start, double end)
 {
 	SIT_Action next = (SIT_Action) act->node.ln_Next;
-	if (start < act->start)
+	if (start < 0)
 	{
 		/* remove action */
 		ListRemove(&sit.actions, &act->node);
@@ -609,6 +609,8 @@ DLLIMP void SIT_ActionReschedule(SIT_Action act, double start, double end)
 			free(act);
 		if (act->node.ln_Prev == NULL)
 			sit.nextAction = next ? next->start : INFINITY;
+
+		return False;
 	}
 	else
 	{
@@ -625,6 +627,7 @@ DLLIMP void SIT_ActionReschedule(SIT_Action act, double start, double end)
 		}
 		act = HEAD(sit.actions);
 		sit.nextAction = act->start;
+		return True;
 	}
 }
 

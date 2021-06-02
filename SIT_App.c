@@ -18,19 +18,19 @@
 #include "nanovg.h"
 
 	TagList AppClass[] = {
-		{ SIT_DefSBArrows,    "defSBArrows", _SG, SIT_INT,  OFFSET(SIT_App, defSBArrows) },
-		{ SIT_DefSBSize,      "defSBSize",   _SG, SIT_UNIT, OFFSET(SIT_App, defSBSize) },
-		{ SIT_RefreshMode,    "refreshMode", _SG, SIT_INT,  OFFSET(SIT_App, refreshMode) },
-		{ SIT_CurrentDir,     "currentDir",  _SG, SIT_PTR,  OFFSET(SIT_App, currentDir) },
-		{ SIT_ScreenWidth,    NULL,          __G, SIT_INT,  OFFSET(SIT_App, screen.width) },
-		{ SIT_ScreenHeight,   NULL,          __G, SIT_INT,  OFFSET(SIT_App, screen.height) },
-		{ SIT_TagPrivate+2,   NULL,          _S_, SIT_PTR,  0}, /* font-file */
-		{ SIT_TagPrivate+1,   NULL,          _S_, SIT_PTR,  OFFSET(SIT_App, fontName) },
-		{ SIT_AddFont,        "addFont",     _S_, SIT_ABBR, ABBR(1, 1, 0, 0) },
-		{ SIT_AccelTable,     "accelTable",  _SG, SIT_PTR,  OFFSET(SIT_App, accel) },
-		{ SIT_StyleSheet,     "styleSheet",  _S_, SIT_PTR,  OFFSET(SIT_App, styles) },
-		{ SIT_ExitCode,       "exitCode",    _SG, SIT_PTR,  OFFSET(SIT_App, exitCode) },
-		{ SIT_CompositedArea, NULL,          __G, SIT_PTR,  0 },
+		{ SIT_DefSBArrows,     "defSBArrows", _SG, SIT_INT,  OFFSET(SIT_App, defSBArrows) },
+		{ SIT_DefSBSize,       "defSBSize",   _SG, SIT_UNIT, OFFSET(SIT_App, defSBSize) },
+		{ SIT_RefreshMode,     "refreshMode", _SG, SIT_INT,  OFFSET(SIT_App, refreshMode) },
+		{ SIT_CurrentDir,      "currentDir",  _SG, SIT_PTR,  OFFSET(SIT_App, currentDir) },
+		{ SIT_ScreenWidth,     NULL,          __G, SIT_INT,  OFFSET(SIT_App, screen.width) },
+		{ SIT_ScreenHeight,    NULL,          __G, SIT_INT,  OFFSET(SIT_App, screen.height) },
+		{ SIT_TagPrivate+2,    NULL,          _S_, SIT_PTR,  0}, /* font-file */
+		{ SIT_TagPrivate+1,    NULL,          _S_, SIT_PTR,  OFFSET(SIT_App, fontName) },
+		{ SIT_AddFont,         "addFont",     _S_, SIT_ABBR, ABBR(1, 1, 0, 0) },
+		{ SIT_AccelTable,      "accelTable",  _SG, SIT_PTR,  OFFSET(SIT_App, accel) },
+		{ SIT_StyleSheet,      "styleSheet",  _S_, SIT_PTR,  OFFSET(SIT_App, styles) },
+		{ SIT_ExitCode,        "exitCode",    _SG, SIT_PTR,  OFFSET(SIT_App, exitCode) },
+		{ SIT_CompositedAreas, NULL,          __G, SIT_PTR,  0 },
 		{ SIT_TagEnd }
 	};
 

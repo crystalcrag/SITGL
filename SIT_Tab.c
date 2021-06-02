@@ -49,14 +49,7 @@ static int SIT_TabAutoManage(SIT_Widget w, APTR cd, APTR ud)
 	 */
 	if (item->clientArea.width != w->layout.pos.width || item->clientArea.height != w->layout.pos.height)
 	{
-		#ifdef DEBUG
-		fprintf(stderr, "*** recomputing layout of tab %d: %ld != %ld || %ld != %ld\n", nth,
-			item->clientArea.width, w->layout.pos.width, item->clientArea.height, w->layout.pos.height);
-		#endif
-//		float box[4];
-//		memcpy(box, &w->box, sizeof box);
 		SIT_LayoutWidgets(w, KeepDialogSize);
-//		memcpy(&w->box, box, sizeof box);
 		item->clientArea.width  = w->layout.pos.width;
 		item->clientArea.height = w->layout.pos.height;
 	}
