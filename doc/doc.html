@@ -220,10 +220,10 @@ potential solution: <b>productivity</b>, <b>ease of integration</b> and <b>small
 
 <p>Having spent a decent chunk of my career developing user interfaces, I was particularly aware of how
 much of a drag, a poorly designed API can be on your productivity. Designing a decent user-interface
-is already a complex and not particlarly fun process, the last thing you want on top of that is fighting
+is already a complex and not particularly fun process, the last thing you want on top of that is fighting
 against the API.
 
-<p>During these years, I had time to developped a lot of <b>basic building blocks</b> (layout routines,
+<p>During these years, I had time to developed a lot of <b>basic building blocks</b> (layout routines,
 drawing, event system, documentation, ...) related to user interface. At this point I thought: why not
 gather all those blocks into a single library?
 
@@ -294,12 +294,12 @@ library for a few weeks, I managed to get the ACID2 test working:
   text edit, ...).
 </ul>
 
-<p>Still, my goto technology whenever I had to do an user interface mockup has been HTML/CSS for a long
+<p>Still, my goto technology whenever I had to do an user interface mock-up has been HTML/CSS for a long
 time at this point. Despite its shortcomings, CSS is still a very powerful technology with a reasonable
 learning curve and not the least, is the fact it has been thoroughly documented.
 
-<p>At this point, I started to realized that CSS positionning was going to be a huge problem. On the other
-hand, positionning elements with SIT is extremely easy, somewhat efficient (relatively easy to recompute
+<p>At this point, I started to realized that CSS positioning was going to be a huge problem. On the other
+hand, positioning elements with SIT is extremely easy, somewhat efficient (relatively easy to recompute
 only parts of the interface if something change) and not the least, I also had an implementation and a
 documentation.
 
@@ -726,7 +726,7 @@ to be freed by <tt>SITGL</tt> too.
 
 <p>This section will describe more in details how to <b>integrate <tt>SITGL</tt> within a windowing
 framework</b>. All the examples in this section will use SDL v1 as basis. Although it is a bit dated at
-the time of writing this, its API is still as sraightforward as it can be.
+the time of writing this, its API is still as straightforward as it can be.
 
 <h3 id="SIT_Init"><span>SIT_Init</span></h3>
 
@@ -835,9 +835,9 @@ but you can look in the "<tt>example</tt>" directory, for some popular framework
   your windowing framework can't handle this, don't bother submitting a bug report/feature request
   to <tt>SITGL</tt>.
 
-  <p><b>The return code</b> indicates whether or not the event was targetting a <tt>SITGL</tt> element (it does
+  <p><b>The return code</b> indicates whether or not the event was targeting a <tt>SITGL</tt> element (it does
   not necessarily mean that the event had an effect). If the screen has to be shared between a user interface
-  and your 3d scene, you might want to ignore events if they are targetting <tt>SITGL</tt> components.
+  and your 3d scene, you might want to ignore events if they are targeting <tt>SITGL</tt> components.
 
   <li><tt class="dt"><type>int</type> SIT_ProcessKey(<type>int</type> key, <type>int</type> modifier, <type>int</type> pressed);</tt>
 
@@ -873,7 +873,7 @@ but you can look in the "<tt>example</tt>" directory, for some popular framework
   </ul>
 
   <p>Some framework like SDL1 does not translate automatically every keystroke, and needs to be
-  explicitely activated using the function <tt>SDL_EnableUNICODE(<val>1</val>);</tt>.
+  explicitly activated using the function <tt>SDL_EnableUNICODE(<val>1</val>);</tt>.
   If you don't want to activate the translation at all times, <tt>SITGL</tt> does provide mechanism
   to activate it only when a text edit has received the keyboard focus (this will be described more
   in detail in the <a href="#events">events</a> section).
@@ -920,7 +920,7 @@ it is, the smoother the animations will be. The <b>return code</b> is one of the
   control (usually done by OpenGL) and another control overlaps that area, and therefore cannot be
   drawn until the external rendering is done. Once the drawing is done, you have to call <tt>SIT_RenderNodes()</tt>
   as long as this code is returned. This mode will be described more in details in <a href="#annexC">annex C</a>,
-  since it requires additionnal setup to work.
+  since it requires additional setup to work.
   <p><span class="n">Note</span>: if you don't plan to use composite operations, you can simply treat
   the return code as a boolean (since <tt>SIT_RenderComposite</tt> will never be returned).
 </ul>
@@ -963,7 +963,7 @@ will provide you with enough tools to deal with that already, adding that featur
 more troubles than anything else (especially in full screen mode). Nevertheless, you'll still have to
 tell Windows to disable it.
 
-<p>First, you can <b>do it manually</b> by displaying the program's properties and then by explicitely
+<p>First, you can <b>do it manually</b> by displaying the program's properties and then by explicitly
 disabling the HiDPI scaling:
 
 <div class="image">
@@ -1015,7 +1015,7 @@ program to generate an icon named <tt>&lt;app&gt;.ico</tt> in the same folder wh
 
 <p><b>Version information</b> can also be added in the resource file, so that it can be read by Windows in
 various places (usually inside file properties "Details" tab). To do this, add the following block in
-the same ressource file:
+the same resource file:
 
 <pre>
 <val>1</val> <spe><b>VERSIONINFO</b></spe>
@@ -1103,9 +1103,9 @@ nvgFill(vg);
   <p><span class="n">Note</span>: the red lines show the bounding box of each rectangles, and have been
   added with a paint program. In this case, you'll need to swap NVG_CCW and NVG_CW to get correct results.
 
-  <li><b>Sub-pixel path drawing might result in some artefacts</b>: which is another artefact of the
+  <li><b>Sub-pixel path drawing might result in some artifacts</b>: which is another artifact of the
   anti-aliasing method used by <tt>nanovg</tt>: if a path end up covering less than one pixel, you might
-  see those artefacts around that edge. For example:
+  see those artifacts around that edge. For example:
 <pre style="margin-left:0"><com>/* both arc end up at the same point */</com>
 nvgBeginPath(vg);
 nvgFillColorRGBA8(vg, <val>"\0\0\0</val><spe>\xff</spe><val>"</val>);
@@ -1179,7 +1179,7 @@ is to render text for use as decals over your models.
  * useful if you only want to render text. In the fragment shader, you can simply recolor the text using
  * something like this:
  *	vec4 col = texture(nvgFBO, tex);
- *  vec4 text = /* color of text */;
+ *  vec4 text = vec4(1,0,0,1); // color of text
  *
  *	if (col.x &lt; 0.004)
  *		discard;
@@ -1284,7 +1284,7 @@ meaning:
   </ul>
 
   <li><tt class="dt">type</tt>: the <b>type of widget</b> you want to create. An enumeration that
-  describes the type of control you want ot create (like <Tt>SIT_BUTTON</tt>,
+  describes the type of control you want to create (like <Tt>SIT_BUTTON</tt>,
   <tt>SIT_LABEL</tt>, ...). The full list will be described in <a href="#controls">chapter
   dedicated to control types</a>.
   
@@ -1300,7 +1300,7 @@ meaning:
   mind that the order in which tags are specified does not matter. You can get the complete
   list of tags in the SIT main header (<tt>SIT.h</tt>), this guide will
   only explain the most important ones. Don't worry, if a tag is not explained, its usage
-  should be pretty straitforward.
+  should be pretty straightforward.
   
   <p><span class="n">Note</span>: don't forget to always <tt class="o">NULL</tt>-terminate the list,
   even if there are no arguments. If you are using a gcc-derived compiler, a warning should be displayed
@@ -1429,7 +1429,7 @@ the right edge of its container box.
 <p>This way you <b>solve two problems</b> in one shot:
 <ol>
   <li>Your application is mostly <b>DPI agnostic</b>: you can change the font size at will (at least
-  within reasonable limits) and your interface will still be layed out correctly.
+  within reasonable limits) and your interface will still be lay out correctly.
 
   <li>Likewise, this will also allow you to change all the messages of your application, while being
   sure no one will be clipped or leave too much white space: <b>internationalization</b> will then
@@ -1536,7 +1536,7 @@ former call to <tt>SIT_CreateWidget()</tt>. Remember that the order in which tag
 <tt>SIT_LeftAttachment</tt> for example. You can even set these properties for attachment that does
 not require a relative object (<tt>SITV_None</tt>, <tt>SITV_Form</tt>, ...), the argument will be
 simply ignored. Also, geometric properties don't have to be set at creation time, this is particularly
-important when you have two widgets refering to each other.
+important when you have two widgets referring to each other.
 
 <p>There is a <b>third group of properties</b> that you might find interesting: usually you'll want to
 specify <b>some space between your controls</b> and their attachments. This is done using this set of
@@ -1688,7 +1688,7 @@ value for <tt>SIT_Width</tt>. That way, you'll guarantee that initial width of y
 no less than the amount you specified. There is also a <b>shortcut property for this group</b>:
 <tt class="dt">SIT_Rect</tt>, which expects 4 integers as arguments, in the order listed above.
 
-<p>If you made your dialog resizeable, the minimal width and/or height you set explicitly might be a
+<p>If you made your dialog can be resized, the minimal width and/or height you set explicitly might be a
 little bit too big, and would like to allow your controls to be resized smaller than the initial
 dimension. This is done through the properties <tt class="dt">SIT_MinWidth</tt> and
 <tt class="dt">SIT_MinHeight</tt>. It is especially useful for canvas or listbox, where you want to
@@ -1870,7 +1870,7 @@ top attachment of the "Ok" and "Cancel" buttons, which gives the following resul
 </div>
 
 <p>In case the button is only hidden instead of removed, this behavior is temporary. If you didn't
-change the constraints in the meantime, next time you'll unhide the list, the top attachment of the
+change the constraints in the meantime, next time you'll show the list, the top attachment of the
 "Ok" and "Cancel" buttons will be restored, ie: you'll get again what you have in the first example.
 
 <p>Keep in mind that all of this was achieved, just by hiding the list and nothing more: the attachments
@@ -2229,7 +2229,7 @@ what properties they accept though):
 	SIT_ManageWidget(diag);
 }</pre>
 
-<p>Which is quite a bit shorter and therefore a lot more pleasant to write, that the neverending stream
+<p>Which is quite a bit shorter and therefore a lot more pleasant to write, that the never ending stream
 of <tt>SIT_CreateWidget</tt> calls.
 
 <h2 id="events">Events/callbacks</h2>
@@ -2313,7 +2313,7 @@ process the Tab key, it will be used to navigate between controls.
 
   <li><tt class="dt">SITE_OnActivate</tt>
   <p>Triggered when the user wants to perform an <b>action with the control</b>.
-  Typicaly, it is used with buttons (push, radio or checkbox), HTML link,
+  Typically, it is used with buttons (push, radio or checkbox), HTML link,
   list box, etc ...
   
   <p>Be aware that this is not exactly the same as a click event. For example to trigger a button
@@ -2348,7 +2348,7 @@ process the Tab key, it will be used to navigate between controls.
   <li><tt class="dt" id="SITE_OnFocus">SITE_OnFocus</tt>, <tt class="dt">SITE_OnBlur</tt>
   <p>A pair of similar events. Used to notify <b>keyboard focus change</b>.
   <tt>call_data</tt> will be <tt class="o">1</tt> for <tt>SITE_OnFocus</tt> event, and <tt class="o">0</tt>
-  for <tt>SITE_OnBlur</tt>. Avoid cancelling those event. If you want your
+  for <tt>SITE_OnBlur</tt>. Avoid canceling those event. If you want your
   focus to remain on a particular control, block focus on the other controls.
   instead.
 
@@ -2472,7 +2472,7 @@ to the listbox when the former has the focus, like up and down arrow to select a
 
 <p>Of course, this function can also be used to create events from scratch: you do not need an existing
 event to redirect it to another widget. As long as you respect the datatype (<tt>call_data</tt>) for
-the event, the targetted widget will see no difference from a user-generated event.
+the event, the targeted widget will see no difference from a user-generated event.
 
 <h3 id="evtsummary"><span>Summary of events and call data</span></h3>
 
@@ -2481,19 +2481,19 @@ the event, the targetted widget will see no difference from a user-generated eve
 <table class="listview pad">
 <thead><tr><td>Event<td>Call data<td>Description</thead>
 <tbody>
-  <tr><td>SITE_OnClose<td><tt><type>Bool </type>*</tt><td>Triggered when dialog is about to be closed, so that it can be cancelled.
+  <tr><td>SITE_OnClose<td><tt><type>Bool </type>*</tt><td>Triggered when dialog is about to be closed, so that it can be canceled.
   <tr><td>SITE_OnActivate<td><em>none</em><td>It signals that the user want to activate the widget (button, checkbox, radio, ...).
   <tr><td>SITE_OnChange<td><tt><type>int</type></tt><br><tt><type>STRPTR</type></tt><td>Something important changed with the widget.
   <tr><td>SITE_OnFocus<td><tt><val>1</val></tt><td>The control gained the keyboard focus.
   <tr><td>SITE_OnBlur<td><tt><val>0</val></tt><td>The control lost the focus.
-  <tr><td>SITE_OnFinalize<td><tt><val>NULL</val></tt><td>The widget is about to be detroyed, you should
+  <tr><td>SITE_OnFinalize<td><tt><val>NULL</val></tt><td>The widget is about to be destroyed, you should
   free any resources you allocated with it. 
   <tr><td>SITE_OnClick<td><tt>SIT_OnMouse&nbsp;*</tt><td>A mouse button has been pressed or released within the control.
   <tr><td>SITE_OnMouseMove<td><tt>SIT_OnMouse&nbsp;*</tt><td>The mouse is moving over the control.
   <tr><td>SITE_OnResize<td><tt><type>float </type> [<val>2</val>]</tt><td>The widget has been resized.
   <tr><td>SITE_OnPaint<td><tt>SIT_OnPaint *</tt><td>You can do any custom rendering within the callback.
   <tr><td>SITE_OnRawKey<td><tt>SIT_OnKey *</tt><td>A key without (obvious) unicode character has been pressed or released.
-  <tr><td>SITE_OnVanillaKey<td><tt>SIT_OnKey *</tt><td>A key with unicode character has been preseed (no released event will be sent).
+  <tr><td>SITE_OnVanillaKey<td><tt>SIT_OnKey *</tt><td>A key with unicode character has been pressed (no released event will be sent).
   <tr><td>SITE_OnScroll<td><tt><type>ULONG</type></tt><td>Scroll position has changed for a scrollbar or a slider.
   <tr><td>SITE_OnGeometrySet<td><tt><type>float </type>[<val>3</val>]</tt><td>Fine tune size of control during layout of forms.
   <tr><td>SITE_OnSortItem<td><tt>SIT_OnSort *</tt><td>Compare two items to reorder rows of list box.
@@ -2588,7 +2588,7 @@ Assumption is made that you already have basic knowledge on how CSS works.
 using CSS selectors.
 
 <p>In the chapter explaining the <a href="#SIT_CreateWidget"><tt>SIT_CreateWidget()</tt></a> function,
-it was mentionned that the tag name with which you can target CSS selectors will be automatically
+it was mentioned that the tag name with which you can target CSS selectors will be automatically
 chosen if you don't provide any. The table below <b>will list the tag name automatically chosen</b>
 for each control types as well as the <b>different parts</b> that a control is made up.
 
@@ -2664,7 +2664,7 @@ reference to a given part (using tag name as the parameter).
 <p><span class="n">Note</span>: check out the <a href="#widgets">widgets</a> chapter for some examples
 on how to style each control.
 
-<p>Then with those tag names along the ID and classes that you have to explicitely set, <b>you can form
+<p>Then with those tag names along the ID and classes that you have to explicitly set, <b>you can form
 standard CSS selectors</b>. As a reference, this is the supported operators you can use to combine with
 tag/ID/classes to form CSS rules:
 
@@ -2681,10 +2681,10 @@ tag/ID/classes to form CSS rules:
 	  <li><tt>hover</tt> : the mouse cursor is <b>over the element</b>. <span class="n">Note</span>: <tt>:active</tt>
 	  class will also match <tt>:hover</tt>
 	  <li><tt>focus</tt> : the element is the <b>target of keyboard events</b>.
-	  <li><tt>kbdfocus</tt> : the keyboard <b>focus</b> have been explicitely set on this element <b>with the
+	  <li><tt>kbdfocus</tt> : the keyboard <b>focus</b> have been explicitly set on this element <b>with the
 	  keyboard</b> (usually tab key). <tt>:focus</tt> can be triggered by mouse action. Usually, this is
 	  the class you want to target if you want to highlight which control has the keyboard focus.
-	  <li><tt>checked</tt> : target elements that have a toggleable state (typically checkbox or radio
+	  <li><tt>checked</tt> : target elements that have a toggle state (typically checkbox or radio
 	  button), with their <b>checked state being set</b>.
 	  <li><tt>disabled</tt> : the <b>element is disabled</b> (no mouse or keyboard events will be sent).
 	</ul>
@@ -2730,10 +2730,10 @@ out, here is what needs to be known about them.
 <p>Strings can be enclosed by <b>single or double quotes</b> (ASCII character 39 or 34). Character
 encoding is supposed to be UTF-8, this library does not give you any choice in that regard.
 
-<p>To escape an <b>ASCII character</b> (typically the single or doble quote, it won't work with
+<p>To escape an <b>ASCII character</b> (typically the single or double quote, it won't work with
 character code &gt; 127), prefixed it using the anti-slash (ASCII character 92). Be careful however,
 if the anti-slash is followed by some hexadecimal digits, they will be interpreted as an unicode
-code point (that will be converted to UTF-8). Additionnally, the escape sequence can be followed
+code point (that will be converted to UTF-8). Additionally, the escape sequence can be followed
 by a newline, to break character globbing.
 
 <p>Some examples:
@@ -2766,7 +2766,7 @@ you can use:
   these units are mostly a relic from the days this library was rendering to PDF format, since postscript
   points (pt) is the native unit of PDF. However <tt>SITGL</tt> makes no attempt at figuring the DPI
   of the monitor where the rendering occur, meaning that those units are mostly useless. <tt>SITGL</tt>
-  will assume a resolution of 72 DPI, for it is worth, which is probably not much. <b>Avoid</b>.
+  will assume a resolution of 72 DPI, for what it is worth, which is probably not much. <b>Avoid</b>.
   <li><tt class="dt">em</tt>: This is more often that not, <b>the unit you want to use</b>. This unit
   will be <b>relative to the element font's height</b>. This is how you make a DPI agnostic interface:
   set the font size to some reasonable value and then derive all your user interface elements from
@@ -2778,11 +2778,11 @@ you can use:
   base font size is usually between <tt>1.3vw</tt> and <tt>1.7vw</tt>.
 </ul>
 
-<p>There is an important fact to keep in mind with these units: even though you can use floatting
+<p>There is an important fact to keep in mind with these units: even though you can use floating
 points, once something has to be rendered on screen, this library with <b>convert everything to integers</b>.
-Even though <tt>nanovg</tt> can handle sub-pixel positionning perfectly, more often than not, it
+Even though <tt>nanovg</tt> can handle sub-pixel positioning perfectly, more often than not, it
 will produce extremely blurry graphics, particularly when it comes to fonts, since they will be
-already anti-aliassed.
+already anti-aliased.
 
 <p>That automatic rounding has a side effect though, especially when using the <tt>em</tt> unit: the
 <b>sum of the parts is not necessarily equal to the whole</b>. For example: when you have a border
@@ -2970,7 +2970,7 @@ well as some extensions:
   <li><tt>rgb(r, g, b)</tt>: <tt>r</tt>, <tt>g</tt> and <tt>b</tt> value must be <b>decimal</b> numbers
   between 0 and 255.
   <li><tt>rgba(r, g, b, a)</tt>: same range as <tt>rgb()</tt>, but <tt>a</tt> needs to be between
-  0 and 1 (possibly fractionnal).
+  0 and 1 (possibly fractional).
   <li><tt>hsl(h, s, l)</tt>: Specify a color using the hue, saturation, luminosity color space.
   <tt>h</tt> must be between 0 and 360, representing the angle on the color wheel, <tt>s</tt> and
   <tt>l</tt>  must be between 0 and 100.
@@ -3014,16 +3014,18 @@ mind is that, <b>this library has no networking capabilities</b> (and hopefully 
 resources must be local. Path will be relative to where your CSS file is located (or the current
 directory if you use a string as a stylesheet).
 
-<p>The following sections will describe how those datatypes are used within CSS attributes. These
-sections are ordered in the way rendering stack is ordered in this library: from bottom to top.
-
 <p>URI can also be used to embed inline images, using the <tt>data:</tt> prefix. For example:
 <pre>url(data:image/gif;base64,R0lGODlhDwAPAKEBAAAAAP///////////yH5BAEKAAIALAAAAAAPAA8AAAIklB8Qx53b4otSUWcvyiz4/4AeQJbmKY4p1HHapBlwPL/uVRsFADs=);</pre>
 <p>Will embed a 15x15px image, using the GIF image format. You can use <a href="dataURI.html" target="_blank">this
 page</a> to generate such URI. Also, check out <a href="#annexB">Annex B</a> to know which file formats are supported.
 
 <p>Even though there are no limits to how long those URI can be in <tt>SITGL</tt>, it is recommended
-to keep them short (around a few kilobytes).
+to keep them short (below a few kilobytes).
+
+
+<p>The following sections will describe how those datatypes are used within CSS attributes. These
+sections are ordered in the way rendering stack is ordered in this library: from bottom to top.
+
 
 <h4 id="cssparsing">Parsing</h4>
 
@@ -3158,9 +3160,9 @@ backgrounds</b>:
   <li><tt class="dt"><com>background</com>: <atr>url("64x64.png") fixed</atr>;</tt>
   <p>This effect can only be visualized in motion. On a screenshot, it is hard to see what's going on.
   Here the origin of the background is the <b>top left corner of the window</b> (ie: html tag). If
-  you were to move the window (the gray rounded rect, not the operating system window), the background
+  you were to move the window (the gray rounded rectangle, not the operating system window), the background
   of the last box would appear to be fixed, like if the box would be transparent and show the background
-  of what would apppear the HTML element.
+  of what would appear the HTML element.
 </ul>
 
 <p>Here are some examples on how to <b>resize the <tt>background-image</tt></b>. It is extremely likely you'll want
@@ -3285,7 +3287,7 @@ your elements. This area will then be reduced by the thickness of the border and
 <p>Here are a few examples:
 <ul>
   <li><img src="images/border_simple.png" style="vertical-align: top">
-  <p>From left to right, here are the CSS delarations used to produce each square:
+  <p>From left to right, here are the CSS declarations used to produce each square:
   <ul>
 	<li><tt class="dt"><com>border</com>: <atr>0.1em solid purple</atr></tt>
 	<p>Simple uniform border declaration.
@@ -3349,7 +3351,7 @@ your elements. This area will then be reduced by the thickness of the border and
   <p>Finally some edge cases to understand the limits of border rendering, from left to right:
   <ul>
 	<li><tt class="dt"><com>border</com>: <atr>1em solid</atr>;<br><com>border-radius</com>: <atr>2em</atr>;<br><com>border-top-width</com>: <atr>0</atr>;<br><com>border-color</com>: <atr>red orange green blue</atr></tt>
-	<p>This highlight another limitation about <tt>nanovg</tt> that has been mentionned <a href="#NVGcaveats">here</a>.
+	<p>This highlight another limitation about <tt>nanovg</tt> that has been mentioned <a href="#NVGcaveats">here</a>.
 	The border forms a shape that gradually tends to a zero-width path: this is a limitation that
 	<tt>nanovg</tt> has trouble to deal with, and as a result, the border appears thicker than it should
 	be.
@@ -3367,7 +3369,7 @@ your elements. This area will then be reduced by the thickness of the border and
 
 	<li><tt class="dt"><com>border</com>: <atr>solid</atr>;<br><com>border-width</com>: <atr>0.1em 0.8em 0.4em 0.8em</atr>;<br><com>border-color</com>: <atr>red orange green blue</atr></tt>
 	<p>Non-uniform border-width, with non-uniform border colors, without radius: this use case should
-	be handled wihtout artifact.
+	be handled without artifact.
 
 	<li><tt class="dt"><com>border</com>: <atr>2em solid green</atr>;<br><com>border-radius</com>: <atr>2em</atr></tt>
 	<p>Here the border is so thick that it is fused as a solid polygon. You could achieve the same
@@ -3470,7 +3472,7 @@ this offset can be used to push the outline border outward (positive dimension) 
   <img src="images/outline_radius.png">
 </div>
 
-<p>The <b>first box</b> has a double border, with an outline offsetted by a third of the border thickness, giving
+<p>The <b>first box</b> has a double border, with an outline offset by a third of the border thickness, giving
 the illusion of a triple border. The yellow background shows where the border box extends:
 <pre><com>border</com>: <atr>1em double black</atr>;
 <com>outline</com>: <atr>0.3em solid black 0.3em</atr>;
@@ -3535,7 +3537,7 @@ will support as many values as you will configure for the root widget.
   <li><tt class="dt" id="csslineheight"><com>line-height</com>: <atr>&lt;dimension&gt;</atr></tt>
   <p>Specify how <b>far apart individual lines will be</b>.
   By default line will be stacked on top of each other without gap. The number specified will be used as is.
-  If you give an absolute number, it will use that number no matter what the pratical line height is.
+  If you give an absolute number, it will use that number no matter what the practical line height is.
   <p>Therefore, it is strongly advised to use relative unit (ie: percentage). Numbers without unit are
   also allowed, it means the ratio by which the line height will be multiplied, eg: 1.1 is like 110%.
 
@@ -3687,7 +3689,7 @@ when talking about <a href="#geometry">geometry management</a>. There are a few 
 
   <li><tt class="dt">SIT_Name</tt> (<tt class="t">STRPTR</tt>) <span class="ro">read-only</span>
   <p>Get the <b>name of the control</b> (first parameter of <a href="#SIT_CreateWidget"><tt>SIT_CreateWidget()</tt></a>).
-  This property is read-only: no not change the value returned.
+  This property is read-only and do not change the value returned.
 
   <li><tt class="dt">SIT_Style</tt> (<tt class="t">STRPTR</tt>) <span class="ro">write-only</span>
   <p>Set the <b>inline CSS styles</b> of the widget. This property is <b>write-only</b>. You can specify
@@ -3832,7 +3834,7 @@ SIT_SetValues(app,
 	SIT_AddFont, <val>"sans-serif-bold"</val>, <val>"fonts/Roboto-Bold.ttf"</val>,
 	<val>NULL</val>
 );</pre>
-  <p>To check if the mapping has been sucessful, you can grab a nanovg context and try to map the font,
+  <p>To check if the mapping has been successful, you can grab a nanovg context and try to map the font,
   using a code similar to:
   <pre><kwd>if</kwd> (nvgFindFont(nvg, <val>"sans-serif"</val>) &lt; <val>0</val>)
 {
@@ -4019,7 +4021,7 @@ freely between all windows in this mode.
 	<li><tt class="dt">SITV_Plain</tt>: this is the flag you have to use to create a plain dialog. Otherwise, the
 	dialog will be a normal one, with title bar and close button.
 	<li><tt class="dt">SITV_Resizable</tt>: if you want your dialog to be resizable, otherwise its
-	size will be just enough to accomodate the constraints of your child controls. The area active
+	size will be just enough to accommodate the constraints of your child controls. The area active
 	for resizing the dialog will be the area covered by the border <b>and the padding</b>.
 	<li><tt class="dt">SITV_NoActivate</tt>: this one is can be used to display a temporary. If you
 	want to open a popup menu from within a dialog, you might not want the parent dialog to lose its
@@ -4126,11 +4128,11 @@ However, there are a few tags that have a special meaning:
 <p>You might wonder what is the point of having a label solely dedicated to display an image, where
 you can just include an <tt>&lt;img&gt;</tt> tag within its title.
 
-<p>The main reason for using this is when the image needs to be <b>dimensionned according to some
+<p>The main reason for using this is when the image needs to be <b>dimensioned according to some
 geometric constraints</b>. Consider the following example:
 
 <div class="image">
-  <img src="images/SIT_LABEL_image.png" alt="constrainted image">
+  <img src="images/SIT_LABEL_image.png" alt="constrained image">
   <span class="marker" style="top: -10px; left: -33px">1<span class="liner" style="width: 200px"><span class="lined" style="height: 20px; top: 0; right: 0; left: auto"></span></span></span>
   <span class="marker" style="top: 100px; left: -33px">3<span class="liner" style="width: 50px"></span></span>
   <span class="marker" style="top: 50px; left: 470px">2<span class="linel" style="width: 50px"></span></span>
@@ -4148,25 +4150,25 @@ space created by the text: the top/bottom of the image needs to line up with the
 But at this point, we don't know the size of the text (worse: depending on word wrapping, it might change
 at runtime).
 
-<p>This is where contraint geometry comes to the rescue: the top of the image label is set line up with
+<p>This is where constraint geometry comes to the rescue: the top of the image label is set line up with
 the top of the title (using <tt>SITV_AttachOpposite, title, 0</tt> as parameter for <tt>SIT_Top</tt>
 property). The bottom attachment is then set to line up with the bottom of the listbox (using
 <tt>SITV_AttachOpposite, listbox, 0</tt> as for the <tt>SIT_Bottom</tt> property). Its left and right
 attachment are left as is. Obviously the top attachment of the listbox is made relative to the title
 label.
 
-<p>Therefore the height of the image will be constrainted by the height of the text. Since there was
-no constraints on the width, this widget will then assign a width proportionnal to its height. If the
-two other widgets have their left attachment set relative to the image, you now have a fully proportionnal
-layout, that can accomodate almost every situation, with very little effort.
+<p>Therefore the height of the image will be constrained by the height of the text. Since there was
+no constraints on the width, this widget will then assign a width proportional to its height. If the
+two other widgets have their left attachment set relative to the image, you now have a fully proportional
+layout, that can accommodate almost every situation, with very little effort.
 
 <h4>Label properties</h4>
 
 <p>Here are the properties accepted by this control:
 <ul>
   <li><tt class="dt">SIT_ImagePath</tt> (<tt class="t">STRPTR</tt>)
-  <p>If this property is set, the label will become an <b>image-only widget</b>, that will be dimensionned
-  accoding to geometric constraints (if there are no constraints, it will simply use the size of the
+  <p>If this property is set, the label will become an <b>image-only widget</b>, that will be dimensioned
+  according to geometric constraints (if there are no constraints, it will simply use the size of the
   image as is: this is usually <b>not</b> what you want).
 
   <p>To get a text label again, you can set the <tt>SIT_Title</tt> property.
@@ -4187,9 +4189,9 @@ layout, that can accomodate almost every situation, with very little effort.
   <li><tt class="dt">SIT_Overflow</tt> (<tt class="t">int</tt>)
   <p>Overflow allows you to clip the text if it is bigger that the box of the label. Remember that
   without geometric constraint, label size will be set so that the entire content will be visible. So
-  without further additionnal information, <tt>SIT_Overflow</tt> will do nothing.
+  without further additional information, <tt>SIT_Overflow</tt> will do nothing.
 
-  <p>For the overflow to work, you'll haveto constraint the width of the label <b>and</b> disable
+  <p>For the overflow to work, you'll have to constraint the width of the label <b>and</b> disable
   word-wrapping using the CSS <tt>white-space</tt> property (typically set to <tt>nowrap</tt>).
 
   <p>Once this is done, you can select an overflow style:
@@ -4315,8 +4317,8 @@ which can only be set at creation time, using one of the following values:</p>
 
   <li><tt class="dt">SITV_ToggleButton</tt>: it behaves like a checkbox and/or radio button, but has the
   appearance of an action button.
-  <p>The <b>main reason</b> for prefering a toggle button instead of a checkbox
-  or radio button is that you won't have to provide additionnal styling rules, if you already did
+  <p>The <b>main reason</b> for preferring a toggle button instead of a checkbox
+  or radio button is that you won't have to provide additional styling rules, if you already did
   everything for a normal push button.
   <p>You can programmatically control the state of the button using the <tt>SIT_CheckState</tt> property.
   You can also use them as a group, similar to a radio button group, if you assign a value to the
@@ -4509,7 +4511,7 @@ assigned to one of the following values:
 
   <p>This widget is designed to handle a moderate amount of text, usually below 100Kb. Editing
   multi-megabyte files will certainly cause performance issues. Internally the text is stored as
-  a contiguous memory buffer: entering a character at the begining will requires all the characters
+  a contiguous memory buffer: entering a character at the beginning will requires all the characters
   that follow to be moved.
   
   <p><b>The typical use case</b> for this control is to edit a few kilobytes of text at a time.
@@ -4571,7 +4573,7 @@ related to text appearance (besides the obvious ones like <tt>color</tt> or <tt>
 
   <li><tt class="dt"><a href="#csstexttrans">text-transform</a></tt>
   <p>You can use this property to enforce a certain case within the text edit. Contrary to CSS in web
-  browsers, this is <b>not just a cosmetical feature</b>. The edit buffer will contain exactly what's
+  browsers, this is <b>not just a cosmetic feature</b>. The edit buffer will contain exactly what's
   displayed on the screen: that is, automatically converted to upper or lower case (more often than
   not, this is what you want anyway).
 
@@ -4582,7 +4584,7 @@ are not supported).
 
 <h4 id="editmem">Memory management</h4>
 
-<p>Like said in the introduction, this control provide a fine grain control over how memroy is allocated:
+<p>Like said in the introduction, this control provide a fine grain control over how memory is allocated:
 you can choose to let the control manage memory all by its own (and use as much as needed), or provide
 your own buffers and/or force its internal buffer to be of fixed size (and thus only requiring a single
 allocation at the start).
@@ -4635,8 +4637,8 @@ allocation at the start).
 	the edit area to what is visible on screen and no more.
 
 	<p>This is actually not as perfect as it sounds: due to different resolution, you'll probably have
-	to adjust the font size at some point. The problem is that text width is not completely proportionnal
-	to the font size, due to rounding occuring at the character level. This is particularly bad when
+	to adjust the font size at some point. The problem is that text width is not completely proportional
+	to the font size, due to rounding occurring at the character level. This is particularly bad when
 	dealing with small font size.
 
 	<p>The only way to reasonably deal with this, is to compute the ideal font size before displaying
@@ -4654,7 +4656,7 @@ allocation at the start).
   <p>The title property is used to set or get the content of the edit box. Keep in mind that cursor
   position will be reset to 0 when setting this property. Also, just like for other controls, when getting
   the value, you'll get the raw pointer that is used internally to store the text. <b>Do not modify</b>
-  anything: any modification will lead to undefined behaviour.
+  anything: any modification will lead to undefined behavior.
 
   <p><span class="n">Note</span>: end of line will be converted to <tt class="s">'\n'</tt> (ie: newline,
   line feed, LF or ASCII code 10). If you provide text with Windows line ending (<tt class="s">"\r\n"</tt>), they will
@@ -4712,7 +4714,7 @@ allocation at the start).
   
   <p>For example, if you create a <tt>SITV_Float</tt> edit box with a <tt>SIT_ScrollPos</tt> containing the
   value <tt class="o">0.1</tt>, the value displayed without rounding will be <tt class="o">0.100000001490116</tt>.
-  To prevent this, you can set this property to round the number at the specified number of fractionnal digits.
+  To prevent this, you can set this property to round the number at the specified number of fractional digits.
 
   <li><tt class="dt">SIT_PlaceHolder</tt> (<tt class="t">STRPTR</tt>)
   <p>This property will <b>display a grayed text</b> over the box if nothing is entered by the user yet.
@@ -4740,11 +4742,11 @@ allocation at the start).
 
 	<p>Despite these shortcomings, there is one <b>very good reason why you might want to use this mode</b>:
 	if the text being entered in the widget will have to be rendered by your own engine (to be used
-	as decals for exemple), properly rendering tab character might be too much of a hassle to deal with.
+	as decals for example), properly rendering tab character might be too much of a hassle to deal with.
 	Using space instead could be a decent compromise in that situation.
 
 	<p>Keep in mind that tab processing is done by <tt>SITGL</tt>, and the code to render them
-	is not exposed to any public functions (the rendering is way too dependant on internal structures
+	is not exposed to any public functions (the rendering is way too dependent on internal structures
 	from the text edit widget anyway). Also, <tt>nanovg</tt> has no facilities to render them.
 
 	<li><tt>SITV_TabEditForbid</tt>: if the limitations of <tt>SITV_TabEditToSpace</tt> are too problematic,
@@ -4812,9 +4814,9 @@ SIT_Wiget num = SIT_CreateWidget(<val>"fps"</val>, SIT_EDITBOX, parent,
 <p>The main event reported by text boxes that you might be interested in is <tt><b>SITE_OnChange</b></tt>.
 This event will be fired whenever the content of the edit buffer has changed. The <tt>call_data</tt>
 for this event will be the UTF-8 string that you can also get by reading the <tt>SIT_Title</tt> property.
-By the time the event is fired, the changes will have already been commited, therefore it won't be
+By the time the event is fired, the changes will have already been committed, therefore it won't be
 possible to cancel them. And, as usual, don't try to modify the content of this buffer, you'll cause
-undefined behaviour all over the place.
+undefined behavior all over the place.
 
 <p>If you want to change the text of the control at this point, you can do safely using the <tt>SIT_Title</tt>
 property. Keep in mind, that cursor position will be reset to 0.
@@ -5201,7 +5203,7 @@ all the items in the row.
 
 <p>Therefore, there are two boxes per cell: <b>item box</b> and <b>cell box</b>. Item box is necessarily
 smaller or equal to the cell box (which is not necessarily true in list view). You might be interested
-to control how an item is positionned within the cell box. By default items will be placed on the top
+to control how an item is positioned within the cell box. By default items will be placed on the top
 left corner, but you can select another one, using one of these methods:
 
 <ul>
@@ -5267,7 +5269,7 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
   <li><tt class="dt">SIT_ListBoxFlags</tt> (<tt class="t">int</tt>)
   <p>A bitfield that can be initialized with the following flags:
   <ul>
-	<li><tt class="dt">SITV_SelectMultiple</tt> : mulitple items can be selected by the user. Use
+	<li><tt class="dt">SITV_SelectMultiple</tt> : multiple items can be selected by the user. Use
 	Ctrl + click to select more of Shift + click to select a group.
 	<li><tt class="dt">SITV_SelectAlways</tt> : always try to keep at least one item selected.
 	<li><tt class="dt">SITV_SelectNone</tt> : display-only list box, no interaction possible.
@@ -5842,7 +5844,7 @@ at a given index, then add some other, by specifying a NULL-terminated list of s
 
 <p>The event <tt>SITE_OnChange</tt> is fired whenever the selected tab changed. The <tt>call_data</tt>
 can be converted into an integer to get the tab that has been selected (0-based index). Note that
-auto-visibility of chidren controls is also managed through a callback of this type.
+auto-visibility of children controls is also managed through a callback of this type.
 If you register your own callback for this event, do not return <tt class="o">1</tt>, otherwise the auto-visibility
 will not be triggered.</p>
 
@@ -5894,7 +5896,7 @@ using the following properties:
   <li><tt class="dt">SIT_DelayTime</tt> (<tt class="t">int</tt>)
   <p>How long the mouse needs to be idle over the target for the tooltip to popup, in <b>milliseconds</b>.
   Default value is 1,000. You can use the special value <tt>SITV_TooltipManualTrigger</tt>: the tooltip
-  can only be showed by explicitely setting its <tt>SIT_Visible</tt> property to <tt class="o">True</tt>.
+  can only be showed by explicitly setting its <tt>SIT_Visible</tt> property to <tt class="o">True</tt>.
 
   <li><tt class="dt">SIT_ToolTipAnchor</tt>  (<tt class="t">int</tt>)
   <p>An enumeration that can be assigned to one of the following values:
@@ -6153,7 +6155,7 @@ been mentionned so far in this document:
   <tt class="o">NULL</tt>-terminated and UTF-8 encoded, unless the clipboard did not contain any
   textual information. In that case <tt class="o">NULL</tt> will be returned.
   
-  <p><b>The string will be dynamicly allocated</b>, and you'll have to free it yourself when not
+  <p><b>The string will be dynamically allocated</b>, and you'll have to free it yourself when not
   needed anymore. On Windows, if you are using the same runtime than <tt>SITGL</tt>, you can use
   the standard <tt>free()</tt> function, if unsure, use <tt>SIT_Free()</tt>.
 
@@ -6172,7 +6174,7 @@ been mentionned so far in this document:
   allocated resources and where the lifetime of those resources are not in the control of <tt>SITGL</tt>.
   For these cases, you'll have to free the resources yourself using this method.
 
-  <p>As of writing this, all the resources dynamicly allocated are strings.
+  <p>As of writing this, all the resources dynamically allocated are strings.
 
 </ul>
 
@@ -6287,7 +6289,7 @@ hardest:</p>
   this:
   <pre><def>#define </span><inc>MyAttribute2(param1)    MyAttribute1, param1, SIT_TagUser+100</span></pre>
   <p>Here we used a private tag definition (<tt>SIT_TagUser+100</tt>: out of the reach of any
-  auto-completition tool of a typical IDE) to be sure it is not directly set
+  auto-completion tool of a typical IDE) to be sure it is not directly set
   by the user. Then, you can use it that way:</p>
   <pre>SIT_SetValues(ctrl, MyAttribute3, <val>123</val>, MyAttribute2(<val>456</val>), <val>789</val>, <val>NULL</val>);</pre>
   <p>Which breaks a little bit the tag/value model, but it is still acceptable. This method
@@ -6306,7 +6308,7 @@ hardest:</p>
   to honor the request of user with whatever information has been provided.</li>
 </ol>
 
-<p>Remember that within the SIT library, all properties have been carefully choosen to not depend
+<p>Remember that within the SIT library, all properties have been carefully chosen to not depend
 on the order in which arguments are passed. It would be quite error prone to introduce such a
 constraint this late in the game. Also, use the method best suited for the job: no need to
 implement a 2-stage property processing, if there is nothing that can be done if all properties
@@ -6382,7 +6384,7 @@ SIT_GetValues(w, SIT_Width, &amp;width, SIT_Height, &amp;height, <val>NULL</val>
 <h3 id="colorchooser"><span>Color chooser</span></h3>
 
 <p>There are no color chooser is the list of stock widgets, but it is relatively easy to develop one.
-Here is a simple implemention, that will <b>allow you to select an RGB color</b> using the HSV color space:
+Here is a simple implementation, that will <b>allow you to select an RGB color</b> using the HSV color space:
 
 <div class="image">
   <img src="images/SIT_COLORCHOOSER.png">
@@ -6436,26 +6438,31 @@ buffer don't need to be shifted. Therefore adding text should be done at a const
 big the content buffer is or how many bytes have been added so far.
 
 <p>This widget has to be derived from a <a href="#SIT_CANVAS"><tt>SIT_CANVAS</tt></a>, that <b>you have
-to create beforehand</b>. Additionnally, you can also create a <a href="#SIT_SCROLLBAR"><tt>SIT_SCROLLBAR</tt></a>,
+to create beforehand</b>. Additionally, you can also create a <a href="#SIT_SCROLLBAR"><tt>SIT_SCROLLBAR</tt></a>,
 <b>as a child of the <tt>SIT_CANVAS</tt></b>, in order to scroll the content, in case there is more than
-what can be displayed on screen. This scroll bar need to be created in a vertical orientation, since
-text will be wordwrapped (or, at your choice, character wrapped), a horizontal scrollbar will be
+what can be displayed on screen. This scroll bar needs to be created in a vertical orientation, since
+the text will be wordwrapped (or, at your choice, character wrapped), a horizontal scrollbar will be
 completely useless.
 
 <p>Scrollbar is optional though, you are free to implement your own scrolling behavior, since there is
-an API to manually set the top visible line.
+an API to manually set the top visible line (and keyboard shortcuts will work fine without it).
 
 <p>This is the typical code to create the necessary widgets:
 
 <pre>SIT_CreateWidgets(diag,
 	<val>"&lt;canvas name=output left=FORM right=FORM top=FORM bottom=FORM&gt;"
-	"  &lt;scrollbar name=scroll top=FORM bottom=FORM right=FORM visible=0&gt;"
+	"  &lt;scrollbar name=scroll top=FORM bottom=FORM right=FORM,,NOPAD visible=0&gt;"
 	"&lt;/canvas&gt;"</val>
 );</pre>
 
-<p>Take note, that the scrollbar has been initially set to hidden and anchor on the right side of the
+<p>Take note, that the scrollbar has been initially set to hidden and anchored on the right side of the
 canvas. There are only 2 ways to position the scroll bar though: on the right side or left side. If placed
 anywhere else, the scrollbar will overwrite some content at some point.
+<p><span class="n">Note</span>: if the scrollbar is attached on the left, you might want to add a bit
+of padding on the right to prevent the text from being flushed against the scrollbar. You can do this
+by specifying a dimension for the property <tt>SIT_RightOffset</tt>. Even though, the right attachment
+should left to <tt>None</tt>, you can still assign an offset to it (the geometry layout will of course
+ignore that offset).
 
 <p>Once the widgets have been created, you need to <b>give their ownership to the console widget</b>, using
 the following function:
@@ -6469,8 +6476,8 @@ These properties can be set/retrieved <b>on the canvas widget</b> (not the scrol
 <ul>
   <li><tt class="dt">VT_AddText</tt> (<tt class="t">STRPTR</tt>) <span class="ro">write-only</span>
   <p>This is the property you can use to add text to the console. It only accepts a <tt class="o">NULL</tt>-terminated
-  string as input. <tt>printf</tt>-like format are not supported, although creating a wrapper is simple
-  enough as to be left as a exercise for the user.
+  string as input (and as always, UTF-8 encoded). <tt>printf</tt>-like format are not supported, although
+  creating a wrapper is simple enough as to be left as a exercise for the user.
   
   <p>The text can have format specifiers to change the text color, background or font. A format specifier
   uses the following syntax:
@@ -6553,6 +6560,11 @@ SIT_SetValues(canvas, VT_AddText, <val>"<spe>\x1b</spe>[1;31mHello world"</val>,
   possible with the console. It means, that if you want to always display the bottom of the log, simply
   give a very large number.
 
+  <p>The top line will be kept as is even if new content is added, to prevent the view from jumping all
+  over the place when you are reading earlier lines. You can force the control to always show the last
+  lines that have been added, simply by setting this property to a very large number. This is 
+  the <b>initial value</b>: the content will be scrolled to always display the end of the buffer.
+
   <li><tt class="dt">VT_TotalLines</tt> (<tt class="t">int</tt>) <span class="ro">read-only</span>
   <p>Retrieve the <b>total number of lines</b> currently stored in the content buffer. That number will
   also include the number of soft-lines due to character/word wrapping. This property is useful if you
@@ -6565,7 +6577,8 @@ SIT_SetValues(canvas, VT_AddText, <val>"<spe>\x1b</spe>[1;31mHello world"</val>,
   <li><tt class="dt">VT_SelBuffer(max)</tt> (<tt class="t">STRPTR</tt>) <span class="ro">write-only</span>
   <p><b>Copy current text selected</b> into the buffer provided. This macro require an argument that specify
   the amount of bytes the buffer can hold. If the buffer is too small, the text will be truncated. As
-  long as there is at least one byte available, the buffer will always be <tt class="o">NULL</tt>-terminated.
+  long as there is at least one byte available, the buffer will always be <tt class="o">NULL</tt>-terminated
+  and multi-byte characters should not be split in the middle.
 
   <p><span class="n">Note</span>: formatting attributes <b>will not</b> be copied, only the text will.
 
@@ -6575,6 +6588,21 @@ SIT_SetValues(canvas, VT_AddText, <val>"<spe>\x1b</spe>[1;31mHello world"</val>,
 
   <li><tt class="dt">VT_WordWrap</tt> (<tt class="t">int</tt>)
   <p>How lines should be wrapped: 0 for character wrapping or 1 for word wrapping (default).
+
+  <li><tt class="dt">VT_MarkText</tt> (<tt class="t">STRPTR</tt>)
+  <p>Will highlight <b>all occurrences of the text</b> given as argument. Formatting attributes <b>and
+  case</b> will be ignored when comparing search text and buffer content. Also, a single space in the
+  search string can match multiple spaces in the console buffer. Tab and spaces are considered to be
+  space characters (newlines are not though).
+
+  <p><span class="n">Note</span>: the text will be limited to the first 31 characters, and cannot span
+  multiple lines.
+
+  <li><tt class="dt">VT_MarkFgBg</tt> (<tt class="t">int</tt>)
+  <p>Color to use for highlighting occurrences. You have to specify both foreground (lower 4bits)
+  and background (higher 4bits), or use the macro <tt>VT_FGBG()</tt>. Default value is 8 for foreground
+  and 15 for background, which is dark gray on yellow background using the default palette.
+
 </ul>
 
 <h4 id="vt100css">Styling</h4>
@@ -6582,8 +6610,9 @@ SIT_SetValues(canvas, VT_AddText, <val>"<spe>\x1b</spe>[1;31mHello world"</val>,
 <p>The content area is mostly managed by this control, however, it will honor a few CSS properties:
 <ul>
   <li><tt class="dt">text-shadow</tt>
-  <p>Shadow text will be rendered layer per layer, which means you can use shadow that overlaps both
-  the top or the bottom line without overwriting any text.
+  <p>Shadow text will be rendered line per line, which means you kind of have to avoid text shadow
+  overlaping previous line, because it can overwrite some text. Also, since you cannot specify a
+  text-shadow per background color, you should always add an alpha component to the shadow color.
 
   <li><tt class="dt">line-height</tt>
   <p>Use this property to make thicker lines. The difference between <tt>line-height</tt> and
@@ -6604,6 +6633,8 @@ keyboard events to this control (typical use case: redirect some events from a s
   <li><span class="key">&#x25b2;</span>, <span class="key">&#x25bc;</span>: scroll up/down one line.
   <li><span class="key">Ctrl+A</span>: select all text.
   <li><span class="key">Ctrl+C</span>: copy selection to clipboard.
+  <li><span class="key">Ctrl+F</span>: use current selection as the word to highlight.
+  <li><span class="key">Ctrl+G</span>: select next occurrence of word.
   <li><span class="key">Ctrl+L</span>: clear entire content.
   <li><span class="key">Ctrl+V</span>: paste clipboard into content buffer.
 </ul>
@@ -6612,7 +6643,7 @@ keyboard events to this control (typical use case: redirect some events from a s
 
 <p>Internationalization refers to everything required for an application to <em>speak</em> in a different
 language than the one it was originally written for. This includes lots of concepts, like date and number
-formatting, currency, left-to-right or right-to-left writtings, input methods, and of course, messages
+formatting, currency, left-to-right or right-to-left writings, input methods, and of course, messages
 displayed by your application. For the sake of simplicity, we will only explain the latter point:
 translating messages of your application.
 
@@ -6686,7 +6717,7 @@ you only have to modify the label creation, with the following line:
 <pre>SIT_CreateWidgets(app, <val>"&lt;label name=hello title="</val> _(<val>"Hello, world!"</val>), <val>"&gt;"</val>);</pre>
 
 <p><span class="n">Note</span>: since you'll need locale information to load the correct language file,
-and since this information is only available at the <tt>SIT_APP</tt> level, that means any errors occuring
+and since this information is only available at the <tt>SIT_APP</tt> level, that means any errors occurring
 before a successful <tt>SIT_Init()</tt> cannot be translated with this module. <span class="n">XXX</span>
 should be decoupled really.
 
@@ -6751,7 +6782,7 @@ function).
 another translation file through the <tt>#include</tt> directive. This directive must be followed by
 the path of the file, without quote, relatively to language file where the directive is in. A over-typical
 application for this is to have catalogs for countries with the same basic language, but with small
-variations, like british english versus american english, or french versus canadian french, etc...
+variations, like British english versus American english, or french versus Canadian french, etc...
 
 <h3 id="loadmsgs"><span>Loading translation file</span></h3>
 
@@ -6913,7 +6944,6 @@ therefore there will be no helping functions in this module.
 {
 	  ListNode * lh_Head;
 	  ListNode * lh_Tail;
-	  <type>int</type>        lh_Count;
 };
 <type>typedef struct</type> ListHead_t     ListHead;</pre>
 
@@ -6967,8 +6997,8 @@ field, here is the recommended strategy you can use. For example, let's assume t
 	<com>/* ... */</com>
 };</pre>
 
-<p>By building the <Tt>blueItems</tt>, like you would for the <tt>redItems</tt> list, using something
-like this:
+<p>You can add items in the <Tt>blueItems</tt> list, like you would for the <tt>redItems</tt> list,
+using something like this:
 <pre>ListAddTail(&amp;parent->blueItems, &amp;node->blueNode);</pre>
 
 <p>All the macros will now give you a pointer to the start of the <tt>blueNode</tt> field, which is
@@ -7050,7 +7080,8 @@ are straightforward, but here is the complete list:
     <li><tt>path</tt>: private, do not modify.
 	<li><tt>isDir</tt>: 1 if the object returned is a directory, 0 otherwise.
 	<li><tt>size</tt>: size in bytes of the file (always 0 for directories).
-	<li><tt>date</tt>: last modification date, using ISO-8601 format (YYYY-MM-DD HH:MM:SS).
+	<li><tt>date</tt>: last modification date, using ISO-8601 format (YYYY-MM-DD HH:MM:SS), using local
+	timezone.
 	<li><tt>type</tt>: human readable string describing file type. UTF-8 encoded. On Windows, this is
 	the same string displayed by the file explorer "Type" column.
 	<li><tt>name</tt>: name of the object, UTF-8 encoded.
@@ -7215,7 +7246,7 @@ are straightforward, but here is the complete list:
 
 <h3 class="annex" id="multithread"><span>Multi-thread</span></h3>
 
-<p>These set of functions will allow you to create threads and the typical synchronisation objects like
+<p>These set of functions will allow you to create threads and the typical synchronization objects like
 mutexes and semaphores. Be extremely careful with these functions, multi-thread and OpenGL don't mix
 very well. OpenGL requires a context per thread, which none of these functions will allocate. Your
 windowing framework might provide such facility (like SDL2 and GLFW), and in that case in might be
@@ -7306,19 +7337,19 @@ with this topic in much more depth, than what is explained in here.
 of time down to the millisecond range and get current time down to the microsecond range.
 
 <p><span class="n">Note</span>: avoid storing timestamp in <tt class="t">float</tt> datatype. You'll only
-have 4 hours and 40 minutes before running out of precision (at the milisecond range, after that time
-the precision will drop to 2 miliseconds). You can store them in integer (and losing the fractional part):
-a timestamp down to the milisecond range is not too bad for timing purpose. Using this type, you'll have
+have 4 hours and 40 minutes before running out of precision (at the millisecond range, after that time
+the precision will drop to 2 milliseconds). You can store them in integer (and losing the fractional part):
+a timestamp down to the millisecond range is not too bad for timing purpose. Using this type, you'll have
 between about 25 days (<tt class="t">signed</tt>) and 50 days (<tt class="t">unsigned</tt>) before timer
 wraps around. The recommended datatype is <tt class="t">double</tt> though (with 285616 years before
-there will be a loss of precision at the milisecond range).
+there will be a loss of precision at the millisecond range).
 
 <p><span class="n">Note</span>: on Windows, these functions are based on the <tt>QueryPerformanceCounter()</tt>
 API.
 
 <ul>
   <li><tt class="dt">void FrameSetFPS(int fps);</tt>
-  <p>Before you can use <tt>FrameWaitNext()</tt>, you need to initialize the targetted frame per
+  <p>Before you can use <tt>FrameWaitNext()</tt>, you need to initialize the targeted frame per
   second you want. This function can be called at any point, but this is usually done before the main
   event loop starts.
 
@@ -7339,7 +7370,7 @@ API.
   is paused, otherwise any actions based on time interval will be messed up. The idea is to call this
   function with the pause parameter set to <tt class="o">True</tt> at the start of the pause, then set
   to <tt class="o">False</tt> at the end. That way, the <tt>FrameGetTime()</tt> function will return
-  an (almost) monotonic increase of the time, without any gap, as if the pause never happened.
+  an (almost) monotonic increase of the time, without any gaps, as if the pause never happened.
 
   <p>While pause is on, the <tt>FrameGetTime()</tt> will always report the same value. <tt>FrameWaitNext()</tt>
   will work as normal though.
@@ -7365,7 +7396,7 @@ API.
   <tt>NULL</tt>-terminated. Also, UTF-8 sequence will be cut correctly if it the sequence does not fit
   fully in the buffer (it supposes that those sequences are correctly encoded in the first place though).
 
-  <p>This function is not really desgined for performance: it only copies one character at a time,
+  <p>This function is not really designed for performance: it only copies one character at a time,
   but for short strings, this is usually more than enough.
 
   <li><tt class="dt">int StrCat(STRPTR dest, int max, int pos, STRPTR cat);</tt>
@@ -7579,7 +7610,7 @@ using OpenGL commands, completely outside of <tt>SITGL</tt> control. On top of a
 tooltip background is partially transparent). Both have been created this way:
 
 <pre>SIT_CreateWidgets(diag,
-	<com>/* some declaractions have been removed for clarity */</com>
+	<com>/* some declarations have been removed for clarity */</com>
 	<val>"&lt;canvas composited=1 name=tb.inv left=FORM top=WIDGET,player,0.5em/&gt;"
 	"&lt;tooltip name=info delayTime="</val>, SITV_TooltipManualTrigger, <val>" displayTime=10000"
 	" toolTipAnchor="</val>, SITV_TooltipFollowMouse, <val>">"</val>
@@ -7689,7 +7720,7 @@ are 16 numbers:
 
 <p>Once all those values are extracted, we can <b>push this shape inward</b> by the amount of the border
 thickness to get the shape of the inner border. Of course, if one of the number becomes negative, it
-will be clamped to 0. That simple trick is what alllows to handle nearly all use cases, including
+will be clamped to 0. That simple trick is what allows to handle nearly all use cases, including
 degenerate cases with variable/null border width and/or weird rounded corner values.
 
 <p>At this point, <b>we could draw each part (left, top, right, bottom) of the border individually</b>,
@@ -7727,7 +7758,7 @@ this parameter will always be 15 (ie: draw all border parts).
 
 <p>While checking which borders are contiguous, we only want parts that form a single border: if the
 top and bottom parts use the same style (but left and right use something different), the two borders
-will still be rendered indidually because they do not form a single polygon. This is the purpose of
+will still be rendered individually because they do not form a single polygon. This is the purpose of
 this test:
 <pre><kwd>if</kwd> (b->color.val == <val>0</val> || (&amp;borders.top)[j] &lt;= <val>0</val> || (merge &amp; (<val>0x100</val>&lt;&lt;j)) || (merge &amp; (<val>5</val><<(j-<val>1</val>))) == <val>0</val>)
 	<kwd>continue</kwd>;</pre>

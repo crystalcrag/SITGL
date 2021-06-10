@@ -38,6 +38,11 @@ static uint8_t VTDefPalette[] = {
 static uint8_t VTUtf8Next[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 3, 4};
 static uint8_t VTCharClass[128];
 
+static uint8_t ctrlCodes[] = {
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0
+};
+
 enum /* VTCharClass entries */
 {
 	CHR, SEP, SPC = ' '
@@ -71,6 +76,7 @@ static void VTAdjustScroll(VirtualTerm vt)
 		SIT_SetValues(vt->scroll, SIT_Visible, 0, NULL);
 		vt->topLine   = 0;
 		vt->scrollPad = 0;
+		vt->scrollOff = 0;
 		vt->hasScroll = 0;
 	}
 }
@@ -80,12 +86,10 @@ static void VTInitIter(VirtualTerm vt, VTIter_t * iter, int start, int end)
 {
 	DATA8 line = vt->buffer + vt->lines[start].offset;
 	DATA8 next = vt->buffer + vt->lines[start+1].offset;
-	iter->line  = line;
+	iter->line  = iter->base = line;
 	iter->split = 0;
 	iter->endLine = end;
-	iter->endChr  = 0;
 	iter->curLine = start;
-	iter->curChr  = 0;
 	if (next <= line)
 		iter->size = next + vt->bufMax - line, iter->split = 1;
 	else
@@ -98,7 +102,7 @@ static Bool VTIterNext(VirtualTerm vt, VTIter_t * iter)
 	if (cur > iter->endLine) return False;
 	DATA8 line = vt->buffer + vt->lines[cur].offset;
 	DATA8 next = vt->buffer + vt->lines[cur+1].offset;
-	iter->line = line;
+	iter->line = iter->base = line;
 	iter->curLine = cur;
 	if (next < line)
 		iter->size = next + vt->bufMax - line, iter->split = 1;
@@ -279,7 +283,7 @@ static void VTReformat(VirtualTerm vt, NVGcontext * vg)
 	uint16_t attrs[2];
 	DATA8    start, eof, end, next;
 	DATA8    selStart, selEnd;
-	float    max = vt->width - vt->scrollPad;
+	float    max = vt->width - vt->scrollPad - vt->scrollOff;
 	uint8_t  hasSel = vt->hasSelect;
 	int      total;
 
@@ -375,9 +379,7 @@ static void VTReformat(VirtualTerm vt, NVGcontext * vg)
 enum
 {
 	VT_USECURFG = 1,
-	VT_USECURBG = 2,
-	VT_NOCUSTBG = 4,
-	VT_SELTEXT  = 7
+	VT_SELTEXT  = 2
 };
 
 /* curFgBg: &1: use current Fg, &2: use current bg, &4: don't draw bg */
@@ -385,14 +387,14 @@ static float nvgTextWithTabs(VirtualTerm vt, NVGcontext * vg, float x, float y, 
 {
 	uint16_t attrs = vt->lineAttr[0];
 	float    uline = attrs & VT_ATTRLINE ? x : -1;
-	float    dx = 0, dy = 0, h = vt->lineHeight - vt->linePadding;
+	float    dx = 0, dy = 0;
 
 	/* selected text don't get shifted */
 	if (useCurFgBg != VT_SELTEXT)
 		dx = vt->dx, dy = vt->dy;
 
 	nvgFontFaceId(vg, attrs & VT_ATTRBOLD ? vt->fontBoldId : vt->fontId);
-	if ((useCurFgBg & VT_USECURFG) == 0)
+	if (useCurFgBg == 0)
 		nvgFillColorRGBA8(vg, vt->palette + (attrs & 15) * 4);
 
 	while (start < end)
@@ -405,17 +407,6 @@ static float nvgTextWithTabs(VirtualTerm vt, NVGcontext * vg, float x, float y, 
 		if (next > start)
 		{
 			ox = x;
-			if ((useCurFgBg & VT_NOCUSTBG) == 0 && (attrs & 0xf0))
-			{
-				/* paint a custom background */
-				nvgSave(vg);
-				nvgBeginPath(vg);
-				nvgRect(vg, x, y, nvgTextBounds(vg, 0, 0, start, next, NULL), h);
-				if ((useCurFgBg & VT_USECURBG) == 0)
-					nvgFillColorRGBA8(vg, vt->palette + ((attrs & 0xf0) >> 2));
-				nvgFill(vg);
-				nvgRestore(vg);
-			}
 			x = nvgText(vg, x + dx, y + dy + vt->lineBorder, start, next) - dx;
 			/* user didn't provide a bold font face: fake it by overwriting text 1px to the right */
 			if (vt->fakeBold && (attrs & VT_ATTRBOLD))
@@ -442,25 +433,12 @@ static float nvgTextWithTabs(VirtualTerm vt, NVGcontext * vg, float x, float y, 
 		switch (chr) {
 		case 27:
 			/* change current attribute */
-			if ((useCurFgBg & VT_USECURFG) == 0)
+			if (useCurFgBg == 0)
 				nvgFillColorRGBA8(vg, vt->palette + 4 * (next[2] & 15));
 			vt->lineAttr[0] = attrs = (next[1] << 8) | next[2];
 			nvgFontFaceId(vg, attrs & VT_ATTRBOLD ? vt->fontBoldId : vt->fontId);
 			next += 3;
 			uline = attrs & VT_ATTRLINE ? x : -1;
-			break;
-			if ((useCurFgBg & VT_NOCUSTBG) == 0 && (attrs & 0xf0))
-			{
-				nvgSave(vg);
-				nvgBeginPath(vg);
-				nvgRect(vg, x, y, ox, h);
-				if ((useCurFgBg & VT_USECURBG) == 0)
-					nvgFillColorRGBA8(vg, vt->palette + ((attrs & 0xf0) >> 2));
-				nvgFill(vg);
-				nvgRestore(vg);
-			}
-			x += ox;
-			next += 3;
 			break;
 		case '\n':
 			return x;
@@ -477,16 +455,6 @@ static float nvgTextWithTabs(VirtualTerm vt, NVGcontext * vg, float x, float y, 
 			ox = vt->tabSizePx - ((int) x - vt->startx) % vt->tabSizePx;
 			next ++;
 		case_common:
-			if ((useCurFgBg & VT_NOCUSTBG) == 0 && (attrs & 0xf0))
-			{
-				nvgSave(vg);
-				nvgBeginPath(vg);
-				nvgRect(vg, x, y, ox, h);
-				if ((useCurFgBg & VT_USECURBG) == 0)
-					nvgFillColorRGBA8(vg, vt->palette + ((attrs & 0xf0) >> 2));
-				nvgFill(vg);
-				nvgRestore(vg);
-			}
 			x += ox;
 			if (uline >= 0) { chr = 0; goto underline; }
 		}
@@ -509,14 +477,170 @@ static void VTAdjustTop(VirtualTerm vt, int top)
 	vt->topOffset = offset;
 }
 
+static void VTSearchNext(VirtualTerm vt, int search[4])
+{
+	static uint8_t fold[256];
+
+	int pos = search[2];
+	int end = search[1];
+	int max = vt->bufMax;
+
+	if (fold[255] == 0)
+	{
+		int i;
+		for (i = 0; i <= 255; fold[i] = 'a' <= i && i <= 'z' ? i - 'a' + 'A' : i, i ++);
+		fold['\t'] = ' ';
+	}
+
+	if (pos >= 0)
+	{
+		pos = search[2] + search[3];
+		if (pos >= max) pos -= max;
+	}
+	else pos = search[0];
+
+	/* search for next case insensitive word */
+	DATA8   data = vt->buffer;
+	uint8_t chr1 = fold[vt->search[0]];
+
+	while (pos != end)
+	{
+		uint8_t chr = fold[data[pos]];
+		if (27 <= chr && chr <= 29)
+		{
+			/* attributes: skip */
+			pos += 3;
+			if (pos >= end) break;
+			if (pos >= max)
+				pos -= max;
+			continue;
+		}
+		else if (chr == chr1)
+		{
+			/* first character matched, check for the remaining */
+			int src = pos + 1, i, len;
+			if (src == max) src = 0;
+			for (i = len = 1; i < vt->searchMax; )
+			{
+				uint8_t schr = fold[data[src]];
+				uint8_t dchr = fold[vt->search[i]];
+				if (27 <= schr && schr <= 29)
+				{
+					src += 3;
+					len += 3;
+					if (src >= max) src -= max;
+				}
+				else if (schr == dchr)
+				{
+					src ++;
+					len ++;
+					i   ++;
+					if (src == max) src = 0;
+
+					/* a space character in the search string will match any number of space in the vt buffer */
+					if (dchr == ' ')
+					{
+						while (src != end)
+						{
+							schr = fold[data[src]];
+							if (27 <= schr && schr <= 29)
+							{
+								/* attributes: skip */
+								src += 3;
+								len += 3;
+								if (src >= max) src -= max;
+								continue;
+							}
+							if (schr != ' ') break;
+							src ++;
+							len ++;
+							if (src == max) src = 0;
+						}
+						while (i < vt->searchMax && fold[vt->search[i]] == ' ') i ++;
+					}
+				}
+				else goto break_all;
+			}
+			/* found a match */
+			search[2] = pos;
+			search[3] = len;
+			return;
+		}
+		break_all:
+		pos ++;
+		if (pos == max)
+			pos = 0;
+	}
+	search[2] = pos;
+	search[3] = 0;
+}
+
+static void VTSearchInit(VirtualTerm vt, int search[4])
+{
+	VTLine line = vt->lines + vt->topLine;
+	int    ext  = vt->searchMax - 1;
+	int    pos  = line->offset - ext;
+	int    eof  = vt->bufStart + vt->bufUsage;
+
+	if (pos < vt->bufStart && pos+ext >= vt->bufStart) pos = vt->bufStart;
+	if (pos < 0) pos += vt->bufMax;
+	search[0] = pos;
+
+	pos = vt->topLine + (vt->height + vt->lineHeight - 1 - vt->topOffset) / vt->lineHeight;
+	if (pos >= vt->totalLines) pos = vt->totalLines;
+	if (eof > vt->bufMax) eof -= vt->bufMax;
+	line = vt->lines + pos;
+	pos = line->offset + ext;
+	if (pos > eof && pos-ext <= eof) pos = eof;
+	search[1] = pos;
+	search[2] = -1;
+	search[3] = 0;
+}
+
+static int VTSearchOverlapLine(VirtualTerm vt, DATA8 start, int len, int search[4])
+{
+	if (search[2] == search[1]) return 0;
+	int mid   = vt->bufStart;
+	int line1 = start - vt->buffer;
+	int line2 = line1 + len;
+	int pos1  = search[2];
+	int pos2  = search[2] + search[3];
+	if (line1 < mid) line1 += vt->bufMax;
+	if (line2 < mid) line2 += vt->bufMax;
+	if (pos1  < mid) pos1  += vt->bufMax;
+	if (pos2  < mid) pos2  += vt->bufMax;
+
+	while (pos2 < line1)
+	{
+		VTSearchNext(vt, search);
+		pos1 = search[2];
+		pos2 = search[2] + search[3];
+		if (pos1 < mid) pos1 += vt->bufMax;
+		if (pos2 < mid) pos2 += vt->bufMax;
+	}
+
+	if (pos1 < line2 && pos2 >= line1)
+	{
+		/* found a match in this line */
+		len = MIN(pos2, line2) - pos1;
+		if (pos1+len == search[2]+search[3])
+			VTSearchNext(vt, search);
+		pos1 -= line1;
+		if (pos1 < 0) len += pos1, pos1 = 0;
+		return pos1 | (len << 16);
+	}
+	return 0;
+}
+
 static int VTPaint(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_OnPaint * paint = cd;
 	VirtualTerm   vt    = ud;
 	NVGcontext *  vg    = paint->nvg;
-	VTIter_t      start;
+	VTIter_t      iter;
+	int           search[4];
 
-	if (vt->formatWidth != vt->width - vt->scrollPad)
+	if (vt->formatWidth != vt->width - vt->scrollPad - vt->scrollOff)
 	{
 		if (vt->waitConf)
 		{
@@ -546,7 +670,7 @@ static int VTPaint(SIT_Widget w, APTR cd, APTR ud)
 			}
 		}
 		/* redo line wrapping */
-		vt->formatWidth = vt->width - vt->scrollPad;
+		vt->formatWidth = vt->width - vt->scrollPad - vt->scrollOff;
 		VTReformat(vt, vg);
 		if (vt->topLine != vt->topTarget)
 			VTAdjustTop(vt, vt->topTarget);
@@ -561,120 +685,168 @@ static int VTPaint(SIT_Widget w, APTR cd, APTR ud)
 		VTAdjustScroll(vt);
 	}
 
-	float  x = paint->x;
-	float  y = paint->y;
-	float  b = y + paint->h;
-	int    i, max;
-	int8_t shadow, drawFgBg;
+	uint8_t memAttr[256];
+	short   maxAttr = sizeof memAttr;
+	DATA8   bgAttr = memAttr;
+	VTLine  line;
+	float   x = paint->x + vt->scrollOff;
+	float   y = paint->y;
+	float   bottom = y + paint->h;
+	int     max;
 
 	if (vt->totalLines == 0) return 1;
 
 	nvgIntersectScissor(vg, x, y, paint->w, paint->h);
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 
-	y += vt->topOffset;
-	i = vt->topLine;
 	vt->startx = x;
+	y += vt->topOffset;
+	VTInitIter(vt, &iter, vt->topLine, vt->totalLines-1);
 
-	VTInitIter(vt, &start, i, vt->totalLines-1);
-
-	/* render shadows layer per layer */
-	SITTSH textShadow = paint->shadow;
-	for (shadow = paint->shadowCount, drawFgBg = 0; shadow >= 0; shadow --, textShadow ++, drawFgBg |= VT_NOCUSTBG)
+	if (vt->searchMax > 0)
 	{
-		VTIter_t iter = start;
-		VTLine   line = vt->lines + i;
-		float    startx = x;
-		float    starty = y;
-		if (shadow > 0)
-		{
-			drawFgBg |= VT_USECURFG;
-			nvgFillColorRGBA8(vg, textShadow->color);
-			nvgFontBlur(vg, textShadow->blur);
-			/* note: those values will be rounded by SITGL */
-			vt->dx = textShadow->dx;
-			vt->dy = textShadow->dy;
-		}
-		else /* final text layer */
-		{
-			drawFgBg &= VT_NOCUSTBG;
-			nvgFontBlur(vg, 0);
-			textShadow = NULL;
-			vt->dx = vt->dy = 0;
-		}
-		memcpy(vt->lineAttr, line, 4);
-
-		for (max = vt->totalLines - vt->topLine; max > 0 && y < b; i ++, max --, line ++)
-		{
-			uint16_t flags = line->styles;
-			uint8_t  hasNL = 0;
-			DATA8    start, end;
-
-			/* indent (soft lines only) */
-			x = startx;
-			if ((flags & VT_PRIMARY) == 0)
-				x += line->indent;
-
-			VT_CHECKIFSPLIT(iter);
-			start = iter.line;
-			end   = start + iter.size;
-			if (end > start && end[-1] == '\n') end --, hasNL = 1;
-
-			if (flags & VT_SELWHOLE)
-			{
-				/* line partially or entirely selected */
-				uint16_t s, e;
-				switch (flags & VT_SELWHOLE) {
-				case VT_SELSTART: s = vt->colStart; e = end - start + hasNL; break;
-				case VT_SELEND:   s = 0; e = vt->colEnd; break;
-				case VT_SELBOTH:  s = vt->colStart; e = vt->colEnd; break;
-				case VT_SELWHOLE: s = 0; e = end - start + hasNL;
-				}
-				float x2 = x;
-				if (s > e) { uint16_t tmp = s; s = e; e = tmp; }
-				if (s > 0)
-					x2 = nvgTextWithTabs(vt, vg, x, y, start, start + s, drawFgBg), start += s, e -= s, s = 0;
-				if (e > 0)
-				{
-					NVGcolor fg;
-					nvgGetCurTextColor(vg, &fg);
-					if ((drawFgBg & VT_NOCUSTBG) == 0)
-					{
-						nvgSave(vg);
-						float w = nvgTextBoundsWithTabs(vt, vg, x2, start, start + e, NULL) - x2;
-						nvgRestore(vg);
-						nvgFillColorRGBA8(vg, vt->selColors + 4);
-						nvgBeginPath(vg);
-						nvgRect(vg, x2, y, w, vt->lineHeight - vt->linePadding);
-						nvgFill(vg);
-						nvgFillColorRGBA8(vg, vt->selColors);
-						/* if someone uses a god awful theme, selection will be able to override this crap */
-						x2 = nvgTextWithTabs(vt, vg, x2, y, start, start + e, VT_SELTEXT);
-					}
-					else x2 = nvgTextBoundsWithTabs(vt, vg, x2, start, start + e, vt->lineAttr);
-					nvgFillColor(vg, fg);
-					start += e;
-				}
-				if (start < end)
-					nvgTextWithTabs(vt, vg, x2, y, start, end, drawFgBg);
-			}
-			else nvgTextWithTabs(vt, vg, x, y, start, end, drawFgBg);
-			y += vt->lineHeight;
-			if (! VTIterNext(vt, &iter))
-				break;
-		}
-		x = startx;
-		y = starty;
-		i = vt->topLine;
+		VTSearchInit(vt, search);
+		VTSearchNext(vt, search);
 	}
+
+	for (max = vt->totalLines - vt->topLine, line = vt->lines + iter.curLine; max > 0 && y < bottom; max --, line ++, y += vt->lineHeight)
+	{
+		uint16_t flags = line->styles;
+		uint8_t  hasNL = 0;
+		float    x2;
+		DATA8    start, end, p, bg;
+
+		/* indent (soft lines only) */
+		x = vt->startx;
+		if ((flags & VT_PRIMARY) == 0)
+			x += line->indent;
+
+		memcpy(vt->lineAttr, line, 4);
+		VT_CHECKIFSPLIT(iter);
+
+		start = iter.line;
+		end   = start + iter.size;
+
+		if (iter.size > maxAttr)
+		{
+			/* argh, not enough space on stack, use heap then */
+			if (bgAttr == memAttr) bgAttr = NULL;
+			maxAttr = (iter.size + 127) & ~127;
+			bgAttr  = realloc(bgAttr, maxAttr);
+		}
+
+		for (bg = bgAttr, p = start, flags &= VT_ATTRBG; p < end; )
+		{
+			uint8_t chr = *p;
+			switch (chr) {
+			case 27:
+				flags = p[2] & VT_ATTRBG;
+			case 28:
+			case 29:
+				memset(bg, flags, 3);
+				p += 3;
+				bg += 3;
+				break;
+			default:
+				bg[0] = flags;
+				p ++;
+				bg ++;
+			}
+		}
+		/* apply highlight on top */
+		if (vt->searchMax > 0)
+		{
+			int pos;
+			while ((pos = VTSearchOverlapLine(vt, iter.base, end - start, search)) > 0)
+			{
+				memset(bgAttr + (pos & 0xffff), (vt->searchAttr & VT_ATTRBG) | 1, pos >> 16);
+			}
+		}
+		/* apply selection on top of all */
+		if (end > start && end[-1] == '\n') end --, hasNL = 1;
+		flags = line->styles;
+		if (flags & VT_SELWHOLE)
+		{
+			uint16_t s, e;
+			switch (flags & VT_SELWHOLE) {
+			case VT_SELSTART: s = vt->colStart; e = end - start + hasNL; break;
+			case VT_SELEND:   s = 0; e = vt->colEnd; break;
+			case VT_SELBOTH:  s = vt->colStart; e = vt->colEnd; break;
+			case VT_SELWHOLE: s = 0; e = end - start + hasNL;
+			}
+			memset(bgAttr + s, 3, e - s);
+		}
+
+		/* draw background first */
+		for (p = bgAttr, x2 = x; p < bg; )
+		{
+			uint8_t curBg = *p;
+			DATA8   next;
+			for (next = p + 1; next < bg && curBg == *next; next ++);
+			if (curBg > 0 || next < bg)
+			{
+				float w = nvgTextBoundsWithTabs(vt, vg, x2, start + (p - bgAttr), start + (next - bgAttr), vt->lineAttr) - x2;
+				if (curBg > 0)
+				{
+					nvgFillColorRGBA8(vg, curBg == 3 ? vt->selColors + 4 : vt->palette + (curBg >> 4) * 4);
+					nvgBeginPath(vg);
+					nvgRect(vg, x2, y, w, vt->lineHeight - vt->linePadding);
+					nvgFill(vg);
+				}
+				x2 += w;
+			}
+			p = next;
+		}
+
+		/* shadow and text on top */
+		SITTSH textShadow = paint->shadow;
+		int8_t shadow;
+		for (shadow = paint->shadowCount; shadow >= 0; shadow --, textShadow ++)
+		{
+			memcpy(vt->lineAttr, line, 4);
+			if (shadow > 0)
+			{
+				nvgFillColorRGBA8(vg, textShadow->color);
+				nvgFontBlur(vg, textShadow->blur);
+				vt->dx = textShadow->dx;
+				vt->dy = textShadow->dy;
+			}
+			else /* final text layer */
+			{
+				nvgFontBlur(vg, 0);
+				vt->dx = vt->dy = 0;
+			}
+
+			for (p = bgAttr, x2 = x; p < bg; )
+			{
+				uint8_t curBg = *p;
+				DATA8   next;
+				for (next = p + 1; next < bg && curBg == *next; next ++);
+				DATA8 text1 = start + (p - bgAttr);
+				DATA8 text2 = start + (next - bgAttr);
+				if (curBg & 1)
+				{
+					/* highlight and selection: don't draw any shadow over these */
+					if (shadow == 0)
+					{
+						nvgFillColorRGBA8(vg, curBg == 3 ? vt->selColors : vt->palette + (vt->searchAttr & 15) * 4);
+						x2 = nvgTextWithTabs(vt, vg, x2, y, text1, text2, VT_SELTEXT);
+					}
+					else x2 = nvgTextBoundsWithTabs(vt, vg, x2, text1, text2, vt->lineAttr);
+				}
+				else x2 = nvgTextWithTabs(vt, vg, x2, y, text1, text2, shadow > 0);
+				p = next;
+			}
+		}
+
+		if (! VTIterNext(vt, &iter))
+			break;
+	}
+	if (bgAttr != memAttr)
+		free(bgAttr);
 
 	return 1;
 }
-
-static uint8_t ctrlCodes[] = {
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0
-};
 
 /* compute length of text as it will be stored in buffer */
 static int VTStrLen(DATA8 text)
@@ -895,7 +1067,6 @@ static void VTAddText(VirtualTerm vt, DATA8 text)
 			}
 		}
 	}
-	//fprintf(stderr, "usage = %d, start = %d  \n", vt->bufUsage, vt->bufStart);
 	if (vt->reformat < 0)
 	{
 		len = vt->totalLines - 1;
@@ -924,8 +1095,6 @@ static void VTClearAll(VirtualTerm vt)
 		SIT_ActionReschedule(vt->autoScroll, -1, -1), vt->autoScroll = NULL;
 	memset(&vt->selStart, 0, 3 * sizeof vt->selStart);
 }
-
-#define VTLINE_BUF(vt, coord)    (vt->buffer + vt->lines[coord.line].offset + coord.chr)
 
 /* calc selection length in bytes */
 static int VTSelLength(VirtualTerm vt)
@@ -971,9 +1140,10 @@ static int VTSelLength(VirtualTerm vt)
 static void VTSelCopy(VirtualTerm vt, DATA8 out)
 {
 	VTIter_t iter;
+	DATA8    copy = out;
 	int      max = vt->reformat;
 
-	if (max == 0) return;
+	if (max <= 0) return;
 	if (vt->selStart.line <= vt->selEnd.line)
 		VTInitIter(vt, &iter, vt->selStart.line, vt->selEnd.line);
 	else
@@ -1003,16 +1173,37 @@ static void VTSelCopy(VirtualTerm vt, DATA8 out)
 			default:
 				if (max == 1)
 				{
-					*out = 0;
-					return;
+					*copy = 0;
+					goto break_all;
 				}
-				else *out++ = *start, max --;
+				else *copy++ = *start, max --;
 				start ++;
 			}
 		}
 	} while (VTIterNext(vt, &iter));
 
-	*out = 0;
+	*copy = 0;
+	break_all:
+	/* check for incomplete UTF-8 character */
+	vt->reformat = -1;
+	for (copy --, max = 0; copy > out && (*copy & 0xc0) == 0x80; copy --, max ++);
+	if (copy >= out && *copy > 0x7f && VTUtf8Next[*copy >> 4] != max+1)
+		copy[0] = 0;
+}
+
+static void VTGrabWord(VirtualTerm vt, DATA8 word)
+{
+	if (word == NULL)
+	{
+		vt->reformat = sizeof vt->search;
+		VTSelCopy(vt, vt->search);
+	}
+	else CopyString(vt->search, word, sizeof vt->search);
+	DATA8 nl = strchr(vt->search, '\n');
+	if (nl) *nl = 0;
+	vt->searchMax = strlen(vt->search);
+	if (vt->searchMax < 2)
+		vt->searchMax = 0;
 }
 
 static int VTSetOrGet(SIT_Widget w, APTR cd, APTR ud)
@@ -1033,6 +1224,8 @@ static int VTSetOrGet(SIT_Widget w, APTR cd, APTR ud)
 		case VT_SelLength:   SIT_SET(cd, VTSelLength(vt), int); break;
 		case VT_LinePadding: SIT_SET(cd, vt->linePadding, int); break;
 		case VT_TotalLines:  SIT_SET(cd, vt->totalLines, int); break;
+		case VT_MarkText:    SIT_SET(cd, vt->search, DATA8); break;
+		case VT_MarkFgBg:    SIT_SET(cd, vt->searchAttr, int); break;
 		case VTX_Private:    vt->reformat = (int) val->ptr; break;
 		case VTX_Private2:   VTSelCopy(vt, val->ptr); break;
 		}
@@ -1041,6 +1234,12 @@ static int VTSetOrGet(SIT_Widget w, APTR cd, APTR ud)
 		switch (val->tag) {
 		case VT_AddText:
 			VTAddText(vt, SIT_GET(val, DATA8));
+			break;
+		case VT_DefFgBg:
+			vt->defAttr = SIT_GET(val, int);
+			break;
+		case VT_MarkFgBg:
+			vt->searchAttr = SIT_GET(val, int);
 			break;
 		case VT_TabSize:
 			arg = SIT_GET(val, int);
@@ -1064,6 +1263,23 @@ static int VTSetOrGet(SIT_Widget w, APTR cd, APTR ud)
 				SIT_ForceRefresh();
 			}
 			break;
+		case VT_TopLine:
+			arg = SIT_GET(val, int);
+			if (arg != vt->topLine)
+			{
+				int visible = (vt->height + vt->lineHeight - 1) / vt->lineHeight;
+				int max = vt->totalLines - visible;
+				if (arg < 0) arg = 0;
+				if (max < 0) max = 0;
+				vt->topTarget = arg;
+				if (arg > max)
+				{
+					arg = max;
+					vt->topOffset = vt->height - vt->lineHeight * visible;
+				}
+				vt->topLine = arg;
+			}
+			break;
 		case VT_LinePadding:
 			arg = SIT_EmToReal(w, SIT_GET(val, int));
 			if (arg > 255) arg = 255;
@@ -1071,12 +1287,14 @@ static int VTSetOrGet(SIT_Widget w, APTR cd, APTR ud)
 			vt->linePadding = arg;
 			vt->lineHeight = vt->fontSize + vt->linePadding;
 			SIT_ForceRefresh();
+			break;
+		case VT_MarkText:
+			VTGrabWord(vt, SIT_GET(val, DATA8));
 		}
 		break;
 	case SITV_PostProcess:
 		break;
 	}
-
 	return 1;
 }
 
@@ -1103,7 +1321,7 @@ static Bool VTGetCoord(VirtualTerm vt, VTCoord_t * coord, int x, int y)
 	nvgFontSize(vg, vt->fontSize);
 	nvgTextAlign(vg, NVG_ALIGN_TOP | NVG_ALIGN_LEFT);
 
-	coord->chr = VTTextFit(vt, vg, x, iter.line, iter.line+iter.size, attrs, True);
+	coord->chr = VTTextFit(vt, vg, x - vt->scrollOff, iter.line, iter.line+iter.size, attrs, True);
 	return True;
 }
 
@@ -1277,14 +1495,14 @@ static void VTStartAutoScroll(VirtualTerm vt, int dir)
 
 static int VTMouse(SIT_Widget w, APTR cd, APTR ud)
 {
+	static uint32_t lastClick;
 	VirtualTerm   vt  = ud;
 	SIT_OnMouse * msg = cd;
 
 	switch (msg->state) {
 	case SITOM_ButtonPressed:
-		if (msg->button == SITOM_ButtonLeft)
-		{
-			static uint32_t lastClick;
+		switch (msg->button) {
+		case SITOM_ButtonLeft:
 			if (vt->hasSelect)
 				VTClearSelection(vt), SIT_ForceRefresh();
 //			fprintf(stderr, "pos: %d, %d\n", msg->x, msg->y);
@@ -1302,6 +1520,17 @@ static int VTMouse(SIT_Widget w, APTR cd, APTR ud)
 			else vt->selCur = vt->selStart;
 			lastClick = TimeMS();
 			return 2;
+
+		case SITOM_ButtonWheelDown:
+		case SITOM_ButtonWheelUp:
+			/* in case there is no scrollbar */
+			if (! vt->scroll)
+			{
+				SIT_OnKey key = {.keycode = (msg->button == SITOM_ButtonWheelUp ? SITK_Up : SITK_Down)};
+				VTRawKey(w, &key, ud);
+			}
+		default:
+			break;
 		}
 		break;
 	case SITOM_CaptureMove:
@@ -1329,10 +1558,23 @@ static int VTMouse(SIT_Widget w, APTR cd, APTR ud)
 	case SITOM_ButtonReleased:
 		if (vt->autoScrollDir)
 			VTStartAutoScroll(vt, 0);
-		break;
 	default:
 		break;
 	}
+	return 1;
+}
+
+/* SITE_OnScroll on scrollbar */
+static int VTTrackPos(SIT_Widget w, APTR cd, APTR ud)
+{
+	VirtualTerm vt = ud;
+	int pos = (int) cd;
+
+	vt->topLine = pos / vt->lineHeight;
+	vt->topOffset = vt->topLine * vt->lineHeight - pos;
+	vt->topTarget = (pos + vt->height >= vt->totalLines * vt->lineHeight ? 1000000 : vt->topLine);
+	SIT_ForceRefresh();
+
 	return 1;
 }
 
@@ -1340,8 +1582,8 @@ static int VTRawKey(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_OnKey * msg = cd;
 	VirtualTerm vt  = ud;
-	int scroll = 0, max = vt->totalLines * vt->lineHeight - vt->height;
-	SIT_GetValues(vt->scroll, SIT_ScrollPos, &scroll, NULL);
+	int scroll = vt->topLine * vt->lineHeight - vt->topOffset;
+	int max    = vt->totalLines * vt->lineHeight - vt->height;
 	switch (msg->keycode) {
 	case SITK_PrevPage: scroll -= vt->height; break;
 	case SITK_NextPage: scroll += vt->height; break;
@@ -1353,11 +1595,14 @@ static int VTRawKey(SIT_Widget w, APTR cd, APTR ud)
 	}
 	if (scroll < 0)   scroll = 0;
 	if (scroll > max) scroll = max;
-	SIT_SetValues(vt->scroll, SIT_ScrollPos, scroll, NULL);
+	if (vt->scroll)
+		SIT_SetValues(vt->scroll, SIT_ScrollPos, scroll, NULL);
+	else
+		VTTrackPos(NULL, (APTR) scroll, ud);
 	return 1;
 }
 
-static void VT_CopyToClipboard(VirtualTerm vt)
+static void VTCopyToClipboard(VirtualTerm vt)
 {
 	if (vt->hasSelect)
 	{
@@ -1369,8 +1614,83 @@ static void VT_CopyToClipboard(VirtualTerm vt)
 			VTSelCopy(vt, mem);
 			SIT_CopyToClipboard(mem, length);
 			if (length >= 1024) free(mem);
-			vt->reformat = -1;
 		}
+	}
+}
+
+/* get line number from offset within content buffer */
+static int VTGetLine(VirtualTerm vt, int offset, int * chr)
+{
+	/* use dichotomic search */
+	int s, e, max = vt->bufMax;
+	if (offset < vt->bufStart) offset += max;
+	for (s = 0, e = vt->totalLines - 1; s < e; )
+	{
+		int    mid  = (s + e) >> 1;
+		VTLine line = vt->lines + mid;
+		int    pos  = line->offset;
+		if (pos < vt->bufStart) pos += max;
+		if (pos <= offset && offset < pos + (line[1].offset - line->offset))
+		{
+			*chr = offset - pos;
+			return mid;
+		}
+		if (pos < offset) s = mid;
+		else              e = mid;
+	}
+	return -1;
+}
+
+/* select next occurences of search term */
+static void VTFindNext(VirtualTerm vt)
+{
+	if (vt->searchMax > 0)
+	{
+		int search[4];
+		int start = 0;
+		VTSearchInit(vt, search);
+		search[1] = vt->bufStart + vt->bufUsage;
+		if (vt->hasSelect && vt->selStart.line == vt->selEnd.line)
+		{
+			start = vt->lines[vt->selEnd.line].offset;
+			search[0] = start + vt->selEnd.chr;
+			start += vt->selStart.chr;
+		}
+
+		VTSearchNext(vt, search);
+		if (search[3] == 0 && start > 0)
+		{
+			/* not found in visible area: check before visible area */
+			search[0] = vt->lines[0].offset;
+			search[1] = start + vt->searchMax - 1;
+			VTSearchNext(vt, search);
+			if (search[3] == 0) return;
+		}
+
+		VTClearSelection(vt);
+		vt->selStart.line = vt->selEnd.line = start = VTGetLine(vt, search[2], &vt->selStart.chr);
+		vt->selEnd.chr = vt->selStart.chr + search[3];
+		vt->lines[vt->selStart.line].styles |= VT_SELBOTH;
+		vt->colStart = vt->selStart.chr;
+		vt->colEnd   = vt->selEnd.chr;
+		vt->hasSelect = 1;
+		if (start < vt->topLine)
+		{
+			vt->topLine = start;
+			vt->topOffset = 0;
+			VTAdjustScroll(vt);
+		}
+		else if (start > vt->topLine + vt->height / vt->lineHeight)
+		{
+			int maxVisible = (vt->height + vt->lineHeight - 1) / vt->lineHeight;
+			int topLine    = start - maxVisible + 1;
+			int offset     = vt->height - maxVisible * vt->lineHeight;
+			if (topLine < 0) topLine = offset = 0;
+			vt->topLine = topLine;
+			vt->topOffset = offset;
+			VTAdjustScroll(vt);
+		}
+		SIT_ForceRefresh();
 	}
 }
 
@@ -1384,7 +1704,14 @@ static int VTKeyboard(SIT_Widget w, APTR cd, APTR ud)
 		SIT_ForceRefresh();
 		break;
 	case 3: /* ctrl+C */
-		VT_CopyToClipboard(ud);
+		VTCopyToClipboard(ud);
+		break;
+	case 6: /* ctrl+F: highlight all occurences of characters selected */
+		VTGrabWord(ud, NULL);
+		SIT_ForceRefresh();
+		break;
+	case 7: /* ctrl+G: find next */
+		VTFindNext(ud);
 		break;
 	case 12: /* ctrl+L: clear all */
 		VTClearAll(ud);
@@ -1396,7 +1723,6 @@ static int VTKeyboard(SIT_Widget w, APTR cd, APTR ud)
 		SIT_SetValues(w, VT_AddText, cd, NULL);
 		free(cd);
 	}
-
 	return 1;
 }
 
@@ -1413,20 +1739,14 @@ static int VTResize(SIT_Widget w, APTR cd, APTR ud)
 static int VTScrollPad(SIT_Widget w, APTR cd, APTR ud)
 {
 	VirtualTerm vt = ud;
-	vt->scrollPad = ((float *)cd)[0];
+	float       padding;
+	int         attach;
+	SIT_GetValues(w, SIT_RightAttachment, &attach, SIT_RightOffset, &padding, NULL);
+	if (attach != SITV_AttachNone)
+		vt->scrollOff = 0, vt->scrollPad = ((float *)cd)[0];
+	else
+		vt->scrollOff = ((float *)cd)[0] + padding, vt->scrollPad = 0;
 	return 0;
-}
-
-/* SITE_OnScroll on scrollbar */
-static int VTTrackPos(SIT_Widget w, APTR cd, APTR ud)
-{
-	VirtualTerm vt = ud;
-	int pos = (int) cd;
-
-	vt->topLine = pos / vt->lineHeight;
-	vt->topOffset = vt->topLine * vt->lineHeight - pos;
-
-	return 1;
 }
 
 static int VTFinalize(SIT_Widget w, APTR cd, APTR ud)
@@ -1456,7 +1776,8 @@ void VTInit(SIT_Widget canvas, SIT_Widget scroll)
 	vt->totalBytes = VT_DEFMAX;
 	vt->tabSize    = 4;
 	vt->palette    = VTDefPalette;
-//	vt->topTarget  = 1e6;
+	vt->topTarget  = 1e6;
+	vt->searchAttr = 0xe8;
 	vt->reformat   = -1;
 	vt->waitConf   = 1;
 	vt->wordWrap   = 1;

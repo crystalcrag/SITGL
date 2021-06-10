@@ -573,12 +573,12 @@ struct SIT_FolderSel_t
 
 union SIT_Variant_t
 {
-	int    integer;
-	long   longInt;
-	double real;
-	void * pointer;
-	Bool   boolean;
-	STRPTR string;
+	int      integer;
+	uint16_t word;
+	double   real;
+	void *   pointer;
+	Bool     boolean;
+	STRPTR   string;
 };
 
 /* Private tags */
@@ -587,7 +587,7 @@ union SIT_Variant_t
 enum SIT_Type_t /* types for ParseTags */
 {
 	SIT_INT,
-	SIT_LONG,
+	SIT_U16,
 	SIT_BOOL,
 	SIT_STR,
 	SIT_REAL,

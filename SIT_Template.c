@@ -151,7 +151,7 @@ static STRPTR SIT_ParseLine(STRPTR line, va_list * list, TagList * classArgs, PL
 				if (*p == '>' && p[-1] == '/') cd->closing = 1, p --;
 
 				/* hack: we want userdata to be processed as an integer not pointer */
-				switch (args->tl_TagID == SIT_UserData ? SIT_LONG : args->tl_Type) {
+				switch (args->tl_TagID == SIT_UserData ? SIT_INT : args->tl_Type) {
 				case SIT_ABBR: break;
 				case SIT_REAL: cur->key.real = e < p ? strtod(e, &e) : 0; break;
 				case SIT_INT:
@@ -164,7 +164,7 @@ static STRPTR SIT_ParseLine(STRPTR line, va_list * list, TagList * classArgs, PL
 						break;
 					}
 					/* no break; */
-				case SIT_LONG:
+				case SIT_U16:
 				case SIT_BOOL: cur->key.val = e < p ? strtol(e, &e, 0) : 0; break;
 				case SIT_CTRL:
 					cur->key.ptr = e < p ? SIT_FindControl(cd->parent, e, p - e + 1, False) : NULL;
@@ -217,8 +217,8 @@ static STRPTR SIT_ParseLine(STRPTR line, va_list * list, TagList * classArgs, PL
 				case SIT_CTRL: case SIT_STR:
 				case SIT_PTR:  cur->key.ptr = va_arg(*list, APTR); break;
 				case SIT_UNIT:
-				case SIT_INT:  cur->key.val = va_arg(*list, int);  break;
-				case SIT_LONG: cur->key.val = va_arg(*list, long); break;
+				case SIT_INT:
+				case SIT_U16:  cur->key.val = va_arg(*list, int); break;
 				case SIT_BOOL: cur->key.val = va_arg(*list, Bool); break;
 				}
 				if (cur->tag > 0)

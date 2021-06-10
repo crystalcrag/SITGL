@@ -146,11 +146,11 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 		APTR p = (STRPTR)w + tag->tl_Arg;
 		/* check first if value differs */
 		switch (tag->tl_Type) {
-		default:       if (* (int  *)    p == val->integer) return 0; break; /* SIT_INT */
-		case SIT_LONG: if (* (long *)    p == val->longInt) return 0; break;
-		case SIT_BOOL: if (* (uint8_t *) p == val->boolean) return 0; break;
-		case SIT_UNIT: if (* (float *)   p == val->real)    return 0; break;
-		case SIT_REAL: if (* (double *)  p == val->real)    return 0;
+		default:       if (* (int  *)   p == val->integer) return 0; break; /* SIT_INT */
+		case SIT_U16:  if (* (DATA16)   p == val->word)    return 0; break;
+		case SIT_BOOL: if (* (DATA8)    p == val->boolean) return 0; break;
+		case SIT_UNIT: if (* (float *)  p == val->real)    return 0; break;
+		case SIT_REAL: if (* (double *) p == val->real)    return 0;
 		/* no need to check SIT_CTRL, SIT_PTR, SIT_STR */
 		}
 		int flg = SITF_GeometryChanged;
@@ -187,12 +187,12 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 		switch (tag->tl_Type) {
 		case SIT_ABBR: break;
 		case SIT_CTRL:
-		case SIT_PTR:  SET_VALUE(w, void *,  val->pointer); break;
-		case SIT_INT:  SET_VALUE(w, int,     val->integer); break;
-		case SIT_LONG: SET_VALUE(w, long,    val->longInt); break;
-		case SIT_REAL: SET_VALUE(w, double,  val->real);    break;
-		case SIT_BOOL: SET_VALUE(w, uint8_t, !!val->boolean); /* we need 0 or 1 */ break;
-		case SIT_UNIT: SET_VALUE(w, REAL,    val->real);    break;
+		case SIT_PTR:  SET_VALUE(w, void *,   val->pointer); break;
+		case SIT_INT:  SET_VALUE(w, int,      val->integer); break;
+		case SIT_U16:  SET_VALUE(w, uint16_t, val->word);    break;
+		case SIT_REAL: SET_VALUE(w, double,   val->real);    break;
+		case SIT_BOOL: SET_VALUE(w, uint8_t,  !!val->boolean); /* we need 0 or 1 */ break;
+		case SIT_UNIT: SET_VALUE(w, REAL,     val->real);    break;
 		case SIT_STR:
 			str = (STRPTR *) ((STRPTR)w + tag->tl_Arg);
 			if (*str) free(*str);
@@ -691,7 +691,7 @@ void SIT_ParseTags(SIT_Widget w, va_list vargs, TagList * classArgs)
 					case SIT_ABBR: break;
 					case SIT_REAL: value.real = list->key.real; break;
 					case SIT_CTRL: case SIT_PTR: value.pointer = list->key.ptr; break;
-					case SIT_LONG: case SIT_BOOL: case SIT_INT: value.integer = list->key.val; break;
+					case SIT_BOOL: case SIT_U16: case SIT_INT: value.integer = list->key.val; break;
 					case SIT_UNIT: value.real = SIT_EmToReal(w, list->key.val); break;
 					case SIT_STR:  value.string = list->key.ptr; list ++; goto assign_str;
 					}
@@ -705,7 +705,7 @@ void SIT_ParseTags(SIT_Widget w, va_list vargs, TagList * classArgs)
 				case SIT_PTR:  value.pointer = va_arg(vargs, void *); break;
 				case SIT_BOOL:
 				case SIT_INT:  value.integer = va_arg(vargs, int);    break;
-				case SIT_LONG: value.longInt = va_arg(vargs, long);   break;
+				case SIT_U16:  value.word    = va_arg(vargs, int);    break;
 				case SIT_REAL: value.real    = va_arg(vargs, double); break;
 				case SIT_UNIT: value.real    = SIT_EmToReal(w, va_arg(vargs, int)); break;
 				case SIT_STR: /* strings have to be malloced ... */
@@ -1206,7 +1206,7 @@ DLLIMP void SIT_GetValues(SIT_Widget w, ...)
 				case SIT_PTR:  va_arg(vargs, APTR *)[0]   = * (APTR *)   field; break;
 				case SIT_UNIT: va_arg(vargs, REAL *)[0]   = * (REAL *)   field; break;
 				case SIT_INT:  va_arg(vargs, int *)[0]    = * (int *)    field; break;
-				case SIT_LONG: va_arg(vargs, long *)[0]   = * (long *)   field; break;
+				case SIT_U16:  va_arg(vargs, int *)[0]    = * (DATA16)   field; break;
 				case SIT_REAL: va_arg(vargs, double *)[0] = * (double *) field; break;
 				case SIT_BOOL: va_arg(vargs, Bool *)[0]   = * (DATA8)    field; break;
 				case SIT_STR:  va_arg(vargs, STRPTR *)[0] = * (STRPTR *) field;

@@ -18,7 +18,7 @@
 		{ SIT_ScrollPos,    "scrollPos",    _SG, SIT_INT,  OFFSET(SIT_ScrollBar, scrollPos) },
 		{ SIT_HorizScroll,  "horizScroll",  C__, SIT_BOOL, OFFSET(SIT_ScrollBar, isHoriz) },
 		{ SIT_WheelMult,    "wheelMult",    _SG, SIT_INT,  OFFSET(SIT_ScrollBar, wheelMult) },
-		{ SIT_IsDragged,    NULL,           __G, SIT_BOOL, OFFSET(SIT_ScrollBar, isDragged) },
+		{ SIT_IsDragged,    NULL,           __G, SIT_U16,  OFFSET(SIT_ScrollBar, isDragged) },
 		{ SIT_ArrowType,    "arrowType",    C__, SIT_INT,  OFFSET(SIT_ScrollBar, arrowType) },
 		{ SIT_TagEnd }
 	};
@@ -87,7 +87,10 @@ static int SIT_ScrollBarResize(SIT_Widget w, APTR cd, APTR ud)
 		sb->scrollPos = pos;
 		sb->checkPos = 0;
 		if (w->layout.pos.width > 0)
+		{
+			sb->isDragged = 0;
 			SIT_ApplyCallback(w, (APTR) pos, SITE_OnScroll);
+		}
 	}
 
 	if (range == 0)
@@ -149,6 +152,7 @@ static int SIT_ScrollBarClick(SIT_Widget w, APTR cd, APTR ud)
 		{
 			sb->scrollPos = pos;
 			SIT_ScrollBarResize(w, NULL, NULL);
+			sb->isDragged = 1;
 			SIT_ApplyCallback(w, (APTR) lround(pos), SITE_OnScroll);
 		}
 		return 1;

@@ -20,15 +20,17 @@ enum /* extra properties that can be set on <canvas> after VTInit has been calle
 	VT_TabSize,                 /* CSG: int, def: 4 */
 	VT_TopLine,                 /* CSG: int */
 	VT_TotalLines,              /* __G: int */
-	VT_DefFgBg,                 /* CSG: int, use macro VT_DEFFGBG */
+	VT_DefFgBg,                 /* CSG: int, use macro VT_FGBG */
 	VT_SelLength,               /* __G: int */
 	VT_LinePadding,             /* CSG: int */
+	VT_MarkText,                /* CSG: String */
+	VT_MarkFgBg,                /* CSG: int, use macro VT_FGBG */
 	VTX_Private,                /* _S_: use VT_SelBuffer() macro instead */
 	VTX_Private2,               /* _S_: use VT_SelBuffer() macro instead */
 	VT_WordWrap                 /* CSG: int (>0: wrap words, 0: wrap characters, default: 1) */
 };
 
-#define VT_DEFFGBG(fg, bg)      (((bg)<<4)|(fg))
+#define VT_FGBG(fg, bg)         (((bg)<<4)|(fg))
 #define VT_SelBuffer(size)      VTX_Private, (APTR) (size), VTX_Private2
 
 /* private stuff below */
@@ -37,6 +39,7 @@ typedef struct VirtualTerm_t *  VirtualTerm;
 typedef struct VTCoord_t        VTCoord_t;
 typedef struct VTIter_t         VTIter_t;
 typedef struct VTLine_t *       VTLine;
+typedef struct VTDrawCmd_t *    VTDrawCmd;
 typedef uint16_t *              DATA16;
 
 struct VTCoord_t
@@ -79,7 +82,10 @@ struct VirtualTerm_t
 	uint8_t    wordWrap;
 	uint8_t    spaceLen;
 	uint8_t    linePadding;
+
 	uint8_t    lineBorder;      /* line-height */
+	uint8_t    searchAttr;
+	uint8_t    searchMax;
 
 	SIT_Action autoScroll;
 	uint8_t    selColors[8];
@@ -98,9 +104,11 @@ struct VirtualTerm_t
 	int        width, height;   /* size of content area in px */
 	int        fontSize;        /* font height in px */
 	int        scrollPad;       /* width of scrollbar */
+	int        scrollOff;       /* if anchored on the left */
 	int        reformat;        /* line to start reformating */
 	int        fontId;
 	int        fontBoldId;
+	uint8_t    search[32];      /* highlight this bytes (up to searchMax) */
 };
 
 struct VTIter_t
@@ -108,10 +116,9 @@ struct VTIter_t
 	DATA8    line;
 	uint8_t  split;
 	uint16_t size;
-	uint16_t endChr;
-	uint16_t curChr;
 	int      endLine;
 	int      curLine;
+	DATA8    base;
 };
 
 #ifdef VT_UNITTEST
@@ -133,9 +140,7 @@ struct VTIter_t
 
 #define VT_ATTRBOLD   0x0100
 #define VT_ATTRLINE   0x0200
-#define VT_ATTRRIGHT  0x0001
-#define VT_ATTRCENTER 0x0002
-
+#define VT_ATTRBG     0x00f0
 
 #endif
 #endif
