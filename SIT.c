@@ -534,6 +534,39 @@ DLLIMP void SIT_Nuke(int what)
 	}
 }
 
+void SIT_NukeCSS(void)
+{
+	/* clear all styles of all widgets */
+	SIT_Widget list;
+	CSSImage   img;
+	for (list = sit.root; ; )
+	{
+		fprintf(stderr, "clearing node %s\n", list->name);
+		cssClear(list);
+
+		if (! list->children.lh_Head)
+		{
+			while (list->node.ln_Next == NULL)
+			{
+				list = list->parent;
+				if (list == NULL) goto break_all;
+			}
+			list = (SIT_Widget) list->node.ln_Next;
+		}
+		else list = (SIT_Widget) list->children.lh_Head;
+	}
+
+	break_all:
+	if (sit.imageCleanup) SIT_ActionReschedule(sit.imageCleanup, -1, -1);
+	for (img = HEAD(sit.images); img; img->usage = 0, NEXT(img));
+	SIT_FreeImg(NULL, NULL, NULL);
+	free(sit.cssFile); sit.cssFile = NULL;
+	free(sit.theme);   sit.theme   = NULL;
+	sit.themeSize = sit.themeLast = 0;
+	sit.themeMax = 0;
+	sit.lastRule = -1;
+}
+
 /* utility function */
 DLLIMP Bool SIT_ParseCSSColor(STRPTR cssColor, uint8_t ret[4])
 {

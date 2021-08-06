@@ -182,6 +182,7 @@ static void layoutTransformText(WordWrap word, int transform)
 	else
 		StrToUpper16(buf, sz);
 
+	/* XXX overwrite internal buffer XXX cannot change this at runtime */
 	UTF16ToUTF8(word->word, len, buf, sz);
 }
 
@@ -633,6 +634,7 @@ void layoutFree(SIT_Widget start)
 			{
 				next = node->parent;
 				SIT_FreeCSS(node);
+				free(node);
 				node = next;
 				if (node == start)
 				{
@@ -643,6 +645,7 @@ void layoutFree(SIT_Widget start)
 			next = node;
 			NEXT(node);
 			SIT_FreeCSS(next);
+			free(next);
 		}
 		else node = HEAD(node->children);
 	}
@@ -1197,6 +1200,7 @@ void layoutMeasureWords(SIT_Widget node, SizeF * ret)
 				case VerticalAlignSuper:    word->y = asc - word->bl - h/5; break;
 				default:                    word->y += asc - word->bl;
 				}
+				word->y = roundf(word->y);
 				word ++;
 			}
 			if (maxw < width)

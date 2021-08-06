@@ -25,7 +25,6 @@ typedef struct Iter_t
 /* Q'n'D digital differential analyzer */
 static void ddaInit(Iter * iter, int xe, int ys, int ye)
 {
-	/* pre-condition: xe > xs >= 0 */
 	div_t q = div(ye - ys, xe);
 	iter->y   = ys;
 	iter->x   = 0;
@@ -285,7 +284,7 @@ Bool gradientDrawRadial(CSSImage img, Gradient * grad, REAL ratio)
 	#define ry   info[3]
 
 	i      = grad->colorStop;
-	colors = alloca(sizeof *colors * i);
+	colors = alloca(sizeof *colors * (i + 1));
 
 	img->bitmap = malloc(stride * h);
 
@@ -317,6 +316,12 @@ Bool gradientDrawRadial(CSSImage img, Gradient * grad, REAL ratio)
 				d->pos = num + (diff * k / distrib);
 			distrib = -1;
 		}
+	}
+	/* incomplete gradient: repeat last color stop */
+	if (c[-1].pos < rx)
+	{
+		memcpy(c, c-1, sizeof *c);
+		c->pos = rx;
 	}
 
 	i = ry*2+2;

@@ -243,12 +243,13 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 	{
 		/* render header */
 		REAL x;
-		for (i = col, cell = list->columns, x = 0; i > 0; x += cell->sizeCell.width, i --, cell ++)
+		for (i = col, cell = list->columns, x = w->layout.border.left; i > 0; x += cell->sizeCell.width, i --, cell ++)
 		{
 			SIT_Widget hdr = cell->obj;
 			if (hdr == NULL) continue;
 
 			hdr->box.left = x;
+			hdr->box.top = w->layout.border.top;
 			hdr->box.right = x + cell->sizeCell.width;
 			hdr->box.bottom = cell->sizeCell.height;
 
@@ -285,36 +286,14 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 			uint16_t   flags = cell->flags;
 			uint8_t    align = text;
 			SIT_Widget node  = (flags & CELL_SELECT) || forceSel ? sel : td;
+
 			if (flags & CELL_CATEGORY)
 			{
 				if (list->catVisible < 2 || (flags & CELL_CATVISIBLE) == 0) continue;
 				node = list->thead;
 				align = TextAlignLeft;
 			}
-			if ((flags & CELL_ISCONTROL) == 0)
-			{
-				node->title = cell->obj;
-				node->layout.textarea = cell->sizeObj;
-				ListNew(&node->children);
-				/* quick and easy way to customize cell appearance */
-				if (paint && ! forceSel)
-				{
-					SIT_OnCellPaint ocp = {.rowColumn = j | (row << 8)};
-					paint(w, &ocp, cell[-j].userData);
-					if (ocp.bgColor[3] > 0)
-					{
-						/* override background color */
-						NVGcontext * vg = sit.nvgCtx;
-						nvgBeginPath(vg);
-						nvgRect(vg, w->offsetX + w->box.left + cell->sizeCell.left + w->padding[0],
-							w->offsetY + w->box.top + cell->sizeCell.top - list->scrollTop + w->padding[1], cell->sizeCell.width, cell->sizeCell.height);
-						nvgFillColorRGBA8(vg, ocp.bgColor);
-						nvgFill(vg);
-					}
-					memcpy(node->style.color.rgba, ocp.fgColor[3] > 0 ? ocp.fgColor : (DATA8) node->attachment, 4);
-				}
-			}
-			else SIT_ListRestoreChildren(node, cell);
+
 			node->box.left = cell->sizeCell.left + w->padding[0];
 			REAL maxw = cell->sizeCell.width;
 			if (icon == 0)
@@ -337,6 +316,39 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 			node->box.bottom = node->box.top + cell->sizeCell.height;
 			if (node->box.top > pos.height)
 				goto break_all;
+
+			if ((flags & CELL_ISCONTROL) == 0)
+			{
+				node->title = cell->obj;
+				node->layout.textarea = cell->sizeObj;
+				ListNew(&node->children);
+				/* quick and easy way to customize cell appearance */
+				if (paint)
+				{
+					SIT_OnCellPaint ocp = {.rowColumn = j | (row << 8), .LTWH = {
+						node->box.left + w->offsetX + w->box.left,
+						node->box.top  + w->offsetY + w->box.top,
+						node->box.right - node->box.left,
+						node->box.bottom - node->box.top
+					}};
+					paint(w, &ocp, cell[-j].userData);
+					if (! forceSel)
+					{
+						if (ocp.bgColor[3] > 0)
+						{
+							/* override background color */
+							NVGcontext * vg = sit.nvgCtx;
+							nvgBeginPath(vg);
+							nvgRect(vg, w->offsetX + w->box.left + cell->sizeCell.left + w->padding[0],
+								w->offsetY + w->box.top + cell->sizeCell.top - list->scrollTop + w->padding[1], cell->sizeCell.width, cell->sizeCell.height);
+							nvgFillColorRGBA8(vg, ocp.bgColor);
+							nvgFill(vg);
+						}
+						memcpy(node->style.color.rgba, ocp.fgColor[3] > 0 ? ocp.fgColor : (DATA8) node->attachment, 4);
+					}
+				}
+			}
+			else SIT_ListRestoreChildren(node, cell);
 
 			SIT_LayoutCSSSize(node);
 			SIT_RenderNode(node);

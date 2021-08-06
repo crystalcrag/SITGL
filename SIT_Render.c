@@ -445,8 +445,9 @@ static void renderBackground(SIT_Widget node, RectF * alt, int sides)
 			DATA8 col2  = bg->gradient.colors[1].rgba;
 			gradientGetCenter(&bg->gradient, info, rect.width, rect.height, node->style.font.size);
 
-			REAL  scale = info[2] / (float) info[3];
+			REAL scale = info[2] / (float) info[3];
 			nvgSave(vg);
+			nvgTranslate(vg, rect.left, rect.top);
 			nvgScale(vg, 1, 1 / scale);
 			nvgFillPaint(vg, nvgRadialGradient(vg, info[0], info[1] * scale, 0, info[2] * 1.1,
 				nvgRGBA(col1[0], col1[1], col1[2], col1[3]), nvgRGBA(col2[0], col2[1], col2[2], col2[3])));

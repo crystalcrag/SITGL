@@ -39,7 +39,6 @@ typedef struct VirtualTerm_t *  VirtualTerm;
 typedef struct VTCoord_t        VTCoord_t;
 typedef struct VTIter_t         VTIter_t;
 typedef struct VTLine_t *       VTLine;
-typedef struct VTDrawCmd_t *    VTDrawCmd;
 typedef uint16_t *              DATA16;
 
 struct VTCoord_t
@@ -121,13 +120,6 @@ struct VTIter_t
 	DATA8    base;
 };
 
-struct VTDrawCmd_t
-{
-	uint16_t styles;
-	uint16_t chrLen;
-	uint16_t pxLen;
-};
-
 #ifdef VT_UNITTEST
 /* note: need to be a power of 2 */
 #define VT_DEFMAX     16
@@ -147,7 +139,7 @@ struct VTDrawCmd_t
 
 #define VT_ATTRBOLD   0x0100
 #define VT_ATTRLINE   0x0200
-
+#define VT_ATTRBG     0x00f0
 
 #endif
 #endif

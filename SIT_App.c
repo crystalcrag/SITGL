@@ -155,6 +155,63 @@ static STRPTR SIT_GetFontFile(STRPTR fmt, STRPTR dest)
 	return NULL;
 }
 
+/* replace the entire stylesheet */
+static void SIT_ChangeStyleSheet(SIT_Widget w, STRPTR path)
+{
+	SIT_NukeCSS();
+	sit.dirty = 1;
+
+	/* don't care if it fails */
+	cssParse(path, True);
+	if (! cssParse(path, True))
+		SIT_SetValues(sit.root, SIT_Style, "background: white", NULL);
+
+	/* reapply new styles to all widgets */
+	SIT_Widget list;
+	for (list = sit.root; ; )
+	{
+		layoutCalcBox(list);
+		if (list->parent)
+		{
+			list->minBox.width = list->minBox.height = -1;
+			list->optimalBox   = list->maxBox = list->minBox;
+			if ((list->flags & SITF_TopLevel) == 0)
+				list->currentBox = list->childBox = list->minBox;
+		}
+
+		if (! list->children.lh_Head)
+		{
+			while (list->node.ln_Next == NULL)
+			{
+				list = list->parent;
+				if (list == NULL) goto layout;
+			}
+			list = (SIT_Widget) list->node.ln_Next;
+		}
+		else list = (SIT_Widget) list->children.lh_Head;
+	}
+
+	/* need to compute CSS box first */
+	layout:
+	for (list = sit.root; ; )
+	{
+		if (list->flags & SITF_TopLevel)
+			SIT_LayoutWidgets(list, KeepDialogSize);
+
+		if (! list->children.lh_Head)
+		{
+			while (list->node.ln_Next == NULL)
+			{
+				list = list->parent;
+				if (list == NULL) return;
+			}
+			list = (SIT_Widget) list->node.ln_Next;
+		}
+		else list = (SIT_Widget) list->children.lh_Head;
+	}
+}
+
+
 static int SIT_AppSetValues(SIT_Widget w, APTR call_data, APTR user_data)
 {
 	SIT_Variant * val = user_data;
@@ -188,6 +245,9 @@ static int SIT_AppSetValues(SIT_Widget w, APTR call_data, APTR user_data)
 		break;
 	case SIT_RefreshMode:
 		sit.refreshMode = app->refreshMode = val->integer;
+		break;
+	case SIT_StyleSheet:
+		SIT_ChangeStyleSheet(w, val->pointer);
 		break;
 	case SIT_CurrentDir:
 		/* note: value->string is a user-supplied buffer (SIT_PTR), not a copy: do not modify */

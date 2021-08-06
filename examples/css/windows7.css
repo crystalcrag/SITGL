@@ -1,6 +1,6 @@
 /* stylesheet that somewhat mimics the style of nanovg */
 html {
-	color: black; font-size: 1.7vw;
+	color: black; font-size: 1.6vw;
 	background:
 		repeating-linear-gradient(to bottom, transparent, transparent 2px, rgba(255,255,255,0.2) 2px, rgba(255,255,255,0.2) 4px),
 		linear-gradient(336deg, #000030, rgba(0,0,255,0) 70%),
@@ -43,7 +43,7 @@ checkbox:checked box { background: url(mask:checkmark.png) no-repeat 50% 50%, li
 radio:kbdfocus, checkbox:kbdfocus { outline: 2px solid #48d8fb 0.2em }
 
 radio box { border-radius: 1em; border: 2px solid #888; padding: 0.4em; background-color: white; vertical-align: middle }
-radio:checked box { background: radial-gradient(circle at 50% 45%, transparent, transparent 35%, rgba(black, 0.5) 35%),
+radio:checked box { background: radial-gradient(circle at 50% 50%, transparent, transparent 35%, rgba(black, 0.5) 35%),
 	radial-gradient(circle at 30% 30%, #c7ebfd, #0c3d5d); outline: 2px solid #ddd -3px }
 
 button:kbdfocus { outline: 1px solid #48d8fb }
@@ -81,7 +81,7 @@ listbox { border: 1px solid #aaa; background: white; padding: 0.3em }
 listbox td label { padding: 0.2em; text-align: center }
 listbox td:checked label { background-color: selback; color: selfore }
 table td:checked { background-color: selback; color: selfore }
-table th { border: 1px solid #aaa; border-right-color: white; padding: 4px; background: linear-gradient(to bottom, white, white 50%, #f7f8fa 50%, #f1f2f4); }
+table th { border: 1px solid #aaa; border-top-width: 0; border-right-color: white; padding: 4px; background: linear-gradient(to bottom, white, white 50%, #f7f8fa 50%, #f1f2f4); }
 table th dim { color: #888 }
 listbox thead { text-align: center; padding-bottom: 5px; border-bottom: 1px solid black; font-weight: bold }
 

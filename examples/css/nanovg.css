@@ -1,5 +1,5 @@
 /* stylesheet that somewhat mimics the style of nanovg */
-html { color: white; font-size: 1.8vw; background: url(icon5.png) }
+html { color: white; font-size: 1.8vw; background: linear-gradient(to bottom right, #0874e3, #0e1670) }
 
 dialog, form { border-radius: 0.2em; box-shadow: 0 0 20px #444; border-bottom: 1px solid black;
 	     background: #303238; padding: 2em 0.5em 0.5em 0.5em }
@@ -60,7 +60,7 @@ combobox { border: 0.1em solid #202125; border-radius: 0.3em; background: linear
 combobox arrow { background: url(mask:arrowdown.png) 50% 50% no-repeat; background-size: 50% 25% }
 popup { border: 2px solid #87cb85; border-width: 2px 2px; background-color: black; padding: 6px }
 
-frame { border: 2px solid #87cb85; border-radius: 0.5em }
+fieldset { border: 2px solid #ccc; border-radius: 0.5em }
 
 table { background: rgba(white, 0.2); border: 1px solid black; color: #ddd }
 table td { color: #ddd }

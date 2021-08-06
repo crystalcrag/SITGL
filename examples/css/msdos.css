@@ -1,0 +1,69 @@
+/* stylesheet that somewhat mimics the style of old school msdos applications */
+html { color: cyan; font-size: 1.8vw; background: linear-gradient(0deg, lightblue, blue) }
+
+dialog, form { box-shadow: 0.5em 0.5em rgba(black,0.5); background: #ccc; padding: 1em; outline: 0.5em double white -0.75em }
+dialog title { text-align: center; color: teal; vertical-align: middle; background-color: #ccc; padding: 0 0.5em; font-weight: bold }
+dialog client { padding: 0.5em; color: black }
+dialog close { background-color: darkgray }
+dialog close:active { color: red }
+
+#blurb { color: red; text-align: center; background: yellow }
+
+editbox { background: white }
+
+button { color: black; text-align: center; background: white; box-shadow: 0.5em 0.5em black; padding: 0.1em 1em }
+button.def { background: cyan }
+button:active { left: 0.5em; top: 0.5em; box-shadow: 0 0 }
+button:kbdfocus { outline: 2px solid red }
+button:kbdfocus:active { outline-color: black }
+
+editbox spin.up { background: url(mask:arrowup.png) 60% 50% no-repeat, rgba(black, 0.1); color: #aaa; background-size: 70% 35%, 100% 100%; border-radius: 0 0.2em 0 0  }
+editbox spin.down { background: url(mask:arrowdown.png) 60% 50% no-repeat, rgba(black, 0.1); color: #aaa; background-size: 70% 35%, 100% 100%; border-radius: 0 0 0.2em 0  }
+editbox spin.up:active { background: url(mask:arrowup.png) 60% 50% no-repeat, rgba(white, 0.7); color: #444 }
+editbox spin.down:active { background: url(mask:arrowdown.png) 60% 50% no-repeat, rgba(white, 0.7); color: #444 }
+
+checkbox, radio { border-radius: 0.2em }
+checkbox box { padding: 0.4em; box-shadow: 0 0 4px black inset; background-color: #232428; border-radius: 0.15em; vertical-align: middle }
+checkbox:checked box { background: url(mask:checkmark.png) no-repeat 50% 50%; background-size: 80% 80%; color: #aaa }
+radio:kbdfocus, checkbox:kbdfocus { outline: 2px solid rgba(#7edfff, 0.5) 0.2em }
+
+radio box { border-radius: 1em; border: 2px solid #87cb85; padding: 0.4em; background-color: black; vertical-align: middle }
+radio:checked box { background: black url(mask:circle.png) no-repeat 50% 50%; background-size: 80% 80%; color: #c4f4c3 }
+
+table { background-color: #aaa; outline: 0.1em inset #ccc -0.5em; padding: 1em; border: 0.1em solid transparent }
+table:kbdfocus { border-color: red }
+td { color: white }
+td:checked { background-color: blue }
+#listtitle { background: #aaa }
+
+thumb { background-color: white }
+vscroll, hscroll { background: url(checkboard.png); background-size: 0.2em 0.2em }
+arrow.up   { background: #aaa url("mask:arrowup.png") no-repeat 50% 50%; background-size: 60% 60%; color: white } 
+arrow.down { background: #aaa url("mask:arrowdown.png") no-repeat 50% 50%; background-size: 60% 60%; color: white } 
+arrow:active { background-color: black; color: #888 }
+
+slider thumb { border-radius: 1em; box-shadow: 0 0 4px black; border: 0; background: linear-gradient(to bottom, #303338, #25282d) }
+slider { box-shadow: 0.1em 0.1em 0.4em #111 inset }
+gauge { background-color: rgba(#7edfff, 0.3); border-radius: 1em }
+slider:kbdfocus { outline: 2px solid rgba(#7edfff, 0.5) }
+
+combobox { border: 0.1em solid #202125; border-radius: 0.3em; background: linear-gradient(to bottom, #595b62, #44464f); padding: 0.3em 0.5em; color: #aaa }
+combobox arrow { background: url(mask:arrowdown.png) 50% 50% no-repeat; background-size: 50% 25% }
+popup { border: 2px solid #87cb85; border-width: 2px 2px; background-color: black; padding: 6px }
+
+frame { border: 2px solid #87cb85; border-radius: 0.5em }
+
+tooltip { background-color: rgba(#000,0.9); color: white; text-shadow: 2px 2px #3f3f3f; padding: 0.5em;
+          outline: 0.15em solid #6e34c6 -0.3em; font-size: 0.8em; white-space: pre; border-radius: 0.3em }
+
+tab { padding: 5px; color: black; background-color: #c6c6c6; border: 0.2em outset #c6c6c6; border-radius: 0.3em; border-top-left-radius: 0 }
+tab pane { border-radius: 0.3em 0.3em 0 0; text-shadow: none; background-color: #8b8b8b;
+           border: 0.2em outset #8b8b8b; border-bottom: 0; font-size: 0.9em; padding: 3px 10px }
+tab pane:active { background-color: #c6c6c6; border-color: #c6c6c6; border-width: 0.2em; padding: 5px 10px }
+tab pane img { width: 20px }
+tab .inv { background-color: #8b8b8b }
+tab .inv td { border: 2px inset #ccc }
+tab editbox { background-color: #8b8b8b; text-transform: uppercase; border: 2px inset #ccc; padding: 2px 4px; -caret-color: #ddd; color: white; text-shadow: 2px 2px #3f3f3f }
+tab vscroll { border: 2px inset #ccc; background-color: #8b8b8b }
+
+::link { color: #55f }

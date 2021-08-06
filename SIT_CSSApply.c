@@ -1522,7 +1522,7 @@ int cssApply(SIT_Widget node)
 	if (node->enabled == 0)
 		state = 7;
 
-	if (sit.themeSize > 0)
+	if (sit.themeLast > 0)
 	{
 		for (rule = (CSSRule) sit.theme, i = 0; ; rule = (CSSRule) (sit.theme + rule->next), i ++)
 		{
@@ -1595,7 +1595,14 @@ int cssApply(SIT_Widget node)
 void cssClear(SIT_Widget node)
 {
 	cssSetDefault(node);
-	memset(node->styles, 0, sizeof node);
+
+	memset(node->styles, 0, sizeof node->styles);
+	if (node->inlineStyle && (node->flags & SITF_StaticStyles) == 0)
+		free(node->inlineStyle), node->inlineStyle = NULL;
+
+	SIT_FreeCSS(node);
+	vector_init(node->layout.wordwrap, sizeof (struct WordWrap_t));
+	memset(&node->style, 0,sizeof node->style);
 	memset(node->layout.crc32, 0xff, sizeof node->layout.crc32);
 }
 

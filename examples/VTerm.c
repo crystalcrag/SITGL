@@ -341,6 +341,8 @@ static void VTReformat(VirtualTerm vt, NVGcontext * vg)
 				vt->selEnd.chr  = chr;
 			}
 		}
+
+		total ++;
 		if (total >= vt->allocLines)
 		{
 			int max = (total + VT_LINES) & ~(VT_LINES-1);
@@ -351,13 +353,12 @@ static void VTReformat(VirtualTerm vt, NVGcontext * vg)
 			vt->allocLines = max;
 		}
 
-		line = vt->lines + total;
+		line = vt->lines + total - 1;
 		line->offset = start - vt->buffer;
 		line->styles = curAttrs[0];
 		line->indent = curAttrs[1];
 		if (line->offset == vt->bufStart || vt->buffer[line->offset > 0 ? line->offset-1 : vt->bufMax-1] == '\n')
 			line->styles |= VT_PRIMARY;
-		total ++;
 		if (next == end)
 			next = vt->buffer;
 		start = next;
@@ -376,11 +377,7 @@ static void VTReformat(VirtualTerm vt, NVGcontext * vg)
 	}
 }
 
-enum
-{
-	VT_USECURFG = 1,
-	VT_SELTEXT  = 2
-};
+#define VT_SELTEXT  2
 
 /* curFgBg: &1: use current Fg, &2: use current bg, &4: don't draw bg */
 static float nvgTextWithTabs(VirtualTerm vt, NVGcontext * vg, float x, float y, DATA8 start, DATA8 end, int useCurFgBg)
@@ -605,25 +602,17 @@ static int VTSearchOverlapLine(VirtualTerm vt, DATA8 start, int len, int search[
 	int line2 = line1 + len;
 	int pos1  = search[2];
 	int pos2  = search[2] + search[3];
-	if (line1 < mid) line1 += vt->bufMax;
-	if (line2 < mid) line2 += vt->bufMax;
-	if (pos1  < mid) pos1  += vt->bufMax;
-	if (pos2  < mid) pos2  += vt->bufMax;
-
-	while (pos2 < line1)
-	{
-		VTSearchNext(vt, search);
-		pos1 = search[2];
-		pos2 = search[2] + search[3];
-		if (pos1 < mid) pos1 += vt->bufMax;
-		if (pos2 < mid) pos2 += vt->bufMax;
-	}
+	int max   = vt->bufMax;
+	if (line1 < mid) line1 += max;
+	if (line2 < mid) line2 += max;
+	if (pos1  < mid) pos1  += max;
+	if (pos2  < mid) pos2  += max;
 
 	if (pos1 < line2 && pos2 >= line1)
 	{
 		/* found a match in this line */
 		len = MIN(pos2, line2) - pos1;
-		if (pos1+len == search[2]+search[3])
+		if ((pos1+len) % max == (search[2]+search[3]) % max)
 			VTSearchNext(vt, search);
 		pos1 -= line1;
 		if (pos1 < 0) len += pos1, pos1 = 0;
@@ -632,6 +621,7 @@ static int VTSearchOverlapLine(VirtualTerm vt, DATA8 start, int len, int search[
 	return 0;
 }
 
+/* SITE_OnPaint handler */
 static int VTPaint(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_OnPaint * paint = cd;
@@ -640,6 +630,8 @@ static int VTPaint(SIT_Widget w, APTR cd, APTR ud)
 	VTIter_t      iter;
 	int           search[4];
 
+	if (vt->fontSize != paint->fontSize)
+		goto reformat;
 	if (vt->formatWidth != vt->width - vt->scrollPad - vt->scrollOff)
 	{
 		if (vt->waitConf)
@@ -647,6 +639,7 @@ static int VTPaint(SIT_Widget w, APTR cd, APTR ud)
 			/* only need to do this once */
 			TEXT fontBold[64];
 			float lineHeight;
+			reformat:
 			SIT_GetCSSValue(w, "line-height", &lineHeight);
 			SIT_GetCSSValue(w, "selection",   &vt->selColors);
 			CopyString(fontBold, nvgGetFontName(vg, paint->fontId), sizeof fontBold);
@@ -1143,7 +1136,13 @@ static void VTSelCopy(VirtualTerm vt, DATA8 out)
 	DATA8    copy = out;
 	int      max = vt->reformat;
 
+	vt->reformat = -1;
 	if (max <= 0) return;
+	if (! vt->hasSelect)
+	{
+		out[0] = 0;
+		return;
+	}
 	if (vt->selStart.line <= vt->selEnd.line)
 		VTInitIter(vt, &iter, vt->selStart.line, vt->selEnd.line);
 	else
@@ -1185,14 +1184,15 @@ static void VTSelCopy(VirtualTerm vt, DATA8 out)
 	*copy = 0;
 	break_all:
 	/* check for incomplete UTF-8 character */
-	vt->reformat = -1;
 	for (copy --, max = 0; copy > out && (*copy & 0xc0) == 0x80; copy --, max ++);
 	if (copy >= out && *copy > 0x7f && VTUtf8Next[*copy >> 4] != max+1)
 		copy[0] = 0;
 }
 
-static void VTGrabWord(VirtualTerm vt, DATA8 word)
+static Bool VTGrabWord(VirtualTerm vt, DATA8 word)
 {
+	TEXT prev[32];
+	strcpy(prev, vt->search);
 	if (word == NULL)
 	{
 		vt->reformat = sizeof vt->search;
@@ -1204,6 +1204,7 @@ static void VTGrabWord(VirtualTerm vt, DATA8 word)
 	vt->searchMax = strlen(vt->search);
 	if (vt->searchMax < 2)
 		vt->searchMax = 0;
+	return strcasecmp(vt->search, prev) != 0;
 }
 
 static int VTSetOrGet(SIT_Widget w, APTR cd, APTR ud)
@@ -1289,7 +1290,8 @@ static int VTSetOrGet(SIT_Widget w, APTR cd, APTR ud)
 			SIT_ForceRefresh();
 			break;
 		case VT_MarkText:
-			VTGrabWord(vt, SIT_GET(val, DATA8));
+			if (VTGrabWord(vt, SIT_GET(val, DATA8)))
+				SIT_ForceRefresh();
 		}
 		break;
 	case SITV_PostProcess:
@@ -1313,15 +1315,18 @@ static Bool VTGetCoord(VirtualTerm vt, VTCoord_t * coord, int x, int y)
 		line = 0;
 
 	VTInitIter(vt, &iter, line, line);
-	VT_CHECKIFSPLIT(iter);
 	memcpy(attrs, vt->lines + line, 4);
 	coord->line = line;
+	DATA8 end = iter.line + iter.size;
+	if (end > vt->buffer + vt->bufMax) end -= vt->bufMax;
 
 	SIT_GetValues(vt->canvas, SIT_NVGcontext, &vg, NULL);
 	nvgFontSize(vg, vt->fontSize);
 	nvgTextAlign(vg, NVG_ALIGN_TOP | NVG_ALIGN_LEFT);
 
-	coord->chr = VTTextFit(vt, vg, x - vt->scrollOff, iter.line, iter.line+iter.size, attrs, True);
+	line = VTTextFit(vt, vg, x - vt->scrollOff, iter.line, end, attrs, True);
+	if (line < 0) line += vt->bufMax;
+	coord->chr = line;
 	return True;
 }
 
@@ -1505,7 +1510,6 @@ static int VTMouse(SIT_Widget w, APTR cd, APTR ud)
 		case SITOM_ButtonLeft:
 			if (vt->hasSelect)
 				VTClearSelection(vt), SIT_ForceRefresh();
-//			fprintf(stderr, "pos: %d, %d\n", msg->x, msg->y);
 			vt->selCur = vt->selStart;
 			vt->wordSelect = 0;
 			if (VTGetCoord(vt, &vt->selStart, msg->x, msg->y) && memcmp(&vt->selStart, &vt->selCur, sizeof vt->selStart) == 0 &&
@@ -1534,7 +1538,6 @@ static int VTMouse(SIT_Widget w, APTR cd, APTR ud)
 		}
 		break;
 	case SITOM_CaptureMove:
-//		fprintf(stderr, "pos: %d, %d\n", msg->x, msg->y);
 		if (msg->y < 0)
 		{
 			/* vertical auto-scroll */
@@ -1628,17 +1631,19 @@ static int VTGetLine(VirtualTerm vt, int offset, int * chr)
 	{
 		int    mid  = (s + e) >> 1;
 		VTLine line = vt->lines + mid;
-		int    pos  = line->offset;
-		if (pos < vt->bufStart) pos += max;
-		if (pos <= offset && offset < pos + (line[1].offset - line->offset))
+		int    pos1 = line->offset;
+		int    pos2 = line[1].offset;
+		if (pos1 < vt->bufStart) pos1 += max;
+		if (pos2 < vt->bufStart) pos2 += max;
+		if (pos1 <= offset && offset < pos2)
 		{
-			*chr = offset - pos;
+			*chr = offset - pos1;
 			return mid;
 		}
-		if (pos < offset) s = mid;
-		else              e = mid;
+		if (pos1 < offset) s = mid+1;
+		else               e = mid;
 	}
-	return -1;
+	return s;
 }
 
 /* select next occurences of search term */
@@ -1648,12 +1653,13 @@ static void VTFindNext(VirtualTerm vt)
 	{
 		int search[4];
 		int start = 0;
+		int max = vt->bufMax;
 		VTSearchInit(vt, search);
-		search[1] = vt->bufStart + vt->bufUsage;
+		search[1] = (vt->bufStart + vt->bufUsage) % max;
 		if (vt->hasSelect && vt->selStart.line == vt->selEnd.line)
 		{
 			start = vt->lines[vt->selEnd.line].offset;
-			search[0] = start + vt->selEnd.chr;
+			search[0] = (start + vt->selEnd.chr) % max;
 			start += vt->selStart.chr;
 		}
 
@@ -1662,7 +1668,7 @@ static void VTFindNext(VirtualTerm vt)
 		{
 			/* not found in visible area: check before visible area */
 			search[0] = vt->lines[0].offset;
-			search[1] = start + vt->searchMax - 1;
+			search[1] = (start + vt->searchMax - 1) % max;
 			VTSearchNext(vt, search);
 			if (search[3] == 0) return;
 		}
@@ -1707,8 +1713,8 @@ static int VTKeyboard(SIT_Widget w, APTR cd, APTR ud)
 		VTCopyToClipboard(ud);
 		break;
 	case 6: /* ctrl+F: highlight all occurences of characters selected */
-		VTGrabWord(ud, NULL);
-		SIT_ForceRefresh();
+		if (VTGrabWord(ud, NULL))
+			SIT_ForceRefresh();
 		break;
 	case 7: /* ctrl+G: find next */
 		VTFindNext(ud);

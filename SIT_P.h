@@ -103,6 +103,7 @@ void SIT_CenterDialog(SIT_Widget, int flags);
 void SIT_MeasureWidget(SIT_Widget);
 int  SIT_ListGetItemCount(SIT_Widget);
 void SIT_ListGetArg(SIT_Widget, int type, APTR arg);
+void SIT_NukeCSS(void);
 
 int  SIT_TextEditKey(SIT_EditBox, int key);
 int  SIT_TextEditInsertText(SIT_EditBox, DATA8 utf8);

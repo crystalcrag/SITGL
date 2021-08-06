@@ -100,7 +100,7 @@
 
 	static STRPTR widgetNames[] = {         /* generic name for CSS (need to be different for each) */
 		"html", "dialog", "label", "button", "editbox", "fieldset", "listbox", "canvas", "vscroll",
-		"slider", "progress", "combobox", "tab", "tooltip", NULL, NULL, NULL
+		"slider", "progress", "combobox", "tab", "tooltip", "", "", ""
 	};
 
 	#if 0
@@ -365,6 +365,18 @@ static int SIT_FrameMeasure(SIT_Widget w, APTR cd, APTR mode)
 	frame->title.width  = roundf(min.width);
 	frame->title.height = roundf(min.height);
 
+	int i;
+	REAL minPadding[] = {roundf(fh * 0.9), roundf(fh * 1.2), roundf(fh * 0.9), roundf(fh * 0.8)};
+	for (i = 0; i < 4; i ++)
+	{
+		REAL * pad = w->padding + i;
+		if (*pad < minPadding[i])
+		{
+			(&min.width)[i&1] += - *pad;
+			*pad = minPadding[i];
+		}
+	}
+
 	/* layout children */
 	if (w->children.lh_Head && SIT_LayoutWidgets(w, (ULONG) mode))
 	{
@@ -373,18 +385,10 @@ static int SIT_FrameMeasure(SIT_Widget w, APTR cd, APTR mode)
 		min.height = w->box.bottom - w->box.top;
 	}
 
-	int i;
-	for (i = 0; i < 4; i ++)
-	{
-		REAL * pad = w->padding + i;
-		if (*pad < fh)
-		{
-			(&min.width)[i&1] +=  - *pad;
-			*pad = fh;
-		}
-	}
-
 	frame->title.width += roundf((w->padding[0] + w->padding[1]) * 0.25);
+
+//	min.width  += w->padding[0] + w->padding[2];
+//	min.height += w->padding[1] + w->padding[3];
 
 	if (pref->width  < min.width)  pref->width  = min.width;
 	if (pref->height < min.height) pref->height = min.height;
@@ -855,7 +859,6 @@ void SIT_FreeCSS(SIT_Widget node)
 	if (node->style.borderImg)   free(node->style.borderImg);
 	if (node->layout.wordwrap.buffer)
 		free(node->layout.wordwrap.buffer);
-	free(node);
 }
 
 static void SIT_RemoveFromFocus(SIT_Widget w)
@@ -940,6 +943,7 @@ void SIT_DestroyWidget(SIT_Widget w)
 	}
 
 	SIT_FreeCSS(w);
+	free(w);
 }
 
 /* remove properties added to window for keeping widget class */
@@ -980,6 +984,8 @@ static void SIT_GeomRemoveChildrenOf(SIT_Widget w)
 /* geometric changes done on widget: check neighbor if more changes are needed */
 void SIT_InitiateReflow(SIT_Widget w)
 {
+	if (w->optimalWidth == NULL)
+		return;
 	if (w->flags & SITF_GeomNotified)
 	{
 		SIT_Widget inlist;

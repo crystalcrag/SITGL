@@ -39,7 +39,6 @@ typedef struct VirtualTerm_t *  VirtualTerm;
 typedef struct VTCoord_t        VTCoord_t;
 typedef struct VTIter_t         VTIter_t;
 typedef struct VTLine_t *       VTLine;
-typedef struct VTDrawCmd_t *    VTDrawCmd;
 typedef uint16_t *              DATA16;
 
 struct VTCoord_t

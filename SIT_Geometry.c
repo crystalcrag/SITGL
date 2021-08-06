@@ -494,8 +494,8 @@ static int SIT_LayoutOptimal(SIT_Widget root)
 	if (root->parent == NULL)
 	{
 		/* fixed size no matter what */
-		root->layout.pos.width  = root->maxBox.width;
-		root->layout.pos.height = root->maxBox.height;
+		root->box.right  = root->fixed.width;
+		root->box.bottom = root->fixed.height;
 	}
 	else if (root->type == SIT_DIALOG)
 	{
@@ -515,6 +515,7 @@ static int SIT_LayoutOptimal(SIT_Widget root)
 			client->optimalBox.width = client->optimalBox.height = -1;
 			memset(&client->box, 0, sizeof client->box);
 		}
+		memset(&root->box, 0, sizeof root->box);
 	}
 	else /* Check if size of control is constrained */
 	{
@@ -523,9 +524,9 @@ static int SIT_LayoutOptimal(SIT_Widget root)
 		root->maxBox = SIT_GeomGetMaxBox(root);
 		if (IsDef(root->title))
 			layoutMeasureWords(root, &root->optimalBox);
+		memset(&root->box, 0, sizeof root->box);
 	}
 
-	memset(&root->box, 0, sizeof root->box);
 	/*
 	if (root->flags & SITF_FixedWidth)  root->box.right  = root->fixed.width;
 	if (root->flags & SITF_FixedHeight) root->box.bottom = root->fixed.height;

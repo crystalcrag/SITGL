@@ -597,6 +597,7 @@ struct SIT_OnCellPaint_t
 	uint8_t fgColor[4];
 	uint8_t bgColor[4];
 	int     rowColumn; /* 0 based */
+	float   LTWH[4];
 };
 
 struct SIT_OnVal_t
