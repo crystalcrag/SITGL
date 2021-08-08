@@ -1966,8 +1966,8 @@ DLLIMP SIT_RENDER SIT_RenderNodes(double time)
 		return SIT_RenderNothing;
 
 	#ifdef DEBUG_SIT
-	static int render = 1;
-	fprintf(stderr, "frame render = %d\r", render ++);
+//	static int render = 1;
+//	fprintf(stderr, "frame render = %d\r", render ++);
 	#endif
 
 	SIT_ClearGL();

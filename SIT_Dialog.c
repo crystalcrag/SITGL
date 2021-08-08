@@ -5,6 +5,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include "SIT_P.h"
 #include "SIT_CSSLayout.h"
 
@@ -13,6 +14,37 @@
 		{ SIT_AccelTable,   "accelTable",  _SG,  SIT_PTR,  OFFSET(SIT_Dialog, accel) },
 		{ SIT_TagEnd }
 	};
+
+
+static int SIT_DialogCorner(SIT_Widget w, float x, float y)
+{
+	#define dialog   ((SIT_Dialog)w)
+	int corner = 0;
+	REAL min = w->style.font.size * 0.5;
+
+	x = x + w->layout.pos.left - w->box.left;
+	y = y + w->layout.pos.top  - w->box.top;
+
+	/* need to ignore title for normal dialog */
+	if (x < min) corner |= 1; else
+	if (x > w->box.right - w->box.left - min) corner |= 4;
+	if (y < min) corner |= 2; else
+	if (y > w->box.bottom - w->box.top - min) corner |= 8;
+	if (__builtin_popcount(corner) <= 1)
+	{
+		/* give corner more room */
+		uint8_t corner2 = 0;
+		min *= 2;
+		if (x < min) corner2 |= 1; else
+		if (x > w->box.right - w->box.left - min) corner2 |= 4;
+		if (y < min) corner2 |= 2; else
+		if (y > w->box.bottom - w->box.top - min) corner2 |= 8;
+		if (__builtin_popcount(corner2) == 2)
+			return corner2;
+	}
+	return corner;
+	#undef dialog
+}
 
 static int SIT_DialogMove(SIT_Widget w, APTR cd, APTR ud)
 {
@@ -23,23 +55,29 @@ static int SIT_DialogMove(SIT_Widget w, APTR cd, APTR ud)
 	#define SITV_DoMove     0x1000
 	#define SITV_DoResize   0x2000
 	switch (msg->state) {
+	case SITOM_Move:
+		if (dialog->customStyles & SITV_Resizable)
+		{
+			/* hilight corner hovered */
+			uint8_t corner = SIT_DialogCorner(w, msg->x, msg->y);
+
+			if (dialog->cornerHover != corner)
+			{
+				/* way too annoying otherwise */
+				dialog->cornerHover = corner;
+				if (HAS_EVT(sit.root, SITE_OnChange))
+				{
+					struct SIT_OnChange_t msg = {.type = SIT_CHANGE_CURSOR, .arg = corner};
+					SIT_ApplyCallback(sit.root, &msg, SITE_OnChange);
+				}
+			}
+		}
+		break;
 	case SITOM_ButtonPressed:
 		dialog->customStyles &= ~ (SITV_DoMove|SITV_DoResize);
 		if (dialog->customStyles & SITV_Resizable)
 		{
-			uint8_t corner = 0;
-			if ((dialog->customStyles & SITV_Plain) == 0)
-			{
-				/* need to ignore title */
-				SIT_Widget client = dialog->clientArea;
-				if (msg->y < w->box.bottom - w->box.top - client->box.bottom - client->box.top) corner |= 2;
-//				fprintf(stderr, "pos: %d, %d for %s\n", msg->x, msg->y, w->name);
-			}
-			else if (msg->y < 0) corner |= 2;
-			if (msg->x < 0) corner |= 1;
-			if (msg->x > w->layout.pos.width)  corner |= 4;
-			if (msg->y > w->layout.pos.height) corner |= 8;
-
+			uint8_t corner = SIT_DialogCorner(w, msg->x, msg->y);
 			if (corner)
 			{
 				dialog->cornerResize = corner;
@@ -53,7 +91,9 @@ static int SIT_DialogMove(SIT_Widget w, APTR cd, APTR ud)
 		}
 		if (dialog->customStyles & SITV_Movable)
 		{
-			if ((dialog->customStyles & SITV_Plain) == 0 && msg->y >= 0) return 0;
+			if ((dialog->customStyles & SITV_Plain) == 0 && msg->y >= 0)
+				/* outside title bar */
+				return 0;
 			dialog->moveOffX = msg->x;
 			dialog->moveOffY = msg->y;
 			dialog->customStyles |= SITV_DoMove;
@@ -112,14 +152,40 @@ static int SIT_DialogMove(SIT_Widget w, APTR cd, APTR ud)
 	return 0;
 }
 
+static int SIT_DialogMouseOut(SIT_Widget w, APTR cd, APTR ud)
+{
+	SIT_Dialog dialog = (SIT_Dialog) w;
+	SIT_Widget newIn  = cd;
+	if (dialog->cornerHover > 0)
+	{
+		while (newIn && newIn != w)
+			newIn = newIn->parent;
+		if (newIn == NULL)
+		{
+			dialog->cornerHover = 0;
+			if (HAS_EVT(sit.root, SITE_OnChange))
+			{
+				struct SIT_OnChange_t msg = {.type = SIT_CHANGE_CURSOR};
+				SIT_ApplyCallback(sit.root, &msg, SITE_OnChange);
+			}
+		}
+	}
+	return 1;
+}
+
 Bool SIT_InitDialog(SIT_Widget w, va_list args)
 {
+	static struct SIT_Attach_t defAttach[] = {
+		{SITV_AttachPos(50), SITV_AttachPosition, SITV_OffsetCenter},
+		{SITV_AttachPos(50), SITV_AttachPosition, SITV_OffsetCenter}
+	};
 	SIT_Dialog dialog = (SIT_Dialog) w;
 	SIT_Widget parent = NULL;
 
 	/* GeomNotified flags is to prevent children from triggering a reflow (layout will be done when dialog is managed) */
 	w->flags |= SITF_TopLevel | SITF_GeomNotified;
 	w->layout.flags |= LAYF_IgnoreWords;
+	memcpy(w->attachment, defAttach, sizeof defAttach);
 
 	SIT_ParseTags(w, args, w->attrs = DialogClass);
 
@@ -133,6 +199,7 @@ Bool SIT_InitDialog(SIT_Widget w, va_list args)
 	layoutCalcBox(w);
 
 	SIT_AddCallback(w, SITE_OnClickMove, SIT_DialogMove, NULL);
+	SIT_AddCallback(w, SITE_OnMouseOut,  SIT_DialogMouseOut, NULL);
 
 	if ((dialog->customStyles & SITV_Plain) == 0)
 	{
@@ -182,4 +249,41 @@ DLLIMP void SIT_CloseDialog(SIT_Widget w)
 		if (! param) return;
 	}
 	SIT_RemoveWidget(w);
+}
+
+/* remove dialog from tree, but does not free its resourcess */
+DLLIMP void SIT_ExtractDialog(SIT_Widget w)
+{
+	if (w == NULL) return;
+
+	while (w && w->type != SIT_DIALOG)
+		w = w->parent;
+
+	if (w->type == SIT_APP || w->parent->type != SIT_APP) return;
+
+	if (w == sit.activeDlg)
+	{
+		SIT_Widget parent = w->parent;
+		while ((parent->flags & SITF_TopLevel) == 0)
+			parent = parent->parent;
+		sit.active = sit.hover = sit.focus = NULL;
+		sit.activeDlg = parent;
+	}
+	ListRemove(&w->parent->children, &w->node);
+	memset(&w->node, 0, sizeof w->node);
+	sit.dirty = 1;
+}
+
+/* insert it back where it was */
+DLLIMP void SIT_InsertDialog(SIT_Widget w)
+{
+	ListAddTail(&w->parent->children, &w->node);
+	sit.dirty = 1;
+
+	REAL box[4];
+	memcpy(box, &w->box, sizeof box);
+	SIT_CenterDialog(w);
+	/* note: w->box uses integer coordinates */
+	if (memcmp(box, &w->box, sizeof box))
+		SIT_MoveWidgets(w);
 }

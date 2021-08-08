@@ -5,13 +5,120 @@
  * written by T.Pierron, May 2021.
  */
 
-#define VT_IMPL
+//#define VT_UNITTEST
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <malloc.h>
 #include "SIT.h"
 #include "extra.h"
+
+/* keep datatypes private */
+typedef struct VirtualTerm_t *  VirtualTerm;
+typedef struct VTCoord_t        VTCoord_t;
+typedef struct VTIter_t         VTIter_t;
+typedef struct VTLine_t *       VTLine;
+typedef uint16_t *              DATA16;
+
+struct VTCoord_t
+{
+	int line;
+	int chr;
+};
+
+struct VTLine_t
+{
+	uint16_t styles;            /* VT_ATTR* | VT_SEL* */
+	uint16_t indent;
+	uint32_t offset;            /* absolute offsets within <buffer> */
+};
+
+struct VirtualTerm_t
+{
+	SIT_Widget canvas;
+	SIT_Widget scroll;
+	DATA8      palette;
+	DATA8      buffer;          /* ring buffer */
+	VTLine     lines;           /* array is <totalLines> items */
+	uint16_t   curAttr[2];      /* running attribute when parsing text */
+	uint16_t   lineAttr[2];     /* running attribute when rendering */
+	uint16_t   defAttr;
+	uint16_t   tabSizePx;
+	int16_t    startx;          /* absolute column (px) to start rendering */
+	uint16_t   lineHeight;
+
+	uint8_t    tabSize;
+	uint8_t    hasScroll;
+	uint8_t    hasSelect;
+	uint8_t    wordSelect;
+
+	int8_t     dx, dy;          /* used to render text-shadow */
+	int8_t     autoScrollDir;
+	uint8_t    waitConf;
+
+	uint8_t    fakeBold;        /* overwrite text if no bold font is found */
+	uint8_t    wordWrap;
+	uint8_t    spaceLen;
+	uint8_t    linePadding;
+
+	uint8_t    lineBorder;      /* line-height */
+	uint8_t    searchAttr;
+	uint8_t    searchMax;
+
+	SIT_Action autoScroll;
+	uint8_t    selColors[8];
+	VTCoord_t  selStart, selCur, selEnd;
+	uint16_t   colStart, colEnd;
+	int        bufUsage;        /* bytes currently stored in VTerm (including attributes) */
+	int        bufMax;          /* max bytes that can be stored */
+	int        bufStart;        /* start of content within the ring buffer */
+	int        allocLines;      /* max capacity on <styles> and <lines> array */
+	int        topLine;
+	int        topTarget;
+	int        topOffset;       /* pixel offset to shift lines in content area */
+	int        totalLines;      /* number of items in <styles> and <lines> array */
+	int        totalBytes;
+	int        formatWidth;     /* need to redo word wrapping if it differs */
+	int        width, height;   /* size of content area in px */
+	int        fontSize;        /* font height in px */
+	int        scrollPad;       /* width of scrollbar */
+	int        scrollOff;       /* if anchored on the left */
+	int        reformat;        /* line to start reformating */
+	int        fontId;
+	int        fontBoldId;
+	uint8_t    search[32];      /* highlight this bytes (up to searchMax) */
+};
+
+struct VTIter_t
+{
+	DATA8    line;
+	uint8_t  split;
+	uint16_t size;
+	int      endLine;
+	int      curLine;
+	DATA8    base;
+};
+
+#ifdef VT_UNITTEST
+/* note: need to be a power of 2 */
+#define VT_DEFMAX     16
+#define VT_CHUNK      16
+#else
+#define VT_DEFMAX     64*1024
+#define VT_CHUNK      2048
+#endif
+#define VT_LINES      128
+
+#define VT_SELSTART   0x1000 /* those are only set in vt->styles */
+#define VT_SELEND     0x2000
+#define VT_SELBOTH    0x3000
+#define VT_SELWHOLE   0x7000
+#define VT_SELCLEAR   0x8fff /* using operator & */
+#define VT_PRIMARY    0x8000
+
+#define VT_ATTRBOLD   0x0100
+#define VT_ATTRLINE   0x0200
+#define VT_ATTRBG     0x00f0
 
 static Bool VTMarkSelection(VirtualTerm vt);
 static int VTRawKey(SIT_Widget w, APTR cd, APTR ud);
@@ -60,6 +167,7 @@ static void VTAdjustScroll(VirtualTerm vt)
 	{
 		if (! vt->hasScroll)
 		{
+			fprintf(stderr, "scroll bar visible\n");
 			SIT_SetValues(vt->scroll, SIT_Visible, 1, NULL);
 			vt->hasScroll = 1;
 		}
@@ -73,6 +181,7 @@ static void VTAdjustScroll(VirtualTerm vt)
 	}
 	else if (vt->hasScroll)
 	{
+		fprintf(stderr, "scroll bar hide\n");
 		SIT_SetValues(vt->scroll, SIT_Visible, 0, NULL);
 		vt->topLine   = 0;
 		vt->scrollPad = 0;
@@ -634,7 +743,7 @@ static int VTPaint(SIT_Widget w, APTR cd, APTR ud)
 		goto reformat;
 	if (vt->formatWidth != vt->width - vt->scrollPad - vt->scrollOff)
 	{
-		if (vt->waitConf)
+		if (vt->waitConf & 1)
 		{
 			/* only need to do this once */
 			TEXT fontBold[64];
@@ -649,7 +758,7 @@ static int VTPaint(SIT_Widget w, APTR cd, APTR ud)
 			vt->fontId = paint->fontId;
 			vt->spaceLen = nvgTextBounds(vg, 0, 0, " ", NULL, NULL);
 			vt->tabSizePx = vt->spaceLen * vt->tabSize;
-			vt->waitConf = False;
+			vt->waitConf &= ~1;
 			vt->fontBoldId = nvgFindFont(vg, fontBold);
 			if (vt->fontBoldId < 0)
 				vt->fontBoldId = vt->fontId, vt->fakeBold = 1;
@@ -667,7 +776,6 @@ static int VTPaint(SIT_Widget w, APTR cd, APTR ud)
 		VTReformat(vt, vg);
 		if (vt->topLine != vt->topTarget)
 			VTAdjustTop(vt, vt->topTarget);
-		VTAdjustScroll(vt);
 	}
 	else if (vt->reformat >= 0)
 	{
@@ -675,6 +783,10 @@ static int VTPaint(SIT_Widget w, APTR cd, APTR ud)
 		VTReformat(vt, vg);
 		if (vt->topLine != vt->topTarget)
 			VTAdjustTop(vt, vt->topTarget);
+	}
+	if (vt->waitConf & 2)
+	{
+		vt->waitConf &= ~2;
 		VTAdjustScroll(vt);
 	}
 
@@ -1739,6 +1851,7 @@ static int VTResize(SIT_Widget w, APTR cd, APTR ud)
 	/* lines will be readjusted in VTPaint() */
 	vt->width  = sz[0];
 	vt->height = sz[1];
+	vt->waitConf |= 2;
 	return 1;
 }
 
@@ -1761,6 +1874,120 @@ static int VTFinalize(SIT_Widget w, APTR cd, APTR ud)
 	free(ud);
 	return 1;
 }
+
+#ifdef VT_UNITTEST
+#include <assert.h>
+/* that ring buffer is not so trivial, be sure nothing is broken if something is changed */
+static void VTUnitTest(VirtualTerm vt)
+{
+	/* note: VT_CHUNK must be 16 and vt->totalBytes must be 16 too */
+
+	/* add 12 bytes */
+	VTAddText(vt, "ABC\nDEF\nGHI\n");
+	assert(vt->buffer && vt->bufStart == 0 && vt->bufUsage == 12);
+
+	VTAddText(vt, "123");
+	assert(vt->bufStart == 0 && vt->bufUsage == 15);
+	assert(strncmp(vt->buffer, "ABC\nDEF\nGHI\n123", 15) == 0);
+
+	/* discard some unformatted text */
+	VTAddText(vt, "\n456");
+	assert(vt->bufStart == 3 && vt->bufUsage == 16);
+	assert(strncmp(vt->buffer, "456\nDEF\nGHI\n123\n", 16) == 0);
+
+	/* discard all previous text */
+	VTAddText(vt, "9876543210ABCDEF");
+	assert(vt->bufStart == 0 && vt->bufUsage == 16);
+	assert(strncmp(vt->buffer, "9876543210ABCDEF", 16) == 0);
+
+	/* restart from scratch */
+	VTClearAll(vt);
+	assert(vt->bufStart == 0 && vt->bufUsage == 0 && vt->buffer == NULL);
+
+	VTAddText(vt, "0123456789abcd");
+	assert(vt->bufStart == 0 && vt->bufUsage == 14);
+
+	/* styled text: overlap at edge of ring buffer */
+	VTAddText(vt, "\x1b[1mHello\x1b[0m");
+	assert(vt->bufStart == 9 && vt->bufUsage == 16);
+	assert(strncmp(vt->buffer, "\x00Hello\x1b\x00\x00" "9abcd\x1b\x01", 16) == 0);
+
+	/* flood with text */
+	VTAddText(vt, "e1ojgohrfq3pofj32r09tugbvkc;apseowkgpkq0123456789XXYYZZ");
+	assert(vt->bufStart == 0 && vt->bufUsage == 16);
+	assert(strncmp(vt->buffer, "0123456789XXYYZZ", 16) == 0);
+
+	VTClearAll(vt);
+
+	/* try formatted text next */
+	NVGcontext * vg;
+	SIT_GetValues(vt->canvas, SIT_NVGcontext, &vg, NULL);
+
+	/* don't care about width: simply use max (ie: newlines) */
+	vt->width = 4096;
+	VTAddText(vt, "ABC\nDEF\nGHI\n123\n");
+	assert(vt->bufStart == 0 && vt->bufUsage == 16);
+
+	VTReformat(vt, vg);
+	assert(vt->totalLines == 4 && memcmp(vt->lines, (struct VTLine_t [5])
+		{{VT_PRIMARY,0,0}, {VT_PRIMARY,0,4}, {VT_PRIMARY,0,8}, {VT_PRIMARY,0,12}, {0,0,16}}, 5*8) == 0);
+
+	/* should remove first line */
+	VTAddText(vt, "456");
+	assert(vt->bufStart == 4 && vt->bufUsage == 15);
+	assert(strncmp(vt->buffer, "456\nDEF\nGHI\n123\n", 16) == 0);
+
+	VTReformat(vt, vg);
+	assert(vt->totalLines == 4 && memcmp(vt->lines, (struct VTLine_t [5])
+		{{VT_PRIMARY,0,4}, {VT_PRIMARY,0,8}, {VT_PRIMARY,0,12}, {VT_PRIMARY,0,0}, {0,0,3}}, 5*8) == 0);
+
+	VTClearAll(vt);
+	/* reformat with styled text */
+	VTAddText(vt, "ABC\nDEF\nGHI\n");
+	VTReformat(vt, vg);
+	assert(vt->bufStart == 0 && vt->bufUsage == 12 && vt->totalLines == 3);
+
+	/* should discard first 2 lines */
+	VTAddText(vt, "JK\x1b[1mL\x1b[0m");
+	assert(vt->bufStart == 8 && vt->bufUsage == 13);
+	assert(strncmp(vt->buffer, "\x00L\x1b\x00\x00" "EF\nGHI\nJK\x1b\x01", 16) == 0);
+
+	VTReformat(vt, vg);
+	assert(vt->totalLines == 2 && memcmp(vt->lines, (struct VTLine_t [3])
+		{{VT_PRIMARY,0,8}, {VT_PRIMARY,0,12}, {0,0,5}}, 3*8) == 0);
+
+	VTAddText(vt, "\n1234\n");
+	assert(vt->bufStart == 12 && vt->bufUsage == 15);
+	assert(strncmp(vt->buffer, "\x00L\x1b\x00\x00\n1234\n\nJK\x1b\x01", 16) == 0);
+
+	VTReformat(vt, vg);
+	assert(vt->totalLines == 2 && memcmp(vt->lines, (struct VTLine_t [3])
+		{{VT_PRIMARY,0,12}, {VT_PRIMARY,0,6}, {0,0,11}}, 3*8) == 0);
+
+	VTAddText(vt, "ABCDEFG");
+	assert(vt->bufStart == 6 && vt->bufUsage == 12);
+	assert(strncmp(vt->buffer, "FG\x1b\x00\x00\n1234\nABCDE", 16) == 0);
+
+	VTReformat(vt, vg);
+	assert(vt->totalLines == 2 && memcmp(vt->lines, (struct VTLine_t [3])
+		{{VT_PRIMARY,0,6}, {VT_PRIMARY,0,11}, {0,0,2}}, 3*8) == 0);
+
+	VTClearAll(vt);
+	VTAddText(vt, "ABC-DEF-GHI-");
+	VTReformat(vt, vg);
+	assert(vt->totalLines == 1 && memcmp(vt->lines, (struct VTLine_t [2])
+		{{VT_PRIMARY,0,0}, {0,0,12}}, 2*8) == 0);
+
+	VTAddText(vt, "JKLM");
+	VTReformat(vt, vg);
+	assert(vt->totalLines == 1 && memcmp(vt->lines, (struct VTLine_t [2])
+		{{VT_PRIMARY,0,0}, {0,0,16}}, 2*8) == 0);
+
+	VTClearAll(vt);
+}
+#else
+#define VTUnitTest(x)
+#endif
 
 void VTInit(SIT_Widget canvas, SIT_Widget scroll)
 {
@@ -1797,4 +2024,8 @@ void VTInit(SIT_Widget canvas, SIT_Widget scroll)
 	SIT_AddCallback(canvas, SITE_OnVanillaKey, VTKeyboard,  vt);
 	SIT_AddCallback(scroll, SITE_OnScroll,     VTTrackPos,  vt);
 	SIT_AddCallback(scroll, SITE_OnResize,     VTScrollPad, vt);
+
+	#ifdef VT_UNITTEST
+	VTUnitTest(vt);
+	#endif
 }

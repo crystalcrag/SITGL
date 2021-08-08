@@ -862,70 +862,22 @@ DATA8 cssAllocThemeBytes(int size, APTR data)
 	return sit.theme + pos;
 }
 
-#define SZATTRS     (2 * sizeof (STRPTR))
-static STRPTR * cssAllocAttrs(DATA16 offsets)
-{
-	STRPTR * ret;
-	uint16_t off;
-	switch (offsets[2]) {
-	case 0:
-		/* alloc at end of array */
-		ret = (STRPTR *) cssAllocThemeBytes(SZATTRS, NULL);
-		offsets[1] ++;
-		break;
-	case 0xffff:
-		/* existing list full, relocate */
-		off = sit.themeSize;
-		ret = (STRPTR *) cssAllocThemeBytes((offsets[1] + 1) * SZATTRS, NULL);
-		memcpy(ret, sit.theme + offsets[0], offsets[1] * SZATTRS);
-		ret += offsets[1] * 2;
-		offsets[0] = off;
-		offsets[1] ++;
-		offsets[2] = 0;
-		break;
-
-	default:
-		/* reuse existing array */
-		ret = (STRPTR *) (sit.theme + offsets[0] + (offsets[1] - offsets[2]) * SZATTRS);
-		offsets[2] --;
-		if (offsets[2] == 0)
-			offsets[2] = 0xffff;
-	}
-	return ret;
-}
-
-static void cssAllocInit(uint16_t alloc[3], DATA16 offsets)
-{
-	if (offsets[0] > 0)
-	{
-		/* already allocated some bytes before: reuse the array, it is extremely likely it will have enough space */
-		memcpy(alloc, offsets, 4);
-		alloc[2] = offsets[1];
-		/* clear previous entries though */
-		memset(sit.theme + offsets[0], 0, SZATTRS * alloc[1]);
-	}
-	else alloc[0] = sit.themeSize, alloc[1] = alloc[2] = 0;
-}
-#undef SZATTRS
-
 /*
  * parse CSS block attributes
  * transform them into table of key/value pairs (NULL-terminated)
  */
-STRPTR cssParseStyles(STRPTR start, uint16_t offsets[2])
+static STRPTR cssParseStyles(STRPTR start, int * count)
 {
 	STRPTR * attr = NULL;
 	STRPTR   fmt = skipspace(start);
-	uint16_t alloc[3];
-
-	cssAllocInit(alloc, offsets);
+	int      nb = 0;
 
 	while (*fmt && *fmt != '}')
 	{
 		if (attr == NULL)
-			attr = cssAllocAttrs(alloc);
+			attr = (STRPTR *) cssAllocThemeBytes(2 * sizeof (STRPTR), NULL);
 		attr[0] = fmt;
-		fmt  = cssIdent(fmt);
+		fmt = cssIdent(fmt);
 
 		if (*fmt == ':')
 		{
@@ -958,6 +910,7 @@ STRPTR cssParseStyles(STRPTR start, uint16_t offsets[2])
 			{
 				StrToLower(attr[0], -1);
 				attr[1] = start;
+				nb ++;
 				if (*fmt == '}') { *fmt = 0; cssNormalizeSpace(start); *fmt = '}'; break; }
 				if (*fmt == ';') { *fmt++ = 0; }
 				cssNormalizeSpace(start);
@@ -975,8 +928,38 @@ STRPTR cssParseStyles(STRPTR start, uint16_t offsets[2])
 		fmt = skipspace(fmt);
 	}
 	if (*fmt == '}') *fmt ++ = 0;
-	memcpy(offsets, alloc, 4);
+	*count = nb;
 	return fmt;
+}
+
+void cssParseInlineStyles(SIT_Widget node, STRPTR styles)
+{
+	if (node->inlineStyles)
+		free(node->inlineStyles), node->inlineStyles = NULL;
+	if (IsDef(styles))
+	{
+		int length = strlen(styles);
+		int commit = sit.themeSize;
+		int count;
+
+		/* alloc everything in one block */
+		styles = STRDUPA(styles);
+		cssParseStyles(styles, &count);
+		if (count > 0)
+		{
+			count *= 2;
+			node->inlineStyles = malloc((count + 1) * sizeof (STRPTR) + length + 1);
+			STRPTR dup = (STRPTR) (node->inlineStyles + count + 1);
+			STRPTR * attr;
+			memcpy(dup, styles, length + 1);
+			memcpy(node->inlineStyles, sit.theme + commit, count * sizeof (STRPTR));
+			node->inlineStyles[count] = NULL;
+			sit.themeSize = commit;
+			commit = dup - styles;
+			/* inlineStyles still points to a stack allocated mem block at this point */
+			for (attr = node->inlineStyles; count > 0; attr[0] += commit, count --, attr ++);
+		}
+	}
 }
 
 /* transform selector string into something more easily parsable */
@@ -1147,16 +1130,15 @@ static void cssParseString(STRPTR rules, STRPTR rel)
 
 		if (! fail)
 		{
-			uint16_t offsets[2] = {0, 0};
-
-			p = cssParseStyles(p, offsets);
-			if (offsets[1] > 0)
+			int count, offset = sit.themeSize;
+			p = cssParseStyles(p, &count);
+			if (count > 0)
 			{
 				int first = commit;
 				do {
 					rule = (CSSRule) (sit.theme + first);
-					rule->styles = offsets[0];
-					rule->nbstyles = offsets[1];
+					rule->styles = offset;
+					rule->nbstyles = count;
 					first = rule->next;
 				} while (first > 0);
 			}
@@ -1165,8 +1147,6 @@ static void cssParseString(STRPTR rules, STRPTR rel)
 		}
 		else eof = cssSkipBogus(p, 0);
 	}
-	/* will allow to free style attributes with just one assignment */
-	sit.themeLast = sit.themeSize;
 }
 
 /* initiate parsing of external CSS file */

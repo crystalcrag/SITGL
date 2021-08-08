@@ -7,12 +7,13 @@
 *.exe
 
 /bin/
-/fonts/
 /images/
 /obj/
 /objs/
+/old/
 
 example*.c
 default.html
 SITGL.layout
 SITGL.exe.Manifest
+*.depend

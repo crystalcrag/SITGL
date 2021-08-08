@@ -506,15 +506,11 @@ DLLIMP void SIT_Nuke(int what)
 	switch (what) {
 	case SITV_NukeCtrl:
 		/* remove inline styles */
-		if (sit.root->styles[0] > 0)
-		{
-			cssClear(sit.root);
-			cssApply(sit.root);
-			layoutCalcBox(sit.root);
-		}
+		cssClear(sit.root);
+		cssApply(sit.root);
+		layoutCalcBox(sit.root);
 		FOCUSRING(sit.root) = NULL;
 		sit.root->tooltip = NULL;
-		sit.themeSize = sit.themeLast;
 		sit.dirty = True;
 		break;
 	case SITV_NukeAll:
@@ -562,7 +558,7 @@ void SIT_NukeCSS(void)
 	SIT_FreeImg(NULL, NULL, NULL);
 	free(sit.cssFile); sit.cssFile = NULL;
 	free(sit.theme);   sit.theme   = NULL;
-	sit.themeSize = sit.themeLast = 0;
+	sit.themeSize = 0;
 	sit.themeMax = 0;
 	sit.lastRule = -1;
 }

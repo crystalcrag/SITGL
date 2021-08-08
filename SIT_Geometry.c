@@ -75,7 +75,7 @@ static SizeF SIT_GetContentBox(SIT_Widget w)
 /*
  * Core layout engine - compute widget position
  */
-static int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert */, ResizePolicy adjust)
+int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert */, ResizePolicy adjust)
 {
 	static int sideAttach[] = {LAYF_HasLeftAttach, LAYF_HasTopAttach, LAYF_HasRightAttach, LAYF_HasBottomAttach};
 	static int sideOpp[]    = {LAYF_HasRightAttach, LAYF_HasBottomAttach, LAYF_HasLeftAttach, LAYF_HasTopAttach};
@@ -908,7 +908,7 @@ Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode)
 		if (SIT_HasNoOptimalValue(root))
 		{
 			SIT_LayoutOptimal(root);
-			if (mode == KeepDialogSize && box[0] > box[2] && box[1] > box[3])
+			if (mode == KeepDialogSize && box[2] > box[0] && box[3] > box[1])
 				memcpy(&root->box, box, sizeof box);
 		}
 		SIT_LayoutInitial(root, mode);

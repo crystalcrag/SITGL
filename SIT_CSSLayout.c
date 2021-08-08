@@ -499,7 +499,6 @@ static STRPTR layoutParseTag(SIT_Widget * parent, DATA8 start)
 	node->userData = (APTR) (node+1);
 	node->tagName = (DATA8) ((DATA8 *) node->userData + nb);
 	node->enabled = node->visible = 1;
-	node->flags |= SITF_StaticStyles;
 	memset(node->layout.crc32, 0xff, sizeof node->layout.crc32);
 
 	/* force lower case node name */
@@ -519,10 +518,9 @@ static STRPTR layoutParseTag(SIT_Widget * parent, DATA8 start)
 	else node->userData = NULL;
 
 	/* will be needed sooner or later */
-	node->classes     = SIT_GetHTMLAttr(node, "\1""class");
-	node->name        = SIT_GetHTMLAttr(node, "\1""id");
-	node->inlineStyle = SIT_GetHTMLAttr(node, "style");
-	node->parent      = offset;
+	node->classes = SIT_GetHTMLAttr(node, "\1""class");
+	node->name    = SIT_GetHTMLAttr(node, "\1""id");
+	node->parent  = offset;
 	if (! node->name)
 		node->name = node->tagName;
 
@@ -535,8 +533,9 @@ static STRPTR layoutParseTag(SIT_Widget * parent, DATA8 start)
 	else
 		*parent = node;
 
-	if (node->inlineStyle)
-		cssParseStyles(node->inlineStyle, node->styles);
+	name = SIT_GetHTMLAttr(node, "style");
+	if (IsDef(name))
+		cssParseInlineStyles(node, name);
 
 	layoutCalcBox(node);
 

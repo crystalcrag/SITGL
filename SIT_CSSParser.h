@@ -26,7 +26,7 @@ Bool   cssParseAngle(STRPTR fmt, STRPTR * pend, uint16_t * mem);
 Bool   cssParseGradient(STRPTR fmt, STRPTR * pend, Gradient * mem);
 Bool   cssParseURI(STRPTR fmt, STRPTR * pend, STRPTR * mem);
 Bool   cssParse(STRPTR css, int isPath);
-STRPTR cssParseStyles(STRPTR start, uint16_t offsets[2]);
+void   cssParseInlineStyles(SIT_Widget, STRPTR styles);
 ULONG  cssColorSearch(STRPTR name);
 
 int    cssApply(SIT_Widget);
@@ -87,15 +87,6 @@ struct CSSRule_t
 	uint8_t  nbstyles;
 	int      specif;
 	uint16_t styles;
-
-	#if 0
-	ListNode node;
-	CSSSel   selector;      /* CSS Selector (NULL for inline) */
-	uint16_t nbsel;         /* nb of items in selector[] */
-	uint8_t  shared;        /* True if 'styles' is shared by another rule */
-	int      specif;        /* weight of rule according to selector */
-	STRPTR * styles;        /* pairs of attribute/value, NULL terminated */
-	#endif
 };
 
 struct CSSSel_t             /* selector item */

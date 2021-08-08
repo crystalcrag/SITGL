@@ -79,6 +79,7 @@ Bool SIT_InitComboBox(SIT_Widget, va_list args);
 Bool SIT_InitTab(SIT_Widget, va_list args);
 Bool SIT_InitTooltip(SIT_Widget, va_list args);
 APTR SIT_FindControl(SIT_Widget, STRPTR utf8, int len, Bool recursive);
+int  SIT_LayoutWidget(SIT_Widget, SIT_Widget w, int side /* 0: horiz, 1:vert */, ResizePolicy adjust);
 Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode);
 void SIT_ReflowLayout(SIT_Widget list);
 void SIT_ParseTags(SIT_Widget, va_list vargs, TagList * classArgs);
@@ -99,7 +100,7 @@ void SIT_AppDelDnD(void);
 void SIT_AppGetCWD(SIT_Widget);
 void SIT_TooltipAuto(SIT_Widget parent, STRPTR fmt);
 int  SIT_TooltipTimer(SIT_Widget, APTR cd, APTR ud);
-void SIT_CenterDialog(SIT_Widget, int flags);
+void SIT_CenterDialog(SIT_Widget);
 void SIT_MeasureWidget(SIT_Widget);
 int  SIT_ListGetItemCount(SIT_Widget);
 void SIT_ListGetArg(SIT_Widget, int type, APTR arg);
@@ -164,7 +165,6 @@ struct SITContext_t
 	DATA8        theme;                /* CSSRule, CSSSel, STRPTR */
 	uint16_t     themeMax;             /* mem allocated in <theme> */
 	uint16_t     themeSize;            /* mem used */
-	uint16_t     themeLast;
 	int          lastRule;
 	ListHead     images;               /* CSSImage: keep in a cache, free after a while */
 	ListHead     actions;              /* SIT_Action */
@@ -204,8 +204,7 @@ struct SIT_Widget_t
 	SIT_Widget   nextCtrl;
 	STRPTR       title, tagName;       /* public */
 	STRPTR       name, classes;        /* public */
-	STRPTR       inlineStyle;          /* public */
-	uint16_t     styles[2];            /* styles offset from inline styles in global rule list */
+	STRPTR *     inlineStyles;         /* public */
 	ListHead     children;
 	ListHead     callbacks;
 	int          evtFlags;             /* which evt has been set (quick filter): 1<<SITE_* */
@@ -267,6 +266,7 @@ struct SIT_Dialog_t
 	SizeF        maxSize;
 	int          customStyles;         /* public: SITV_DialogStyles */
 	uint8_t      cornerResize;
+	uint8_t      cornerHover;
 	int16_t      moveOffX;
 	int16_t      moveOffY;
 };
@@ -663,7 +663,6 @@ enum /* bitfield for flags */
 	SITF_ImmediateActive = 0x02000000, /* onclick = activate event */
 	SITF_InFocusRing     = 0x10000000, /* will act as a tab stop */
 	SITF_RecalcStyles    = 0x20000000,
-	SITF_StaticStyles    = 0x40000000, /* inlineStyle is static mem, do not free */
 	SITF_FallthroughEvt  = 0x40000000, /* mouse events are sent to widgets below this one */
 	SITF_HasAccel        = 0x80000000
 };

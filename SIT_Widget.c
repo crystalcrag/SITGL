@@ -19,7 +19,7 @@
 	/* common properties for all widgets */
 	TagList WidgetClass[] = {
 		{ SIT_Title,        "title",        CSG, SIT_STR,  OFFSET(SIT_Widget, title) },
-		{ SIT_Style,        "style",        CSG, SIT_STR,  OFFSET(SIT_Widget, inlineStyle) },
+		{ SIT_Style,        "style",        CSG, SIT_PTR,  0},
 		{ SIT_Name,         "name",         __G, SIT_STR,  OFFSET(SIT_Widget, name) },
 		{ SIT_Classes,      "classes",      CSG, SIT_STR,  OFFSET(SIT_Widget, classes) },
 		{ SIT_UserData,     "userData",     _SG, SIT_PTR,  OFFSET(SIT_Widget, userData) },
@@ -33,9 +33,9 @@
 		{ SIT_Y,            "y",            CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.top) },
 		{ SIT_X,            "x",            CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.left) },
 		{ SIT_Rect,         "rect",         CSG, SIT_ABBR, ABBR(1, 1, 1, 1) },
-		{ SIT_Padding,      NULL,           __G, SIT_INT,  0 },
-		{ SIT_AbsX,         "absX",         CSG, SIT_UNIT, 0 },
-		{ SIT_AbsY,         "absY",         CSG, SIT_UNIT, 0 },
+		{ SIT_Padding,      NULL,           __G, SIT_INT,  0},
+		{ SIT_AbsX,         "absX",         CSG, SIT_UNIT, 0},
+		{ SIT_AbsY,         "absY",         CSG, SIT_UNIT, 0},
 		{ SIT_Parent,       NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, parent) },
 		{ SIT_NextSibling,  NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, node.ln_Next) },
 		{ SIT_PrevSibling,  NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, node.ln_Prev) },
@@ -100,7 +100,7 @@
 
 	static STRPTR widgetNames[] = {         /* generic name for CSS (need to be different for each) */
 		"html", "dialog", "label", "button", "editbox", "fieldset", "listbox", "canvas", "vscroll",
-		"slider", "progress", "combobox", "tab", "tooltip", "", "", ""
+		"slider", "progress", "combobox", "tab", "tooltip", "", "", NULL
 	};
 
 	#if 0
@@ -235,7 +235,8 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 	case SIT_Style:
 		w->flags |= SITF_RecalcStyles;
 		memset(w->layout.crc32, 0xff, sizeof w->layout.crc32);
-		cssParseStyles(w->inlineStyle, w->styles);
+		/* note: val->string is a direct pointer from user, might be a static string at this point */
+		cssParseInlineStyles(w, val->string);
 		break;
 	case SIT_X:
 		if (w->flags & SITF_Style1Changed)
@@ -717,14 +718,6 @@ void SIT_ParseTags(SIT_Widget w, va_list vargs, TagList * classArgs)
 					assign_str:
 					/* ... but there are a few exceptions */
 					switch (args->tl_TagID) {
-					case SIT_Style:
-						if (w->flags & SITF_StaticStyles)
-						{
-							/* do not free */
-							w->flags &= ~SITF_StaticStyles;
-							w->inlineStyle = NULL;
-						}
-						break;
 					case SIT_Title:
 						switch (w->type) {
 						case SIT_EDITBOX:
@@ -919,8 +912,7 @@ void SIT_DestroyWidget(SIT_Widget w)
 	else w->finalize(w, NULL, NULL);
 
 	if (w->title) free(w->title);
-	if (w->inlineStyle && (w->flags & SITF_StaticStyles) == 0)
-		free(w->inlineStyle);
+	if (w->inlineStyles) free(w->inlineStyles);
 
 	/* unregister events */
 	for (cbl = HEAD(w->callbacks); cbl; cbl = next)
@@ -1053,12 +1045,6 @@ DLLIMP void SIT_SetValues(SIT_Widget w, ...)
 		/* avoid reusing the callback */
 		w->postProcess = NULL;
 	}
-/*	else if (w->flags & SITF_PostProcess)
-	{
-		SIT_OnVal cd = {.stage = SITV_PostProcess};
-		w->flags &= ~SITF_PostProcess;
-		SIT_ApplyCallback(w, &cd, SITE_OnSetOrGet);
-	} */
 
 	if (w->flags & SITF_RecalcStyles)
 	{
@@ -1069,7 +1055,6 @@ DLLIMP void SIT_SetValues(SIT_Widget w, ...)
 	/* check for geometry changes */
 	if (w->flags & SITF_GeometryChanged)
 	{
-//		if (IsVisible(w))
 		if (w->type == SIT_HTMLTAG)
 			layoutSetSize(w);
 		else
@@ -1101,14 +1086,14 @@ DLLIMP void SIT_GetValues(SIT_Widget w, ...)
 
 		if (tag < SIT_EndCommonTags)
 		{
-			/* Direct lookup on widget class */
+			/* direct lookup on widget class */
 			args = WidgetClass + tag - 2;
 			goto found;
 		}
 
 		for (args = w->attrs; args->tl_TagID != SIT_TagEnd; )
 		{
-			/* Super class */
+			/* super class */
 			if (args->tl_TagID == SIT_SuperClass)
 			{
 				stack[usage ++] = args + 1;
@@ -1237,23 +1222,17 @@ void SIT_MoveWidgets(SIT_Widget w)
 	}
 }
 
-void SIT_CenterDialog(SIT_Widget w, int flags)
+void SIT_CenterDialog(SIT_Widget w)
 {
-	if (flags & 1)
-	{
-		REAL x = roundf((sit.scrWidth - w->box.right + w->box.left) * 0.5) - w->box.left;
-		w->layout.pos.left += x;
-		w->box.left  += x;
-		w->box.right += x;
-	}
-
-	if (flags & 2)
-	{
-		REAL y = roundf((sit.scrHeight - w->box.bottom + w->box.top) * (2 / 5.)) - w->box.top;
-		w->layout.pos.top += y;
-		w->box.top    += y;
-		w->box.bottom += y;
-	}
+	float curX = w->layout.pos.left - w->box.left;
+	float curY = w->layout.pos.top  - w->box.top;
+	w->currentBox.width  = w->box.right - w->box.left;
+	w->currentBox.height = w->box.bottom - w->box.top;
+//	fprintf(stderr, "center dialog from %gx%g\n", w->currentBox.width, w->currentBox.height);
+	SIT_LayoutWidget(sit.root, w, 0, FitUsingCurrentBox);
+	SIT_LayoutWidget(sit.root, w, 1, FitUsingCurrentBox);
+	w->layout.pos.left = curX + w->box.left;
+	w->layout.pos.top  = curY + w->box.top;
 }
 
 /* finishes dialog initialization */
@@ -1270,7 +1249,7 @@ DLLIMP int SIT_ManageWidget(SIT_Widget w)
 
 		if (w->type == SIT_DIALOG && w->visible == 0)
 		{
-			SIT_CenterDialog(w, 3);
+			SIT_CenterDialog(w);
 			SIT_MoveWidgets(w);
 
 			w->visible = True;
@@ -1299,10 +1278,6 @@ DLLIMP void SIT_RemoveWidget(SIT_Widget w)
 
 	if (w == NULL || (w->flags & SITF_BeingDestroyed)) return;
 	for (d = w; d && ! (d->type & SITF_TopLevel); d = d->parent);
-//	if (w->flags & SITF_IsLocked) {
-//		PostMessageW(d->sw_Handle, WM_DELAYDESTROY, 0, (LPARAM) w->sw_Handle);
-//		return;
-//	}
 
 	/* Remove from MAX constraint chain */
 	SIT_Widget prev = (APTR) w->max.ln_Prev;

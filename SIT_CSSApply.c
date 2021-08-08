@@ -1522,18 +1522,15 @@ int cssApply(SIT_Widget node)
 	if (node->enabled == 0)
 		state = 7;
 
-	if (sit.themeLast > 0)
+	for (rule = (CSSRule) sit.theme, i = 0; ; rule = (CSSRule) (sit.theme + rule->next), i ++)
 	{
-		for (rule = (CSSRule) sit.theme, i = 0; ; rule = (CSSRule) (sit.theme + rule->next), i ++)
-		{
-			if (cssMatchSelector(stack, level, rule))
-				cssAddStyles(&styles, (STRPTR *) (sit.theme + rule->styles), rule->nbstyles, rule->specif, 1);
-			if (rule->next == 0) break;
-		}
+		if (cssMatchSelector(stack, level, rule))
+			cssAddStyles(&styles, (STRPTR *) (sit.theme + rule->styles), rule->nbstyles, rule->specif, 1);
+		if (rule->next == 0) break;
 	}
 
-	if (node->styles[1] > 0)
-		cssAddStyles(&styles, (STRPTR *) (sit.theme + node->styles[0]), node->styles[1], 0xff<<16, 2);
+	if (node->inlineStyles)
+		cssAddStyles(&styles, node->inlineStyles, 1e6, 0xff<<16, 2);
 
 	qsort(styles.buffer, styles.count, sizeof *style, cssSortStyle);
 
@@ -1596,9 +1593,8 @@ void cssClear(SIT_Widget node)
 {
 	cssSetDefault(node);
 
-	memset(node->styles, 0, sizeof node->styles);
-	if (node->inlineStyle && (node->flags & SITF_StaticStyles) == 0)
-		free(node->inlineStyle), node->inlineStyle = NULL;
+	if (node->inlineStyles)
+		free(node->inlineStyles), node->inlineStyles = NULL;
 
 	SIT_FreeCSS(node);
 	vector_init(node->layout.wordwrap, sizeof (struct WordWrap_t));

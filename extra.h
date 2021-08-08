@@ -34,7 +34,6 @@ enum /* extra properties that can be set on <canvas> after VTInit has been calle
 #define VT_SelBuffer(size)      VTX_Private, (APTR) (size), VTX_Private2
 
 /* private stuff below */
-#ifdef VT_IMPL
 typedef struct VirtualTerm_t *  VirtualTerm;
 typedef struct VTCoord_t        VTCoord_t;
 typedef struct VTIter_t         VTIter_t;
@@ -65,7 +64,7 @@ struct VirtualTerm_t
 	uint16_t   lineAttr[2];     /* running attribute when rendering */
 	uint16_t   defAttr;
 	uint16_t   tabSizePx;
-	uint16_t   startx;          /* absolute column (px) to start rendering */
+	int16_t    startx;          /* absolute column (px) to start rendering */
 	uint16_t   lineHeight;
 
 	uint8_t    tabSize;

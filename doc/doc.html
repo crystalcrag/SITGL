@@ -4020,18 +4020,41 @@ freely between all windows in this mode.
   <ul>
 	<li><tt class="dt">SITV_Plain</tt>: this is the flag you have to use to create a plain dialog. Otherwise, the
 	dialog will be a normal one, with title bar and close button.
+
 	<li><tt class="dt">SITV_Resizable</tt>: if you want your dialog to be resizable, otherwise its
 	size will be just enough to accommodate the constraints of your child controls. The area active
-	for resizing the dialog will be the area covered by the border <b>and the padding</b>.
+	for resizing the dialog will be an area of 0.5em around border and 1em in the corner.
+
+	<p>You might be interested in changing the cursor shape when the mouse cursor is hovering such an
+	area. There is an <a href="../examples/exampleSDL.c">example</a> on how to do this using SDL in the
+	<tt>example</tt> folder. Since this is way more work than it is worth, only the SDL and Win32 examples
+	have been implemented. In practice, it is strongly advised to <b>avoid using this flag</b> unless
+	it is absolutely necessary.
+
+	<p>Since cursor shape has to be handled by the operating system layer (SDL, GLFW, ...), the only help
+	you'll be able to get from <tt>SITGL</tt> is a notification as to when you'll need to change it.
+	For this, you have to register a callback on the <b>root widget</b> for the event <tt>SITE_OnChange</tt>.
+	The <tt>call_data</tt> will be a pointer to a <tt>struct OnChange_t</tt>.
+
+	<p>The <tt>type</tt> field will be set to <tt>SIT_CHANGE_CURSOR</tt> and the <tt>arg</tt> field will
+	encode the corner being hovered. It is a bitfield, where bit1 will be set if left edge is hovered,
+	bit2 for top edge, bit3 for right edge and bit4 for bottom edge. Obviously, at most 2 bits will
+	be set.
+
+	<p>Check out the <tt>examples</tt> folder on how to properly handle this event, even though in
+	practice it is better <b>not to use this flag</b>.
+
 	<li><tt class="dt">SITV_NoActivate</tt>: this one is can be used to display a temporary. If you
 	want to open a popup menu from within a dialog, you might not want the parent dialog to lose its
 	focus, and thus preventing the title bar from flashing its color from active to inactive for a
 	brief moment (assuming the dialog has been themed to reflect those states).
+
 	<li><tt class="dt">SITV_Movable</tt>: will let the user move the dialog. Otherwise it will fixed and can only
 	be moved programmatically. The active area for a normal dialog will be its border and title (if
 	the dialog is also resizable, only the title bar will be sensitive). For a plain dialog, wherever
 	a left-mouse click hasn't been processed by a control, it will trigger a click-drag sequence to move
 	the dialog.
+
 	<li><tt class="dt">SITV_Modal</tt>: will prevent any parent controls from receiving user input (mouse and keyboard).
 	It will add a 50% black overlay over the entire screen. <span class="n">XXX</span> not themable.
   </ul>
@@ -4045,6 +4068,22 @@ freely between all windows in this mode.
 <p>Once a dialog has been created, and controls added, <b>you need to notify the library that the dialog
 is ready to be displayed</b>, using the function <tt>void SIT_ManageWidget(SIT_Widget)</tt>.
 
+<hr>
+
+<p><tt>SITGL</tt> has a crude way to <b>"save" the state of the interface</b>. The typical use case for this
+is to display a temporary screen, that will replace everything on screen, but you don't want to recreate
+everything once the temporary screen is closed. Keep in mind that this feature only works on the dialog
+level, not on individual control. For this, there are the following API:
+
+<pre><type>void</type> SIT_ExtractDialog(SIT_Widget w)</pre>
+
+<p>Will remove the dialog from the current tree, but will not free any of its resources, so that it can
+added back to the list later, using the following function:
+
+<pre><type>void</type> SIT_InsertDialog(SIT_Widget w)</pre>
+
+<p>This function will also reposition the dialog for you, in case the screen size has changed in the
+meantime.
 
 <h3 id="SIT_LABEL"><span>SIT_LABEL</span></h3>
 
@@ -6422,6 +6461,14 @@ styling support (colors and fonts). The typical use case for this control is to 
 for your engine. Usually, when building your application for release, the standard output (ie:
 <tt>printf</tt> or <tt>cout</tt>) will not be available. If you still want to keep a log accessible
 somewhere, you might be interested by this widget.
+
+<p>Note: <b>for debugging purpose, don't use that widget</b>. Simply use the standard output/error stream.
+The reason being that if something goes wrong with your program, it is going to be hard to access the
+buffer content, especially if your program is stopped in a debugger breakpoint. That problem can be
+easily solved by using your terminal output.
+
+<p>The purpose of this widget is to be used by the final user, like dumping a chat log or a way to
+dump some command output.
 
 <div class="image">
   <img src="images/VT100.png">

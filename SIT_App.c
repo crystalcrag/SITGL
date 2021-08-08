@@ -402,6 +402,7 @@ void SIT_AppDelDnD(void)
 {
 	if (mainWndProc)
 	{
+		DragAcceptFiles(mainWnd, False);
 		SetWindowLong(mainWnd, GWL_WNDPROC, (LONG) mainWndProc);
 		mainWndProc = NULL;
 	}

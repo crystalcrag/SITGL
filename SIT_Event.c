@@ -638,7 +638,7 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 			}
 			c = sit.hover;
 			if (HAS_EVT(c, SITE_OnMouseOut))
-				SIT_ApplyCallback(c, NULL, SITE_OnMouseOut);
+				SIT_ApplyCallback(c, hover, SITE_OnMouseOut);
 
 			//fprintf(stderr, "exiting %s: [%d]", sit.hover->name, sit.hover->state);
 		}
@@ -689,14 +689,14 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 	if (sit.hover)
 	{
 		/* regular mouse move event */
-		hover = sit.hover;
+		hover = SIT_EventBubble(sit.hover, SITE_OnMouseMove);
 
-		if (HAS_EVT(hover, SITE_OnMouseMove))
+		if (hover)
 		{
 			SIT_OnMouse msg = {.state = SITOM_Move};
 			msg.flags = sit.keyQual;
-			msg.x     = x;
-			msg.y     = y;
+			msg.x     = sit.mouseX - hover->offsetX - hover->layout.pos.left;
+			msg.y     = sit.mouseY - hover->offsetY - hover->layout.pos.top;
 			SIT_ApplyCallback(hover, &msg, SITE_OnMouseMove);
 		}
 	}
@@ -734,11 +734,9 @@ DLLIMP void SIT_ProcessResize(int width, int height)
 
 		for (w = HEAD(w->children); w; NEXT(w))
 		{
-			if ((w->flags & SITF_TopLevel) == 0) continue;
-			uint8_t flags = ((w->flags ^ (SITF_FixedX|SITF_FixedY)) >> 2) & 3;
-			if (flags)
+			if (w->flags & SITF_TopLevel)
 			{
-				SIT_CenterDialog(w, flags);
+				SIT_CenterDialog(w);
 				SIT_MoveWidgets(w);
 			}
 		}

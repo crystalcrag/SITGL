@@ -154,6 +154,7 @@ static int SIT_ScrollBarClick(SIT_Widget w, APTR cd, APTR ud)
 			SIT_ScrollBarResize(w, NULL, NULL);
 			sb->isDragged = 1;
 			SIT_ApplyCallback(w, (APTR) lround(pos), SITE_OnScroll);
+			sb->isDragged = 0;
 		}
 		return 1;
 	default:
