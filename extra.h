@@ -141,4 +141,3 @@ struct VTIter_t
 #define VT_ATTRBG     0x00f0
 
 #endif
-#endif

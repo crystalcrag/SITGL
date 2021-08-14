@@ -260,7 +260,7 @@ static void SIT_TabSet(SIT_Widget w, STRPTR tabs)
 			label->render = SIT_TabRenderCorner;
 			label->flags |= SITF_ToggleButon;
 			label->layout.flags |= LAYF_AdjustRect | LAYF_AdjustHitRect;
-			SIT_AddCallback(label, SITE_OnClick, SIT_TabSetCurrent, NULL);
+			SIT_AddCallback(label, SITE_OnClick + EVT_PRIORITY(100), SIT_TabSetCurrent, NULL);
 		}
 		else SIT_SetValues(label, SIT_Title, tabs, NULL);
 
@@ -320,8 +320,8 @@ Bool SIT_InitTab(SIT_Widget w, va_list args)
 
 	SIT_TabSet(w, tab->tabStr);
 
-	SIT_AddCallback(w, SITE_OnResize, SIT_TabSetSize,    NULL);
-	SIT_AddCallback(w, SITE_OnChange, SIT_TabAutoManage, NULL);
+	SIT_AddCallback(w, SITE_OnResize + EVT_PRIORITY(100), SIT_TabSetSize,    NULL);
+	SIT_AddCallback(w, SITE_OnChange + EVT_PRIORITY(100), SIT_TabAutoManage, NULL);
 
 	return True;
 }

@@ -108,6 +108,14 @@ static int SIT_ButtonSetValues(SIT_Widget w, APTR cd, APTR ud)
 				*button->curValue = button->type == SITV_RadioButton || (button->type == SITV_ToggleButton && button->group > 0) ? button->radioID : button->state;
 		}
 		break;
+	case SIT_RadioGroup:
+		button->group = val->integer;
+		if (button->type == SITV_ToggleButton)
+		{
+			if (button->group > 0) w->flags |= SITF_ImmediateActive;
+			else w->flags &= ~SITF_ImmediateActive;
+		}
+		break;
 	default:
 		SIT_SetWidgetValue(w, cd, ud);
 	}
@@ -140,6 +148,7 @@ static int SIT_ButtonToggle(SIT_Widget w, APTR cd, APTR ud)
 	return 0;
 }
 
+/* SITE_OnFinalize */
 static int SIT_ButtonRemPtr(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_Button button = (SIT_Button) w;
@@ -223,7 +232,7 @@ Bool SIT_InitButton(SIT_Widget w, va_list args)
 	if (button->type >= SITV_CheckBox)
 	{
 		if (button->state > 0) SIT_SetValues(w, SIT_CheckState, button->state, NULL);
-		SIT_AddCallback(w, SITE_OnActivate, SIT_ButtonToggle, NULL);
+		SIT_AddCallback(w, SITE_OnActivate + EVT_PRIORITY(100), SIT_ButtonToggle, NULL);
 	}
 	layoutCalcBox(w);
 	if (w->title)

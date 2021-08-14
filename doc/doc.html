@@ -4025,9 +4025,9 @@ freely between all windows in this mode.
 	size will be just enough to accommodate the constraints of your child controls. The area active
 	for resizing the dialog will be an area of 0.5em around border and 1em in the corner.
 
-	<p>You might be interested in changing the cursor shape when the mouse cursor is hovering such an
+	<p>You might be interested in changing the cursor shape when the mouse cursor is hovering an active
 	area. There is an <a href="../examples/exampleSDL.c">example</a> on how to do this using SDL in the
-	<tt>example</tt> folder. Since this is way more work than it is worth, only the SDL and Win32 examples
+	<tt>examples</tt> folder. Since this is way more work than it is worth, only the SDL and Win32 examples
 	have been implemented. In practice, it is strongly advised to <b>avoid using this flag</b> unless
 	it is absolutely necessary.
 
@@ -4044,19 +4044,20 @@ freely between all windows in this mode.
 	<p>Check out the <tt>examples</tt> folder on how to properly handle this event, even though in
 	practice it is better <b>not to use this flag</b>.
 
-	<li><tt class="dt">SITV_NoActivate</tt>: this one is can be used to display a temporary. If you
-	want to open a popup menu from within a dialog, you might not want the parent dialog to lose its
-	focus, and thus preventing the title bar from flashing its color from active to inactive for a
-	brief moment (assuming the dialog has been themed to reflect those states).
+	<li><tt class="dt">SITV_NoActivate</tt>: this one is can be used to <b>display a temporary window</b>.
+	If you want to open a popup menu from within a dialog, you might not want the parent dialog to
+	lose its focus, and thus preventing the title bar from flashing its color from active to inactive
+	for a brief moment (assuming the dialog has been themed to reflect those states).
 
-	<li><tt class="dt">SITV_Movable</tt>: will let the user move the dialog. Otherwise it will fixed and can only
-	be moved programmatically. The active area for a normal dialog will be its border and title (if
-	the dialog is also resizable, only the title bar will be sensitive). For a plain dialog, wherever
-	a left-mouse click hasn't been processed by a control, it will trigger a click-drag sequence to move
-	the dialog.
+	<li><tt class="dt">SITV_Movable</tt>: will let the user <b>move the dialog</b>. Otherwise it will fixed
+	and can only be moved programmatically. The active area for a normal dialog will be its border and
+	title (if the dialog is also resizable, only the title bar will be sensitive). For a plain dialog,
+	wherever a left-mouse click hasn't been processed by a control, it will trigger a click-drag
+	sequence to move the dialog.
 
-	<li><tt class="dt">SITV_Modal</tt>: will prevent any parent controls from receiving user input (mouse and keyboard).
-	It will add a 50% black overlay over the entire screen. <span class="n">XXX</span> not themable.
+	<li><tt class="dt">SITV_Modal</tt>: will prevent any parent controls from <b>receiving user input</b>
+	(mouse and keyboard). It will add a 50% black overlay over the entire screen.
+	<span class="n">XXX</span> not themable.
   </ul>
 
   <li><tt class="dt">SIT_AccelTable</tt> (<tt>SIT_Accel *</tt>)
@@ -4070,10 +4071,11 @@ is ready to be displayed</b>, using the function <tt>void SIT_ManageWidget(SIT_W
 
 <hr>
 
-<p><tt>SITGL</tt> has a crude way to <b>"save" the state of the interface</b>. The typical use case for this
-is to display a temporary screen, that will replace everything on screen, but you don't want to recreate
-everything once the temporary screen is closed. Keep in mind that this feature only works on the dialog
-level, not on individual control. For this, there are the following API:
+<p>This library also has a crude way to <b>"save" the state of the interface</b>. The typical use case
+for this is when you want to display a temporary screen, that will replace everything on screen, but
+you don't want to lose everything there is currently, because you'll have to recreate everything once
+the temporarily screen is removed. Keep in mind that this feature only works on the dialog level, not
+on individual control. For this, there is the following API:
 
 <pre><type>void</type> SIT_ExtractDialog(SIT_Widget w)</pre>
 
@@ -4380,11 +4382,10 @@ insert a SIT_LISTBOX within the button, to use it as a fancy layout. <b>Keep it 
 <hr>
 
 <p><b>Check box buttons</b> toggle between the checked and unchecked state. By default label is on the
-right. If you want to put it on the left, set the <tt>SIT_AlignHoriz</tt> property to <tt>SITV_AlignRight</tt> (or in a more
-mnemotechnical way, the box will be set in the far-most direction described
-by the property, with the label being aligned in the same direction). The
-checkmark in the box is controlled through the <tt>SIT_CheckState</tt>
-property.
+right. If you want to put it on the left, set the <tt>SIT_AlignHoriz</tt> property to <tt>SITV_AlignRight</tt>
+(or in a more mnemotechnical way, the box will be set in the far-most direction described by the property,
+with the label being aligned in the same direction). The checkmark in the box is controlled through the
+<tt>SIT_CheckState</tt> property.
 
 <p><b>Radio buttons</b> behave similarly to check box, there is only one more property to define into
 which set the button belong. Only one button in a given set can be "checked", this policy will be enforced
@@ -4434,7 +4435,7 @@ Mutual exclusivity policy will still be enforced on radio buttons though.
 <div class="bgtip" style="width: 70%; margin: auto"><p><b>Note:</b>
 buttons also respond to <tt>SITE_OnClick</tt> event.
 <p>Using <tt>SITE_OnActivate</tt> or <tt>SITE_OnClick</tt> depends on what type of feedback you are
-going to provide to the user: if there are only using <b>visual feedback</b>, you should register events
+going to provide to the user: if you are only giving <b>visual feedback</b>, you should register events
 with <tt>SITE_OnActivate</tt>. If you are providing <b>sound feedback</b>, you should use
 <tt>SITE_OnClick</tt>, and not even bother providing a CSS activated style (<tt>:active</tt>).
 </div>

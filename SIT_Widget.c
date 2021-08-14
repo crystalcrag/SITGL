@@ -759,6 +759,8 @@ void SIT_ParseTags(SIT_Widget w, va_list vargs, TagList * classArgs)
 DLLIMP Bool SIT_AddCallback(SIT_Widget w, int type, SIT_CallProc proc, APTR data)
 {
 	SIT_Callback cb;
+	uint8_t priority = type >> 8;
+	type &= 0xff;
 
 	if (w == NULL) return False;
 
@@ -789,10 +791,14 @@ DLLIMP Bool SIT_AddCallback(SIT_Widget w, int type, SIT_CallProc proc, APTR data
 			cb->sc_UserData = data;
 			cb->sc_Event    = type;
 			cb->sc_Malloc   = alloced;
+			cb->sc_Priority = priority;
 			w->evtFlags    |= SET_EVT(type);
 
-			/* last In, first Apply order */
-			ListAddHead(&w->callbacks, &cb->sc_Node);
+			/* keep them ordered in descreasing priority */
+			SIT_Callback ins;
+			for (ins = HEAD(w->callbacks); ins && ins->sc_Priority > priority; NEXT(ins));
+			if (ins) ListInsert(&w->callbacks, &cb->sc_Node, ins->sc_Node.ln_Prev);
+			else ListAddTail(&w->callbacks, &cb->sc_Node);
 
 			if (type == SITE_OnDropFiles)
 			{

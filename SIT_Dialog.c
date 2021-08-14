@@ -198,8 +198,8 @@ Bool SIT_InitDialog(SIT_Widget w, va_list args)
 
 	layoutCalcBox(w);
 
-	SIT_AddCallback(w, SITE_OnClickMove, SIT_DialogMove, NULL);
-	SIT_AddCallback(w, SITE_OnMouseOut,  SIT_DialogMouseOut, NULL);
+	SIT_AddCallback(w, SITE_OnClickMove + EVT_PRIORITY(100), SIT_DialogMove, NULL);
+	SIT_AddCallback(w, SITE_OnMouseOut  + EVT_PRIORITY(100), SIT_DialogMouseOut, NULL);
 
 	if ((dialog->customStyles & SITV_Plain) == 0)
 	{

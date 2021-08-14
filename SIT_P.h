@@ -251,6 +251,7 @@ struct SIT_Callback_t
 	APTR         sc_UserData;
 	uint8_t      sc_Event;
 	uint8_t      sc_Malloc;
+	uint8_t      sc_Priority;
 };
 
 struct SIT_Dialog_t
@@ -690,6 +691,7 @@ enum /* bitfield for 'layout.flags' */
 	LAYF_BImgLoaded      = 0x0010000,
 	LAYF_AdjustHitRect   = 0x0020000,  /* use optimalWidth() callback to adjust hit box */
 	LAYF_AdjustRect      = 0x0040000,  /* adjust render rect in renderNode() via optimalWidth() cb */
+	LAYF_RenderWordBg    = 0x0080000,
 };
 
 enum /* bitfield for style.flags */
@@ -720,6 +722,7 @@ enum /* bitfield for state */
 #define STATE_ACTIVATED    (STATE_ACTIVE|STATE_HOVER)
 
 #define AdjustRenderRect    ((APTR)10)
+#define EVT_PRIORITY(p)     ((p) << 8)
 
 #define UTF8ToUTF16(utf8, utf16) \
 { \

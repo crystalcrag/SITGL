@@ -1398,6 +1398,7 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 	Overflow     overflow = {0};
 	Decor        deco;
 	Bool         ret = False;
+	uint8_t      renderBg = (node->layout.flags & LAYF_RenderWordBg) > 0; /* need to be rendered only once */
 	int          count = node->layout.wordwrap.count;
 
 	switch (node->style.overflow) {
@@ -1480,7 +1481,7 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 								x = cx; cy += h; y = cy;
 								h = 0; first = 1;
 							}
-							else x += w->width + w->space + w->marginR, first = 0;
+							else x += w->width + w->space + w->marginL + w->marginR, first = 0;
 							if (count == 1 || w[1].node != old) break;
 						}
 						continue;
@@ -1626,15 +1627,18 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 			deco.lineY = word.y + yf;
 			deco.height = word.h;
 			deco.baseline = word.bl;
-			renderInline(node, w, i, count, first, xf, yf);
-			if (old->layout.flags & LAYF_HasImg)
+			if (renderBg)
 			{
-				/* img.src not be confused with background-image */
-				CSSImage src = (APTR) old->manage;
-				nvgBeginPath(vg);
-				nvgRect(vg, xf, yf + word.y, word.width, word.h);
-				nvgFillPaint(vg, nvgImagePattern(vg, xf, yf + word.y, word.width, word.h, 0, src->handle, 1));
-				nvgFill(vg);
+				renderInline(node, w, i, count, first, x, y);
+				if (old->layout.flags & LAYF_HasImg)
+				{
+					/* img.src not be confused with background-image */
+					CSSImage src = (APTR) old->manage;
+					nvgBeginPath(vg);
+					nvgRect(vg, xf, yf + word.y, word.width, word.h);
+					nvgFillPaint(vg, nvgImagePattern(vg, xf, yf + word.y, word.width, word.h, 0, src->handle, 1));
+					nvgFill(vg);
+				}
 			}
 			if (word.n == -1)
 			{
@@ -1664,7 +1668,6 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 				}
 				h = 0;
 				first = 1;
-				/* the only overhead for not having overflow */
 				overflow.state = overflow.init;
 			}
 			else x += word.width + word.space + word.marginR, first = 0;
@@ -1686,7 +1689,7 @@ void renderTextShadow(SIT_Widget node, RectF * box)
 	int i;
 
 	/* shadow are ordered top to bottom in CSS (like multiple background) */
-	for (i = 1; renderWords(node, box, i); i ++);
+	for (i = 1; renderWords(node, box, i); node->layout.flags &= ~LAYF_RenderWordBg, i ++);
 
 	nvgFontBlur(sit.nvgCtx, 0);
 }
@@ -1863,6 +1866,7 @@ static void renderNode(SIT_Widget node)
 
 	if ((node->layout.flags & LAYF_IgnoreWords) == 0)
 	{
+		node->layout.flags |= LAYF_RenderWordBg;
 		if (node->style.shadowTotal > 0)
 			renderTextShadow(node, &box);
 		renderWords(node, &box, 0);

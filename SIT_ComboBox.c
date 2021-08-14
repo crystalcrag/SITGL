@@ -426,6 +426,7 @@ static int SIT_ComboRender(SIT_Widget w, APTR cd, APTR ud)
 	}
 	else old.val = 0;
 
+	w->layout.flags |= LAYF_RenderWordBg;
 	if (w->style.shadowTotal > 0)
 		renderTextShadow(w, box);
 	renderWords(w, box, 0);

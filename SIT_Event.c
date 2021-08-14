@@ -40,6 +40,12 @@ DLLIMP int SIT_ApplyCallback(SIT_Widget w, APTR cd, int type)
 		/* user might delete this control in the callback */
 		w->flags |= SITF_IsLocked;
 
+		if (w->type == SIT_BUTTON && type == SITE_OnActivate)
+		{
+			SIT_Button button = (SIT_Button) w;
+			cd = (APTR) (button->curValue ? *button->curValue : button->state);
+		}
+
 		ret = cb->sc_CB(w, cd, cb->sc_UserData);
 
 		if (ret || ! next) break;
@@ -237,7 +243,7 @@ DLLIMP int SIT_ProcessKey(int key, int modifier, int pressed)
 				sit.active = focus;
 				layoutUpdateStyles(focus);
 				if (focus->flags & SITF_ImmediateActive)
-					SIT_ApplyCallback(focus, focus, SITE_OnActivate);
+					SIT_ApplyCallback(focus, NULL, SITE_OnActivate);
 				return 1;
 			}
 			else
@@ -258,11 +264,11 @@ DLLIMP int SIT_ProcessKey(int key, int modifier, int pressed)
 
 			if (key == SITK_Escape && diag->cancelButton)
 			{
-				SIT_ApplyCallback(diag->cancelButton, diag->cancelButton, SITE_OnActivate);
+				SIT_ApplyCallback(diag->cancelButton, NULL, SITE_OnActivate);
 			}
 			else if (key == SITK_Return && diag->defButton)
 			{
-				SIT_ApplyCallback(diag->defButton, diag->defButton, SITE_OnActivate);
+				SIT_ApplyCallback(diag->defButton, NULL, SITE_OnActivate);
 			}
 		}
 	}
@@ -277,7 +283,7 @@ DLLIMP int SIT_ProcessKey(int key, int modifier, int pressed)
 			layoutUpdateStyles(active);
 			sit.active = NULL;
 		}
-		if (SIT_ApplyCallback(active, active, SITE_OnActivate))
+		if (SIT_ApplyCallback(active, NULL, SITE_OnActivate))
 			return 1;
 	}
 	/* bubble keyboard event */

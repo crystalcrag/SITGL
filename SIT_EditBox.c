@@ -411,7 +411,7 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 	SIT_AddCallback(w, SITE_OnFocus,     SIT_TextEditDirty, NULL);
 
 	if (edit->editType >= SITV_Integer && edit->curValue)
-		SIT_AddCallback(w, SITE_OnChange, SIT_TextEditSyncValue, NULL);
+		SIT_AddCallback(w, SITE_OnChange + EVT_PRIORITY(100), SIT_TextEditSyncValue, NULL);
 
 	if (edit->tabStyle < 0)
 		edit->tabStyle = edit->editType == SITV_Multiline ? SITV_TabEditNormal : SITV_TabEditForbid;
