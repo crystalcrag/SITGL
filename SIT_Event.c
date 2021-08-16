@@ -450,7 +450,7 @@ DLLIMP int SIT_ProcessClick(float x, float y, int button, int pressed)
 		}
 		else sendEvt = SIT_EventBubble(active, SITE_OnActivate);
 
-		/* button up need to sent to the widget processing the capture move events */
+		/* button up need to be sent to the widget processing the capture move events */
 		if (sit.captureEvt)
 		{
 			sit.captureEvt = 0;
@@ -469,7 +469,7 @@ DLLIMP int SIT_ProcessClick(float x, float y, int button, int pressed)
 			msg.flags = sit.keyQual;
 			handled = SIT_ApplyCallback(target, &msg, SITE_OnClick);
 			if (handled > 1 && pressed)
-				sit.captureEvt = 1;
+				sit.captureEvt = 1, sit.active = target;
 			else if (handled < 0) /* cancel mouse release event */
 				sit.active = NULL;
 			hover = sit.hover;

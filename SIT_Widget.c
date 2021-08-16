@@ -229,8 +229,11 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 		}
 		break;
 	case SIT_Enabled:
-		w->oldState = w->oldEna ? 0 : STATE_DISABLED;
-		w->flags |= SITF_RecalcStyles;
+		if (w->oldEna != w->enabled)
+		{
+			w->oldState = w->oldEna ? 0 : STATE_DISABLED;
+			w->flags |= SITF_RecalcStyles;
+		}
 		break;
 	case SIT_Style:
 		w->flags |= SITF_RecalcStyles;

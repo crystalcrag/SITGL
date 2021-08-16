@@ -88,6 +88,7 @@ static int SIT_ProgressPostProcess(SIT_Widget w, APTR cd, APTR ud)
 	SizeF dummy;
 	layoutMeasureWords(w, &dummy);
 	SIT_ProgressResize(w, cd, ud);
+	sit.dirty = 1;
 	return 1;
 }
 
@@ -107,8 +108,11 @@ static int SIT_ProgressSetValues(SIT_Widget w, APTR cd, APTR ud)
 	case SIT_MinValue:
 	case SIT_MaxValue:
 	case SIT_ProgressPos:
+		if (pb->progressPos == ((SIT_Variant *)ud)->integer)
+			return 0;
 		w->postProcess = SIT_ProgressPostProcess;
-		// no break;
+		pb->progressPos = ((SIT_Variant *)ud)->integer;
+		break;
 	default:
 		SIT_SetWidgetValue(w, cd, ud);
 	}

@@ -934,6 +934,22 @@ DLLIMP int StrCount(STRPTR list, int chr)
 	return n;
 }
 
+/* String/FormatNumber */
+DLLIMP int FormatNumber(int num, STRPTR buffer, int max)
+{
+	WCHAR input[32];
+	WCHAR output[32];
+	wsprintf(input, L"%d", num);
+
+	GetNumberFormat(LOCALE_USER_DEFAULT, 0, input, NULL, output, sizeof output);
+
+	/* of course, it has to add useless stuff */
+	LPWSTR dot = wcsrchr(output, '.');
+	if (dot) *dot = 0;
+
+	return WideCharToMultiByte(CP_UTF8, 0, output, -1, buffer, max, NULL, NULL) - 1;
+}
+
 /*
  * Thread.c
  */

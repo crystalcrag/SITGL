@@ -88,7 +88,7 @@ int  SIT_SetWidgetValue(SIT_Widget, APTR cd, APTR ud);
 void SIT_LayoutCSSSize(SIT_Widget);
 void SIT_RenderNode(SIT_Widget);
 Bool SIT_ReassignAttachments(SIT_Widget);
-void SIT_ActionDispatch(float time);
+void SIT_ActionDispatch(double time);
 void SIT_InitiateReflow(SIT_Widget);
 void SIT_FreeCSS(SIT_Widget);
 void SIT_DestroyWidget(SIT_Widget);
@@ -177,6 +177,7 @@ struct SITContext_t
 	uint64_t     QPCfreq;
 	uint64_t     QPCstart;
 	uint64_t     QPCpause;
+	uint64_t     QPCsave;
 	double       QPCfreqinv;
 	Lang         curLang;
 	SIT_CallProc dragCb;

@@ -661,7 +661,7 @@ DLLIMP Bool SIT_ActionReschedule(SIT_Action act, double start, double end)
 }
 
 /* simply dispatch to registered callbacks */
-void SIT_ActionDispatch(float time)
+void SIT_ActionDispatch(double time)
 {
 	SIT_Action act, next;
 	for (act = next = HEAD(sit.actions); act && act->start < time; act = next)
@@ -671,12 +671,12 @@ void SIT_ActionDispatch(float time)
 		int extend = proc(act->ctrl, (APTR) (act->end < time), act->ud);
 		if (extend > 0)
 		{
-			float next = time + extend;
+			double next = time + extend;
 			SIT_ActionReschedule(act, next, next + (act->end - act->start));
 			continue;
 		}
 
-		if (act->end < time)
+		if (act->end < time || extend < 0)
 			SIT_ActionReschedule(act, -1, -1);
 	}
 }
@@ -763,6 +763,17 @@ DLLIMP void FramePauseUnpause(Bool pause)
 		sit.QPCpause = 0;
 	}
 	else sit.QPCpause = time.QuadPart;
+}
+
+DLLIMP void FrameSaveRestoreTime(Bool save)
+{
+	LARGE_INTEGER time;
+	QueryPerformanceCounter(&time);
+	if (! save)
+		/* ignore the time between pause */
+		sit.QPCstart += time.QuadPart - sit.QPCsave;
+	else
+		sit.QPCsave = time.QuadPart;
 }
 
 /*

@@ -137,7 +137,7 @@
  <a class="annex sub2" href="#inifile">INI file</a>
 
 <a class="annex" href="#annexB"><span>stb_image API</span></a>
-<a class="annex" href="#annexC"><span>Advanced rendering API</span></a>
+<a class="annex sub1" href="#annexC"><span>Advanced rendering API</span></a>
  <a class="annex sub2" href="#composite">Composited rendering</a>
  <a class="annex sub2" href="#rendernode">Rendering individual widget</a>
 
@@ -6216,6 +6216,37 @@ been mentionned so far in this document:
 
   <p>As of writing this, all the resources dynamically allocated are strings.
 
+
+  <li><tt class="dt">SIT_Action SIT_ActionAdd(SIT_Widget w, <type>double</type> start_ms, <type>double</type> end_ms, SIT_CallProc, <type>APTR</type> ud);</tt>
+  <p>Add an asynchronous action to be called (potentially repeatedly) at a later time. Your callback
+  won't be called until the control has been given back to <tt>SITGL</tt>, through the function
+  <tT>SIT_RenderNodes()</tt>. <span class"n">Note</span>: the <tt>w</tt> is kind of useless, it is simply
+  a parameter that will be given back to your callback as its first argument.
+
+  <p>The callback will be called repeatedly (ie: each frame) as long the current time falls between
+  <tt>start_ms</tt> and <tt>end_ms</tt>. If <tt>end_ts</tt> falls behind the current time, the asynchronous
+  action will be removed. The <tt>call_data</tt> can be seen as a boolean, that will be set to
+  <tt class="o">True</tt> if it the <b>last time this callback will be triggered</b>.
+
+  <p>The return value of the callback has a special meaning though:
+  <ul>
+    <li>negative value: immediately remove the action from the list. Your callback won't be called again
+	after this.
+	<li>zero: keep going, change nothing.
+	<li>positive value: shift the time interval by this amount of milliseconds (both <tt>start_ms</tt>
+	and <tt>end_ms</tt>).
+  </ul>
+
+  <p>The return value in an opaque pointer that represents the action. It will be valid as long as you
+  didn't cancel the action explicitely (see next function) or the callback hasn't been notified of its
+  last execution.
+
+  <li><tt class="dt"><type>Bool</type> SIT_ActionReschedule(SIT_Action act, <type>double</type> start_ms, <type>double</type> end_ms);</tt>
+  <p>You can extend the life time of an asynchronous action with this function. Even though its main
+  purpose is usually to cancel one. For this, simply use <tt class="o">-1</tt> as for the <tt>start_ms</tt>
+  and <tt>end_ms</tt> parameter. If you kept a reference on the <tt>SIT_Action</tt> object, time to clear
+  it now.
+
 </ul>
 
 <h2 id="extractrl">Extra widgets</h2>
@@ -6423,7 +6454,7 @@ SIT_GetValues(w, SIT_Width, &amp;width, SIT_Height, &amp;height, <val>NULL</val>
 
 <h3 id="colorchooser"><span>Color chooser</span></h3>
 
-<p>There are no color chooser is the list of stock widgets, but it is relatively easy to develop one.
+<p>There are no color chooser in the list of stock widgets, but it is relatively easy to develop one.
 Here is a simple implementation, that will <b>allow you to select an RGB color</b> using the HSV color space:
 
 <div class="image">
@@ -7379,6 +7410,95 @@ with this topic in much more depth, than what is explained in here.
   other threads are currently waiting on it, otherwise a segmentation fault is probably pending.
 </ul>
 
+<hr>
+
+<p>Here is a simple example on how to use these functions: suppose you have a button in your interface
+that can potentially starts a lengthy operation. You don't want to do that operation inside the
+<tt>SITE_OnActivate</tt> event, because the interface will be completely frozen while the operation
+is running (especially, you might want to keep a cancel button accessible in the meantime).
+
+<p>Therefore, in the <tt>SITE_OnActivate</tt> event, you'll need to start a thread (using <tt>ThreadCreate()</tt>).
+That thread function should write in a <b>global variable</b>, the progress of its work in one form
+or another. If the work cannot be measured easily, at least you'll need to set a boolean to indicate
+when the function has finished. <b>Be careful though!</b> Remember that threads created by <tt>SITGL</tt>
+<b>cannot</b> call any OpenGL functions whatsoever (which also includes any SITGL function).
+
+<p>Once the thread has been started, you'll have to monitor that global variable to know when the function
+has finished (and possibly report progress using a <a href="#SIT_PROGRESS">SIT_PROGRESS</a> control).
+For this, you can use asynchronous event, using the <tt>SIT_ActionAdd()</tt> function. Therefore the
+whole process should looks something like this:
+
+<pre>
+<com>/* global variable used to report progress by the thread */</com>
+<type>static int</type> progress;
+
+<com>/* this function will run in a separate thread */</com>
+<type>static void</type> myCostlyOperation(<type>void</type> * unused)
+{
+	<type>int</type> i;
+	<kwd>for</kwd> (i = <val>0</val>; i &lt; <val>100</val>; i ++)
+	{
+		<com>/* this is the costly work */</com>
+		ThreadPause(<val>500</val>);
+
+		<com>/* report progress <b>/!\ don't call any SITGL function here</b> */</com>
+		progress ++;
+	}
+}
+
+<com>/* this is function that will check the thread progress */</com>
+<type>static void</type> myProgressCheck(SIT_Widget w, <type>APTR</type> cd, <type>APTR</type> ud)
+{
+	<kwd>if</kwd> (progress == <val>100</val>)
+	{
+		<com>/* thread has finished */</com>
+		SIT_CloseDialog(w);
+		<com>// Alternatively, you can reenable the button if the dialog isn't closed
+		// SIT_SetValues(w, SIT_Enabled, True, NULL);</com>
+		
+		<com>/* stop the timer now */</com>
+		<kwd>return</kwd> -<val>1</val>;
+	}
+
+	<com>/* report progress to your interface */
+	// SIT_SetValues(progress, SIT_ProgressPos, progress, NULL);</com>
+	<kwd>return</kwd> <val>0</val>;
+}
+
+<com>/* SITE_OnActivate callback */</com>
+<type>static void</type> handleButton(SIT_Widget w, <type>APTR</type> cd, <type>APTR</type> ud)
+{
+	<com>/* you don't want to start the operation again, while one is running */</com>
+	SIT_SetValues(w, SIT_Enabled, <val>False</val>, <val>NULL</val>);
+
+	<com>/* this is where the work will be done */</com>
+	progress = <val>0</val>;
+	ThreadCreate(myCostlyOperation, <val>NULL</val>);
+
+	<com>/* asynchronous callback that will on the thread progress */</com>
+	double curTime = FrameGetTime();
+	SIT_ActionAdd(w, curTime, curTime + <val>1e9</val>, myProgressCheck, <val>NULL</val>);
+}</pre>
+
+<p>This is a very simple approach though: it supposes that resources used by the thread are independant
+from the user interface, and there are no logic to cancel the operation once it is started. As simple
+as this approach is, you can already see that there is <b>quite a bit of work involved</b>, therefore
+you should only consider adding such a feature if it is really worth it.
+
+<p>Adding a <b>cancellable operation</b> will involve a bit more work. You might have noticed that there
+are no functions to immediately stop a thread. More often than, forcibly stopping a thread is a bad idea,
+because it will be extremely likely that the thread have allocated some resources, that will need to be
+freed before exiting.
+
+<p>To do this, first you have to add a global variable that has to be monitored by the thread to know
+if it has to exit immediately. You don't have to do this in the inner loop, but as long as it done every
+couple of milliseconds, it will be largely enough. <b>To know when the thread has exited</b>, you can use a
+mutex: create one before starting the thread. In the thread, lock that mutex immediately and release
+it only at the very end. If you want to cancel the operation, simply set that global variable to
+notify the thread to exit immediately and then attempt to lock and then unlock the mutex: once unlocked
+you know the thread has exited.
+
+
 <h3 class="annex" id="timer"><span>Timer functions</span></h3>
 
 <p>This will provide a set of functions to implement high precision timer: wait for a specified amount
@@ -7422,6 +7542,18 @@ API.
 
   <p>While pause is on, the <tt>FrameGetTime()</tt> will always report the same value. <tt>FrameWaitNext()</tt>
   will work as normal though.
+
+  <li><tt class="dt">void FrameSaveRestoreTime(Bool save);</tt>
+  <p>If you want to display a temporary screen on top of your scene, that will need to stop the time
+  while being displayed, the function <tt>FramePauseUnpause()</tt> might be too drastic: it will stop
+  the time advance in the entirety of <tt>SITGL</tt>. That means asynchronous updates and animation
+  will stop working.
+
+  <p>What this function will do, is save the current time (as returned by <tt>FrameGetTime()</tt>), when
+  the <tt>save</tt> parameter is set to <tt class="o">True</tt>, and then restore this value when this
+  parameter is set to <tt class="o">False</tt>. In the meantime, the <tt>FrameGetTime()</tt> will return
+  a normal advance of time. Obviously, you'll need extra logic in your main loop to avoid using that
+  function. Extra logic that will not needed if you use the function <tt>FramePauseUnpause()</tt>.
 
 </ul>
 
@@ -7642,7 +7774,7 @@ to render your graphics.
 
 <h3 class="annex" id="composite"><span>Composited rendering</span></h3>
 
-<p>The first step to achieve this is to mark elements that will be rendered over (outside of <tt>SITGL</tt>
+<p>The first step to achieve this, is to mark elements that will be rendered over (outside of <tt>SITGL</tt>
 control) as composited. You do this by assigning a positive integer to the property <tt>SIT_Composited</tt>.
 This integer has to be managed on your side. It will be given back when it is safe to render over this
 particular area. Consider the following example:
@@ -7814,7 +7946,7 @@ this test:
 <p>This test is divided into 4 parts:
 <ol>
   <li>Check if the border part is completely transparent, in which case there is no point in rendering anything.
-  <li>Check if the border width is 0, is which case there will be nothing to render.
+  <li>Check if the border width is 0, in which case there will be nothing to render.
   <li>Check if the border part has already been rendered.
   <li>Check if the border <b>before or after</b> the current part (<tt>j</tt>) is part of the merge.
   If neither of these are, it means the current part will form a standalone polygon. Technically, <tt>nanovg</tt>
