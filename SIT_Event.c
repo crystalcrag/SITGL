@@ -642,11 +642,9 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 				sit.toolTip = NULL;
 				sit.curTooltip = NULL;
 			}
-			c = sit.hover;
-			if (HAS_EVT(c, SITE_OnMouseOut))
-				SIT_ApplyCallback(c, hover, SITE_OnMouseOut);
-
-			//fprintf(stderr, "exiting %s: [%d]", sit.hover->name, sit.hover->state);
+			c = SIT_EventBubble(sit.hover, SITE_OnMouseOut);
+			if (c) SIT_ApplyCallback(c, hover, SITE_OnMouseOut);
+			//fprintf(stderr, "exiting %s: [%d]\n", sit.hover->name, sit.hover->state);
 		}
 		if (! sit.active || sit.active == hover)
 		{

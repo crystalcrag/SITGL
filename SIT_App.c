@@ -4,13 +4,7 @@
  * written by T.Pierron, apr 2020.
  */
 
-#define	STRICT
-#define	UNICODE
-#define	WIN32_LEAN_AND_MEAN
-#define	WINVER        0x500
-#define	_WIN32_IE     0x501
-#include <windows.h>
-#include <shellapi.h>
+#include "platform.h"
 #include <malloc.h>
 #include <stdlib.h>
 #include "SIT_P.h"
@@ -254,7 +248,7 @@ static int SIT_AppSetValues(SIT_Widget w, APTR call_data, APTR user_data)
 		if (val->string)
 		{
 			LPWSTR str;
-			UTF8ToUTF16(val->string, str);
+			allocaUTF8ToUTF16(val->string, str);
 			SetCurrentDirectory(str);
 		}
 		break;

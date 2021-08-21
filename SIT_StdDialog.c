@@ -5,9 +5,7 @@
  * Written by T.Pierron, Nov 2009.
  */
 
-#define UNICODE
-#define SHOBJ
-#include <windows.h>
+#include "platform.h"
 #include <malloc.h>
 #include <shlobj.h>
 #include <stdio.h>
@@ -140,7 +138,7 @@ static int SIT_ManageFileDialog(SIT_Widget w, APTR cd, APTR ud)
 
 	/* title of dialog */
 	if (IsDef(w->title))
-		UTF8ToUTF16(w->title, dlg->ofn.lpstrTitle);
+		allocaUTF8ToUTF16(w->title, dlg->ofn.lpstrTitle);
 
 	/* parse filter string */
 	if (dlg->filters)
@@ -170,7 +168,7 @@ static int SIT_ManageFileDialog(SIT_Widget w, APTR cd, APTR ud)
 		{
 			TEXT ch = base[-1];
 			base[-1] = 0;
-			UTF8ToUTF16(dlg->initPath, dlg->ofn.lpstrInitialDir);
+			allocaUTF8ToUTF16(dlg->initPath, dlg->ofn.lpstrInitialDir);
 			base[-1] = ch;
 		}
 	}
@@ -227,7 +225,7 @@ static int CALLBACK SIT_PostInitBrowse(HWND wnd, UINT msg, LPARAM lParam, LPARAM
 		SIT_FolderSel f = (APTR) lpData;
 		LPWSTR dir;
 
-		UTF8ToUTF16(f->initPath, dir);
+		allocaUTF8ToUTF16(f->initPath, dir);
 
 		SendMessage(wnd, BFFM_SETSELECTION, TRUE, (LPARAM) dir);
 
@@ -251,7 +249,7 @@ static int SIT_ManageFolderDialog(SIT_Widget w, APTR cd, APTR ud)
 	bi->ulFlags        = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
 
 	if (IsDef(w->title))
-		UTF8ToUTF16(w->title, bi->lpszTitle);
+		allocaUTF8ToUTF16(w->title, bi->lpszTitle);
 
 	ITEMIDLIST * pidl = SHBrowseForFolder(bi);
 

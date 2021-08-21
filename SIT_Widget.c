@@ -4,9 +4,7 @@
  * written by T.Pierron, may 2020.
  */
 
-#define UNICODE
-#define SHOBJ
-#include <windows.h>
+#include "platform.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>

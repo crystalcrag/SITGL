@@ -27,8 +27,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define UNICODE
-#include <windows.h>
+#include "platform.h"
 #include <math.h>
 #include <malloc.h>
 #include <time.h>
@@ -273,8 +272,8 @@ static int SIT_MessageBox(STRPTR text, STRPTR title, int flags)
 	extern HANDLE mainWnd;
 	LPWSTR text16, title16;
 
-	UTF8ToUTF16(text, text16);
-	UTF8ToUTF16(title, title16);
+	allocaUTF8ToUTF16(text, text16);
+	allocaUTF8ToUTF16(title, title16);
 
 	return MessageBox(mainWnd, text16, title16, flags);
 }

@@ -89,7 +89,7 @@ static int SIT_ButtonSetValues(SIT_Widget w, APTR cd, APTR ud)
 		}
 		button->state = val->integer;
 		w->oldState = w->state;
-		if (button->type == SITV_ToggleButton)
+		if (button->type <= SITV_ToggleButton)
 		{
 			if (button->group > 0 && val->integer) SIT_ButtonDeselectRadio(w);
 			if (val->integer) w->state |=  STATE_ACTIVATED;

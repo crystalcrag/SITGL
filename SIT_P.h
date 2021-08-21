@@ -558,7 +558,7 @@ struct SIT_FileDialog_t
 	STRPTR *     saveState;
 	int          nbSelect;
 	STRPTR       filePtr;
-	#ifdef SHOBJ
+	#ifdef PLATFORM_H
 	WCHAR        fileName[512];
 	OPENFILENAME ofn;
 	#endif
@@ -568,7 +568,7 @@ struct SIT_FolderSel_t
 {
 	SIT_Widget_t super;
 	STRPTR       initPath;
-	#ifdef SHOBJ
+	#ifdef PLATFORM_H
 	WCHAR        path[MAX_PATH];
 	TEXT         info[128];
 	#endif
@@ -725,7 +725,7 @@ enum /* bitfield for state */
 #define AdjustRenderRect    ((APTR)10)
 #define EVT_PRIORITY(p)     ((p) << 8)
 
-#define UTF8ToUTF16(utf8, utf16) \
+#define allocaUTF8ToUTF16(utf8, utf16) \
 { \
 	int len = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, NULL, 0); \
 \

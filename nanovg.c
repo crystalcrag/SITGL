@@ -27,7 +27,12 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_NO_LINEAR
 #define STBI_NO_HDR
+#ifdef WIN32
+#include "stb_image_win32.h"
+#else
 #include "stb_image.h"
+#endif
+
 
 #ifdef _MSC_VER
 #pragma warning(disable: 4100)  // unreferenced formal parameter

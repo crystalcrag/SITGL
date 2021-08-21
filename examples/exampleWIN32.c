@@ -47,7 +47,7 @@ static int setCursor(SIT_Widget w, APTR cd, APTR ud)
 	/* bonus point: they are HiDPI aware */
 	static LPWSTR cursors[] = {
 		IDC_ARROW, IDC_SIZEWE, IDC_SIZENS, IDC_SIZENWSE, IDC_SIZEWE, 0, IDC_SIZENESW,
-		0, IDC_SIZENS, IDC_SIZENESW, 0, 0, IDC_SIZENESW
+		0, IDC_SIZENS, IDC_SIZENESW, 0, 0, IDC_SIZENWSE
 	};
 	SIT_OnChange * msg = cd;
 	if (msg->type == SIT_CHANGE_CURSOR)
@@ -73,11 +73,12 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 	/* Use default icon and mouse-pointer */
 	wincl.hIcon = LoadIcon (NULL, IDI_APPLICATION);
 	wincl.hIconSm = LoadIcon (NULL, IDI_APPLICATION);
-	wincl.hCursor = winCursor = LoadCursor (NULL, IDC_ARROW);
+	wincl.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wincl.lpszMenuName = NULL;
 	wincl.cbClsExtra = 0;
 	wincl.cbWndExtra = 0;
 	wincl.hbrBackground = (HBRUSH) COLOR_BACKGROUND;
+	winCursor = IDC_ARROW;
 
 	if (!RegisterClassEx (&wincl))
 		return 0;
@@ -117,7 +118,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 	wglMakeCurrent(glHDC, GLctx);
 
 	/* now we can init SITGL */
-	app = SIT_Init(SIT_NVG_FLAGS, winWidth, winHeight, "css/windows7.css", 1);
+	app = SIT_Init(SIT_NVG_FLAGS, winWidth, winHeight, "examples/css/windows7.css", 1);
 
 	if (app == NULL)
 	{
@@ -270,7 +271,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 		SIT_ProcessMouseMove(LOWORD(lParam), HIWORD(lParam));
 		break;
 	case WM_SETCURSOR:
-		SetCursor(winCursor);
+		SetCursor(LoadCursor(NULL, winCursor));
 		break;
 	case WM_LBUTTONDOWN: param ++; // no break;
 	case WM_LBUTTONUP:   param ++; // no break;
