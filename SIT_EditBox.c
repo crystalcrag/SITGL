@@ -27,7 +27,7 @@
 		{ SIT_MinValue,    "minValue",    _SG, SIT_REAL, OFFSET(SIT_EditBox, minValue) },
 		{ SIT_MaxValue,    "maxValue",    _SG, SIT_REAL, OFFSET(SIT_EditBox, maxValue) },
 		{ SIT_StepValue,   "stepValue",   _SG, SIT_REAL, OFFSET(SIT_EditBox, stepValue) },
-		{ SIT_ScrollPos,   "scrollPos",   _SG, SIT_PTR,  OFFSET(SIT_EditBox, curValue) },
+		{ SIT_CurValue,    "curValue",    _SG, SIT_PTR,  OFFSET(SIT_EditBox, curValue) },
 		{ SIT_PlaceHolder, "placeHolder", _SG, SIT_STR,  OFFSET(SIT_EditBox, cueBanner) },
 		{ SIT_HotKey,      "hotKey",      _SG, SIT_INT,  OFFSET(SIT_EditBox, hotKey) },
 		{ SIT_EditBuffer,  "editBuffer",  C__, SIT_PTR,  OFFSET(SIT_EditBox, fixedBuffer) },
@@ -316,6 +316,15 @@ static int SIT_TextEditSpinnerClick(SIT_Widget w, APTR cd, APTR ud)
 			SIT_TextEditSetText(&edit->super, edit->text);
 			if (msg && edit->autoScroll == NULL)
 				edit->autoScroll = SIT_ActionAdd(w, sit.curTime + 500, -1, SIT_TextEditSpinnerClick, ud);
+			if (edit->curValue)
+			{
+				/* int and float conversion will be lossless */
+				switch (edit->editType) {
+				case SITV_Integer: * (int *)    edit->curValue = val; break;
+				case SITV_Float:   * (float *)  edit->curValue = val; break;
+				case SITV_Double:  * (double *) edit->curValue = val;
+				}
+			}
 			return 50;
 		}
 		else if (changes)

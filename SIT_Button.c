@@ -65,7 +65,10 @@ static int SIT_ButtonSetValues(SIT_Widget w, APTR cd, APTR ud)
 		case SITV_CheckBox:
 		case SITV_3StateCB:
 		case SITV_RadioButton:
-			SIT_AddTitle(w, "<box></box> ", 0);
+			if (w->style.text.align == TextAlignRight)
+				SIT_AddTitle(w, " <box></box>", -1);
+			else
+				SIT_AddTitle(w, "<box></box> ", 0);
 		}
 
 		if (val->string)
@@ -89,7 +92,7 @@ static int SIT_ButtonSetValues(SIT_Widget w, APTR cd, APTR ud)
 		}
 		button->state = val->integer;
 		w->oldState = w->state;
-		if (button->type <= SITV_ToggleButton)
+		if (button->type == SITV_ToggleButton)
 		{
 			if (button->group > 0 && val->integer) SIT_ButtonDeselectRadio(w);
 			if (val->integer) w->state |=  STATE_ACTIVATED;
@@ -235,13 +238,16 @@ Bool SIT_InitButton(SIT_Widget w, va_list args)
 		SIT_AddCallback(w, SITE_OnActivate + EVT_PRIORITY(100), SIT_ButtonToggle, NULL);
 	}
 	layoutCalcBox(w);
-	if (w->title)
+	if (w->title || button->type >= SITV_CheckBox)
 	{
 		switch (button->type) {
 		case SITV_CheckBox:
 		case SITV_3StateCB:
 		case SITV_RadioButton:
-			SIT_AddTitle(w, "<box></box> ", 0);
+			if (w->style.text.align == TextAlignRight)
+				SIT_AddTitle(w, " <box></box>", -1);
+			else
+				SIT_AddTitle(w, "<box></box> ", 0);
 		}
 
 		layoutParseHTML(w, w->title);

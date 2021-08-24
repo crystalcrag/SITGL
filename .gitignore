@@ -16,4 +16,4 @@
 default.html
 SITGL.layout
 SITGL.exe.Manifest
-*.depend
+/*.depend

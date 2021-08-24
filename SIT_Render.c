@@ -1728,19 +1728,32 @@ int SIT_FrameRender(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_Frame frame = (SIT_Frame) w;
 	RectF     box;
+
 	box.left   = w->box.left + frame->padLeft;
 	box.top    = w->box.top;
 	box.width  = w->box.right  - w->padding[2] - box.left;
 	box.height = w->box.bottom - w->padding[3] - box.top;
 	box.left   = roundf(box.left + w->offsetX - w->layout.padding.left + w->padding[0] * 0.25);
 	box.top   += w->offsetY - w->layout.padding.top;
+
 	renderWords(w, &box, 0);
 
 	/* render border with text clipped */
 	if (w->title)
 	{
+		REAL offX = 0;
+		if (w->style.text.align > 0)
+		{
+			if (w->layout.wordwrap.count > 0)
+			{
+				WordWrap word = vector_first(w->layout.wordwrap);
+				offX = fabsf(word->marginL);
+			}
+			else offX = w->layout.wordSpacing;
+		}
+
 		box.left   = w->box.left + w->layout.border.left;
-		box.top    = w->box.top + frame->title.height * 0.5;
+		box.top    = roundf(w->box.top + frame->title.height * 0.6);
 		box.width  = w->box.right  - box.left - w->layout.border.right;
 		box.height = w->box.bottom - box.top - w->layout.border.bottom;
 		box.left  += w->offsetX;
@@ -1748,7 +1761,7 @@ int SIT_FrameRender(SIT_Widget w, APTR cd, APTR ud)
 
 		/* would be nice to have a way to invert scissor, but we need to intersect with current clipping rect anyway */
 		nvgSave(sit.nvgCtx);
-		nvgIntersectScissor(sit.nvgCtx, w->box.left + w->offsetX, w->box.top + w->offsetY, frame->padLeft, w->box.bottom);
+		nvgIntersectScissor(sit.nvgCtx, w->box.left + w->offsetX, w->box.top + w->offsetY, frame->padLeft + offX, w->box.bottom);
 		renderBorder(w, &box, 1+4+8);
 		nvgRestore(sit.nvgCtx);
 
@@ -1758,7 +1771,7 @@ int SIT_FrameRender(SIT_Widget w, APTR cd, APTR ud)
 		nvgRestore(sit.nvgCtx);
 
 		nvgSave(sit.nvgCtx);
-		nvgIntersectScissor(sit.nvgCtx, w->box.left + frame->padLeft + frame->title.width + w->offsetX, w->box.top + w->offsetY, box.width, w->box.bottom);
+		nvgIntersectScissor(sit.nvgCtx, w->box.left + frame->padLeft + frame->title.width + w->offsetX + offX, w->box.top + w->offsetY, box.width, w->box.bottom);
 		renderBorder(w, &box, 1+2+4);
 		nvgRestore(sit.nvgCtx);
 	}

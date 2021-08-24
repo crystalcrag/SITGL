@@ -149,9 +149,8 @@ typedef enum
 } GpImageLockMode;
 
 
-static int GdiplusPresent = -1;
 static long GpToken;
-static HINSTANCE GdiplusDLL;
+static HINSTANCE GdiplusDLL = (HINSTANCE) 1;
 static HINSTANCE Ole32;
 static GdiplusStartupOutput gpStartupOutput;
 
@@ -180,7 +179,7 @@ FARPROC GpFunc(char * str)
 	FARPROC p = GetProcAddress(GdiplusDLL, str);
 	if (p == NULL)
 		/* if something doesn't load, bail */
-		GdiplusPresent = FALSE;
+		GdiplusDLL = 0;
 	return p;
 }
 
@@ -190,7 +189,6 @@ static void LoadGdiplus(void)
 	Ole32 = LoadLibrary(L"ole32.dll");
 	if (! GdiplusDLL) return;
 
-	GdiplusPresent = TRUE;
 	GdiplusStartup = (GdiplusStartupProc) GpFunc("GdiplusStartup");
 	GdipCreateBitmapFromStream = (GdipCreateBitmapFromStreamProc)GpFunc("GdipCreateBitmapFromStream");
 	GdipCreateBitmapFromFile = (GdipCreateBitmapFromFileProc)GpFunc("GdipCreateBitmapFromFile");
@@ -199,11 +197,11 @@ static void LoadGdiplus(void)
 	GdipBitmapUnlockBits = (GdipBitmapUnlockBitsProc)GpFunc("GdipBitmapUnlockBits");
 	GdipGetImagePixelFormat = (GdipGetImagePixelFormatProc)GpFunc("GdipGetImagePixelFormat");
 
-	if (GdiplusPresent)
+	if (GdiplusDLL)
 	{
 		GdiplusStartupInput gpStartupInput = {1, NULL, TRUE, FALSE};
 		if (GdiplusStartup(&GpToken, &gpStartupInput, &gpStartupOutput) != GpOk)
-			GdiplusPresent = FALSE;
+			GdiplusDLL = 0;
 	}
 
 	if (Ole32)
@@ -219,10 +217,11 @@ DLLIMP uint8_t * stbi_load_from_memory(const uint8_t * mem, int len, int *x, int
 	GpPixelFormat pixelFormat;
 	uint8_t *     ret;
 
-	if (GdiplusPresent < 0)
-	{
+	if (GdiplusDLL == (HINSTANCE) 1)
 		LoadGdiplus();
-	}
+
+	if (! GdiplusDLL)
+		return NULL;
 
 	*x = 0;
 	*y = 0;

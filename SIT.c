@@ -484,12 +484,13 @@ DLLIMP int SIT_InitDrag(SIT_CallProc cb)
 DLLIMP void SIT_Nuke(int what)
 {
 	SIT_Action act;
+	SIT_Widget app = sit.root;
 	CSSImage   img;
 
 	if (sit.focus) SIT_SetFocus(NULL);
-	SIT_DestroyChildren(sit.root);
+	SIT_DestroyChildren(app);
 	sit.hover = sit.active = sit.focus = sit.composited = sit.geomList = sit.curTooltip = NULL;
-	sit.activeDlg = sit.root;
+	sit.activeDlg = app;
 	sit.toolTip = NULL;
 
 	while ((act = HEAD(sit.actions)))
@@ -502,20 +503,26 @@ DLLIMP void SIT_Nuke(int what)
 		SIT_DestroyWidget(w);
 	}
 
+	if (HAS_EVT(app, SITE_OnFinalize))
+	{
+		SIT_ApplyCallback(app, NULL, SITE_OnFinalize);
+		SIT_DelCallback(app, SITE_OnFinalize, NULL, NULL);
+	}
+
 	switch (what) {
 	case SITV_NukeCtrl:
 		/* remove inline styles */
-		cssClear(sit.root);
-		cssApply(sit.root);
-		layoutCalcBox(sit.root);
-		FOCUSRING(sit.root) = NULL;
-		sit.root->tooltip = NULL;
+		cssClear(app);
+		cssApply(app);
+		layoutCalcBox(app);
+		FOCUSRING(app) = NULL;
+		app->tooltip = NULL;
 		sit.dirty = True;
 		break;
 	case SITV_NukeAll:
-		SIT_DestroyWidget(sit.root);
+		SIT_DestroyWidget(app);
 		cssFreeGlobals();
-		sit.activeDlg = sit.root = NULL;
+		sit.activeDlg = app = NULL;
 		// no break;
 	case SITV_NukeTheme:
 		if (sit.imageCleanup) SIT_ActionReschedule(sit.imageCleanup, -1, -1);

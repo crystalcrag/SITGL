@@ -103,8 +103,8 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 	pfd.nVersion = 1;
 	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
 	pfd.iPixelType = PFD_TYPE_RGBA;
-	pfd.cColorBits = 24;
-	pfd.cDepthBits = 16;
+	pfd.cColorBits = 32;
+	pfd.cDepthBits = 24;
 	pfd.cStencilBits = 8;
 	pfd.iLayerType = PFD_MAIN_PLANE;
 
@@ -161,6 +161,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance,
 		"<button name=ok title=", _("This is a <b>Button</b>"), "bottom=FORM>"
 		"<button name=ko title=", _("Exit"), "top=OPPOSITE,ok left=WIDGET,ok,1em>"
 		"<progress name=prog progressPos=50 title='%d%%' width=10em left=WIDGET,ko,1em bottom=OPPOSITE,ok>"
+		"<button name=check title='A checkbox' checkState=1 buttonType=", SITV_CheckBox, "left=WIDGET,prog,1em top=MIDDLE,ok>"
 	);
 	SIT_SetAttributes(dialog, "<edit bottom=WIDGET,ok,0.5em>");
 
@@ -271,7 +272,10 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
 		SIT_ProcessMouseMove(LOWORD(lParam), HIWORD(lParam));
 		break;
 	case WM_SETCURSOR:
-		SetCursor(LoadCursor(NULL, winCursor));
+		if (LOWORD(lParam) == HTCLIENT)
+			SetCursor(LoadCursor(NULL, winCursor));
+		else
+			DefWindowProc(hwnd, message, wParam, lParam);
 		break;
 	case WM_LBUTTONDOWN: param ++; // no break;
 	case WM_LBUTTONUP:   param ++; // no break;

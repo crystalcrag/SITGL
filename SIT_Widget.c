@@ -361,7 +361,7 @@ static int SIT_FrameMeasure(SIT_Widget w, APTR cd, APTR mode)
 	SIT_Frame frame = (SIT_Frame) w;
 	REAL      fh    = w->style.font.size;
 	SizeF *   pref  = cd;
-	SizeF     min;
+	SizeF     min   = *pref;
 
 	layoutMeasureWords(w, &min);
 	frame->title.width  = roundf(min.width);
@@ -369,6 +369,8 @@ static int SIT_FrameMeasure(SIT_Widget w, APTR cd, APTR mode)
 
 	int i;
 	REAL minPadding[] = {roundf(fh * 0.9), roundf(fh * 1.2), roundf(fh * 0.9), roundf(fh * 0.8)};
+	if (w->layout.border.bottom == 0)
+		minPadding[3] = 0;
 	for (i = 0; i < 4; i ++)
 	{
 		REAL * pad = w->padding + i;
@@ -429,7 +431,10 @@ static Bool SIT_InitFrame(SIT_Widget w, va_list args)
 
 	SIT_AddCallback(w, SITE_OnResize, SIT_FrameNoBorders, NULL);
 	SIT_ParseTags(w, args, w->attrs = WidgetClass);
+	layoutCalcBox(w);
 
+	if (w->title)
+		layoutParseHTML(w, w->title);
 	return TRUE;
 }
 
@@ -825,15 +830,23 @@ static void SIT_DelCB(SIT_Widget w, SIT_Callback cb)
 
 DLLIMP void SIT_DelCallback(SIT_Widget w, int type, SIT_CallProc proc, APTR data)
 {
-	SIT_Callback cb;
+	SIT_Callback cb, next;
 
 	if (w == NULL) return;
 
-	for (cb = HEAD(w->callbacks); cb && !(cb->sc_CB == proc &&
-	     cb->sc_UserData == data && cb->sc_Event == type); NEXT(cb));
+	if (proc)
+	{
+		for (cb = HEAD(w->callbacks); cb && !(cb->sc_CB == proc &&
+			 cb->sc_UserData == data && cb->sc_Event == type); NEXT(cb));
 
-	if (cb) SIT_DelCB(w, cb);
-
+		if (cb) SIT_DelCB(w, cb);
+	}
+	else for (cb = next = HEAD(w->callbacks); cb; cb = next)
+	{
+		/* delete all cb register for this event type */
+		NEXT(next);
+		if (cb->sc_Event == type) SIT_DelCB(w, cb);
+	}
 	if (type == SITE_OnDropFiles) SIT_AppDelDnD();
 }
 
