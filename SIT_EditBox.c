@@ -48,7 +48,8 @@
 		FLAG_FIXEDUNDO = 8,
 		FLAG_SETSTART  = 16,
 		FLAG_SETEND    = 32,
-		FLAG_CLEARCLIP = 64
+		FLAG_CLEARCLIP = 64,
+		FLAG_IGNOREEVT = 128
 	};
 
 static uint32_t lastClick;
@@ -259,6 +260,12 @@ static void SIT_TextEditCheckNumber(SIT_EditBox edit, STRPTR buf)
 static int SIT_TextEditSyncValue(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_EditBox edit = (SIT_EditBox) w;
+	if (edit->flags & FLAG_IGNOREEVT)
+	{
+		/* OnChange event is comming from spinner: curValue is already in sync */
+		edit->flags ^= FLAG_IGNOREEVT;
+		return 0;
+	}
 	switch (edit->editType) {
 	case SITV_Integer: edit->value.ref = round(strtod(edit->text, NULL)); break;
 	case SITV_Float:
@@ -325,12 +332,16 @@ static int SIT_TextEditSpinnerClick(SIT_Widget w, APTR cd, APTR ud)
 				case SITV_Double:  * (double *) edit->curValue = val;
 				}
 			}
+			edit->flags |= FLAG_IGNOREEVT;
+			SIT_ApplyCallback(&edit->super, edit->text, SITE_OnChange);
 			return 50;
 		}
 		else if (changes)
 		{
 			/* garbage from input removed usually */
 			SIT_TextEditSetText(&edit->super, edit->text);
+			edit->flags |= FLAG_IGNOREEVT;
+			SIT_ApplyCallback(&edit->super, edit->text, SITE_OnChange);
 		}
 	}
 	else if (msg->state == SITOM_ButtonReleased)
@@ -510,7 +521,7 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 	{
 		/* add spinner buttons */
 		edit->spinnerUp = SIT_CreateWidget("#spin.up", SIT_BUTTON, w,
-			SIT_NextCtrl, "NONE",
+			SIT_NextCtrl, NULL,
 			SIT_Right,    SITV_AttachForm, 0, SITV_NoPad,
 			SIT_Top,      SITV_AttachForm, 0, SITV_NoPad,
 			SIT_Width,    SITV_Em(0.9),
@@ -518,7 +529,7 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 			NULL
 		);
 		edit->spinnerDown = SIT_CreateWidget("#spin.down", SIT_BUTTON, w,
-			SIT_NextCtrl, "NONE",
+			SIT_NextCtrl, NULL,
 			SIT_Right,    SITV_AttachForm, 0, SITV_NoPad,
 			SIT_Bottom,   SITV_AttachForm, 0, SITV_NoPad,
 			SIT_Width,    SITV_Em(0.9),
@@ -1325,6 +1336,11 @@ static int SIT_TextEditInsertChars(SIT_EditBox state, int pos, char * text, int 
 		*eof = 0;
 		i = state->rowTop;
 		add = state->charTop;
+		if (pos < add)
+		{
+			for (i = 0, rows = state->rows, add = 0, p = state->text;
+				 i < state->rowCount && add + rows[i].bytes <= pos; add += rows[i].bytes, i ++);
+		}
 		if (state->editType >= SITV_Integer)
 			state->value.step = INVALID_STEP;
 	}
@@ -2599,14 +2615,17 @@ static int SIT_TextEditRedoMakeRoom(SIT_EditBox state, int opsize, DATA8 * alloc
 			int diff = max - state->undoSize;
 			s1 = state->undoBuffer;
 			end = buf + max;
-			state->undoBuffer = buf;
-			state->undoSize   = max;
 			if (state->redoLast)
 				state->redoLast = buf + (state->redoLast - s1);
 			if (state->undoLast)
 				state->undoLast = buf + (state->undoLast - s1);
 			if (state->redoLast)
-				memmove(state->redoLast + diff, state->redoLast, max - (state->redoLast-buf));
+			{
+				memmove(state->redoLast + diff, state->redoLast, state->undoSize - (state->redoLast-buf));
+				state->redoLast += diff;
+			}
+			state->undoBuffer = buf;
+			state->undoSize   = max;
 		}
 		else return 0;
 	}

@@ -360,8 +360,8 @@ Bool SIT_InitScrollBar(SIT_Widget w, va_list args)
 		SIT_Attach * ref1;
 		SIT_Attach * ref2;
 		int8_t       off = sb->isHoriz ? 1 : -1;
-		sb->arrowUp   = SIT_CreateWidget(classes[sb->isHoriz],   SIT_BUTTON, w->parent, SIT_NextCtrl, "NONE", NULL);
-		sb->arrowDown = SIT_CreateWidget(classes[sb->isHoriz+2], SIT_BUTTON, w->parent, SIT_NextCtrl, "NONE", NULL);
+		sb->arrowUp   = SIT_CreateWidget(classes[sb->isHoriz],   SIT_BUTTON, w->parent, SIT_NextCtrl, NULL, NULL);
+		sb->arrowDown = SIT_CreateWidget(classes[sb->isHoriz+2], SIT_BUTTON, w->parent, SIT_NextCtrl, NULL, NULL);
 		ref1 = sb->arrowUp->attachment + (1-sb->isHoriz);
 		ref2 = sb->arrowDown->attachment + (1-sb->isHoriz);
 		switch (sb->arrowType) {

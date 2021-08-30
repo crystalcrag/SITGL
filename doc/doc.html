@@ -2542,11 +2542,18 @@ auto-repeat when a text edit widget get the focus:
 	<type>static uint8_t</type> repeatOn = <val>0</val>;
 
 	<type>int</type> type;
-	SIT_GetValues(w, SIT_CtrlType, &type, NULL);
+	<com>/*
+	 * note: some widgets will temporarily receive the mouse focus without changing the keyboard focus
+	 *       (like spinner on numeric input): that's why we don't use &lt;w&gt; parameter.
+	 */</com>
+	SIT_GetValues(SIT_GetFocus(), SIT_CtrlType, &type, NULL);
 	<kwd>if</kwd> (cd && type == SIT_EDITBOX)
 	{
-		SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
-		repeatOn = <val>1</val>;
+		<kwd>if</kwd> (repeatOn == <val>0</val>)
+		{
+			SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+			repeatOn = <val>1</val>;
+		}
 	}
 	<kwd>else if</kwd> (repeatOn)
 	{

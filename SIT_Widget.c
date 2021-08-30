@@ -456,7 +456,9 @@ static void SIT_AdjustTabOrder(SIT_Widget w, STRPTR ctrl)
 		if (list)
 			*prev = list->nextCtrl, w->flags &= ~SITF_InFocusRing;
 	}
-	switch (FindInList("NONE,FIRST,LAST", ctrl, 0)) {
+	if (ctrl == NULL)
+		w->nextCtrl = NoFocusRing;
+	else switch (FindInList("NONE,FIRST,LAST", ctrl, 0)) {
 	case 0: /* none */
 		w->nextCtrl = NoFocusRing;
 		break;

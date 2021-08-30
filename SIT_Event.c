@@ -199,16 +199,29 @@ static Bool SIT_ProcessAccel(int capture, int key)
 DLLIMP int SIT_ProcessKey(int key, int modifier, int pressed)
 {
 	if (pressed)
-	switch (key) {
-	case SITK_LShift:
-	case SITK_RShift:
-	case SITK_Shift:  modifier |= SITK_FlagShift; break;
-	case SITK_LCtrl:
-	case SITK_RCtrl:  modifier |= SITK_FlagCtrl; break;
-	case SITK_LCommand:
-	case SITK_RCommand: modifier |= SITK_FlagCmd; break;
-	case SITK_LAlt:
-	case SITK_RAlt:   modifier |= SITK_FlagAlt;
+	{
+		/* is it a char instead? */
+		if (key < SITK_Home)
+		{
+			switch (key) {
+			case '\r':
+			case '\n': key = SITK_Return; break;
+			case '\b': key = SITK_BackSpace; break;
+			default:   return SIT_ProcessChar(key, modifier);
+			}
+		}
+		switch (key) {
+		case SITK_LShift:
+		case SITK_RShift:
+		case SITK_Shift:  modifier |= SITK_FlagShift; break;
+		case SITK_LCtrl:
+		case SITK_RCtrl:  modifier |= SITK_FlagCtrl; break;
+		case SITK_LCommand:
+		case SITK_RCommand: modifier |= SITK_FlagCmd; break;
+		case SITK_LAlt:
+		case SITK_RAlt:   modifier |= SITK_FlagAlt; break;
+		case SITK_Tab:    return SIT_ProcessChar('\t', modifier);
+		}
 	}
 
 	sit.keyQual = modifier;
