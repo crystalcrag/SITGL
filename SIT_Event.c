@@ -261,6 +261,28 @@ DLLIMP int SIT_ProcessKey(int key, int modifier, int pressed)
 			}
 			else
 			{
+				if (key == SITK_Return)
+				{
+					/* check if there is a default button in range */
+					SIT_Widget root = sit.activeDlg;
+					SIT_Widget def  = NULL;
+					if (root->type == SIT_APP || (def = ((SIT_Dialog)root)->defButton) == NULL)
+					{
+						for (root = sit.root; root; NEXT(root))
+						{
+							if (root->type != SIT_DIALOG) continue;
+							SIT_Widget act = ((SIT_Dialog)root)->defButton;
+							if (act == NULL) continue;
+							if (def) { def = NULL; break; }
+							else def = act;
+						}
+					}
+					if (def)
+					{
+						SIT_ApplyCallback(def, NULL, SITE_OnActivate);
+						return 1;
+					}
+				}
 				SIT_Widget target = SIT_EventBubble(focus, SITE_OnRawKey);
 				if (target && HAS_EVT(target, SITE_OnRawKey))
 				{

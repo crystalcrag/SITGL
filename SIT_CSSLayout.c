@@ -358,15 +358,18 @@ static DATA8 layoutParseEntities(DATA8 text, int max)
 		p += CP2UTF8(p, len);
 		end ++;
 
-		if (end < eof)
-			memmove(p, end, eof - end), eof -= end - p;
-		p --;
+		if (end >= eof)
+		{
+			p[0] = 0;
+			break;
+		}
+		memmove(p, end, eof - end); eof -= end - p; p --;
 	}
 	return p;
 }
 
 /* add an image as if it is a regular character */
-static void layoutAddSymbol(SIT_Widget node, STRPTR uri)
+static void layoutAddSymbol(SIT_Widget node, STRPTR uri, Bool fullH)
 {
 	CSSImage img = cssAddImage(uri, True);
 	SIT_Widget offset;
@@ -380,14 +383,15 @@ static void layoutAddSymbol(SIT_Widget node, STRPTR uri)
 	nvgFontFaceId(sit.nvgCtx, node->style.font.handle);
 	nvgFontSize(sit.nvgCtx,   node->style.font.size);
 	nvgTextMetrics(sit.nvgCtx, &w->bl, NULL, &w->h);
-
+	if (fullH)
+		w->bl = w->h, w->n = -2, w->va = VerticalAlignBottom;
+	else
+		w->n = -1, w->va = node->style.verticalAlign;
 	w->word  = (STRPTR) img;
 	w->node  = node;
 	w->space = w->y = w->marginR = w->marginL = 0;
-	w->n     = -1;
 	w->nl    = 0;
-	w->va    = node->style.verticalAlign;
-	w->width = w->bl * img->width / img->height;
+	w->width = roundf(w->bl * img->width / img->height);
 }
 
 typedef struct HTMLAttr_t *      HTMLAttr;
@@ -486,11 +490,13 @@ static STRPTR layoutParseTag(SIT_Widget * parent, DATA8 start)
 		w->nl = 1;
 		return start + 1;
 	}
-	else if (strcasecmp(name, "xchar") == 0)
-	{
+	else switch (FindInList("xchar,pchar", name, 0)) {
+	case 0: nb = 0; goto case_common;
+	case 1: nb = 1;
+	case_common:
 		/* image character: that one pesky symbol not defined in the font */
 		if (attrs && strcasecmp(attrs->name, "src") == 0)
-			layoutAddSymbol(offset, attrs->value);
+			layoutAddSymbol(offset, attrs->value, nb);
 		return start + 1;
 	}
 

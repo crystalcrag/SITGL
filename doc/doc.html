@@ -4745,10 +4745,12 @@ allocation at the start).
   to a <strong>valid reference</strong> to an integer/float/double, depending on the type of control
   you created. The current value represented by the control will be stored at the location pointed 
   by this reference. Obviously, do not give a reference to a local variable, it will corrupt your stack.
-  
+
   <p>The initial value for this property will be used to set the content of the edit box. In that case,
-  the value given to <tt>SIT_Title</tt> (if any) <b>will be ignored</b>.
-  
+  the value given to <tt>SIT_Title</tt> (if any) <b>will be ignored</b>. If you modify the value,
+  you'll have to notify <tt>SITGL</tt> obviously. To do so, simply set the <tt>SIT_Title</tt> property
+  to <tt class="o">NULL</tt> just <b>after</b> having changed the value.
+
   <p><span class="n">Note</span>: the conversion to text will use a <tt>printf()</tt> derived function
   with the <tt class="s">"%f"</tt> format specifier. That means: no localization support and numbers
   will be written with all digits (no exponent).
@@ -4758,8 +4760,8 @@ allocation at the start).
   limited precision of <tt class="t">float</tt> and <tt class="t">double</tt> types, you very rarely
   want to display all the fractional digits encoded in those types, because it will be mostly rounding
   error.
-  
-  <p>For example, if you create a <tt>SITV_Float</tt> edit box with a <tt>SIT_ScrollPos</tt> containing the
+
+  <p>For example, if you create a <tt>SITV_Float</tt> edit box with a <tt>SIT_CurValue</tt> containing the
   value <tt class="o">0.1</tt>, the value displayed without rounding will be <tt class="o">0.100000001490116</tt>.
   To prevent this, you can set this property to round the number at the specified number of fractional digits.
 
@@ -4829,10 +4831,10 @@ allocation at the start).
   Spin buttons can also be controlled using the Up/Down arrow keys. The default values for range are
   +/- infinity and the default step value is 1.
 
-  <p><b class="n">DANGER</b>: take particular attention that these properties needs a <tt class="t">double</tt>
+  <p><err>DANGER</err>: take particular attention that these properties needs a <tt class="t">double</tt>
   argument. If you are using the <tt>SIT_SetValues()</tt> or <tt>SIT_CreateWidget()</tt> functions,
   be careful that the numbers you give are promoted to <tt class="t">double</tt>. For example:
-  <pre><com>/* <span class="e">this code contains an error</span> */</com>
+  <pre><com>/* <err>this code contains an error</err> */</com>
 <type>int</type> fps = <val>60</val>;
 SIT_Wiget num = SIT_CreateWidget(<val>"fps"</val>, SIT_EDITBOX, parent,
 	SIT_EditType, SITV_Integer,
@@ -4842,7 +4844,7 @@ SIT_Wiget num = SIT_CreateWidget(<val>"fps"</val>, SIT_EDITBOX, parent,
 	<val>NULL</val>
 );
 
-<com>/* <span class="ok">this is the correct way</span> */</com>
+<com>/* <good>this is the correct way</good> */</com>
 SIT_Wiget num = SIT_CreateWidget(<val>"fps"</val>, SIT_EDITBOX, parent,
 	SIT_EditType, SITV_Integer,
 	SIT_CurValue, &amp;fps,

@@ -442,7 +442,7 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 		if (! edit->fixedBuffer)
 			edit->fixedSize = fixedMem = 128;
 		/* disable undo: will prevent spreading password all over the memory */
-		edit->undoSize = 0;
+		edit->undoSize = edit->editType == SITV_Password ? 0 : 128;
 		edit->flags |= FLAG_FIXEDUNDO|FLAG_FIXEDSIZE;
 	}
 	if (edit->editType == SITV_Integer)
@@ -604,7 +604,19 @@ void SIT_TextEditSetText(SIT_Widget w, STRPTR title)
 		edit->ypos = 0;
 		/* text */
 		edit->length = 0;
-		SIT_TextEditPaste(edit, title ? title : "", -1);
+		if (title == NULL && edit->curValue && edit->editType >= SITV_Integer)
+		{
+			/* value changed from outside: refresh text */
+			double val;
+			switch (edit->editType) {
+			case SITV_Integer: val = * (int *)    edit->curValue; break;
+			case SITV_Float:   val = * (float *)  edit->curValue; break;
+			default:           val = * (double *) edit->curValue;
+			}
+			SIT_TextEditFormatDouble(edit->text, edit->maxText, val, edit->roundTo);
+			SIT_TextEditPaste(edit, edit->text, -1);
+		}
+		else SIT_TextEditPaste(edit, title ? title : "", -1);
 		if (pos > edit->length) pos = edit->length;
 		edit->cursor = edit->selStart = edit->selEnd = pos;
 		if (w->layout.pos.width > 0)

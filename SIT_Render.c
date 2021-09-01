@@ -1640,7 +1640,7 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 					nvgFill(vg);
 				}
 			}
-			if (word.n == -1)
+			if (word.n < 0)
 			{
 				/* symbol image */
 				CSSImage img   = (CSSImage) word.word;
