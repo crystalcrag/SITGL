@@ -475,10 +475,10 @@ static Bool SIT_CanChangeContainerSize(SIT_Widget w, SizeF * oldSz, SizeF * newS
 	if (a->sa_Type == SITV_AttachNone)
 	{
 		/* bottom/right set to none */
-		REAL bottom = c->box.bottom - c->padding[side+2];
+		REAL bottom = c->box.bottom - c->box.top - c->padding[side+2];
 		// XXX might not be set yet
 		// (&c->layout.pos.width)[side] + c->padding[side];
-		if (p[0] > bottom || p[-2] + (&oldSz->width)[side] == bottom) return True;
+		if (p[0] > bottom || p[-2] + (&oldSz->width)[side] >= bottom) return True;
 		if (newSz && (&newSz->width)[side] >= bottom) return True;
 	}
 	return False;
@@ -944,7 +944,7 @@ void SIT_ReflowLayout(SIT_Widget list)
 	while (list)
 	{
 		SIT_Widget parent = list->parent;
-		SizeF      pref   = {0};
+		SizeF      pref   = {-1, -1};
 		REAL       pbox[4];
 		REAL       dim[4];
 		int        i, flag;

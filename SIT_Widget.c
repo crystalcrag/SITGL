@@ -912,8 +912,13 @@ void SIT_DestroyWidget(SIT_Widget w)
 	if (sit.activeDlg  == w) sit.activeDlg  = sit.root;
 	if (sit.curTooltip == w) sit.curTooltip = NULL;
 	if (sit.active     == w) sit.active     = NULL;
-	if (sit.focus      == w) sit.focus      = NULL;
 	if (sit.hover      == w) sit.hover      = NULL;
+
+	if (sit.focus == w)
+	{
+		SIT_ApplyCallback(w, NULL, SITE_OnBlur);
+		sit.focus = NULL;
+	}
 
 	if (HAS_EVT(w, SITE_OnFinalize))
 		SIT_ApplyCallback(w, NULL, SITE_OnFinalize);

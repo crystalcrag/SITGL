@@ -352,7 +352,7 @@ DLLIMP int SIT_ProcessChar(int cp, int modifier)
 			focus->oldState = focus->state;
 			focus->state &= ~(STATE_FOCUS | STATE_KBDFOCUS);
 			layoutUpdateStyles(focus);
-			if (HAS_EVT(focus, SITE_OnBlur)|| HAS_EVT(sit.root, SITE_OnBlur))
+			if (HAS_EVT(focus, SITE_OnBlur) || HAS_EVT(sit.root, SITE_OnBlur))
 				SIT_ApplyCallback(focus, NULL, SITE_OnBlur);
 		}
 		if (next)

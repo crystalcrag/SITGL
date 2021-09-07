@@ -879,6 +879,10 @@ but you can look in the "<tt>example</tt>" directory, for some popular framework
   in detail in the <a href="#events">events</a> section).
   <p><span class="n">Note</span>: if a key press generates multiple characters, you'll have to call
   this function for each unicode code point.
+  <p><span class="n">Note²</span>: some keys can be processed both as character and key code events (like
+  Tab: it can be processed as the character <tt>'\t'</tt> or the key code <tt>SITK_Tab</tt>, same with
+  Return or BackSpace key): in that case, you can use any method you feel like <b>as long as you use
+  only one</b>.
 
   <p><b>The return code</b> works exactly like <tt>SIT_ProcessKey()</tt>.
 
@@ -2394,10 +2398,11 @@ process the Tab key, it will be used to navigate between controls.
   the cannonical names.
 
   <li><tt class="dt" id="SITE_OnResize">SITE_OnResize</tt>
-  <p>Whenever any of your control (including dialog box) is <b>about to be
-  resized</b>, this event will be triggered. The <tt>call_data</tt> parameter
-  will contain a table of 2 <tt class="t">float</tt>, specifying the new width and height in
-  pixels of the control.
+  <p>Whenever any of your control (including dialog box) is <b>about to be resized</b>, this event will
+  be triggered. The <tt>call_data</tt> parameter will contain an array of 2 <tt class="t">float</tt>,
+  specifying the new width and height in pixels of the <b>content area</b> of the control. At this point,
+  if you want the total size (including padding), you can retrieve the properties <tt>SIT_Width</tt> and
+  <tt>SIT_Height</tt>.
 
   <li><tt class="dt">SITE_OnPaint</tt>
   <p>Used to <b>redraw part of a control</b> and/or dialog. <tt>call_data</tt> is a pointer to a
@@ -2801,162 +2806,58 @@ of 0.1em and a padding of 0.2em, the total might not be exactly 0.3em, because o
 well as some extensions:
 
 <ul>
-  <li><b>Named colors</b>: there are <b>140 pre-defined colors</b>. In the table below you can see all of
-  them. Hover the mouse to get its name and their RGB components:
+  <li><b>Named colors</b>: there are <b>43 pre-defined colors</b>. In the table below you can see all of
+  them (sorted by name). Hover the mouse to get its name and their RGB components:
 <table id="colors">
 <tr>
-	<td style='background: #000000' title='black #000000'>
-	<td style='background: #000080' title='navy #000080'>
-	<td style='background: #00008b' title='darkblue #00008B'>
-	<td style='background: #0000cd' title='mediumblue #0000CD'>
-	<td style='background: #0000ff' title='blue #0000FF'>
-	<td style='background: #006400' title='darkgreen #006400'>
-	<td style='background: #008000' title='green #008000'>
-	<td style='background: #008080' title='teal #008080'>
-	<td style='background: #008b8b' title='darkcyan #008B8B'>
-	<td style='background: #00bfff' title='deepskyblue #00BFFF'>
-	<td style='background: #00ced1' title='darkturquoise #00CED1'>
-	<td style='background: #00fa9a' title='mediumspringgreen #00FA9A'>
-	<td style='background: #00ff00' title='lime #00FF00'>
-	<td style='background: #00ff7f' title='springgreen #00FF7F'>
-<tr>
+	<td style='background: #F0F8FF' title='aliceblue #F0F8FF'>
 	<td style='background: #00ffff' title='aqua #00FFFF'>
-	<td style='background: #00ffff' title='cyan #00FFFF'>
-	<td style='background: #191970' title='midnightblue #191970'>
-	<td style='background: #1e90ff' title='dodgerblue #1E90FF'>
-	<td style='background: #20b2aa' title='lightseagreen #20B2AA'>
-	<td style='background: #228b22' title='forestgreen #228B22'>
-	<td style='background: #2e8b57' title='seagreen #2E8B57'>
-	<td style='background: #2f4f4f' title='darkslategray #2F4F4F'>
-	<td style='background: #32cd32' title='limegreen #32CD32'>
-	<td style='background: #3cb371' title='mediumseagreen #3CB371'>
-	<td style='background: #40e0d0' title='turquoise #40E0D0'>
-	<td style='background: #4169e1' title='royalblue #4169E1'>
-	<td style='background: #4682b4' title='steelblue #4682B4'>
-	<td style='background: #483d8b' title='darkslateblue #483D8B'>
-<tr>
-	<td style='background: #48d1cc' title='mediumturquoise #48D1CC'>
-	<td style='background: #4b0082' title='indigo #4B0082'>
-	<td style='background: #556b2f' title='darkolivegreen #556B2F'>
-	<td style='background: #5f9ea0' title='cadetblue #5F9EA0'>
-	<td style='background: #6495ed' title='cornflowerblue #6495ED'>
-	<td style='background: #66cdaa' title='mediumaquamarine #66CDAA'>
-	<td style='background: #696969' title='dimgray #696969'>
-	<td style='background: #6a5acd' title='slateblue #6A5ACD'>
-	<td style='background: #6b8e23' title='olivedrab #6B8E23'>
-	<td style='background: #708090' title='slategray #708090'>
-	<td style='background: #778899' title='lightslategray #778899'>
-	<td style='background: #7b68ee' title='mediumslateblue #7B68EE'>
-	<td style='background: #7cfc00' title='lawngreen #7CFC00'>
-	<td style='background: #7fff00' title='chartreuse #7FFF00'>
-<tr>
-	<td style='background: #7fffd4' title='aquamarine #7FFFD4'>
-	<td style='background: #800000' title='maroon #800000'>
-	<td style='background: #800080' title='purple #800080'>
-	<td style='background: #808000' title='olive #808000'>
-	<td style='background: #808080' title='gray #808080'>
-	<td style='background: #808080' title='grey #808080'>
-	<td style='background: #87ceeb' title='skyblue #87CEEB'>
-	<td style='background: #87cefa' title='lightskyblue #87CEFA'>
-	<td style='background: #8a2be2' title='blueviolet #8A2BE2'>
-	<td style='background: #8b0000' title='darkred #8B0000'>
-	<td style='background: #8b008b' title='darkmagenta #8B008B'>
-	<td style='background: #8b4513' title='saddlebrown #8B4513'>
-	<td style='background: #8fbc8f' title='darkseagreen #8FBC8F'>
-	<td style='background: #90ee90' title='lightgreen #90EE90'>
-<tr>
-	<td style='background: #9370d8' title='mediumpurple #9370D8'>
-	<td style='background: #9400d3' title='darkviolet #9400D3'>
-	<td style='background: #98fb98' title='palegreen #98FB98'>
-	<td style='background: #9932cc' title='darkorchid #9932CC'>
-	<td style='background: #9acd32' title='yellowgreen #9ACD32'>
-	<td style='background: #a0522d' title='sienna #A0522D'>
-	<td style='background: #a52a2a' title='brown #A52A2A'>
-	<td style='background: #a9a9a9' title='darkgray #A9A9A9'>
-	<td style='background: #add8e6' title='lightblue #ADD8E6'>
-	<td style='background: #adff2f' title='greenyellow #ADFF2F'>
-	<td style='background: #afeeee' title='paleturquoise #AFEEEE'>
-	<td style='background: #b0c4de' title='lightsteelblue #B0C4DE'>
-	<td style='background: #b0e0e6' title='powderblue #B0E0E6'>
-	<td style='background: #b22222' title='firebrick #B22222'>
-<tr>
-	<td style='background: #b8860b' title='darkgoldenrod #B8860B'>
-	<td style='background: #ba55d3' title='mediumorchid #BA55D3'>
-	<td style='background: #bc8f8f' title='rosybrown #BC8F8F'>
-	<td style='background: #bdb76b' title='darkkhaki #BDB76B'>
-	<td style='background: #c0c0c0' title='silver #C0C0C0'>
-	<td style='background: #c71585' title='mediumvioletred #C71585'>
-	<td style='background: #cd5c5c' title='indianred #CD5C5C'>
-	<td style='background: #cd853f' title='peru #CD853F'>
-	<td style='background: #d2691e' title='chocolate #D2691E'>
-	<td style='background: #d2b48c' title='tan #D2B48C'>
-	<td style='background: #d3d3d3' title='lightgrey #D3D3D3'>
-	<td style='background: #d87093' title='palevioletred #D87093'>
-	<td style='background: #d8bfd8' title='thistle #D8BFD8'>
-	<td style='background: #da70d6' title='orchid #DA70D6'>
-<tr>
-	<td style='background: #daa520' title='goldenrod #DAA520'>
-	<td style='background: #dc143c' title='crimson #DC143C'>
-	<td style='background: #dcdcdc' title='gainsboro #DCDCDC'>
-	<td style='background: #dda0dd' title='plum #DDA0DD'>
-	<td style='background: #deb887' title='burlywood #DEB887'>
-	<td style='background: #e0ffff' title='lightcyan #E0FFFF'>
-	<td style='background: #e6e6fa' title='lavender #E6E6FA'>
-	<td style='background: #e9967a' title='darksalmon #E9967A'>
-	<td style='background: #ee82ee' title='violet #EE82EE'>
-	<td style='background: #eee8aa' title='palegoldenrod #EEE8AA'>
-	<td style='background: #f08080' title='lightcoral #F08080'>
-	<td style='background: #f0e68c' title='khaki #F0E68C'>
-	<td style='background: #f0f8ff' title='aliceblue #F0F8FF'>
-	<td style='background: #f0fff0' title='honeydew #F0FFF0'>
-<tr>
 	<td style='background: #f0ffff' title='azure #F0FFFF'>
-	<td style='background: #f4a460' title='sandybrown #F4A460'>
-	<td style='background: #f5deb3' title='wheat #F5DEB3'>
 	<td style='background: #f5f5dc' title='beige #F5F5DC'>
-	<td style='background: #f5f5f5' title='whitesmoke #F5F5F5'>
-	<td style='background: #f5fffa' title='mintcream #F5FFFA'>
-	<td style='background: #f8f8ff' title='ghostwhite #F8F8FF'>
-	<td style='background: #fa8072' title='salmon #FA8072'>
-	<td style='background: #faebd7' title='antiquewhite #FAEBD7'>
-	<td style='background: #faf0e6' title='linen #FAF0E6'>
-	<td style='background: #fdf5e6' title='oldlace #FDF5E6'>
-	<td style='background: #ff0000' title='red #FF0000'>
-	<td style='background: #ff00ff' title='fuchsia #FF00FF'>
-	<td style='background: #ff00ff' title='magenta #FF00FF'>
-<tr>
-	<td style='background: #ff1493' title='deeppink #FF1493'>
-	<td style='background: #ff4500' title='orangered #FF4500'>
-	<td style='background: #ff6347' title='tomato #FF6347'>
-	<td style='background: #ff7f50' title='coral #FF7F50'>
-	<td style='background: #ff8c00' title='darkorange #FF8C00'>
-	<td style='background: #ffa07a' title='lightsalmon #FFA07A'>
-	<td style='background: #ffa500' title='orange #FFA500'>
-	<td style='background: #ffb6c1' title='lightpink #FFB6C1'>
-	<td style='background: #ffc0cb' title='pink #FFC0CB'>
-	<td style='background: #ffd700' title='gold #FFD700'>
-	<td style='background: #ffdab9' title='peachpuff #FFDAB9'>
-	<td style='background: #ffdead' title='navajowhite #FFDEAD'>
-	<td style='background: #ffe4b5' title='moccasin #FFE4B5'>
 	<td style='background: #ffe4c4' title='bisque #FFE4C4'>
+	<td style='background: #000000' title='black #000000'>
+	<td style='background: #0000ff' title='blue #0000FF'>
+	<td style='background: #a52a2a' title='brown #A52A2A'>
+	<td style='background: #dc143c' title='crimson #DC143C'>
+	<td style='background: #00ffff' title='cyan #00FFFF'>
 <tr>
-	<td style='background: #ffe4e1' title='mistyrose #FFE4E1'>
-	<td style='background: #ffebcd' title='blanchedalmond #FFEBCD'>
-	<td style='background: #ffefd5' title='papayawhip #FFEFD5'>
-	<td style='background: #fff0f5' title='lavenderblush #FFF0F5'>
-	<td style='background: #fff5ee' title='seashell #FFF5EE'>
-	<td style='background: #fff8dc' title='cornsilk #FFF8DC'>
-	<td style='background: #fffacd' title='lemonchiffon #FFFACD'>
-	<td style='background: #fffaf0' title='floralwhite #FFFAF0'>
-	<td style='background: #fffafa' title='snow #FFFAFA'>
-	<td style='background: #ffff00' title='yellow #FFFF00'>
-	<td style='background: #ffffe0' title='lightyellow #FFFFE0'>
+	<td style='background: #00008b' title='darkblue #00008B'>
+	<td style='background: #a9a9a9' title='darkgray #A9A9A9'>
+	<td style='background: #006400' title='darkgreen #006400'>
+	<td style='background: #8b0000' title='darkred #8B0000'>
+	<td style='background: #ffd700' title='gold #FFD700'>
+	<td style='background: #808080' title='gray #808080'>
+	<td style='background: #008000' title='green #008000'>
 	<td style='background: #fffff0' title='ivory #FFFFF0'>
+	<td style='background: #f0e68c' title='khaki #F0E68C'>
+	<td style='background: #e6e6fa' title='lavender #E6E6FA'>
+<tr>
+	<td style='background: #add8e6' title='lightblue #ADD8E6'>
+	<td style='background: #e0ffff' title='lightcyan #E0FFFF'>
+	<td style='background: #d3d3d3' title='lightgray #D3D3D3'>
+	<td style='background: #ffb6c1' title='lightpink #FFB6C1'>
+	<td style='background: #ffffe0' title='lightyellow #FFFFE0'>
+	<td style='background: #00ff00' title='lime #00FF00'>
+	<td style='background: #ff00ff' title='magenta #FF00FF'>
+	<td style='background: #800000' title='maroon #800000'>
+	<td style='background: #000080' title='navy #000080'>
+	<td style='background: #808000' title='olive #808000'>
+<tr>
+	<td style='background: #ffa500' title='orange #FFA500'>
+	<td style='background: #ffc0cb' title='pink #FFC0CB'>
+	<td style='background: #800080' title='purple #800080'>
+	<td style='background: #ff0000' title='red #FF0000'>
+	<td style='background: #a0522d' title='sienna #A0522D'>
+	<td style='background: #c0c0c0' title='silver #C0C0C0'>
+	<td style='background: #87ceeb' title='skyblue #87CEEB'>
+	<td style='background: #d2b48c' title='tan #D2B48C'>
+	<td style='background: #008080' title='teal #008080'>
+	<td style='background: #ee82ee' title='violet #EE82EE'>
+<tr>
 	<td style='background: #ffffff' title='white #FFFFFF'>
+	<td style='background: #ffff00' title='yellow #FFFF00'>
 	<td style='background: url(images/checkboard.png)' title='transparent'>
 </table>
-
-  <p>Or check the source file <tt>SIT_CSSColors.h</tt> for the complete list.
 
   <li><tt>selfore</tt>, <tt>selback</tt>: these two pre-defined keywords will retrieve the selection
   color currently in use by the operating system for (respectively) the text and the background.
@@ -4592,6 +4493,9 @@ assigned to one of the following values:
   which does not handle localization: decimal separator must be . (period) and there must be no
   thousand separators. Exponential numbers works, ie: <tt>1e6</tt> will be converted to 1,000,000.
 
+  <p>If you need a greater precision than this, you'll have to monitor the <a href="#editevents"><tt>SIT_OnChange</tt></a>
+  event and convert directly the text entered by the user.
+
   <p>For <tt>SITV_Integer</tt> edit box, if the range of possible values is short, you might consider
   using a <a href="#SIT_SLIDER">SIT_SLIDER</a> instead.
 </ul>
@@ -4830,6 +4734,11 @@ allocation at the start).
   by the control</b>. <tt>SIT_StepValue</tt> control by what amount the spin buttons will change the value.
   Spin buttons can also be controlled using the Up/Down arrow keys. The default values for range are
   +/- infinity and the default step value is 1.
+
+  <p><span class="n">Note</span>: these properties <b>won't prevent users</b> from entering invalid/outside
+  range values in the edit field. If you are monitoring the <tt>SITE_OnChange</tt> event and converting
+  the text into number yourself, you have to keep that in mind. If you assigned something to the property
+  <tt>SIT_CurValue</tt>, the value will be clamped to the specified interval no matter what.
 
   <p><err>DANGER</err>: take particular attention that these properties needs a <tt class="t">double</tt>
   argument. If you are using the <tt>SIT_SetValues()</tt> or <tt>SIT_CreateWidget()</tt> functions,
@@ -5315,6 +5224,14 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
 <p>A few more specialized properties exist to help you manage listbox:
 
 <ul>
+  <li><tt class="dt">SIT_ViewMode</tt> (<tt class="t">int</tt>)
+  <p>Enumeration that controls the <b>view mode in which items will be displayed</b>. Two possible choices:
+  <ul>
+    <li><tt class="dt">SITV_ListViewReport</tt> : Default value. You'll have to set at least the
+	<tt>SIT_ColumnNames</tt> property if you want anything to appear on screen.
+    <li><tt class="dt">SITV_ListViewIcon</tt> : <tt>SIT_ColumnNames</tt> is not necessary.
+  </ul>
+
   <li><tt class="dt">SIT_ListBoxFlags</tt> (<tt class="t">int</tt>)
   <p>A bitfield that can be initialized with the following flags:
   <ul>
@@ -5346,9 +5263,9 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
   property.
 
   <li><tt class="dt">SIT_SelectedIndex</tt> (<tt class="t">int</tt>)
-  <p>Set or get currently selected row. -1 will be returned if none are selected. If you try to set
-  an index out of range, it will be clamped between the minimum and maximum row number. In case of
-  multi-selection is allowed, this will give you the index of the last item selected.
+  <p>Set or get currently selected row. <tt class="o">-1</tt> will be returned if none are selected.
+  If you try to set an index out of range, it will be clamped between the minimum and maximum row number.
+  In case of multi-selection is allowed, this will give you the index of the last item selected.
 
   <li><tt class="dt">SIT_RowSel(row)</tt> (<tt class="t">int</tt>)
   <p>Set or get selection state of a row. If the list is single-selection only, it will automatically
@@ -5359,6 +5276,11 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
   <li><tt class="dt">SIT_RowTag(row)</tt> (<tt class="t">APTR</tt>)
   <p>This tag allows you to set or get an arbitrary pointer to the given row. It works like the previous
   one: you have to specify the row you want to modify as argument to the tag name.
+
+  <li><tt class="dt">SIT_RowMaxVisible</tt> (<tt class="t">int</tt>)
+  <p>Only meaningful in report view. It will constraint the height of the listbox to be an exact multiple
+  of row, up to the maximum specified for this property. If more items are added, a scrollbar will be
+  added. Default value is 0, which disables that feature.
 
   <li><tt class="dt">SIT_MakeVisible</tt> (<tt class="t">int</tt>) <span class="ro">write-only</span>
   <p>Will bring into view the n<sup>th</sup> item by scrolling the content of list by the minimum

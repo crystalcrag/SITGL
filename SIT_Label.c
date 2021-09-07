@@ -26,7 +26,7 @@ int SIT_MeasureLabel(SIT_Widget w, APTR cd, APTR unused)
 {
 	SizeF * pref = cd;
 
-	if ((w->layout.flags & LAYF_HasImg) == 0)
+	if ((w->layout.flags & LAYF_HasImg) == 0 && w->title)
 	{
 		SIT_Label label = (SIT_Label) w;
 		SizeF ret = *pref;

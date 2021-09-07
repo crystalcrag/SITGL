@@ -275,11 +275,14 @@ static int SIT_TextEditSyncValue(SIT_Widget w, APTR cd, APTR ud)
 
 	if (edit->curValue)
 	{
+		double cur = edit->value.ref;
+		if (cur < edit->minValue) cur = edit->minValue; else
+		if (cur > edit->maxValue) cur = edit->maxValue;
 		/* int and float conversion will be lossless */
 		switch (edit->editType) {
-		case SITV_Integer: * (int *)    edit->curValue = edit->value.ref; break;
-		case SITV_Float:   * (float *)  edit->curValue = edit->value.ref; break;
-		case SITV_Double:  * (double *) edit->curValue = edit->value.ref;
+		case SITV_Integer: * (int *)    edit->curValue = cur; break;
+		case SITV_Float:   * (float *)  edit->curValue = cur; break;
+		case SITV_Double:  * (double *) edit->curValue = cur;
 		}
 	}
 	return 0;

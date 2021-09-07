@@ -315,6 +315,7 @@ struct SIT_ListBox_t
 	int          curRow;               /* public: G */
 	int          softColumn;
 	int          recalcCell;
+	int          maxRowVisible;        /* public: SG */
 	uint16_t     msgX, msgY;           /* mousemove */
 	STRPTR       columnNames;          /* public: S */
 	STRPTR       columnWidths;         /* public: S */

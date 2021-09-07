@@ -39,7 +39,7 @@ static int SIT_TabAutoManage(SIT_Widget w, APTR cd, APTR ud)
 
 //		if (c->visible) fprintf(stderr, "auto showing %S\n", c->name);
 	}
-	if (ud) return 1;
+	if (ud) return 0;
 
 	SIT_TabItem item = tab->items + nth;
 
@@ -53,7 +53,7 @@ static int SIT_TabAutoManage(SIT_Widget w, APTR cd, APTR ud)
 		item->clientArea.width  = w->layout.pos.width;
 		item->clientArea.height = w->layout.pos.height;
 	}
-	return 1;
+	return 0;
 }
 
 /* SITE_OnReisze handler */

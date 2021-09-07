@@ -31,6 +31,7 @@
 		{ SIT_RowSelArg,     NULL,            _SG, SIT_BOOL, 0 },
 		{ SIT_RowTagArg,     NULL,            _SG, SIT_PTR,  0 },
 		{ SIT_SortColumn,    "sortColumn",    _SG, SIT_INT,  OFFSET(SIT_ListBox, sortColumn) },
+		{ SIT_RowMaxVisible, "rowMaxVisible", _SG, SIT_INT,  OFFSET(SIT_ListBox, maxRowVisible) },
 		{ SIT_TagEnd }
 	};
 
@@ -124,8 +125,12 @@ static int SIT_ListMeasure(SIT_Widget w, APTR cd, APTR ud)
 		int   i, j, count;
 
 		if (list->lbFlags & SITV_ListMeasured)
+		{
+			if (pref->width  < 0) pref->width  = w->flags & SITF_FixedWidth  ? w->fixed.width  : w->currentBox.width;
+			if (pref->height < 0) pref->height = w->flags & SITF_FixedHeight ? w->fixed.height : w->currentBox.height;
 			/* if size changes, it will be handled in OnRsize event */
 			return 1;
+		}
 
 		count = list->columnCount;
 		hdr = list->columns;
@@ -149,15 +154,7 @@ static int SIT_ListMeasure(SIT_Widget w, APTR cd, APTR ud)
 			for (j = list->rowCount, row = cell; j > 0; j --, row += count)
 			{
 				if ((row->flags & CELL_HASSIZE) == 0)
-				{
-					td->title = row->obj;
-					row->flags |= CELL_HASSIZE;
-					if (i == 0) row->flags |= CELL_COLSTART;
-					row->colLeft = i;
-					layoutMeasureWords(td, &row->sizeObj);
-					row->sizeCell.width  = row->sizeObj.width  + td->padding[0] + td->padding[2];
-					row->sizeCell.height = row->sizeObj.height + td->padding[1] + td->padding[3];
-				}
+					SIT_ListCalcSize(td, row, (int) ud);
 
 				if (hdr->sizeCell.width < row->sizeCell.width)
 					hdr->sizeCell.width = row->sizeCell.width;
@@ -172,6 +169,8 @@ static int SIT_ListMeasure(SIT_Widget w, APTR cd, APTR ud)
 				list->realWidths[i] = hdr->sizeCell.width / size.width;
 			hdr->sizeCell.height = size.height;
 		}
+		int maxRow = list->maxRowVisible;
+		if (maxRow <= 0) maxRow = -1;
 		/* compute row height */
 		for (cell = STARTCELL(list), i = list->rowCount; i > 0; i --)
 		{
@@ -186,7 +185,8 @@ static int SIT_ListMeasure(SIT_Widget w, APTR cd, APTR ud)
 					height = h;
 			}
 			for (j = list->columnCount; j > 0; row->sizeCell.height = height, j --, row ++);
-			size.height += height;
+			if (maxRow != 0)
+				size.height += height, maxRow --;
 		}
 		list->scrollHeight = size.height - list->hdrHeight;
 		size.width  += w->padding[0] + w->padding[1];
@@ -302,7 +302,7 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 				align = hdr->flags & CELL_ALIGNR ? TextAlignRight :
 				        hdr->flags & CELL_ALIGNC ? TextAlignCenter : 0;
 				if (j == col-1)
-					maxw -= list->scrollPad - node->padding[2];
+					maxw -= list->scrollPad;
 			}
 			if (cell->sizeObj.width <= maxw)
 			{
@@ -390,6 +390,7 @@ static Bool SIT_ListAdjustScroll(SIT_ListBox list)
 		{
 			if (list->super.vscroll == NULL)
 			{
+				fprintf(stderr, "adding scroll bar to %s\n", list->super.name);
 				SIT_CreateWidgets(&list->super, "<scrollbar name=vscroll lineHeight=", (int) list->super.style.font.size,
 					"top=", SITV_AttachForm, (int) list->hdrHeight, SITV_NoPad, "bottom=FORM,,NOPAD right=FORM,,NOPAD>");
 				SIT_AddCallback(list->super.vscroll, SITE_OnScroll, SIT_ListScroll, NULL);
@@ -403,6 +404,7 @@ static Bool SIT_ListAdjustScroll(SIT_ListBox list)
 	}
 	else if (list->lbFlags & SITV_HasScroll)
 	{
+		fprintf(stderr, "hiding scroll bar to %s\n", list->super.name);
 		SIT_SetValues(list->super.vscroll, SIT_Visible, False, NULL);
 		list->lbFlags &= ~SITV_HasScroll;
 		list->scrollPad = 0;
@@ -1442,6 +1444,21 @@ Bool SIT_InitListBox(SIT_Widget w, va_list args)
 	return True;
 }
 
+static void SIT_ListAdjustMaxHeight(SIT_ListBox list)
+{
+	float height = 0;
+	Cell  cell;
+	int   i;
+	if ((list->lbFlags & SITV_NoHeaders) == 0)
+		height = list->columns[0].sizeCell.height;
+	for (cell = STARTCELL(list), i = MIN(list->cells.count, list->maxRowVisible); i > 0; i --, cell += list->columnCount)
+		height += cell->sizeObj.height;
+	if (height == 0)
+		height = 1;
+
+	SIT_SetValues(&list->super, SIT_Height, (int) height, NULL);
+}
+
 /* item added at runtime: recompute layout and/or node position (icon view only) */
 static int SIT_ListRecalcItemPos(SIT_Widget w, APTR cd, APTR ud)
 {
@@ -1475,6 +1492,9 @@ static int SIT_ListRecalcItemPos(SIT_Widget w, APTR cd, APTR ud)
 			list->recalcCell = 0;
 		}
 	}
+	if (list->maxRowVisible > 0)
+		SIT_ListAdjustMaxHeight(list);
+
 	/* all cells have same width, but can have different height */
 	for (cell = STARTCELL(list), i = list->cells.count; i > 0; i --, cell ++)
 		if ((cell->flags & CELL_CATEGORY) == 0)
@@ -1502,7 +1522,7 @@ static void SIT_ListStartRecalc(SIT_ListBox list, int pos)
 {
 	if ((list->lbFlags & SITV_PendingRecalc) == 0)
 	{
-		SIT_ActionAdd(&list->super, sit.curTime, -1, SIT_ListRecalcItemPos, NULL);
+		SIT_ActionAdd(&list->super, sit.curTime, -1, SIT_ListRecalcItemPos, (APTR) FitUsingInitialBox);
 		list->lbFlags |= SITV_PendingRecalc;
 		list->recalcCell = pos;
 	}
@@ -1554,10 +1574,8 @@ DLLIMP int SIT_ListInsertItem(SIT_Widget w, int row, APTR rowTag, ...)
 	Cell cell;
 	cells += row * cols;
 	if (row < list->rowCount-1)
-	{
 		memmove(cells + cols, cells, (list->rowCount - 1 - row) * cols * sizeof *cells);
-		memset(cells, 0, cols * sizeof *cells);
-	}
+	memset(cells, 0, cols * sizeof *cells);
 	if (rowTag != SITV_CategoryRow)
 	{
 		/* check if there is a hidden category before: now it will be visible */
@@ -1634,8 +1652,7 @@ static StrPool SIT_ListGetStrPool(SIT_ListBox list, Cell row)
 	StrPool str;
 	STRPTR  mem;
 	int     i;
-
-	for (i = list->columnCount; i > 0 && (row->flags & CELL_ISCONTROL); i ++, row ++);
+	for (i = list->columnCount; i > 0 && (row->flags & CELL_ISCONTROL); i --, row ++);
 	if (i == 0) return NULL;
 	for (str = HEAD(list->strPool), mem = row->obj; str->mem != mem; NEXT(str));
 	return str;
@@ -1646,7 +1663,7 @@ DLLIMP void SIT_ListDeleteRow(SIT_Widget w, int row)
 {
 	SIT_ListBox list = (SIT_ListBox) w;
 	int cols, rows;
-	if (list->cells.count == 0)
+	if (w == NULL || w->type != SIT_LISTBOX || list->cells.count == 0)
 		return;
 	if (row == DeleteAllRows)
 	{
@@ -1741,6 +1758,8 @@ DLLIMP void SIT_ListDeleteRow(SIT_Widget w, int row)
 	SIT_ListFreeCells(cells, cols);
 	memmove(cells, cells + cols, (rows * cols - row) * sizeof *cells);
 	list->cells.count -= cols;
+	if (list->maxRowVisible > 0)
+		SIT_ListAdjustMaxHeight(list);
 	sit.dirty = 1;
 }
 
@@ -1954,7 +1973,7 @@ DLLIMP Bool SIT_ListSetColumn(SIT_Widget w, int col, int width, int align, STRPT
 DLLIMP void SIT_ListReorgColumns(SIT_Widget w, STRPTR fmt)
 {
 	SIT_ListBox list = (SIT_ListBox) w;
-	if (w->type != SIT_LISTBOX || list->viewMode != SITV_ListViewReport) return;
+	if (w == NULL || w->type != SIT_LISTBOX || list->viewMode != SITV_ListViewReport) return;
 
 	if ((list->lbFlags & SITV_PendingRecalc) || (list->lbFlags & SITV_ListMeasured) == 0)
 	{
