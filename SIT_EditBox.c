@@ -68,7 +68,7 @@ static int SIT_MeasureEditBox(SIT_Widget w, APTR cd, APTR unused)
 	ret.height += w->padding[1] + w->padding[3];
 	if (pref->width  < ret.width)  pref->width  = ret.width;
 	if (pref->height < ret.height) pref->height = ret.height;
-	return 1;
+	return 0;
 }
 #undef edit
 

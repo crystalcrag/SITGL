@@ -207,8 +207,11 @@ DLLIMP int SIT_ProcessKey(int key, int modifier, int pressed)
 			case '\r':
 			case '\n': key = SITK_Return; break;
 			case '\b': key = SITK_BackSpace; break;
-			default:   return SIT_ProcessChar(key, modifier);
+			default:
+				if (modifier == SITK_FlagCtrl && 'a' <= key && key <= 'z')
+					return SIT_ProcessChar(key - 'a' + 1, 0);
 			}
+			return False;
 		}
 		switch (key) {
 		case SITK_LShift:
@@ -663,7 +666,7 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 		if (sit.hover)
 		{
 			/* exit control */
-			for (c = sit.hover; c; c = c->parent)
+			for (c = sit.hover; c && c != sit.hover; c = c->parent)
 			{
 				stack[count++] = c;
 				c->oldState = c->state;
@@ -679,7 +682,7 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 			}
 			c = SIT_EventBubble(sit.hover, SITE_OnMouseOut);
 			if (c) SIT_ApplyCallback(c, hover, SITE_OnMouseOut);
-			//fprintf(stderr, "exiting %s: [%d]\n", sit.hover->name, sit.hover->state);
+			// fprintf(stderr, "exiting %s: [%d]\n", sit.hover->name, sit.hover->state);
 		}
 		if (! sit.active || sit.active == hover)
 		{

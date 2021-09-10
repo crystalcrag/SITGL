@@ -340,10 +340,10 @@ struct SIT_Button_t
 {
 	SIT_Widget_t super;
 	int          type;                 /* public: SIT_ButtonType */
-	int          state;
-	int          group;                /* public */
+	int          state;                /* public: SIT_CheckState */
+	int          group;                /* public: SIT_RadioGroup */
 	int *        curValue;             /* public */
-	int          radioID;              /* public */
+	int          radioID;              /* public: SIT_RadioID */
 };
 
 typedef struct DOMRow_t     DOMRow_t;

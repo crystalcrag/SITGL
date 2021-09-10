@@ -126,6 +126,8 @@ static int SIT_ListMeasure(SIT_Widget w, APTR cd, APTR ud)
 
 		if (list->lbFlags & SITV_ListMeasured)
 		{
+			//fprintf(stderr, "list cur size: %g, %g\n", w->flags & SITF_FixedWidth  ? w->fixed.width  : w->currentBox.width,
+			//	w->flags & SITF_FixedHeight ? w->fixed.height : w->currentBox.height);
 			if (pref->width  < 0) pref->width  = w->flags & SITF_FixedWidth  ? w->fixed.width  : w->currentBox.width;
 			if (pref->height < 0) pref->height = w->flags & SITF_FixedHeight ? w->fixed.height : w->currentBox.height;
 			/* if size changes, it will be handled in OnRsize event */
@@ -390,7 +392,6 @@ static Bool SIT_ListAdjustScroll(SIT_ListBox list)
 		{
 			if (list->super.vscroll == NULL)
 			{
-				fprintf(stderr, "adding scroll bar to %s\n", list->super.name);
 				SIT_CreateWidgets(&list->super, "<scrollbar name=vscroll lineHeight=", (int) list->super.style.font.size,
 					"top=", SITV_AttachForm, (int) list->hdrHeight, SITV_NoPad, "bottom=FORM,,NOPAD right=FORM,,NOPAD>");
 				SIT_AddCallback(list->super.vscroll, SITE_OnScroll, SIT_ListScroll, NULL);
@@ -404,7 +405,6 @@ static Bool SIT_ListAdjustScroll(SIT_ListBox list)
 	}
 	else if (list->lbFlags & SITV_HasScroll)
 	{
-		fprintf(stderr, "hiding scroll bar to %s\n", list->super.name);
 		SIT_SetValues(list->super.vscroll, SIT_Visible, False, NULL);
 		list->lbFlags &= ~SITV_HasScroll;
 		list->scrollPad = 0;
@@ -1447,16 +1447,20 @@ Bool SIT_InitListBox(SIT_Widget w, va_list args)
 static void SIT_ListAdjustMaxHeight(SIT_ListBox list)
 {
 	float height = 0;
+	float width  = 0;
 	Cell  cell;
-	int   i;
+	int   i, j;
 	if ((list->lbFlags & SITV_NoHeaders) == 0)
 		height = list->columns[0].sizeCell.height;
-	for (cell = STARTCELL(list), i = MIN(list->cells.count, list->maxRowVisible); i > 0; i --, cell += list->columnCount)
-		height += cell->sizeObj.height;
-	if (height == 0)
-		height = 1;
-
-	SIT_SetValues(&list->super, SIT_Height, (int) height, NULL);
+	for (cell = STARTCELL(list), i = list->cells.count, j = list->maxRowVisible; i > 0; j --, i --, cell += list->columnCount)
+	{
+		if (width < cell->sizeObj.width)
+			width = cell->sizeObj.width;
+		if (j > 0)
+			height += cell->sizeObj.height;
+	}
+	if (height == 0) height = 1;
+	SIT_SetValues(&list->super, SIT_Height, (int) height, SIT_Width, (int) width, NULL);
 }
 
 /* item added at runtime: recompute layout and/or node position (icon view only) */

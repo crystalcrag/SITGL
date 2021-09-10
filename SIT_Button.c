@@ -232,7 +232,7 @@ Bool SIT_InitButton(SIT_Widget w, va_list args)
 		if (button->curValue && *button->curValue == button->radioID && ! button->state)
 			SIT_SetValues(w, SIT_CheckState, True, NULL);
 	}
-	if (button->type >= SITV_CheckBox)
+	if (button->type >= SITV_ToggleButton)
 	{
 		if (button->state > 0) SIT_SetValues(w, SIT_CheckState, button->state, NULL);
 		SIT_AddCallback(w, SITE_OnActivate + EVT_PRIORITY(100), SIT_ButtonToggle, NULL);

@@ -88,6 +88,9 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 	REAL         percent[2];
 	REAL         chldsz = (adjust == FitUsingOptimalBox ? &w->optimalBox.width : &w->currentBox.width)[side];
 
+	if (adjust == FitUsingInitialBox && (w->flags & (SITF_FixedWidth<<side)))
+		chldsz = (&w->fixed.width)[side];
+
 	/* AttachNone and AttachNoOverlap must be computed after any other kind */
 	inc = w->attachment[side].sa_Type == SITV_AttachNone ||
 	      w->attachment[side].sa_Type == SITV_AttachNoOverlap ? -2 : 2;
@@ -478,7 +481,7 @@ static Bool SIT_CanChangeContainerSize(SIT_Widget w, SizeF * oldSz, SizeF * newS
 		REAL bottom = c->box.bottom - c->box.top - c->padding[side+2];
 		// XXX might not be set yet
 		// (&c->layout.pos.width)[side] + c->padding[side];
-		if (p[0] > bottom || p[-2] + (&oldSz->width)[side] >= bottom) return True;
+		if (p[0] >= bottom || p[-2] + (&oldSz->width)[side] >= bottom) return True;
 		if (newSz && (&newSz->width)[side] >= bottom) return True;
 	}
 	return False;
@@ -742,7 +745,9 @@ static int SIT_LayoutInitial(SIT_Widget root, ResizePolicy mode)
 					list->currentBox.height, list->childBox.width, list->childBox.height);
 				#endif
 				SizeF old = list->currentBox;
-				list->optimalWidth(list, &list->currentBox, (APTR) (mode == FitUsingInitialBox ? FitUsingCurrentBox : mode));
+				if (list->optimalWidth(list, &list->currentBox, (APTR) (mode == FitUsingInitialBox ? FitUsingCurrentBox : mode)) == 1)
+					list->childBox = list->currentBox;
+
 				/* check if we really need to reflow everything */
 				if (old.width != list->currentBox.width)
 				{
@@ -936,6 +941,12 @@ Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode)
 	if (mode != FitUsingOptimalBox && (root->flags & SITF_TopLevel))
 		SIT_LayoutCSSSize(root);
 
+	if (root->type == SIT_DIALOG && (root->attachment[3].sa_Type != SITV_AttachForm || root->attachment[2].sa_Type != SITV_AttachForm))
+	{
+		SIT_CenterDialog(root);
+		SIT_MoveWidgets(root);
+	}
+
 	return True;
 }
 
@@ -997,14 +1008,22 @@ void SIT_ReflowLayout(SIT_Widget list)
 					list->optimalBox = pref;
 					SIT_LayoutWidget(parent, list, 0, FitUsingOptimalBox);
 				}
-				else SIT_LayoutWidget(parent, list, 0, FitUsingCurrentBox);
+				else
+				{
+					if (list->flags & SITF_FixedWidth) list->currentBox.width = list->fixed.width;
+					SIT_LayoutWidget(parent, list, 0, FitUsingCurrentBox);
+				}
 
 				if (list->attachment[1].sa_Type == SITV_AttachNone || list->attachment[3].sa_Type == SITV_AttachNone)
 				{
 					if (! done) list->optimalWidth(list, &pref, 0), list->optimalBox = pref;
 					SIT_LayoutWidget(parent, list, 1, FitUsingOptimalBox);
 				}
-				else SIT_LayoutWidget(parent, list, 1, FitUsingCurrentBox);
+				else
+				{
+					if (list->flags & SITF_FixedHeight) list->currentBox.width = list->fixed.height;
+					SIT_LayoutWidget(parent, list, 1, FitUsingCurrentBox);
+				}
 				list->currentBox.width  = list->box.right  - list->box.left;
 				list->currentBox.height = list->box.bottom - list->box.top;
 				if (BoxSizeDiffers(&list->currentBox, &oldSz))

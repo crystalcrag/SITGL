@@ -48,9 +48,6 @@ DLLIMP SIT_Widget SIT_Init(int nvgFlags, int width, int height, STRPTR theme, in
 	if (! gladLoadGL())
 		return NULL;
 
-	/* not the best PRNG, but good enough to randomize graphics */
-	srand(time(NULL));
-
 	/* will be needed for high frequency timer */
 	LARGE_INTEGER start;
 	QueryPerformanceCounter(&start);
