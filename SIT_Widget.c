@@ -517,6 +517,10 @@ DLLIMP SIT_Widget SIT_CreateWidget(STRPTR name, SIT_TYPE type, SIT_Widget parent
 	if (parent && parent->type == SIT_DIALOG && ((SIT_Dialog)parent)->clientArea)
 		parent = ((SIT_Dialog)parent)->clientArea;
 
+	if (type == SIT_DIALOG)
+		while ((parent->flags & SITF_TopLevel) == 0)
+			parent = parent->parent;
+
 	w->name     = (APTR) w + sz + cbs;   /* id for CSS */
 	w->tagName  = widgetNames[type];     /* tag name for CSS */
 	w->type     = type;
@@ -1263,7 +1267,6 @@ void SIT_CenterDialog(SIT_Widget w)
 }
 
 /* finishes dialog initialization */
-#define dialog  ((SIT_Dialog)w)
 DLLIMP int SIT_ManageWidget(SIT_Widget w)
 {
 	if (w == NULL)
@@ -1281,6 +1284,11 @@ DLLIMP int SIT_ManageWidget(SIT_Widget w)
 
 			w->visible = True;
 		}
+		if (sit.activeDlg->type == SIT_DIALOG)
+		{
+			/* keep last widget focus */
+			((SIT_Dialog)sit.activeDlg)->lastFocus = sit.focus;
+		}
 		w->flags &= ~SITF_GeometrySet;
 		sit.active = sit.hover = NULL;
 		sit.activeDlg = w;
@@ -1296,7 +1304,6 @@ DLLIMP int SIT_ManageWidget(SIT_Widget w)
 	}
 	else return w->manage(w, NULL, NULL); /* custom manage (comdlg) */
 }
-#undef dialog
 
 DLLIMP void SIT_RemoveWidget(SIT_Widget w)
 {

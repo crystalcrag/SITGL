@@ -1497,7 +1497,7 @@ int cssApply(SIT_Widget node)
 	node->layout.top = 0;
 
 	#if 0
-	if (strcmp(node->name, "whole") == 0)
+	if (strcmp(node->name, "fname") == 0)
 	{
 		fprintf(stderr, "*** styles for state %d [%d] = %x\n", node->state, state, i);
 		for (i = 0, style = vector_first(styles); i < styles.count; i ++, style ++)

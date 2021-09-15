@@ -117,7 +117,11 @@ DLLIMP int ScanDirInit(ScanDirData * ret, STRPTR path)
 				if (ch == 0 || (ch == '.' && data->cFileName[2] == 0))
 				{
 					if (! FindNextFile(hnd, data))
-						break;
+					{
+						/* empty directory */
+						ScanDirCancel(ret);
+						return 0;
+					}
 				}
 				else break;
 			}
@@ -234,9 +238,9 @@ DLLIMP Bool AddPart(STRPTR path, STRPTR src, int max)
 }
 
 /* DOS/ParentDir */
-DLLIMP Bool ParentDir(STRPTR dir)
+DLLIMP int ParentDir(STRPTR dir)
 {
-	if (! IsDef(dir)) return False;
+	if (! IsDef(dir)) return -1;
 
 	STRPTR p = strchr(dir, 0) - 1;
 
@@ -245,11 +249,11 @@ DLLIMP Bool ParentDir(STRPTR dir)
 
 	while (p > dir && *p != '/' && *p != '\\') p --;
 
-	if (p >= dir && isalpha(p[0]) && p[1] == ':') return False;
+	if (p >= dir && isalpha(p[0]) && p[1] == ':') return -1;
 
 	*p = 0;
 
-	return True;
+	return p - dir;
 }
 
 /* DOS/CreatePath */
@@ -469,7 +473,7 @@ DLLIMP Bool FileCopy(STRPTR from, STRPTR to, Bool overwrite)
 /* DOS/FileRename */
 DLLIMP Bool FileRename(STRPTR from, STRPTR to, Bool overwrite)
 {
-	DWORD  flags   = overwrite ? MOVEFILE_REPLACE_EXISTING : 0;
+	DWORD  flags = overwrite ? MOVEFILE_REPLACE_EXISTING : 0;
 	LPWSTR fromw, tow;
 
 	utf8toutf16(from, fromw);

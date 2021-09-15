@@ -59,19 +59,22 @@ struct StrPool_t
 
 enum /* bitfield for Cell->flags */
 {
-	CELL_ISCONTROL  = 1,    /* Cell->obj is a SIT_Widget, otherwise STRPTR */
-	CELL_HASSIZE    = 2,    /* Cell->size up to date */
-	CELL_ALIGNR     = 4,    /* default: left aligned */
-	CELL_ALIGNC     = 8,
-	CELL_VALIGNB    = 16,   /* default: top aligned */
-	CELL_VALIGNC    = 32,
-	CELL_SELECT     = 64,
-	CELL_CATEGORY   = 128,  /* thead */
-	CELL_CATVISIBLE = 256,  /* initially hidden if no item in cat */
-	CELL_COLSTART   = 512,  /* start of a row */
-	CELL_HASLAYOUT  = 1024  /* header cell has computed label's size */
+	CELL_ISCONTROL  = 0x0001,    /* Cell->obj is a SIT_Widget, otherwise STRPTR */
+	CELL_HASSIZE    = 0x0002,    /* Cell->size up to date */
+	CELL_ALIGNR     = 0x0004,    /* default: left aligned */
+	CELL_ALIGNC     = 0x0008,
+	CELL_VALIGNB    = 0x0010,    /* default: top aligned */
+	CELL_VALIGNC    = 0x0020,
+	CELL_SELECT     = 0x0040,
+	CELL_CATEGORY   = 0x0080,    /* thead */
+	CELL_CATVISIBLE = 0x0100,    /* initially hidden if no item in cat */
+	CELL_COLSTART   = 0x0200,    /* start of a row */
+	CELL_HASLAYOUT  = 0x0400,    /* header cell has computed label's size */
+	CELL_HIDDEN     = 0x0800,    /* temporarily hidden */
+	CELL_PRESELECT  = 0x1000,    /* pre-select by lasso */
 };
 
+#define CELL_HASSELECT       (CELL_PRESELECT | CELL_SELECT)
 #define SITV_HasScroll       0x0100     /* extra flag for SIT_ListBox->lbFlags */
 #define SITV_PendingRecalc   0x0200     /* don't register event twice */
 #define SITV_ColumnChanged   0x0400
@@ -156,7 +159,7 @@ static int SIT_ListMeasure(SIT_Widget w, APTR cd, APTR ud)
 			for (j = list->rowCount, row = cell; j > 0; j --, row += count)
 			{
 				if ((row->flags & CELL_HASSIZE) == 0)
-					SIT_ListCalcSize(td, row, (int) ud);
+					SIT_ListCalcSize(td, row, FitUsingInitialBox);
 
 				if (hdr->sizeCell.width < row->sizeCell.width)
 					hdr->sizeCell.width = row->sizeCell.width;
@@ -165,11 +168,14 @@ static int SIT_ListMeasure(SIT_Widget w, APTR cd, APTR ud)
 		}
 		list->hdrHeight = size.height;
 		/* header height */
-		for (hdr = list->columns, i = 0; i < count; i ++, hdr ++)
+		if (size.width > 0)
 		{
-			if (list->columnWidths == NULL)
-				list->realWidths[i] = hdr->sizeCell.width / size.width;
-			hdr->sizeCell.height = size.height;
+			for (hdr = list->columns, i = 0; i < count; i ++, hdr ++)
+			{
+				if (list->columnWidths == NULL)
+					list->realWidths[i] = hdr->sizeCell.width / size.width;
+				hdr->sizeCell.height = size.height;
+			}
 		}
 		int maxRow = list->maxRowVisible;
 		if (maxRow <= 0) maxRow = -1;
@@ -207,7 +213,7 @@ static int SIT_ListMeasure(SIT_Widget w, APTR cd, APTR ud)
 		{
 			uint16_t flags = cell->flags;
 			if ((flags & CELL_HASSIZE) == 0)
-				SIT_ListCalcSize(flags & CELL_CATEGORY ? list->thead : td, cell, (int) ud);
+				SIT_ListCalcSize(flags & CELL_CATEGORY ? list->thead : td, cell, FitUsingInitialBox);
 
 			if (maxw < cell->sizeCell.width && (flags & CELL_CATEGORY) == 0)
 				maxw = cell->sizeCell.width;
@@ -218,7 +224,6 @@ static int SIT_ListMeasure(SIT_Widget w, APTR cd, APTR ud)
 		/* size has to be explicitely set */
 		if (pref->width  < 0) pref->width  = 0;
 		if (pref->height < 0) pref->height = 0;
-//		w->childBox = *pref;
 	}
 	return 0;
 }
@@ -229,6 +234,7 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 	SIT_CallProc paint = list->cellPaint;
 	SIT_Widget   td    = list->td;
 	SIT_Widget   sel   = list->tdSel;
+	NVGcontext * vg    = sit.nvgCtx;
 	RectF        pos   = w->layout.pos;
 	uint8_t      icon  = list->viewMode == SITV_ListViewIcon;
 	uint8_t      text  = list->defAlign >= 0 ? list->defAlign : w->style.text.align;
@@ -236,8 +242,9 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 	Cell         cell;
 	int          i, j, row;
 
-	nvgSave(sit.nvgCtx);
+	nvgSave(vg);
 	pos.top += w->offsetY - w->layout.padding.top;
+	pos.left += w->offsetX;
 	pos.height += w->layout.padding.bottom + w->layout.padding.top;
 	list->lbFlags &= ~SITV_ReorgColumns;
 
@@ -259,17 +266,18 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 			SIT_RenderNode(hdr);
 		}
 		pos.top += list->hdrHeight;
-		nvgIntersectScissor(sit.nvgCtx, w->offsetX + pos.left, pos.top, pos.width, pos.height - list->hdrHeight);
+		nvgIntersectScissor(vg, pos.left, pos.top, pos.width, pos.height - list->hdrHeight);
 	}
 	/* we have to do clipping here, because children are managed by this control */
-	else nvgIntersectScissor(sit.nvgCtx, w->offsetX + pos.left, pos.top, pos.width, pos.height);
+	else nvgIntersectScissor(vg, pos.left, pos.top, pos.width, pos.height);
 
 	for (cell = list->rowTop, row = cell - STARTCELL(list), i = list->cells.count - row, row /= col; i > 0; i -= col, row ++)
 	{
-		Bool forceSel = (icon == 0 && (cell->flags & CELL_SELECT));
+		Bool forceSel = (icon == 0 && (cell->flags & CELL_HASSELECT));
+		if (cell->flags & CELL_HIDDEN) { cell += col; continue; }
 		if (icon == 0)
 		{
-			SIT_Widget node = (cell->flags & CELL_SELECT) ? sel : td;
+			SIT_Widget node = (cell->flags & CELL_HASSELECT) ? sel : td;
 			if (node->style.background)
 			{
 				/* extend background to the whole row */
@@ -287,7 +295,7 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 		{
 			uint16_t   flags = cell->flags;
 			uint8_t    align = text;
-			SIT_Widget node  = (flags & CELL_SELECT) || forceSel ? sel : td;
+			SIT_Widget node  = (flags & CELL_HASSELECT) || forceSel ? sel : td;
 
 			if (flags & CELL_CATEGORY)
 			{
@@ -339,7 +347,6 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 						if (ocp.bgColor[3] > 0)
 						{
 							/* override background color */
-							NVGcontext * vg = sit.nvgCtx;
 							nvgBeginPath(vg);
 							nvgRect(vg, w->offsetX + w->box.left + cell->sizeCell.left + w->padding[0],
 								w->offsetY + w->box.top + cell->sizeCell.top - list->scrollTop + w->padding[1], cell->sizeCell.width, cell->sizeCell.height);
@@ -357,6 +364,31 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 		}
 	}
 	break_all:
+
+	if (list->lassoSX != list->lassoEX)
+	{
+		REAL sx = list->lassoSX, ex = list->lassoEX - sx;
+		REAL sy = list->lassoSY, ey = list->lassoEY - sy;
+		/* in order for the selection overlay to be visible, we need to darken it a bit */
+		uint8_t bg[4] = {
+			w->style.bgSel.rgba[0] * 205 >> 8,
+			w->style.bgSel.rgba[1] * 205 >> 8,
+			w->style.bgSel.rgba[2] * 205 >> 8,
+			w->style.bgSel.rgba[3]
+		};
+		if (sx < 0) ex += sx, sx = 0;
+		if (sy < 0) ey += sy, sy = 0;
+		if (ex < 0) sx += ex, ex = -ex;
+		if (ey < 0) sy += ey, ey = -ey;
+		sx += pos.left;
+		sy += pos.top - list->scrollTop;
+		nvgBeginPath(vg);
+		nvgRect(vg, sx, sy, ex, ey);
+		nvgStrokeColorRGBA8(vg, bg);
+		nvgStroke(vg); bg[3] >>= 1;
+		nvgFillColorRGBA8(vg, bg);
+		nvgFill(vg);
+	}
 	nvgRestore(sit.nvgCtx);
 
 	return 1;
@@ -461,7 +493,7 @@ static int SIT_ListResize(SIT_Widget w, APTR cd, APTR ud)
 		if (i > 1 && list->borderCSSH == AUTOVAL)
 		{
 			/* distribute horizontal space */
-			for (row = STARTCELL(list), j = list->cells.count; j > 0 && (row->flags & CELL_CATEGORY); j --, row ++);
+			for (row = STARTCELL(list), j = list->cells.count; j > 0 && (row->flags & (CELL_CATEGORY|CELL_HIDDEN)); j --, row ++);
 			if (j > 0)
 			{
 				j = (max - 0.01) / row->sizeCell.width;
@@ -471,7 +503,10 @@ static int SIT_ListResize(SIT_Widget w, APTR cd, APTR ud)
 		if (start > 0)
 		{
 			Cell prev = cell - 1;
-			while ((prev->flags & CELL_COLSTART) == 0) prev --, start --;
+			for (row = STARTCELL(list); prev > row && ((prev->flags & CELL_HIDDEN) || (prev->flags & CELL_COLSTART) == 0); prev --, start --);
+			if (prev->flags & CELL_HIDDEN)
+				goto from_scratch;
+
 			cell = prev + 1;
 			i -= start;
 			x = prev->sizeCell.left + prev->sizeCell.width + list->borderSpacingH;
@@ -479,10 +514,11 @@ static int SIT_ListResize(SIT_Widget w, APTR cd, APTR ud)
 			j = 1;
 			maxh = prev->sizeCell.height;
 		}
-		else maxh = 0, x = 0, y = w->padding[1], j = 0;
+		else from_scratch: maxh = 0, x = 0, y = w->padding[1], j = 0;
 
 		for (visible = y + w->layout.pos.height, list->softColumn = 0; i > 0; i --, cell ++)
 		{
+			if (cell->flags & CELL_HIDDEN) continue;
 			if (cell->flags & CELL_CATEGORY)
 			{
 				if (list->catVisible < 2 || (cell->flags & CELL_CATVISIBLE) == 0)
@@ -584,7 +620,7 @@ static int SIT_ListResize(SIT_Widget w, APTR cd, APTR ud)
 	return 1;
 }
 
-static void SIT_ListUpdateCSS(SIT_ListBox list, Cell cell, Bool set)
+static void SIT_ListUpdateCSS(SIT_ListBox list, Cell cell)
 {
 	SIT_Widget node = cell->flags & CELL_SELECT ? list->tdSel : list->td;
 	SIT_ListRestoreChildren(node, cell);
@@ -628,20 +664,14 @@ static void SIT_ListSetSelection(SIT_ListBox list, Cell cell, Bool deselectOld, 
 		int index = cell - STARTCELL(list);
 		cell = vector_nth(&list->cells, index - index % list->columnCount);
 	}
-	if (! cell)
-		return;
 	if ((list->lbFlags & SITV_SelectMultiple) == 0)
 		deselectOld = True, extend = False;
 	else if (extend)
 		deselectOld = False;
 
 	/* category rows cannot be selected */
-	if (cell->flags & CELL_CATEGORY)
-	{
-		Cell eof = STARTCELL(list) + (list->cells.count-1);
-		for (cell ++; cell < eof && (cell->flags & CELL_CATEGORY); cell ++);
-		if (cell == eof) return;
-	}
+	if (cell && cell->flags & CELL_CATEGORY)
+		return;
 
 	if (old != cell || (list->lbFlags & SITV_SelectMultiple))
 	{
@@ -653,10 +683,10 @@ static void SIT_ListSetSelection(SIT_ListBox list, Cell cell, Bool deselectOld, 
 				int i;
 				for (old = STARTCELL(list), i = list->cells.count; i > 0; i --, old ++)
 				{
-					if (old == cell || (old->flags & CELL_CATEGORY) || (old->flags & CELL_SELECT) == 0) continue;
+					if (old == cell || (old->flags & (CELL_HIDDEN|CELL_CATEGORY)) || (old->flags & CELL_SELECT) == 0) continue;
 					old->flags &= ~CELL_SELECT;
 					if (old->flags & CELL_ISCONTROL)
-						SIT_ListUpdateCSS(list, old, False);
+						SIT_ListUpdateCSS(list, old);
 					sit.dirty = 1;
 				}
 			}
@@ -664,29 +694,31 @@ static void SIT_ListSetSelection(SIT_ListBox list, Cell cell, Bool deselectOld, 
 			{
 				old->flags &= ~CELL_SELECT;
 				if (old->flags & CELL_ISCONTROL)
-					SIT_ListUpdateCSS(list, old, False);
+					SIT_ListUpdateCSS(list, old);
 				sit.dirty = 1;
 			}
 		}
+		uint16_t flags = 0;
 		if (cell)
 		{
+			flags = (cell->flags & CELL_SELECT) ^ CELL_SELECT;
 			list->selIndex = cell - STARTCELL(list);
-			if (! deselectOld)
+			if (! deselectOld && ! extend) /* last cell must be selected */
 				cell->flags ^= CELL_SELECT;
 			else if (cell->flags & CELL_SELECT)
-				return;
+				goto break_all;
 			else
 				cell->flags |= CELL_SELECT;
 			if (cell->flags & CELL_ISCONTROL)
-				SIT_ListUpdateCSS(list, cell, True);
+				SIT_ListUpdateCSS(list, cell);
 			if (extend < 2) /* select all: don't move view */
 				SIT_ListMakeVisible(list, cell);
 			sit.dirty = 1;
 		}
 		else list->selIndex = -1;
+		break_all:
 		if (extend)
 		{
-			uint16_t flags = cell->flags & CELL_SELECT;
 			if (old == NULL)
 				old = STARTCELL(list);
 			while (old != cell)
@@ -695,7 +727,7 @@ static void SIT_ListSetSelection(SIT_ListBox list, Cell cell, Bool deselectOld, 
 				{
 					old->flags ^= CELL_SELECT;
 					if (old->flags & CELL_ISCONTROL)
-						SIT_ListUpdateCSS(list, old, True);
+						SIT_ListUpdateCSS(list, old);
 					sit.dirty = 1;
 				}
 				if (old < cell) old ++;
@@ -704,7 +736,7 @@ static void SIT_ListSetSelection(SIT_ListBox list, Cell cell, Bool deselectOld, 
 		}
 
 		if (HAS_EVT(&list->super, SITE_OnChange))
-			SIT_ApplyCallback(&list->super, cell->userData, SITE_OnChange);
+			SIT_ApplyCallback(&list->super, cell ? cell->userData : NULL, SITE_OnChange);
 	}
 }
 
@@ -856,6 +888,99 @@ static void SIT_ListReorder(SIT_ListBox list)
 	SIT_ListResize(&list->super, NULL, NULL);
 }
 
+static Bool IntersectRectF(REAL * rect1, REAL * rect2)
+{
+	return MIN(rect1[2], rect2[2]) - MAX(rect1[0], rect2[0]) > EPSILON &&
+	       MIN(rect1[3], rect2[3]) - MAX(rect1[1], rect2[1]) > EPSILON;
+}
+
+/* select all items within the lasso */
+static void SIT_ListSelectLasso(SIT_ListBox list)
+{
+	Cell cell;
+	int  col = list->columnCount;
+	int  i, row;
+	char icon = list->viewMode == SITV_ListViewIcon;
+	REAL max  = list->super.layout.pos.height;
+	REAL lasso[4];
+
+	if (list->lassoSX > list->lassoEX) lasso[0] = list->lassoEX, lasso[2] = list->lassoSX;
+	else                               lasso[0] = list->lassoSX, lasso[2] = list->lassoEX;
+	if (list->lassoSY > list->lassoEY) lasso[1] = list->lassoEY, lasso[3] = list->lassoSY;
+	else                               lasso[1] = list->lassoSY, lasso[3] = list->lassoEY;
+
+	lasso[1] -= list->scrollTop;
+	lasso[3] -= list->scrollTop;
+
+	for (cell = list->rowTop, row = cell - STARTCELL(list), i = list->cells.count - row, row /= col; i > 0; i -= col, row ++, cell += col)
+	{
+		if (cell->flags & (CELL_HIDDEN|CELL_CATEGORY|CELL_SELECT)) continue;
+		REAL bbox[4];
+
+		bbox[0] = cell->sizeCell.left;
+		bbox[1] = cell->sizeCell.top  - list->scrollTop;
+		bbox[2] = bbox[0] + (icon ? cell->sizeCell.width : list->super.layout.pos.width);
+		bbox[3] = bbox[1] + cell->sizeCell.height;
+
+		uint16_t flags = IntersectRectF(lasso, bbox) ? CELL_PRESELECT : 0;
+
+		if (flags != (cell->flags & CELL_PRESELECT))
+		{
+			if (flags) cell->flags |= CELL_PRESELECT | CELL_SELECT;
+			else       cell->flags &= ~(CELL_PRESELECT | CELL_SELECT);
+
+			SIT_ListUpdateCSS(list, cell);
+
+			/* not needed anymore */
+			cell->flags &= ~CELL_SELECT;
+		}
+
+		if (bbox[1] > max) break;
+	}
+}
+
+/* convert CELL_PRESELECT flag into CELL_SELECT */
+static void SIT_ListFinishPreselect(SIT_ListBox list)
+{
+	Cell cell;
+	int  i, col = list->columnCount;
+	for (cell = STARTCELL(list), i = list->cells.count; i > 0; i -= col, cell += col)
+	{
+		if (cell->flags & CELL_PRESELECT)
+			cell->flags ^= CELL_PRESELECT|CELL_SELECT;
+	}
+}
+
+static int SIT_ListAutoScroll(SIT_Widget w, APTR cd, APTR ud)
+{
+	SIT_ListBox list = (SIT_ListBox) w;
+	REAL y = list->scrollTop + list->autoScrollDir * 15;
+	REAL max = list->scrollHeight - list->super.layout.pos.height;
+	if (y < 0)   y = 0;
+	if (y > max) y = max;
+	if (y != list->scrollTop)
+	{
+		if (list->autoScrollDir < 0) list->lassoEY = y;
+		else list->lassoEY = y + list->super.layout.pos.height;
+		SIT_ListSelectLasso(list);
+		SIT_ListScroll(list->super.vscroll, (APTR) (int) y, NULL);
+		SIT_ListAdjustScroll(list);
+	}
+	return 25;
+}
+
+static void SIT_ListStartAutoScroll(SIT_ListBox list, int dir)
+{
+	static SIT_Action autoScroll;
+	int8_t cur = list->autoScrollDir;
+	if (dir && cur == 0)
+		autoScroll = SIT_ActionAdd(&list->super, sit.curTime + 100, -1, SIT_ListAutoScroll, NULL);
+
+	if (dir == 0 && autoScroll)
+		SIT_ActionReschedule(autoScroll, -1, -1), autoScroll = NULL;
+	list->autoScrollDir = dir;
+}
+
 /* SITE_OnClick inside list */
 static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 {
@@ -863,13 +988,16 @@ static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 	SIT_ListBox   list = (SIT_ListBox) w;
 	SIT_OnMouse * msg  = cd;
 	REAL          max  = w->layout.pos.height;
+	REAL          x, y;
 	Cell          cell;
 	int           i, j;
 
-	if (msg->button == 0 && msg->state == SITOM_ButtonPressed)
-	{
-		REAL x = msg->x;
-		REAL y = msg->y;
+	switch (msg->state) {
+	case SITOM_ButtonPressed:
+		if (msg->button != 0)
+			return 0;
+		x = msg->x;
+		y = msg->y;
 
 		if ((list->lbFlags & SITV_NoHeaders) == 0 && (list->lbFlags & SITV_DoSort) && list->viewMode == SITV_ListViewReport && y < list->hdrHeight)
 		{
@@ -924,31 +1052,85 @@ static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 						}
 						else SIT_ListSetSelection(list, cell, (msg->flags & SITK_FlagCtrl) == 0, (msg->flags & SITK_FlagShift) > 0);
 						lastClick = TimeMS();
+						if (list->lbFlags & SITV_SelectMultiple)
+						{
+							/* start lasso selection */
+							list->lassoSX = list->lassoEX = x;
+							list->lassoSY = y + list->scrollTop;
+							return 2;
+						}
 						return 1;
 					}
 				}
 			}
 		}
-		if ((list->lbFlags & SITV_SelectAlways) == 0)
+		/* didn't click over an item */
+		if ((list->lbFlags & SITV_SelectAlways) == 0 && (msg->flags & SITK_FlagCtrl) == 0)
 		{
 			/* didn't click on any item: deselect the one selected then */
 			SIT_ListSetSelection(list, NULL, True, False);
 		}
+
 		if (list->lbFlags & SITV_HasScroll)
 		{
 			list->msgX = msg->x;
 			list->msgY = msg->y;
 		}
+
+		if (list->lbFlags & SITV_SelectMultiple)
+		{
+			/* start lasso selection */
+			list->lassoSX = list->lassoEX = x;
+			list->lassoSY = y + list->scrollTop;
+			return 2;
+		}
+		break;
+
+	case SITOM_CaptureMove:
+		if ((list->lbFlags & SITV_SelectMultiple) == 0)
+			return 1;
+		list->lassoEX = msg->x;
+		list->lassoEY = msg->y + list->scrollTop;
+		SIT_ListSelectLasso(list);
+		sit.dirty = 1;
+		if (msg->y < -w->padding[1])
+		{
+			/* vertical auto-scroll */
+			SIT_ListStartAutoScroll(list, -1);
+			return 1;
+		}
+		else if (msg->y > w->layout.pos.height)
+		{
+			SIT_ListStartAutoScroll(list, 1);
+			return 1;
+		}
+		else /* stop auto-scrolling */
+		{
+			SIT_ListStartAutoScroll(list, 0);
+		}
+		break;
+
+	case SITOM_ButtonReleased:
+		if ((list->lbFlags & SITV_SelectMultiple) == 0)
+			return 1;
+		SIT_ListStartAutoScroll(list, 0);
+		SIT_ListFinishPreselect(list);
+		list->lassoEX = list->lassoSX = 0;
+		sit.dirty = 1;
+
+	default: break;
 	}
 	return 1;
 }
 
 /* SITE_OnMouseMove inside list */
+#if 0
 static int SIT_ListMouseMove(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_ListBox   list = (SIT_ListBox) w;
 	SIT_OnMouse * msg  = cd;
 
+	/* XXX auto-scroll based on what ? */
 	if (msg->state == SITOM_CaptureMove && list->msgX < 65535)
 	{
 		REAL max = list->scrollHeight - list->super.layout.pos.height;
@@ -964,6 +1146,7 @@ static int SIT_ListMouseMove(SIT_Widget w, APTR cd, APTR ud)
 	}
 	return 1;
 }
+#endif
 
 static void SIT_ListClearAndFree(SIT_Widget td)
 {
@@ -1112,13 +1295,13 @@ static int SIT_ListKeyboard(SIT_Widget w, APTR cd, APTR ud)
 		switch (msg->keycode) {
 		case SITK_Left:
 			end = STARTCELL(list);
-			for (cell --; cell >= end && (cell->flags & CELL_CATEGORY); cell --);
+			for (cell --; cell >= end && (cell->flags & (CELL_CATEGORY|CELL_HIDDEN)); cell --);
 			if (cell < end) return 0;
 			break;
 		case SITK_Right:
 			end = STARTCELL(list) + (list->cells.count-1);
-			cell ++;
-			if (cell > end) return 0;
+			for (cell ++; cell < end && (cell->flags & (CELL_CATEGORY|CELL_HIDDEN)); cell ++);
+			if (cell == end) return 0;
 			break;
 		case SITK_Down:
 		{	int nth;
@@ -1152,6 +1335,9 @@ static int SIT_ListKeyboard(SIT_Widget w, APTR cd, APTR ud)
 			if (cell == end) return 0;
 			cell = end;
 			break;
+		case SITK_Return:
+			SIT_ApplyCallback(w, cell->userData, SITE_OnActivate);
+			return 1;
 		#ifndef SIT_ListDebug
 		case SITK_Space:
 			SIT_ListDebug(list);
@@ -1401,12 +1587,12 @@ Bool SIT_InitListBox(SIT_Widget w, va_list args)
 	w->finalize     = SIT_ListFinalize;
 	w->render       = SIT_ListRender;
 	w->setValue     = SIT_SetListBoxValues;
-	w->flags       |= SITF_RenderChildren; // | SITF_PrivateChildren;
+	w->flags       |= SITF_RenderChildren;
 	vector_init_zero(list->cells, sizeof (struct Cell_t));
 
 	SIT_AddCallback(w, SITE_OnResize,     SIT_ListResize, NULL);
-	SIT_AddCallback(w, SITE_OnClick,      SIT_ListClick, NULL);
-	SIT_AddCallback(w, SITE_OnMouseMove,  SIT_ListMouseMove, NULL);
+	SIT_AddCallback(w, SITE_OnClickMove,  SIT_ListClick, NULL);
+//	SIT_AddCallback(w, SITE_OnMouseMove,  SIT_ListMouseMove, NULL);
 	SIT_AddCallback(w, SITE_OnRawKey,     SIT_ListKeyboard, NULL);
 	SIT_AddCallback(w, SITE_OnVanillaKey, SIT_ListAutoComplete, NULL);
 	SIT_AddCallback(w, SITE_OnFocus,      SIT_ListResetSearch, NULL);
@@ -1432,6 +1618,7 @@ Bool SIT_InitListBox(SIT_Widget w, va_list args)
 		list->tdSel = td = SIT_CreateWidget("td", SIT_HTMLTAG, w, NULL);
 		td->state |= STATE_CHECKED;
 		td->style.flags &= ~CSSF_APPLIED;
+		td->flags |= SITF_PrivateChildren;
 		layoutCalcBox(td);
 		td->style.overflow = SITV_EllipsisRight;
 		ListRemove(&w->children, &td->node);
@@ -1473,6 +1660,7 @@ static int SIT_ListRecalcItemPos(SIT_Widget w, APTR cd, APTR ud)
 
 	for (i = list->recalcCell, count = list->cells.count, cell = vector_nth(&list->cells, i); i < count; i ++, cell ++)
 	{
+		if (cell->flags & CELL_HIDDEN) continue;
 		if ((cell->flags & CELL_HASSIZE) == 0)
 			SIT_ListCalcSize(list->td, cell, (int) ud);
 
@@ -1486,6 +1674,7 @@ static int SIT_ListRecalcItemPos(SIT_Widget w, APTR cd, APTR ud)
 	{
 		for (i = list->recalcCell, cell = STARTCELL(list); i > 0; i --, cell ++)
 		{
+			if (cell->flags & CELL_HIDDEN) continue;
 			if (maxw < cell->sizeObj.width)
 				maxw = cell->sizeObj.width;
 		}
@@ -1501,7 +1690,7 @@ static int SIT_ListRecalcItemPos(SIT_Widget w, APTR cd, APTR ud)
 
 	/* all cells have same width, but can have different height */
 	for (cell = STARTCELL(list), i = list->cells.count; i > 0; i --, cell ++)
-		if ((cell->flags & CELL_CATEGORY) == 0)
+		if ((cell->flags & (CELL_HIDDEN|CELL_CATEGORY)) == 0)
 			cell->sizeCell.width = maxw;
 
 	count = list->lbFlags & SITV_ReorgColumns;
@@ -1662,63 +1851,17 @@ static StrPool SIT_ListGetStrPool(SIT_ListBox list, Cell row)
 	return str;
 }
 
-/* delete one row/item in the list */
-DLLIMP void SIT_ListDeleteRow(SIT_Widget w, int row)
+/* cell being removed: adjust visual layout */
+static void SIT_ListCellRemoved(SIT_ListBox list, int row)
 {
-	SIT_ListBox list = (SIT_ListBox) w;
-	int cols, rows;
-	if (w == NULL || w->type != SIT_LISTBOX || list->cells.count == 0)
-		return;
-	if (row == DeleteAllRows)
-	{
-		/* start from scratch */
-		SIT_ListFreeCells(STARTCELL(list), list->cells.count);
-		list->cells.count = 0;
-		list->rowCount = 0;
-		list->scrollTop = 0;
-		list->scrollHeight = 0;
-		list->selIndex = -1;
-		list->catCount = 0;
-		list->catVisible = 0;
-		list->rowTop = NULL;
-		vector_free(list->cells);
-		vector_init_zero(list->cells, sizeof (struct Cell_t));
-		APTR str;
-		while ((str = ListRemHead(&list->strPool)))
-			free(str);
-		if (list->lbFlags & SITV_HasScroll)
-			SIT_ListAdjustScroll(list);
-		sit.dirty = 1;
-		return;
-	}
-	rows = list->rowCount-1;
-	if (row == -1)
-		row = rows;
-	else if (row > rows)
-		row = rows;
-	list->rowCount --;
-	cols = list->columnCount;
-	row *= cols;
 	Cell cells = STARTCELL(list) + row;
-	if (cells->flags & CELL_CATEGORY)
-		list->catCount --;
-	if (list->selIndex == row)
-		list->selIndex = -1;
-
-	StrPool str = SIT_ListGetStrPool(list, cells);
-	if (str)
-	{
-		ListRemove(&list->strPool, &str->node);
-		free(str);
-	}
-
 	if (list->viewMode == SITV_ListViewReport)
 	{
 		Cell cell;
-		int  i;
+		int  i, cols = list->columnCount;
 		REAL h = cells->sizeCell.height;
 		list->scrollHeight -= h;
-		REAL max = w->layout.pos.height + w->layout.padding.top + w->layout.padding.bottom - list->hdrHeight;
+		REAL max = list->super.layout.pos.height + list->super.layout.padding.top + list->super.layout.padding.bottom - list->hdrHeight;
 		if (list->scrollTop + max > list->scrollHeight)
 		{
 			/* empty space at bottom: remove */
@@ -1759,6 +1902,64 @@ DLLIMP void SIT_ListDeleteRow(SIT_Widget w, int row)
 		}
 		else SIT_ListStartRecalc(list, nth);
 	}
+}
+
+/* delete one row/item in the list */
+DLLIMP void SIT_ListDeleteRow(SIT_Widget w, int row)
+{
+	SIT_ListBox list = (SIT_ListBox) w;
+	int cols, rows;
+	if (w == NULL || w->type != SIT_LISTBOX || list->cells.count == 0)
+		return;
+	if (row == DeleteAllRows)
+	{
+		/* start from scratch */
+		SIT_ListFreeCells(STARTCELL(list), list->cells.count);
+		if (list->selIndex >= 0 && HAS_EVT(&list->super, SITE_OnChange))
+			SIT_ApplyCallback(&list->super, NULL, SITE_OnChange);
+		list->cells.count = 0;
+		list->rowCount = 0;
+		list->scrollTop = 0;
+		list->scrollHeight = 0;
+		list->selIndex = -1;
+		list->catCount = 0;
+		list->catVisible = 0;
+		list->rowTop = NULL;
+		vector_free(list->cells);
+		vector_init_zero(list->cells, sizeof (struct Cell_t));
+		APTR str;
+		while ((str = ListRemHead(&list->strPool)))
+			free(str);
+		if (list->lbFlags & SITV_HasScroll)
+			SIT_ListAdjustScroll(list);
+		sit.dirty = 1;
+		return;
+	}
+	rows = list->rowCount-1;
+	if (row == -1)
+		row = rows;
+	else if (row > rows)
+		row = rows;
+	list->rowCount --;
+	cols = list->columnCount;
+	row *= cols;
+	Cell cells = STARTCELL(list) + row;
+	if (cells->flags & CELL_CATEGORY)
+		list->catCount --;
+	if (list->selIndex == row)
+	{
+		if ((list->lbFlags & SITV_SelectMultiple) == 0 && HAS_EVT(&list->super, SITE_OnChange))
+			SIT_ApplyCallback(&list->super, NULL, SITE_OnChange);
+		list->selIndex = -1;
+	}
+
+	StrPool str = SIT_ListGetStrPool(list, cells);
+	if (str)
+	{
+		ListRemove(&list->strPool, &str->node);
+		free(str);
+	}
+	SIT_ListCellRemoved(list, row);
 	SIT_ListFreeCells(cells, cols);
 	memmove(cells, cells + cols, (rows * cols - row) * sizeof *cells);
 	list->cells.count -= cols;
@@ -1766,6 +1967,47 @@ DLLIMP void SIT_ListDeleteRow(SIT_Widget w, int row)
 		SIT_ListAdjustMaxHeight(list);
 	sit.dirty = 1;
 }
+
+/* show/hide a row; typical use case: filtering items of a list */
+DLLIMP void SIT_ListSetRowVisibility(SIT_Widget w, int row, Bool visible)
+{
+	SIT_ListBox list = (SIT_ListBox) w;
+	int cols, rows;
+	if (w == NULL || w->type != SIT_LISTBOX || list->cells.count == 0)
+		return;
+
+	rows = list->rowCount-1;
+	if (row == -1)
+		row = rows;
+	else if (row > rows)
+		row = rows;
+
+	cols = list->columnCount;
+	row *= cols;
+	Cell cells = STARTCELL(list) + row;
+	if (cells->flags & CELL_CATEGORY)
+		list->catCount --;
+	if (list->selIndex == row)
+	{
+		cells->flags &= ~CELL_SELECT;
+		SIT_ListUpdateCSS(list, cells);
+		if ((list->lbFlags & SITV_SelectMultiple) == 0 && HAS_EVT(&list->super, SITE_OnChange))
+			SIT_ApplyCallback(&list->super, NULL, SITE_OnChange);
+		list->selIndex = -1;
+	}
+
+	for (; cols > 0; cols --, cells ++)
+	{
+		if (visible) cells->flags &= ~CELL_HIDDEN;
+		else         cells->flags |=  CELL_HIDDEN;
+	}
+
+	SIT_ListCellRemoved(list, row);
+	if (list->maxRowVisible > 0)
+		SIT_ListAdjustMaxHeight(list);
+	sit.dirty = 1;
+}
+
 
 /* add sub-control into a list */
 DLLIMP SIT_Widget SIT_ListInsertControlIntoCell(SIT_Widget w, int row, int col)

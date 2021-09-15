@@ -1286,7 +1286,7 @@ static void renderFlushDeco(Decor * deco, REAL endX)
 	line.height = thick;
 
 	switch (deco->type) { /* order: under / over / strike */
-	case 1: line.top += deco->height - thick * 1.8; break;
+	case 1: line.top += deco->height - thick * 1.2; break;
 	case 2: break;
 	case 3: line.top += (deco->height - thick) * 0.5;
 	}
@@ -1598,7 +1598,7 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 					if (xf - width > EPSILON)
 					{
 						if (n < word.n)
-							n ++, width += nvgTextBounds(vg, 0, 0, word.word+n, word.word+n+1, NULL);
+							width += nvgTextBounds(vg, 0, 0, word.word+n, word.word+n+1, NULL), n ++;
 						else
 							word.space = 0;
 					}
@@ -1671,7 +1671,7 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 				overflow.state = overflow.init;
 			}
 			else x += word.width + word.space + word.marginR, first = 0;
-			if (word.word == textOverflow)
+			if (word.word == textOverflow || overflow.state == OVERFLOW_MWORDSKIP)
 				w --, i ++, count ++;
 		}
 		if (overflow.state == OVERFLOW_RWORDELIPSE)
@@ -1986,6 +1986,7 @@ DLLIMP SIT_RENDER SIT_RenderNodes(double time)
 //	static int render = 1;
 //	fprintf(stderr, "frame render = %d\r", render ++);
 	#endif
+	sit.dirty = False;
 
 	SIT_ClearGL();
 	nvgBeginFrame(sit.nvgCtx, sit.scrWidth, sit.scrHeight, 1);
@@ -1993,7 +1994,6 @@ DLLIMP SIT_RENDER SIT_RenderNodes(double time)
 	SIT_RenderNode(sit.root);
 
 	nvgEndFrame(sit.nvgCtx);
-	sit.dirty = False;
 
 	return sit.composited ? SIT_RenderComposite : SIT_RenderDone;
 }

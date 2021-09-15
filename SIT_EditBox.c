@@ -443,7 +443,7 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 	{
 		/* no need to alloc more for a number or a password */
 		if (! edit->fixedBuffer)
-			edit->fixedSize = fixedMem = 128;
+			edit->fixedSize = 128;
 		/* disable undo: will prevent spreading password all over the memory */
 		edit->undoSize = edit->editType == SITV_Password ? 0 : 128;
 		edit->flags |= FLAG_FIXEDUNDO|FLAG_FIXEDSIZE;
@@ -458,12 +458,15 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 		edit->stepValue = round(edit->stepValue);
 	}
 	/* buffer provided by user: don't alloc anything here */
-	DATA8 fixed = edit->fixedBuffer;
 	edit->fixedBuffer = NULL;
-	if (fixed && edit->fixedSize > 0)
+	if (edit->fixedSize > 0)
 	{
-		edit->text = fixed;
+		DATA8 fixed = edit->fixedBuffer;
 		edit->flags |= FLAG_FIXEDSIZE;
+		if (fixed)
+			edit->text = fixed;
+		else
+			fixedMem += edit->fixedSize;
 	}
 
 	if (edit->editType != SITV_Multiline)

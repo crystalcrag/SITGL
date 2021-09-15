@@ -39,7 +39,7 @@ int SIT_MeasureLabel(SIT_Widget w, APTR cd, APTR unused)
 		else layoutMeasureWords(w, &ret);
 		ret.width  += w->padding[0] + w->padding[2];
 		ret.height += w->padding[1] + w->padding[3];
-		if (pref->width < ret.width)  pref->width = ret.width;
+		if (label->overflow == 0 && pref->width < ret.width) pref->width = ret.width;
 
 		static uint8_t hasAttach[] = {0, 1, 1, 1, 1, 1, 0, 1};
 		/* If label has no vertical constraints, force it to use space occupied by text */
@@ -119,6 +119,7 @@ static int SIT_SetLabelValues(SIT_Widget w, APTR cd, APTR ud)
 			layoutFree(w);
 			label->image = img;
 			SIT_AddCallback(w, SITE_OnGeometrySet, SIT_ImageProp, NULL);
+			sit.dirty = True;
 		}
 		w->flags |= SITF_GeometryChanged;
 		break;
@@ -140,12 +141,14 @@ static int SIT_SetLabelValues(SIT_Widget w, APTR cd, APTR ud)
 				SIT_UnloadImg(label->image);
 			layoutFree(w);
 			layoutParseHTML(w, w->title = val->string);
+			sit.dirty = True;
 		}
 		else w->title = NULL;
 		w->flags |= SITF_GeometryChanged;
 		break;
 	case SIT_Overflow:
 		w->style.overflow = label->overflow = val->integer;
+		sit.dirty = True;
 		break;
 	default:
 		return SIT_SetWidgetValue(w, cd, ud);

@@ -230,12 +230,14 @@ DLLIMP void SIT_CloseDialog(SIT_Widget w)
 
 	if (w == sit.activeDlg)
 	{
+		/* activate previous dialog */
 		SIT_Widget parent = w->parent;
 		while ((parent->flags & SITF_TopLevel) == 0)
 			parent = parent->parent;
 		sit.activeDlg = parent;
 		parent = sit.focus;
-		sit.active = sit.hover = sit.focus = NULL;
+		sit.active = sit.hover = NULL;
+		sit.focus = (sit.activeDlg->type == SIT_DIALOG ? ((SIT_Dialog)sit.activeDlg)->lastFocus : NULL);
 		if (parent)
 			SIT_ApplyCallback(parent, NULL, SITE_OnBlur);
 	}

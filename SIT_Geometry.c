@@ -273,13 +273,17 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 
 	if (p[2] - p[0] < chldsz /*(&w->optimalBox.width)[side]*/ && percent[1] > percent[0])
 	{
-		chldsz = *cside + (p[0] + chldsz - p[2]) / (percent[1] - percent[0]);
-		if (chldsz > sz)
-			chldsz = sz;
-		if (*cside != chldsz)
+		int newsz = *cside + (p[0] + chldsz - p[2]) / (percent[1] - percent[0]);
+		if (newsz > sz)
+			newsz = sz;
+		if (*cside != newsz)
 		{
-			*cside = chldsz;
-			ret = 0;
+			ret = newsz - *cside;
+			/* check if we can adjust control size instead of container */
+			if (ret > 0 && adjust != FitUsingOptimalBox && chldsz - (&w->optimalBox.width)[side] >= ret)
+				;
+			else
+				*cside = newsz, ret = 0;
 		}
 	}
 	return ret;
@@ -467,18 +471,21 @@ static Bool SIT_CanChangeContainerSize(SIT_Widget w, SizeF * oldSz, SizeF * newS
 
 	if (w->flags & SITF_TopLevel) return False;
 
+	#if 0 /* only bottom/right corner should matter ? */
 	if (a->sa_Type == SITV_AttachNone)
 	{
 		REAL pad = c->padding[side];
 		/* top/left set to none: check if get to touch container bbox */
 		if (p[0] < pad || p[2] - (&oldSz->width)[side] == pad) return True;
 	}
+	#endif
 	a += 2;
 	p += 2;
 	if (a->sa_Type == SITV_AttachNone)
 	{
 		/* bottom/right set to none */
-		REAL bottom = c->box.bottom - c->box.top - c->padding[side+2];
+		REAL * csize = &c->box.left + side;
+		REAL bottom = csize[2] - csize[0] - c->padding[side+2];
 		// XXX might not be set yet
 		// (&c->layout.pos.width)[side] + c->padding[side];
 		if (p[0] >= bottom || p[-2] + (&oldSz->width)[side] >= bottom) return True;
@@ -659,6 +666,17 @@ static int SIT_LayoutInitial(SIT_Widget root, ResizePolicy mode)
 				min = root->optimalBox.height;
 			if ((root->flags & SITF_AutoHeight) == 0 && root->box.bottom - root->box.top < min)
 				root->box.bottom = root->box.top + min;
+		}
+		else
+		{
+			/* check if edges are constrainted */
+			if (root->attachment[0].sa_Type != SITV_AttachNone &&
+			    root->attachment[2].sa_Type != SITV_AttachNone)
+			    SIT_LayoutWidget(root->parent, root, 0, mode);
+
+			if (root->attachment[1].sa_Type != SITV_AttachNone &&
+			    root->attachment[3].sa_Type != SITV_AttachNone)
+			    SIT_LayoutWidget(root->parent, root, 1, mode);
 		}
 	}
 
@@ -858,6 +876,9 @@ void SIT_LayoutCSSSize(SIT_Widget root)
 	layoutAlignText(root);
 	root->style.flags &= ~CSSF_BORDERIMG;
 
+	if (root->type == SIT_DIALOG && (root->attachment[3].sa_Type != SITV_AttachNone || root->attachment[2].sa_Type != SITV_AttachNone))
+		SIT_CenterDialog(root);
+
 	/* trigger SITE_OnResize event if needed */
 	if (HAS_EVT(root, SITE_OnResize) && ! (ALMOST0(size.width-root->layout.pos.width) && ALMOST0(size.height-root->layout.pos.height)))
 		SIT_ApplyCallback(root, &root->layout.pos.width, SITE_OnResize);
@@ -940,12 +961,6 @@ Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode)
 
 	if (mode != FitUsingOptimalBox && (root->flags & SITF_TopLevel))
 		SIT_LayoutCSSSize(root);
-
-	if (root->type == SIT_DIALOG && (root->attachment[3].sa_Type != SITV_AttachForm || root->attachment[2].sa_Type != SITV_AttachForm))
-	{
-		SIT_CenterDialog(root);
-		SIT_MoveWidgets(root);
-	}
 
 	return True;
 }

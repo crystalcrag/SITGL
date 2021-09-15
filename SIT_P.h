@@ -264,6 +264,7 @@ struct SIT_Dialog_t
 	SIT_Widget   closeButton;
 	SIT_Widget   defButton;
 	SIT_Widget   cancelButton;
+	SIT_Widget   lastFocus;
 	SizeF        minSize;
 	SizeF        maxSize;
 	int          customStyles;         /* public: SITV_DialogStyles */
@@ -323,6 +324,7 @@ struct SIT_ListBox_t
 	uint8_t      catCount;
 	uint8_t      catVisible;
 	int8_t       defAlign;
+	int8_t       autoScrollDir;
 	ListHead     strPool;              /* StrPool */
 	Cell         columns;
 	Cell         rowTop;
@@ -332,6 +334,8 @@ struct SIT_ListBox_t
 	REAL         borderSpacingV, borderSpacingH;
 	REAL         scrollTop, scrollPad, scrollHeight;
 	REAL         formatTitle;
+	REAL         lassoSX, lassoSY;
+	REAL         lassoEX, lassoEY;
 	REAL         maxCellW;             /* SITV_ListViewIcon */
 	REAL         hdrHeight;            /* SITV_ListViewReport */
 };

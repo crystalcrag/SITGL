@@ -119,7 +119,7 @@ DLLIMP STRPTR SIT_GetError(void)
 
 void SIT_ClearGL(void)
 {
-	glClear(GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
+	glClear(GL_STENCIL_BUFFER_BIT);
 }
 
 Bool SIT_LoadImg(CSSImage img, STRPTR path, int len, int flags)

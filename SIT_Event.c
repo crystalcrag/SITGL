@@ -69,7 +69,7 @@ DLLIMP int SIT_ApplyCallback(SIT_Widget w, APTR cd, int type)
 			{
 				TEXT path[256];
 				layoutGetTextContent(w, path, sizeof path);
-				while (! IsDir(path) && ParentDir(path));
+				while (! IsDir(path) && ParentDir(path) >= 0);
 				OpenDocument(path);
 			}
 			else OpenDocument(href);
@@ -181,8 +181,8 @@ static Bool SIT_ProcessAccel(int capture, int key)
 						break;
 					}
 				default:
-					if (! SIT_ApplyCallback(w, NULL, evt) && a->cb)
-						a->cb(w, (APTR) key, (APTR) evt);
+					if (! SIT_ApplyCallback(w, NULL, evt) && a->cb && a->cb(w, (APTR) key, (APTR) evt) == 0)
+						return False;
 				}
 			}
 			else if (a->cb)
@@ -666,7 +666,7 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 		if (sit.hover)
 		{
 			/* exit control */
-			for (c = sit.hover; c && c != sit.hover; c = c->parent)
+			for (c = sit.hover; c; c = c->parent)
 			{
 				stack[count++] = c;
 				c->oldState = c->state;
@@ -776,11 +776,14 @@ DLLIMP void SIT_ProcessResize(int width, int height)
 
 		for (w = HEAD(w->children); w; NEXT(w))
 		{
-			if (w->flags & SITF_TopLevel)
+			if ((w->flags & SITF_TopLevel) == 0) continue;
+			SIT_CenterDialog(w);
+			if (w->box.right - w->box.left != w->childBox.width ||
+			    w->box.bottom - w->box.top != w->childBox.height)
 			{
-				SIT_CenterDialog(w);
-				SIT_MoveWidgets(w);
+				SIT_LayoutWidgets(w, KeepDialogSize);
 			}
+			else SIT_MoveWidgets(w);
 		}
 	}
 }
