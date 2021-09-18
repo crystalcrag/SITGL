@@ -147,12 +147,11 @@ int CSS_Init(STRPTR theme, int isPath)
 }
 
 /*
- * These 4 functions have been generated with gperf.exe: it is 2 static hash tables: one for
- * CSS attributes and one for CSS colors. Using HashTable from UtilityLib requires 7 Kb of alloc +
- * 5 Kb of code, whereas these tables + code only need less than 1 Kb.
+ * These 2 functions have been generated with gperf.exe: it is a static hash tables for
+ * CSS attributes. Using HashTable from UtilityLib requires 7 Kb of alloc +  5 Kb of code,
+ * whereas these tables + code only need less than 1 Kb.
  *
- * If these tables (cssattrs or colorNames) are changed, check bin/readme.html to see how to regenarete
- * them. Note: only static tables should change, not the code.
+ * If the table "cssattrs" is changed, check bin/readme.html to see how to regenerate the code below.
  */
 static int cssAttrHash(DATA8 str, int len)
 {

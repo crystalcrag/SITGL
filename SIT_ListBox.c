@@ -18,6 +18,7 @@
 	TagList ListBoxClass[] = {
 		{ SIT_ListBoxFlags,  "listBoxFlags",  _SG, SIT_INT,  OFFSET(SIT_ListBox, lbFlags) },
 		{ SIT_CellPaint,     "cellPaint",     _SG, SIT_PTR,  OFFSET(SIT_ListBox, cellPaint) },
+		{ SIT_FinalizeItem,  "finalizeItem",  _SG, SIT_PTR,  OFFSET(SIT_ListBox, finalizeItem) },
 		{ SIT_AutoComplete,  NULL,            _S_, SIT_PTR,  0 },
 		{ SIT_ViewMode,      "viewMode",      _SG, SIT_INT,  OFFSET(SIT_ListBox, viewMode) },
 		{ SIT_ColumnCount,   NULL,            __G, SIT_INT,  OFFSET(SIT_ListBox, softColumn) },
@@ -1159,11 +1160,15 @@ static void SIT_ListClearAndFree(SIT_Widget td)
 	}
 }
 
-static void SIT_ListFreeCells(Cell start, int count)
+static void SIT_ListFreeCells(SIT_ListBox list, Cell start, int count)
 {
 	Cell cell;
+	SIT_CallProc cb = list->finalizeItem;
 	for (cell = start; count > 0; count --, cell ++)
 	{
+		if (cb && cell->userData)
+			cb(&list->super, NULL, cell->userData);
+
 		if (cell->flags & CELL_ISCONTROL)
 		{
 			SIT_Widget td = cell->obj;
@@ -1209,7 +1214,7 @@ static int SIT_ListFinalize(SIT_Widget w, APTR cd, APTR ud)
 	while ((str = ListRemHead(&list->strPool)))
 		free(str);
 
-	SIT_ListFreeCells(STARTCELL(list), list->cells.count);
+	SIT_ListFreeCells(list, STARTCELL(list), list->cells.count);
 	vector_free(list->cells);
 	return 0;
 }
@@ -1228,28 +1233,27 @@ static Cell SIT_ListMovePage(SIT_ListBox list, int dir)
 	if (top < 0)   top = 0;
 	if (top != list->scrollTop)
 	{
-		REAL pos = 0, h = 0;
-		if (list->selIndex >= 0)
-		{
-			Cell cell = sel + list->selIndex;
-			max = list->scrollTop - list->hdrHeight;
-			pos = cell->sizeCell.top - max;
-			h   = pos + cell->sizeCell.height;
-		}
 		SIT_ListScroll(list->super.vscroll, (APTR) top, NULL);
 		SIT_SetValues(list->super.vscroll, SIT_ScrollPos, top, NULL);
 		sit.dirty = 1;
 		if (list->selIndex >= 0)
 		{
-			max = list->scrollTop - list->hdrHeight;
-			if (sel->sizeCell.top - max < 0) sel += sel->colLeft;
-			do {
-				REAL y1 = sel->sizeCell.top - max;
-				REAL y2 = y1 + sel->sizeCell.height;
-				if (y1 < h && y2 > pos) break;
-				sel += sel->colLeft;
+			Cell top = list->rowTop;
+			if (top->sizeCell.top < list->scrollTop)
+				top += top->colLeft;
+			sel += list->selIndex;
+			/* select the first/last visible item */
+			if (sel < top)
+			{
+				while (sel->sizeCell.top - list->scrollTop < 0)
+					sel += sel->colLeft;
 			}
-			while (sel < eof);
+			else
+			{
+				max = list->scrollTop + list->super.layout.pos.height;
+				while (sel->sizeCell.top + sel->sizeCell.height > max)
+					sel -= sel->colLeft;
+			}
 			return sel;
 		}
 	}
@@ -1914,7 +1918,7 @@ DLLIMP void SIT_ListDeleteRow(SIT_Widget w, int row)
 	if (row == DeleteAllRows)
 	{
 		/* start from scratch */
-		SIT_ListFreeCells(STARTCELL(list), list->cells.count);
+		SIT_ListFreeCells(list, STARTCELL(list), list->cells.count);
 		if (list->selIndex >= 0 && HAS_EVT(&list->super, SITE_OnChange))
 			SIT_ApplyCallback(&list->super, NULL, SITE_OnChange);
 		list->cells.count = 0;
@@ -1960,7 +1964,7 @@ DLLIMP void SIT_ListDeleteRow(SIT_Widget w, int row)
 		free(str);
 	}
 	SIT_ListCellRemoved(list, row);
-	SIT_ListFreeCells(cells, cols);
+	SIT_ListFreeCells(list, cells, cols);
 	memmove(cells, cells + cols, (rows * cols - row) * sizeof *cells);
 	list->cells.count -= cols;
 	if (list->maxRowVisible > 0)
@@ -2053,7 +2057,7 @@ DLLIMP void SIT_ListFinishInsertControl(SIT_Widget w)
 	if (cell == NULL) return;
 
 	if (cell->obj)
-		SIT_ListFreeCells(cell, 1);
+		SIT_ListFreeCells(list, cell, 1);
 
 	cell->obj = HEAD(td->children);
 
@@ -2095,7 +2099,7 @@ DLLIMP Bool SIT_ListSetCell(SIT_Widget w, int row, int col, APTR rowTag, int ali
 	if (text != DontChangePtr)
 	{
 		if (cell->flags & CELL_ISCONTROL)
-			SIT_ListFreeCells(cell, 1);
+			SIT_ListFreeCells(list, cell, 1);
 
 		cell->flags &= ~CELL_ISCONTROL;
 		StrPool str = SIT_ListGetStrPool(list, cell-col);

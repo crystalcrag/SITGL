@@ -97,6 +97,7 @@
   <a class="sub3" href="#listicon">Icon view</a>
   <a class="sub3" href="#listcat">Category separator</a>
   <a class="sub3" href="#listprop">Listbox properties</a>
+  <a class="sub3" href="#listonthefly">Lazy rendering</a>
   <a class="sub3" href="#listevents">Events</a>
   <a class="sub3" href="#listkbd">Keyboard shortcuts</a>
 
@@ -5389,6 +5390,73 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
 }</pre>
   <p><b>The default behavior</b> for sorting items is <tt>SIT_SortAlpha</tt>.
 </ul>
+
+
+<h4 id="listonthefly">Rendering items on the fly</h4>
+
+<p>This is a quick technical memo on how you can perform <b>lazy rendering of items displayed in a list</b>.
+
+<p>If you have a list with potentially lots of items in it, and each of those items can have an icon/bitmap,
+that must be read from disk, it might be interesting to only do this for items that are visible.
+
+<p>Otherwise reading hundreds of files from disk, decompressing the data and transfering everything to
+the GPU might be enough to freeze the interface for a couple of seconds or more. While this doesn't sound
+that bad, if this list has to be displayed often, that wait time will start to stack up and become annoying
+for the user.
+
+<p>Hopefully, with everything that has been explained so far, it is somewhat easy to implement some kind
+of lazy rendering to only load the extra information from items that are visible on screen. The added
+benefit of the technique described here is that it does not rely on multi-threading.
+
+
+<p>First, let's say you have a list in icon view, and you are adding items with an icon, using a code
+similar to this:
+<pre>
+SIT_Widget list = ...;
+MyItem     item = ...;
+<type>float</type>      thumbSz = SIT_EmToFloat(list, SITV_em(<val>4</val>));
+
+SIT_Widget td = SIT_ListInsertControlIntoCell(list, SIT_ListInsertItem(list, -<val>1</val>, item, SITV_TDSubChild), <val>0</val>);
+SIT_CreateWidgets(td,
+	<val>"&lt;label name=icon labelSize="</val>, SITV_LabelSize(thumbSz, thumbSz), <val>"&gt;"</val>
+	<val>"&lt;label name=wname title="</val>, item-&gt;name, <val>"left=WIDGET,icon,0.5em top=FORM,,1em&gt;"</val>
+);
+SIT_AddCallback(SIT_GetById(td, <val>"icon"</val>), SITE_OnPaint, OnPaintHandler, item);
+SIT_ListFinishInsertControl(list);
+</pre>
+
+<p>The widget <tt>icon</tt> does not have its <tt>imagePath</tt> attribute set yet. The trick is to use
+an <tt>OnPaint</tt> callback to know if an item is visible or not. If the callback is triggered, it means
+the user can see the item and therefore we should set the icon path.
+
+<p>The next trick is to yield the CPU if extracting the icons takes too much time. Remember that by the
+time the <tt>OnPaint</tt> callback is triggered, you are in the <tt>SIT_RenderNodes(<type>double</type> time);</tt>
+stack frame. Having access to the <tt>time</tt> value given to that function from the <tt>OnPaint</tt>
+callback will allow to know how much time has passed processing the icons. If that time exceeds a couple
+of frames, you can simply stop loading icons and wait for the next frame. This can be simply done, using
+a code like this:
+<pre>
+<type>static void</type> OnPaintHandler(SIT_Widget label, <type>APTR</type> callData, <type>APTR</type> userData)
+{
+	MyItem item = userData;
+	<kwd>if</kwd> (! item-&gt;iconLoaded)
+	{
+		<kwd>if</kwd> (FrameGetTime() - curFrameTime > <val>50</val>)
+		{
+			SIT_ForceRefresh();
+			<kwd>return</kwd> <val>1</val>;
+		}
+
+		SIT_SetValurs(label, SIT_ImagePath, item-&gt;iconPath, <val>NULL</val>);
+		item-&gt;iconLoaded = <val>1</val>;
+	}
+	<kwd>return</kwd> <val>1</val>;
+}
+</pre>
+
+<p>Where <tt>curFrameTime</tt> is the value given to the <tt>time</tt> parameter of the <tt>SIT_RenderNodes()</tt>
+function. If loading the icons take more than 50 ms, we simply stop loading more icons. On the next frame,
+we will restart loading icons only for those that has their <tt>iconLoaded</tt> set to 0.
 
 <h4 id="listkbd"><span>Keyboard shortcuts</span></h4>
 

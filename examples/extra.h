@@ -11,6 +11,18 @@
 SIT_Widget CCOpen(SIT_Widget parent, DATA8 rgb, SIT_CallProc cb, APTR ud);
 SIT_Widget FSOpen(SIT_Widget parent, STRPTR curdir, SIT_CallProc cb, APTR ud, int flags);
 void       VTInit(SIT_Widget canvas, SIT_Widget scroll);
+SIT_Widget FSInit(SIT_Widget parent, STRPTR path, int options, SIT_CallProc cb);
+
+enum /* possible flags for <options> */
+{
+	FSVIEW_SAVE       = 0x01,
+	FSVIEW_MULTISEL   = 0x02,
+	FSVIEW_HASDELETE  = 0x04,
+	FSVIEW_HASMAKEDIR = 0x08,
+	FSVIEW_HASRENAME  = 0x10
+//	FSVIEW_HASCOPY
+};
+
 
 enum /* extra properties that can be set on <canvas> after VTInit has been called */
 {

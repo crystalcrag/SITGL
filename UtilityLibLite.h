@@ -101,6 +101,7 @@ DLLIMP int    ParentDir(STRPTR path);
 DLLIMP Bool   IsDir(STRPTR path);
 DLLIMP STRPTR CreatePath(STRPTR path, Bool not_last);
 DLLIMP STRPTR BaseName(STRPTR path);
+DLLIMP void   SafePath(STRPTR path);
 DLLIMP ULONG  TimeStamp(STRPTR path, int type);
 DLLIMP int    Execute(STRPTR cmd, int timeout);
 DLLIMP int    OpenDocument(STRPTR filename);

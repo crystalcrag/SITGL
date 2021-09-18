@@ -307,6 +307,7 @@ struct SIT_ListBox_t
 	SIT_Widget_t super;
 	SIT_Widget   td, tdSel, thead;
 	SIT_CallProc cellPaint;            /* public: SG */
+	SIT_CallProc finalizeItem;         /* public: SG */
 	int          lbFlags;              /* public: SG */
 	int          rowCount;
 	int          sortColumn;           /* public: SG */

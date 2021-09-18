@@ -236,10 +236,13 @@ DLLIMP void SIT_CloseDialog(SIT_Widget w)
 			parent = parent->parent;
 		sit.activeDlg = parent;
 		parent = sit.focus;
-		sit.active = sit.hover = NULL;
-		sit.focus = (sit.activeDlg->type == SIT_DIALOG ? ((SIT_Dialog)sit.activeDlg)->lastFocus : NULL);
+		sit.active = sit.hover = sit.focus = NULL;
+
 		if (parent)
 			SIT_ApplyCallback(parent, NULL, SITE_OnBlur);
+
+		if (sit.activeDlg->type == SIT_DIALOG)
+			SIT_SetFocus(((SIT_Dialog)sit.activeDlg)->lastFocus);
 	}
 	if (w->type == SIT_APP)
 	{

@@ -316,6 +316,50 @@ DLLIMP Bool IsDir(STRPTR file)
 	return ret != (DWORD) -1 && (ret & FILE_ATTRIBUTE_DIRECTORY);
 }
 
+/* DOS/SafePath */
+DLLIMP void SafePath(STRPTR path)
+{
+	DATA8 s, p;
+
+	if (path == NULL) return;
+
+	for (p = s = path; *p; p ++)
+	{
+		uint8_t chr = *p;
+		switch (chr) {
+		case '\\': case '/': case ':': case '\"':
+		case '<':  case '>': case '|': case '?':
+		case '*':  case '\t': /* invalid characters for windows */
+			*s++ = ' ';
+			break;
+		case '\n': case '\r': /* from copy/paste */
+			*s = 0;
+			goto finish;
+		case 0xC2:
+			if (p[1] == 0xA0) /* nbsp */
+				*s++ = ' ', p ++; /* convert to regular space */
+			if (p[1] == 0xAD) /* soft hyphen: remove */
+				p ++;
+			break;
+		case 0xE2:
+			if (p[1] == 0x81 && p[2] == 0x84) /* fraction slash: remove */
+				p += 2;
+			break;
+		default:
+			*s++ = chr;
+		}
+	}
+
+	finish:
+	/* remove starting spaces */
+	for (*s = 0, p = path; *p == ' '; p ++);
+	if (p > (DATA8) path) strcpy(path, p);
+
+	/* remove trailing spaces, underscores and dots */
+	for (p = strchr(path, 0)-1; p > (DATA8) path; p --)
+		if (*p == ' ') *p = 0; else break;
+}
+
 /* DOS/TimeStamp */
 DLLIMP ULONG TimeStamp(STRPTR path, int type)
 {
