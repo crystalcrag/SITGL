@@ -96,6 +96,8 @@ static void SIT_ListCalcSize(SIT_Widget td, Cell cell, int resize)
 	cell->flags |= CELL_HASSIZE;
 	if (cell->flags & CELL_ISCONTROL)
 	{
+		memset(&td->minBox, 0, sizeof td->minBox);
+		memset(&td->optimalBox, 0, sizeof td->optimalBox);
 		SIT_ListRestoreChildren(td, cell);
 		SIT_LayoutWidgets(td, resize);
 
@@ -2040,7 +2042,7 @@ DLLIMP SIT_Widget SIT_ListInsertControlIntoCell(SIT_Widget w, int row, int col)
 		return NULL;
 
 	td->userData = cell;
-	ListNew(&td->children);
+	SIT_ListRestoreChildren(td, cell);
 
 	return td;
 }
@@ -2056,13 +2058,17 @@ DLLIMP void SIT_ListFinishInsertControl(SIT_Widget w)
 
 	if (cell == NULL) return;
 
-	if (cell->obj)
-		SIT_ListFreeCells(list, cell, 1);
-
 	cell->obj = HEAD(td->children);
 
 	ListNew(&td->children);
 	td->userData = NULL;
+
+	if (w->optimalBox.width >= 0)
+	{
+		/* layout done: item added after being displayed: recompute node position next update cycle */
+		cell->flags &= ~CELL_HASSIZE;
+		SIT_ListStartRecalc(list, cell - (Cell) list->cells.buffer);
+	}
 }
 
 DLLIMP Bool SIT_ListSetCell(SIT_Widget w, int row, int col, APTR rowTag, int align, STRPTR text)
@@ -2238,6 +2244,7 @@ DLLIMP void SIT_ListReorgColumns(SIT_Widget w, STRPTR fmt)
 	REAL   total  = 0;
 	Cell   cell, eof;
 
+	/* get maximal width for each column */
 	memset(widths, 0, sizeof *widths * col);
 	for (cell = STARTCELL(list), eof = cell + list->cells.count; cell < eof; cell += col)
 	{
@@ -2262,7 +2269,11 @@ DLLIMP void SIT_ListReorgColumns(SIT_Widget w, STRPTR fmt)
 		total += widths[i];
 		if (*keep == '*') fixed += widths[i];
 	}
-	widths[col-1] += ((SIT_App)sit.root)->defSBSize;
+	/* redistribute width */
+	pad = ((SIT_App)sit.root)->defSBSize;
+	widths[col-1] += pad;
+	total += pad;
+	if (keep[-1] == '*') fixed += pad;
 	if (fixed > 0)
 	{
 		REAL remain = total - fixed;

@@ -267,7 +267,8 @@ DLLIMP void SIT_ExtractDialog(SIT_Widget w)
 	while (w && w->type != SIT_DIALOG)
 		w = w->parent;
 
-	if (w->type == SIT_APP || w->parent->type != SIT_APP) return;
+	/* parent == NULL means this dialog was already extracted */
+	if (w == NULL || w->parent == NULL || w->type == SIT_APP || w->parent->type != SIT_APP) return;
 
 	if (w == sit.activeDlg)
 	{
@@ -279,14 +280,17 @@ DLLIMP void SIT_ExtractDialog(SIT_Widget w)
 	}
 	ListRemove(&w->parent->children, &w->node);
 	memset(&w->node, 0, sizeof w->node);
+	w->parent = NULL;
 	sit.dirty = 1;
 }
 
 /* insert it back where it was */
 DLLIMP void SIT_InsertDialog(SIT_Widget w)
 {
-	ListAddTail(&w->parent->children, &w->node);
+	if (w->parent) return; /* already in tree */
+	ListAddTail(&sit.root->children, &w->node);
 	sit.dirty = 1;
+	w->parent = sit.root;
 
 	REAL box[4];
 	memcpy(box, &w->box, sizeof box);

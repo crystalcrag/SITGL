@@ -122,7 +122,14 @@ DLLIMP void * fopen_enc(const char * file, const char * mode);
 DLLIMP void   GetSelectionColor(DATA8 fg, DATA8 bg);
 DLLIMP ULONG  TimeMS(void);
 DLLIMP float  RandRange(float min, float max);
+DLLIMP int    GetDefaultPath(int type, STRPTR out, int max);
 
+enum /* possible values for <type> parameter of GetDefaultPath() */
+{
+	FOLDER_APPDATA,
+	FOLDER_MYDOCUMENTS,
+	FOLDER_MYPICTURES
+};
 
 /* String.c */
 DLLIMP void   CopyString(STRPTR destination, STRPTR source, int max);
@@ -135,7 +142,7 @@ DLLIMP int    StrToUpper16(STRPTR str, int len); /* UTF-16 */
 DLLIMP int    StrToLower16(STRPTR str, int len); /* UTF-16 */
 DLLIMP int    StrToLower(STRPTR str, int len);
 DLLIMP int    StrCount(STRPTR list, int chr);
-DLLIMP int    FormatNumber(int num, STRPTR buffer, int max);
+DLLIMP int    FormatNumber(STRPTR buffer, int max, STRPTR fmt, int num);
 
 /* Encodings.c */
 DLLIMP int    CP2UTF8(DATA8 dest, int cp);

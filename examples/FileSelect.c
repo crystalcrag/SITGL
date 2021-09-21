@@ -45,7 +45,7 @@ static void FSFillList(STRPTR path, SIT_Widget list)
 				size[0] = 0;
 				StrCat(args.name, 256, 0, "/");
 			}
-			else sprintf(size, "%d KB", (args.size+1023) >> 10);
+			else FormatNumber(size, sizeof size, "%d KB", (args.size+1023) >> 10);
 			SIT_ListInsertItem(list, -1, (APTR) args.isDir, args.name, args.type, args.date, size);
 		}
 		while (ScanDirNext(&args));
@@ -71,31 +71,29 @@ static int FSCellPaint(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_OnCellPaint * paint = cd;
 
-	memcpy(paint->fgColor, ud && (paint->rowColumn & 0xff) == 0 ? "\x20\x20\xff\xff" : "\0\0\0", 4);
+	memcpy(paint->fgColor, ud && (paint->rowColumn & 0xff) == 0 ? "\xaa\xaa\xff\xff" : "\0\0\0", 4);
 	memcpy(paint->bgColor, (paint->rowColumn >> 8) & 1 ? "\0\0\0\x4" : "\0\0\0", 4);
 
 	return 1;
 }
 
+/* SITE_OnChange on list box */
 static int FSSelItem(SIT_Widget w, APTR cd, APTR ud)
 {
 	FileSelect file = ud;
 	STRPTR     text;
-	int        nth, pos;
+	int        nth;
 	SIT_GetValues(w, SIT_SelectedIndex, &nth, NULL);
 	text = SIT_ListGetCellText(w, 0, nth);
 
 	if (file->hasTip)
 		SIT_SetValues(file->tip, SIT_Visible, False, NULL), file->hasTip = 0;
-	if (file->autoSel)
-	{
-		SIT_GetValues(file->edit, SIT_StartSel, &pos, NULL);
-		SIT_SetValues(file->edit, SIT_Title, text, SIT_StartSel, pos, SIT_EndSel, 100000, NULL);
-	}
-	else SIT_SetValues(file->edit, SIT_Title, text, SIT_StartSel, strlen(text), NULL);
+	if (file->autoSel == 0)
+		SIT_SetValues(file->edit, SIT_Title, text, SIT_StartSel, strlen(text), NULL);
 	return 1;
 }
 
+/* SITE_OnChange on edit box */
 static int FSAutoComplete(SIT_Widget w, APTR cd, APTR ud)
 {
 	FileSelect file = ud;
@@ -106,6 +104,11 @@ static int FSAutoComplete(SIT_Widget w, APTR cd, APTR ud)
 		file->autoSel = 1;
 		SIT_SetValues(file->list, SIT_AutoComplete, cd, NULL);
 		file->autoSel = 0;
+
+		int pos, sel;
+		SIT_GetValues(file->list, SIT_SelectedIndex, &sel, NULL);
+		SIT_GetValues(w, SIT_StartSel, &pos, NULL);
+		SIT_SetValues(w, SIT_Title, SIT_ListGetCellText(file->list, 0, sel), SIT_StartSel, pos, SIT_EndSel, 100000, NULL);
 	}
 	if (file->hasTip)
 		SIT_SetValues(file->tip, SIT_Visible, False, NULL), file->hasTip = 0;
@@ -291,7 +294,7 @@ static int FSSelect(SIT_Widget w, APTR cd, APTR ud)
 	return 1;
 }
 
-SIT_Widget FSOpen(SIT_Widget app, STRPTR curdir, SIT_CallProc cb, APTR ud, int flags)
+SIT_Widget FSOpen(SIT_Widget parent, STRPTR curdir, SIT_CallProc cb, APTR ud, int flags)
 {
 	static struct SIT_Accel_t accels[] = {
 		{SITK_FlagCapture + SITK_Up,       -1, NULL, FSRedirectKeys},
@@ -306,9 +309,9 @@ SIT_Widget FSOpen(SIT_Widget app, STRPTR curdir, SIT_CallProc cb, APTR ud, int f
 		{0}
 	};
 	struct FileSelect_t * file;
-	SIT_Widget diag = SIT_CreateWidget("fileselect", SIT_DIALOG + SIT_EXTRA(sizeof (struct FileSelect_t)), app,
+	SIT_Widget diag = SIT_CreateWidget("fileselect.bg", SIT_DIALOG + SIT_EXTRA(sizeof (struct FileSelect_t)), parent,
 		SIT_Title,        "Select file",
-		SIT_DialogStyles, SITV_Movable | SITV_Resizable,
+		SIT_DialogStyles, SITV_Movable | SITV_Resizable | SITV_Plain,
 		SIT_AccelTable,   accels,
 		NULL
 	);
@@ -316,20 +319,31 @@ SIT_Widget FSOpen(SIT_Widget app, STRPTR curdir, SIT_CallProc cb, APTR ud, int f
 
 	SIT_GetValues(diag, SIT_UserData, &file, NULL);
 	SIT_CreateWidgets(diag,
-		"<button name=parent title=Parent right=FORM>"
-		"<editbox name=curdir left=FORM right=WIDGET,parent,0.3em readOnly=1>"
-		"<button name=select title=", flags & SITV_FileSave ? "Save" : "Select", "right=FORM bottom=FORM>"
-		"<editbox name=path left=FORM bottom=FORM right=WIDGET,select,0.3em>"
+		"<editbox name=curdir left=FORM readOnly=1>"
+		"<button name=parent.save title=Parent right=FORM top=MIDDLE,curdir>"
+		"<editbox name=path left=FORM bottom=FORM>"
+		"<button name=select.save title=", flags & SITV_FileSave ? "Save" : "Select", "right=FORM top=MIDDLE,path>"
 		"<listbox name=files style='font-size: 0.8em' viewMode=", SITV_ListViewReport, "columnNames='Name\tType\tDate\tSize' height=10em width=30em"
 		" left=FORM right=FORM top=WIDGET,curdir,0.3em bottom=WIDGET,path,0.5em listBoxFlags=", lbFlags, "columnAlign='L\tL\tL\tR' sortColumn=0"
 		" cellPaint=", FSCellPaint, "minWidth=15em>"
 	);
+	SIT_SetAttributes(diag, "<curdir right=WIDGET,parent,0.3em><path right=WIDGET,select,0.3em>");
 	SIT_Widget list = file->list = SIT_GetById(diag, "files");
 	SIT_Widget edit = file->edit = SIT_GetById(diag, "path");
 	file->tip = SIT_CreateWidget("infotip", SIT_TOOLTIP, file->edit,
 		SIT_DelayTime, SITV_TooltipManualTrigger,
 		NULL
 	);
+	SIT_Widget app = parent;
+	/* get root widget */
+	for (;;)
+	{
+		SIT_Widget parent;
+		SIT_GetValues(app, SIT_Parent, &parent, NULL);
+		if (parent == NULL) break;
+		app = parent;
+	}
+
 	if (curdir == NULL)
 	{
 		SIT_GetValues(app, SIT_CurrentDir, &curdir, NULL);

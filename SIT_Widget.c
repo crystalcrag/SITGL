@@ -894,6 +894,13 @@ void SIT_DestroyWidget(SIT_Widget w)
 {
 	SIT_Callback next, cbl;
 
+	if (HAS_EVT(w, SITE_OnFinalize))
+	{
+		/* need to be done as early as possible while we still have some internal consistency */
+		SIT_ApplyCallback(w, NULL, SITE_OnFinalize);
+		w->evtFlags &= ~(1 << SITE_OnFinalize);
+	}
+
 	if (w->flags & SITF_IsLocked)
 	{
 		SIT_Widget parent = w->parent;
@@ -924,8 +931,6 @@ void SIT_DestroyWidget(SIT_Widget w)
 		sit.focus = NULL;
 	}
 
-	if (HAS_EVT(w, SITE_OnFinalize))
-		SIT_ApplyCallback(w, NULL, SITE_OnFinalize);
 	if (w->finalize == NULL)
 	{
 		if (w->attrs && w->attrs != WidgetClass)

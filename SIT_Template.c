@@ -75,7 +75,8 @@ static void UnescapeEntities(STRPTR io)
 static STRPTR SIT_ParseLine(STRPTR line, va_list * list, TagList * classArgs, PLArgs * cd)
 {
 	KeyVal_t table[8];
-	TagList  name  = {.tl_TagID = SIT_TagUser, .tl_Type = SIT_PTR};
+	TagList  name  = {.tl_TagID = SIT_TagUser,   .tl_Type = SIT_PTR};
+	TagList  extra = {.tl_TagID = SIT_TagUser+1, .tl_Type = SIT_INT};
 	KeyVal   cur   = table;
 	KeyVal   start = table;
 	STRPTR   buf   = NULL;
@@ -93,7 +94,11 @@ static STRPTR SIT_ParseLine(STRPTR line, va_list * list, TagList * classArgs, PL
 		for (p ++; isspace(*p); p ++);
 
 		stack[0] = WidgetClass; /* implicit: all widgets derived from this */
-		if (strncasecmp(line, "name", tag))
+		if (strncasecmp(line, "extra", tag) == 0)
+		{
+			args = &extra;
+		}
+		else if (strncasecmp(line, "name", tag))
 		{
 			/* search for tag definition in classArgs */
 			for (args = classArgs; args->tl_TagID != SIT_TagEnd; )
@@ -189,7 +194,8 @@ static STRPTR SIT_ParseLine(STRPTR line, va_list * list, TagList * classArgs, PL
 				if (cur->tag > 0)
 				{
 					if (cur->tag < SIT_TagUser) cur ++;
-					else buf = cur->key.ptr;
+					else if (cur->tag == SIT_TagUser) buf = cur->key.ptr; /* name attr */
+					else cd->type += SIT_EXTRA(cur->key.val);
 				}
 				if (*p == ',' || (delim > 0 && *p == delim)) p ++;
 				if (tag == 0) break;
@@ -224,7 +230,8 @@ static STRPTR SIT_ParseLine(STRPTR line, va_list * list, TagList * classArgs, PL
 				if (cur->tag > 0)
 				{
 					if (cur->tag < SIT_TagUser) cur ++;
-					else buf = cur->key.ptr; /* name attr */
+					else if (cur->tag == SIT_TagUser) buf = cur->key.ptr; /* name attr */
+					else cd->type += SIT_EXTRA(cur->key.val);
 				}
 				if (tag == 0) break;
 				args -= (tag & 0xff) - ABBRBASE; tag >>= 8;

@@ -9,6 +9,7 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <windows.h>
+#include <shlobj.h>
 #include <sys/stat.h>
 #include <unistd.h>  /* ftruncate */
 #include <wchar.h>
@@ -444,6 +445,16 @@ DLLIMP int OpenDocument(STRPTR filename)
 	utf8toutf16(filename, doc);
 	return (int) ShellExecute(NULL, L"open", doc, NULL, NULL, SW_SHOWNORMAL) > 32;
 }
+
+/* get some common path for the system */
+DLLIMP int GetDefaultPath(int type, STRPTR out, int max)
+{
+	static uint8_t csidl[] = {CSIDL_APPDATA, CSIDL_PERSONAL, CSIDL_MYPICTURES};
+	wchar_t path[MAX_PATH];
+	SHGetFolderPath(NULL, csidl[type], NULL, 0, path);
+	return WideCharToMultiByte(CP_UTF8, 0, path, -1, out, max, NULL, NULL) > 0;
+}
+
 
 /* DOS/GetSysError */
 DLLIMP void GetErrorMsg(int code, STRPTR buffer, int max)
@@ -983,19 +994,37 @@ DLLIMP int StrCount(STRPTR list, int chr)
 }
 
 /* String/FormatNumber */
-DLLIMP int FormatNumber(int num, STRPTR buffer, int max)
+DLLIMP int FormatNumber(STRPTR buffer, int max, STRPTR fmt, int num)
 {
 	WCHAR input[32];
 	WCHAR output[32];
+	if (max <= 0) return 0;
 	wsprintf(input, L"%d", num);
-
 	GetNumberFormat(LOCALE_USER_DEFAULT, 0, input, NULL, output, sizeof output);
-
 	/* of course, it has to add useless stuff */
 	LPWSTR dot = wcsrchr(output, '.');
 	if (dot) *dot = 0;
+	int len = WideCharToMultiByte(CP_UTF8, 0, output, -1, (LPSTR) input, sizeof input, NULL, NULL) - 1;
 
-	return WideCharToMultiByte(CP_UTF8, 0, output, -1, buffer, max, NULL, NULL) - 1;
+	STRPTR s, d;
+	for (s = fmt, d = buffer; *s && max > 1; s ++)
+	{
+		if (*s == '%')
+		{
+			if (s[1] == 'd')
+			{
+				if (len >= max) len = max-1;
+				memcpy(d, input, len);
+				max -= len;
+				d += len;
+			}
+			else d[0] = s[1], max --, d ++;
+			s ++;
+		}
+		else d[0] = *s, max --, d ++;
+	}
+	d[0] = 0;
+	return d - buffer;
 }
 
 /*

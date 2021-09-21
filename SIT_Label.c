@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <math.h>
 #include <ctype.h>
 #include "SIT_P.h"
@@ -134,6 +135,8 @@ static int SIT_SetLabelValues(SIT_Widget w, APTR cd, APTR ud)
 			SIT_DelCallback(w, SITE_OnGeometrySet, SIT_ImageProp, NULL);
 			w->layout.flags &= ~LAYF_HasImg;
 		}
+		if (w->title)
+			free(w->title), w->title = NULL;
 		if (val->string)
 		{
 			/* cancel image */
@@ -141,9 +144,10 @@ static int SIT_SetLabelValues(SIT_Widget w, APTR cd, APTR ud)
 				SIT_UnloadImg(label->image);
 			layoutFree(w);
 			layoutParseHTML(w, w->title = val->string);
+			w->optimalBox.width = w->optimalBox.height = -1;
+			w->currentBox = w->optimalBox;
 			sit.dirty = True;
 		}
-		else w->title = NULL;
 		w->flags |= SITF_GeometryChanged;
 		break;
 	case SIT_Overflow:
@@ -171,6 +175,7 @@ Bool SIT_InitLabel(SIT_Widget w, va_list args)
 	if (w->title)
 	{
 		SIT_Variant value = {.string = w->title};
+		w->title = NULL;
 		SIT_SetLabelValues(w, WidgetClass, &value);
 	}
 	/* unset until layoutCalcBox() */
