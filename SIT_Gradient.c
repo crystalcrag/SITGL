@@ -155,12 +155,12 @@ Bool gradientDrawLinear(CSSImage img, Gradient * grad, REAL ratio)
 		dist = c->pos - c[-1].pos;
 		if (dist > 0)
 		{
-			uint8_t cs[8];
-			gradientInitColorStops(c[-1].rgba, c->rgba, cs);
-			ddaInit(&r, dist, cs[0], cs[4]);
-			ddaInit(&g, dist, cs[1], cs[5]);
-			ddaInit(&b, dist, cs[2], cs[6]);
-			ddaInit(&a, dist, cs[3], cs[7]);
+			uint8_t cstop[8];
+			gradientInitColorStops(c[-1].rgba, c->rgba, cstop);
+			ddaInit(&r, dist, cstop[0], cstop[4]);
+			ddaInit(&g, dist, cstop[1], cstop[5]);
+			ddaInit(&b, dist, cstop[2], cstop[6]);
+			ddaInit(&a, dist, cstop[3], cstop[7]);
 			#ifdef SINE_CURVES
 			ddaInit(&L, dist, 0, 255);
 			#endif
@@ -178,10 +178,10 @@ Bool gradientDrawLinear(CSSImage img, Gradient * grad, REAL ratio)
 			while (dist > 0)
 			{
 				#ifdef SINE_CURVES
-				p[0] = cs[0] + (r.dy * sinLUT[L.y] >> 8); ddaIter(&r);
-				p[1] = cs[1] + (g.dy * sinLUT[L.y] >> 8); ddaIter(&g);
-				p[2] = cs[2] + (b.dy * sinLUT[L.y] >> 8); ddaIter(&b);
-				p[3] = cs[3] + (a.dy * sinLUT[L.y] >> 8); ddaIter(&a);
+				p[0] = cstop[0] + (r.dy * sinLUT[L.y] >> 8); ddaIter(&r);
+				p[1] = cstop[1] + (g.dy * sinLUT[L.y] >> 8); ddaIter(&g);
+				p[2] = cstop[2] + (b.dy * sinLUT[L.y] >> 8); ddaIter(&b);
+				p[3] = cstop[3] + (a.dy * sinLUT[L.y] >> 8); ddaIter(&a);
 				ddaIter(&L);
 				#else
 				p[0] = r.y; ddaIter(&r);
@@ -499,7 +499,7 @@ static void gradientGetVector(REAL * v, uint16_t orient, int w, int h)
 
 	sa  = sin(a);
 	hyp *= sa;
-	float offx = cos(a) * hyp;
+	float offx = cosf(a) * hyp;
 	float offy = sa * hyp;
 
 	switch (orient >> 14) {
@@ -539,7 +539,7 @@ void gradientGetParam(CSSImage img, Gradient * grad)
 			else       img->rect[3] = w / (float) h, img->stretch = 1, w = h, img->width  = w;
 		}
 
-		REAL vector[4];
+		REAL bbox[4];
 		REAL normal[4];
 		int  imgw = 0, imgh = 0;
 
@@ -595,22 +595,22 @@ void gradientGetParam(CSSImage img, Gradient * grad)
 			imgw = w;
 			break;
 		default: /* use angle */
-			gradientGetVector(vector, grad->orient, w, h);
+			gradientGetVector(bbox,   grad->orient, w, h);
 			gradientGetVector(normal, grad->orient + 16384, w, h);
 
 			/* gradient orientation in CSS are shifted by -90 from trigo : 0 in CSS gradient is at -90 on trigo circle (assuming top down Y axis) */
 			img->angle = (grad->orient-16384) * 2*M_PI / 65536;
-			img->rect[0] = vector[0] + (normal[0] - w/2);
-			img->rect[1] = vector[1] + (normal[1] - h/2);
+			img->rect[0] = bbox[0] + (normal[0] - w/2);
+			img->rect[1] = bbox[1] + (normal[1] - h/2);
 			normal[3] -= normal[1];
 			normal[2] -= normal[0];
 			img->rect[3] = sqrt(normal[2] * normal[2] + normal[3] * normal[3]);
-			normal[2]  = vector[2] - vector[0];
-			normal[3]  = vector[3] - vector[1];
+			normal[2]  = bbox[2] - bbox[0];
+			normal[3]  = bbox[3] - bbox[1];
 			img->rect[2] = sqrt(normal[2] * normal[2] + normal[3] * normal[3]);
 
-			imgw = vector[0] - vector[2];
-			imgh = vector[1] - vector[3];
+			imgw = bbox[0] - bbox[2];
+			imgh = bbox[1] - bbox[3];
 		}
 		img->width  = roundf(sqrt(imgw*imgw + imgh*imgh));
 		img->height = 1;

@@ -43,7 +43,7 @@ enum /* possible values for 'side' parameter of ToPoints() */
 #define CSS_ADDPAD     0x80
 #define CSS_ADDBORDER  0x40
 
-#define EPSILON        0.0001
-#define ALMOST0(v)     (fabs(v) < EPSILON)
+#define EPSILON        0.0001f
+#define ALMOST0(v)     (fabsf(v) < EPSILON)
 
 #endif

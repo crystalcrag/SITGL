@@ -60,7 +60,7 @@ static int SIT_SliderResize(SIT_Widget w, APTR cd, APTR ud)
 	int sz = roundf(s->thumbThick / 2);
 	REAL pad = s->gaugePadding;
 
-	pos = (w->box.right - w->box.left - pad) * pos / range + pad * 0.5;
+	pos = (w->box.right - w->box.left - pad) * pos / range + pad * 0.5f;
 
 	thumb->box.left = pos - sz;
 	thumb->box.right = sz * 2 + thumb->box.left;
@@ -128,9 +128,9 @@ static int SIT_SliderSetValues(SIT_Widget w, APTR call_data, APTR user_data)
 		w = s->buddy = value->pointer;
 		if (w)
 		{
-			TEXT value[16];
-			sprintf(value, "%d", s->sliderPos);
-			SIT_SetValues(w, SIT_Title, value, NULL);
+			TEXT buffer[16];
+			sprintf(buffer, "%d", s->sliderPos);
+			SIT_SetValues(w, SIT_Title, buffer, NULL);
 			if (w->type == SIT_EDITBOX) /* it will trigger event back to TB */
 			{
 				SIT_SetValues(w, SIT_MinValue, (double) s->minValue, SIT_MaxValue, (double) s->maxValue, NULL);
@@ -156,7 +156,7 @@ static int SIT_SliderMove(SIT_Widget w, APTR cd, APTR ud)
 		REAL pad = s->gaugePadding;
 		REAL sz  = w->box.right - w->box.left - pad;
 
-		int pos = roundf((msg->x - pad * 0.5) * (s->maxValue - s->minValue) / sz + s->minValue);
+		int pos = roundf((msg->x - pad * 0.5f) * (s->maxValue - s->minValue) / sz + s->minValue);
 
 		if (pos < s->minValue) pos = s->minValue;
 		if (pos > s->maxValue) pos = s->maxValue;
@@ -274,9 +274,9 @@ Bool SIT_InitSlider(SIT_Widget w, va_list args)
 
 	layoutCalcBox(w);
 
-	if (s->thumbHeight == 1e6)  s->thumbHeight  = SIT_EmToReal(w, SITV_Em(1.5));
-	if (s->thumbThick == 1e6)   s->thumbThick   = SIT_EmToReal(w, SITV_Em(0.5));
-	if (s->gaugePadding == 1e6) s->gaugePadding = SIT_EmToReal(w, SITV_Em(0.5));
+	if (s->thumbHeight == 1e6f)  s->thumbHeight  = SIT_EmToReal(w, SITV_Em(1.5));
+	if (s->thumbThick == 1e6f)   s->thumbThick   = SIT_EmToReal(w, SITV_Em(0.5));
+	if (s->gaugePadding == 1e6f) s->gaugePadding = SIT_EmToReal(w, SITV_Em(0.5));
 
 	s->gauge = SIT_CreateWidget("gauge", SIT_HTMLTAG, w, NULL);
 	s->thumb = SIT_CreateWidget("thumb", SIT_HTMLTAG, w, NULL);

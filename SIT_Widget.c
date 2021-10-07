@@ -147,7 +147,7 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 		default:       if (* (int  *)   p == val->integer) return 0; break; /* SIT_INT */
 		case SIT_U16:  if (* (DATA16)   p == val->word)    return 0; break;
 		case SIT_BOOL: if (* (DATA8)    p == val->boolean) return 0; break;
-		case SIT_UNIT: if (* (float *)  p == val->real)    return 0; break;
+		case SIT_UNIT: if (* (float *)  p == (float) val->real) return 0; break;
 		case SIT_REAL: if (* (double *) p == val->real)    return 0;
 		/* no need to check SIT_CTRL, SIT_PTR, SIT_STR */
 		}
@@ -368,7 +368,7 @@ static int SIT_FrameMeasure(SIT_Widget w, APTR cd, APTR mode)
 	frame->title.height = roundf(min.height);
 
 	int i;
-	REAL minPadding[] = {roundf(fh * 0.9), roundf(fh * 1.2), roundf(fh * 0.9), roundf(fh * 0.8)};
+	REAL minPadding[] = {roundf(fh * 0.9f), roundf(fh * 1.2f), roundf(fh * 0.9f), roundf(fh * 0.8f)};
 	if (w->layout.border.bottom == 0)
 		minPadding[3] = 0;
 	for (i = 0; i < 4; i ++)
@@ -389,7 +389,7 @@ static int SIT_FrameMeasure(SIT_Widget w, APTR cd, APTR mode)
 		min.height = w->box.bottom - w->box.top;
 	}
 
-	frame->title.width += roundf((w->padding[0] + w->padding[1]) * 0.25);
+	frame->title.width += roundf((w->padding[0] + w->padding[1]) * 0.25f);
 
 //	min.width  += w->padding[0] + w->padding[2];
 //	min.height += w->padding[1] + w->padding[3];
@@ -521,8 +521,8 @@ DLLIMP SIT_Widget SIT_CreateWidget(STRPTR name, SIT_TYPE type, SIT_Widget parent
 		while ((parent->flags & SITF_TopLevel) == 0)
 			parent = parent->parent;
 
-	w->name     = (APTR) w + sz + cbs;   /* id for CSS */
-	w->tagName  = widgetNames[type];     /* tag name for CSS */
+	w->name     = (STRPTR) w + sz + cbs + extra;   /* id for CSS */
+	w->tagName  = widgetNames[type];               /* tag name for CSS */
 	w->type     = type;
 	w->parent   = parent;
 	w->attrs    = WidgetClass;
@@ -539,7 +539,7 @@ DLLIMP SIT_Widget SIT_CreateWidget(STRPTR name, SIT_TYPE type, SIT_Widget parent
 
 	w->minBox.width = w->minBox.height = -1;
 	w->optimalBox   = w->maxBox = w->minBox;
-	if (extra > 0) w->userData = w->name + len;
+	if (extra > 0) w->userData = (STRPTR) w->slots + cbs;
 
 	va_start(args, parent);
 
@@ -628,7 +628,7 @@ DLLIMP float SIT_EmToReal(SIT_Widget w, uint32_t val)
 	{
 		val &= 0x7fffffff;
 		if (val & (1<<30)) val |= (1<<31); /* sign ext */
-		return roundf(size * ((int) val * (1/8192.)));
+		return roundf(size * ((int) val * (1/8192.f)));
 	}
 	else
 	{

@@ -567,7 +567,7 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 		/* style.lineHeight is only the minimum required - relative value are relative to font size not parent box */
 		switch (w->style.lineHeight & 3) {
 		case 1: edit->fh *= w->style.font.size; break; /* em */
-		case 2: edit->fh *= w->style.font.size * 0.01; break; /* % */
+		case 2: edit->fh *= w->style.font.size * 0.01f; break; /* % */
 		}
 	}
 	else edit->fh = w->style.font.size;
@@ -579,7 +579,7 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 	}
 
 	edit->fh = roundf(edit->fh);
-	edit->padLineY = roundf((edit->fh - w->style.font.size) * 0.5); /* for selection */
+	edit->padLineY = roundf((edit->fh - w->style.font.size) * 0.5f); /* for selection */
 
 	/* init (w->title) is not malloc for SIT_EDITBOX (see SIT_Widget.c:SIT_ParseTags()) */
 	if (IsDef(init))
@@ -739,7 +739,7 @@ static int SIT_TextEditBreakAt(SIT_EditBox state, DATA8 text, int max, REAL maxw
 
 	if (state->editType == SITV_Password)
 	{
-		i = (state->fh - state->padLineY * 2) * 0.5;
+		i = (state->fh - state->padLineY * 2) * 0.5f;
 		total = round ? roundf(maxwidth / i) : maxwidth / i;
 		if (total > max) total = max;
 		if (xpos) *xpos = total * i;
@@ -769,10 +769,10 @@ static int SIT_TextEditBreakAt(SIT_EditBox state, DATA8 text, int max, REAL maxw
 				DATA8 code = chrCodes + (*s<<1);
 				width = nvgTextBounds(vg, 0, 0, code, code + 2, NULL);
 			}
-			else width = state->tabSize - fmod(i, state->tabSize);
+			else width = state->tabSize - fmodf(i, state->tabSize);
 			if (i + width > maxwidth)
 			{
-				if (round && i + (width * 0.5) < maxwidth) i += width, p = s + 1;
+				if (round && i + (width * 0.5f) < maxwidth) i += width, p = s + 1;
 				break;
 			}
 			i += width;
@@ -787,7 +787,7 @@ static int SIT_TextEditBreakAt(SIT_EditBox state, DATA8 text, int max, REAL maxw
 		{
 			int nb = utf8Next[*p>>4];
 			width = nvgTextBounds(vg, 0, 0, p, p+nb, NULL);
-			if (i + width * 0.5 < maxwidth) p += nb, i += width;
+			if (i + width * 0.5f < maxwidth) p += nb, i += width;
 		}
 	}
 	if (xpos) *xpos = i;
@@ -809,7 +809,7 @@ static REAL SIT_TextEditRenderLine(SIT_EditBox state, DATA8 str, int length, REA
 	}
 	if (state->editType == SITV_Password)
 	{
-		w = (state->fh - state->padLineY * 2) * 0.5;
+		w = (state->fh - state->padLineY * 2) * 0.5f;
 		if (sel)
 		{
 			REAL sz = length * w;
@@ -820,12 +820,12 @@ static REAL SIT_TextEditRenderLine(SIT_EditBox state, DATA8 str, int length, REA
 			nvgFillColorRGBA8(vg, state->super.style.fgSel.rgba);
 		}
 		else nvgFillColorRGBA8(vg, state->super.style.color.rgba);
-		off += w*0.5;
-		y += (state->fh - w) * 0.5 + w*0.5;
+		off += w*0.5f;
+		y += (state->fh - w) * 0.5f + w*0.5f;
 		for (p = str; p < end; p++, x += w)
 		{
 			nvgBeginPath(vg);
-			nvgCircle(vg, x + off, y, w*0.4);
+			nvgCircle(vg, x + off, y, w*0.4f);
 			nvgFill(vg);
 		}
 	}
@@ -868,7 +868,7 @@ static REAL SIT_TextEditRenderLine(SIT_EditBox state, DATA8 str, int length, REA
 		{
 			if (*p == '\t')
 			{
-				w = state->tabSize - fmod(x, state->tabSize);
+				w = state->tabSize - fmodf(x, state->tabSize);
 				if (sel)
 				{
 					nvgFillColorRGBA8(vg, state->bgSel.rgba);
@@ -967,9 +967,9 @@ static int SIT_TextEditRender(SIT_Widget w, APTR unused1, APTR unused2)
 		DATA8 eof = strchr(state->cueBanner, 0);
 		if (ta == TextAlignRight || ta == TextAlignCenter)
 		{
-			REAL w = state->width - nvgTextBounds(vg, 0, 0, state->cueBanner, eof, NULL);
-			if (ta == TextAlignCenter) w *= 0.5;
-			nvgText(vg, x + w, y, state->cueBanner, eof);
+			REAL align = state->width - nvgTextBounds(vg, 0, 0, state->cueBanner, eof, NULL);
+			if (ta == TextAlignCenter) align *= 0.5f;
+			nvgText(vg, x + align, y, state->cueBanner, eof);
 		}
 		else nvgText(vg, x, y, state->cueBanner, eof);
 	}
@@ -999,7 +999,7 @@ static int SIT_TextEditRender(SIT_Widget w, APTR unused1, APTR unused2)
 
 			switch (ta) {
 			case TextAlignRight: offTA = width - row->px - 2; break;
-			case TextAlignCenter: offTA = (width - row->px) * 0.5; break;
+			case TextAlignCenter: offTA = (width - row->px) * 0.5f; break;
 			case TextAlignJustify:
 				/* distribute space, only if line is wrapped (wordWrap needs to be > 0 for this mode to work) */
 				if (*p != '\n' && p != state->text + state->length)
@@ -1091,10 +1091,10 @@ static int SIT_TextEditRender(SIT_Widget w, APTR unused1, APTR unused2)
 		{
 			/* horizontal caret */
 			REAL cw;
-			if (*c == '\n') cw = state->fh * 0.5;
+			if (*c == '\n') cw = state->fh * 0.5f;
 			else if (ta == TextAlignJustify && *c == ' ') cw = spcLen;
 			else SIT_TextEditBreakAt(state, c, utf8Next[*c>>4], width, &cw, 0, NULL);
-			if (*c == '\t') cw -= fmod(x, state->tabSize);
+			if (*c == '\t') cw -= fmodf(x, state->tabSize);
 			y = ycursor + state->fh - 2;
 			if (state->super.style.shadowCount > 0)
 			{
@@ -1156,7 +1156,7 @@ static int SIT_TextEditFitIn(SIT_EditBox state, DOMRow row, int pos, REAL x, REA
 	if (max > 0 && SIT_IsSpace(text[max-1])) max --;
 	switch (state->super.style.text.align) {
 	case TextAlignRight:  off = state->width - row->px - 2; break;
-	case TextAlignCenter: off = (state->width - row->px) * 0.5; break;
+	case TextAlignCenter: off = (state->width - row->px) * 0.5f; break;
 	}
 	off -= state->scrollX;
 	fit = x < off ? 0 : SIT_TextEditBreakAt(state, text, max, x - off, &sz, True, row);

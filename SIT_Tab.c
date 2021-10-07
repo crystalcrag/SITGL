@@ -114,16 +114,16 @@ static int SIT_TabMeasure(SIT_Widget w, APTR cd, APTR ud)
 			Bool reflow;
 			for (c = HEAD(w->children), reflow = False; c; NEXT(c))
 			{
-				int n = c->tabOrder;
+				int order = c->tabOrder;
 
 				if (c->tabOrder == -1) continue;
 
 				if (! tab->visiBitField)
-					n = n <= 0 || n-1 == i;
+					order = order <= 0 || order-1 == i;
 				else /* some controls can be visible over multiple tabs */
-					n = n == 0 || (n & (1<<i)) > 0;
+					order = order == 0 || (order & (1<<i)) > 0;
 
-				if (n != c->visible)
+				if (order != c->visible)
 					c->visible ^= 1, reflow = True;
 			}
 

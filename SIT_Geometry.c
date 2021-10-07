@@ -174,7 +174,7 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 				}
 				margin += padTL;
 			}
-			*p = floor(((sz-pad) * (int) a->sa_Arg + 32768) * (1/65536.)) + margin;
+			*p = floorf(((sz-pad) * (int) a->sa_Arg + 32768) * (1/65536.f)) + margin;
 			break;
 		case SITV_AttachWidget: /* relative to another widget */
 			s->layout.flags |= sideOpp[i];
@@ -219,22 +219,22 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 	if (HAS_EVT(w, SITE_OnGeometrySet))
 	{
 		/* custom callback for setting geometry */
-		int sz[] = {p[0], p[2], side};
-		sz[1] -= sz[0]; /* X/Y, W/H, side */
-		if (SIT_ApplyCallback(w, sz, SITE_OnGeometrySet))
+		int size[] = {p[0], p[2], side};
+		size[1] -= size[0]; /* X/Y, W/H, side */
+		if (SIT_ApplyCallback(w, size, SITE_OnGeometrySet))
 		{
-			if (sz[2] < side)
+			if (size[2] < side)
 			{
 				w->flags |= SITF_NoResetSize;
 				return -1;
 			}
-			if (sz[1] != p[2] - p[0])
+			if (size[1] != p[2] - p[0])
 			{
-				chldsz = sz[1];
-				(&w->box.left)[side+2] = (&w->box.left)[side] + sz[1];
+				chldsz = size[1];
+				(&w->box.left)[side+2] = (&w->box.left)[side] + size[1];
 			}
-			p[0] = sz[0];
-			p[2] = sz[0] + sz[1];
+			p[0] = size[0];
+			p[2] = size[0] + size[1];
 			w->flags |= SITF_NoResetSize;
 			adjust = FitUsingOptimalBox;
 		}
@@ -458,8 +458,8 @@ static SizeF SIT_GeomGetMaxBox(SIT_Widget w)
 		if (max > list->minBox.height && max < ret.height) ret.height = max;
 		if (list->flags & SITF_TopLevel) break;
 	}
-	if (ret.width  == 1e6) ret.width  = -1;
-	if (ret.height == 1e6) ret.height = -1;
+	if (ret.width  == 1e6f) ret.width  = -1;
+	if (ret.height == 1e6f) ret.height = -1;
 	return ret;
 }
 

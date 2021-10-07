@@ -597,18 +597,19 @@ DLLIMP void nvgTransformPremultiply(float* t, const float* s)
 
 DLLIMP int nvgTransformInverse(float* inv, const float* t)
 {
-	double invdet, det = (double)t[0] * t[3] - (double)t[2] * t[1];
+	double invdet, det = (double)t[0] * (double)t[3] - (double)t[2] * (double)t[1];
 	if (det > -1e-6 && det < 1e-6) {
 		nvgTransformIdentity(inv);
 		return 0;
 	}
 	invdet = 1.0 / det;
-	inv[0] = (float)(t[3] * invdet);
-	inv[2] = (float)(-t[2] * invdet);
-	inv[4] = (float)(((double)t[2] * t[5] - (double)t[3] * t[4]) * invdet);
-	inv[1] = (float)(-t[1] * invdet);
-	inv[3] = (float)(t[0] * invdet);
-	inv[5] = (float)(((double)t[1] * t[4] - (double)t[0] * t[5]) * invdet);
+	/* casting hell because of -Wdouble-promotion, but <det> can overflow float precision */
+	inv[0] = (float)((double)t[3] * invdet);
+	inv[2] = (float)((double)-t[2] * invdet);
+	inv[4] = (float)(((double)t[2] * (double)t[5] - (double)t[3] * (double)t[4]) * invdet);
+	inv[1] = (float)((double)-t[1] * invdet);
+	inv[3] = (float)((double)t[0] * invdet);
+	inv[5] = (float)(((double)t[1] * (double)t[4] - (double)t[0] * (double)t[5]) * invdet);
 	return 1;
 }
 
@@ -2340,7 +2341,8 @@ DLLIMP void nvgCircle(NVGcontext* ctx, float cx, float cy, float r)
 	nvgEllipse(ctx, cx,cy, r,r);
 }
 
-DLLIMP void nvgDebugDumpPathCache(NVGcontext* ctx)
+#ifdef DEBUG_SIT
+void nvgDebugDumpPathCache(NVGcontext* ctx)
 {
 	const NVGpath* path;
 	int i, j;
@@ -2352,15 +2354,16 @@ DLLIMP void nvgDebugDumpPathCache(NVGcontext* ctx)
 		if (path->nfill) {
 			printf("   - fill: %d\n", path->nfill);
 			for (j = 0; j < path->nfill; j++)
-				printf("%f\t%f\n", path->fill[j].x, path->fill[j].y);
+				printf("%f\t%f\n", (double) path->fill[j].x, (double) path->fill[j].y);
 		}
 		if (path->nstroke) {
 			printf("   - stroke: %d\n", path->nstroke);
 			for (j = 0; j < path->nstroke; j++)
-				printf("%f\t%f\n", path->stroke[j].x, path->stroke[j].y);
+				printf("%f\t%f\n", (double) path->stroke[j].x, (double) path->stroke[j].y);
 		}
 	}
 }
+#endif
 
 DLLIMP void nvgFill(NVGcontext* ctx)
 {

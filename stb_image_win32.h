@@ -271,10 +271,10 @@ DLLIMP uint8_t * stbi_load_from_memory(const uint8_t * mem, int len, int *x, int
 		image_read:
 		if (pCreateStreamOnHGlobal(hMem, FALSE, &stream) == S_OK)
 		{
-			GpStatus ret = GdipCreateBitmapFromStream(stream, &bitmap);
+			GpStatus status = GdipCreateBitmapFromStream(stream, &bitmap);
 			stream->lpVtbl->Release(stream);
 			GlobalFree(hMem);
-			if (ret == GpOk)
+			if (status == GpOk)
 				goto image_parsed;
 		}
 		GlobalFree(hMem);
@@ -282,11 +282,11 @@ DLLIMP uint8_t * stbi_load_from_memory(const uint8_t * mem, int len, int *x, int
 	else /*  read from file */
 	{
 		/* convert from UTF-8 to UTF-16 */
-		int len = MultiByteToWideChar(CP_UTF8, 0, mem, -1, NULL, 0);
+		int length = MultiByteToWideChar(CP_UTF8, 0, mem, -1, NULL, 0);
 
-		LPWSTR utf16 = alloca(len * sizeof *utf16);
+		LPWSTR utf16 = alloca(length * sizeof *utf16);
 
-		MultiByteToWideChar(CP_UTF8, 0, mem, -1, utf16, len);
+		MultiByteToWideChar(CP_UTF8, 0, mem, -1, utf16, length);
 
 		if (GdipCreateBitmapFromFile(utf16, &bitmap) != GpOk)
 			return NULL;

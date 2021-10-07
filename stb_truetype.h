@@ -441,24 +441,24 @@ int main(int arg, char **argv)
 
    #ifndef STBTT_sqrt
    #include <math.h>
-   #define STBTT_sqrt(x)      sqrt(x)
-   #define STBTT_pow(x,y)     pow(x,y)
+   #define STBTT_sqrt(x)      sqrtf(x)
+   #define STBTT_pow(x,y)     powf(x,y)
    #endif
 
    #ifndef STBTT_fmod
    #include <math.h>
-   #define STBTT_fmod(x,y)    fmod(x,y)
+   #define STBTT_fmod(x,y)    fmodf(x,y)
    #endif
 
    #ifndef STBTT_cos
    #include <math.h>
-   #define STBTT_cos(x)       cos(x)
-   #define STBTT_acos(x)      acos(x)
+   #define STBTT_cos(x)       cosf(x)
+   #define STBTT_acos(x)      acosf(x)
    #endif
 
    #ifndef STBTT_fabs
    #include <math.h>
-   #define STBTT_fabs(x)      fabs(x)
+   #define STBTT_fabs(x)      fabsf(x)
    #endif
 
    // #define your own functions "STBTT_malloc" / "STBTT_free" to avoid malloc.h
@@ -4352,16 +4352,16 @@ static int stbtt__ray_intersect_bezier(float orig[2], float ray[2], float q0[2],
    float s0 = 0., s1 = 0.;
    int num_s = 0;
 
-   if (a != 0.0) {
+   if (a != 0.0f) {
       float discr = b*b - a*c;
-      if (discr > 0.0) {
+      if (discr > 0.0f) {
          float rcpna = -1 / a;
          float d = (float) STBTT_sqrt(discr);
          s0 = (b+d) * rcpna;
          s1 = (b-d) * rcpna;
-         if (s0 >= 0.0 && s0 <= 1.0)
+         if (s0 >= 0.0f && s0 <= 1.0f)
             num_s = 1;
-         if (d > 0.0 && s1 >= 0.0 && s1 <= 1.0) {
+         if (d > 0.0f && s1 >= 0.0f && s1 <= 1.0f) {
             if (num_s == 0) s0 = s1;
             ++num_s;
          }
@@ -4370,7 +4370,7 @@ static int stbtt__ray_intersect_bezier(float orig[2], float ray[2], float q0[2],
       // 2*b*s + c = 0
       // s = -c / (2*b)
       s0 = c / (-2 * b);
-      if (s0 >= 0.0 && s0 <= 1.0)
+      if (s0 >= 0.0f && s0 <= 1.0f)
          num_s = 1;
    }
 
@@ -4504,7 +4504,7 @@ static int stbtt__solve_cubic(float a, float b, float c, float* r)
 	   float u = (float) STBTT_sqrt(-p/3);
 	   float v = (float) STBTT_acos(-STBTT_sqrt(-27/p3) * q / 2) / 3; // p3 must be negative, since d is negative
 	   float m = (float) STBTT_cos(v);
-      float n = (float) STBTT_cos(v-3.141592/2)*1.732050808f;
+      float n = (float) STBTT_cos(v-3.141592f/2)*1.732050808f;
 	   r[0] = s + u * 2 * m;
 	   r[1] = s - u * (m + n);
 	   r[2] = s - u * (m - n);
@@ -4629,12 +4629,12 @@ STBTT_DEF unsigned char * stbtt_GetGlyphSDF(const stbtt_fontinfo *info, float sc
                      float mx = x0 - sx, my = y0 - sy;
                      float res[3],px,py,t,it;
                      float a_inv = precompute[i];
-                     if (a_inv == 0.0) { // if a_inv is 0, it's 2nd degree so use quadratic formula
+                     if (a_inv == 0.0f) { // if a_inv is 0, it's 2nd degree so use quadratic formula
                         float a = 3*(ax*bx + ay*by);
                         float b = 2*(ax*ax + ay*ay) + (mx*bx+my*by);
                         float c = mx*ax+my*ay;
-                        if (a == 0.0) { // if a is 0, it's linear
-                           if (b != 0.0) {
+                        if (a == 0.0f) { // if a is 0, it's linear
+                           if (b != 0.0f) {
                               res[num++] = -c/b;
                            }
                         } else {

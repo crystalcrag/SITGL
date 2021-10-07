@@ -26,11 +26,11 @@
 #define	utf8len(x)     MultiByteToWideChar(CP_UTF8, 0, x, -1, NULL, 0)
 #define	utf8toutf16(utf8, utf16) \
 { \
-	int len = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, NULL, 0); \
+	int length = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, NULL, 0); \
 \
-	utf16 = alloca(len * sizeof *utf16); \
+	utf16 = alloca(length * sizeof *utf16); \
 \
-	MultiByteToWideChar(CP_UTF8, 0, utf8, -1, (LPWSTR) utf16, len); \
+	MultiByteToWideChar(CP_UTF8, 0, utf8, -1, (LPWSTR) utf16, length); \
 }
 
 #define	RGB_GETB(rgb)   (((rgb) >> 16) & 0xff)
@@ -177,7 +177,7 @@ DLLIMP Bool IsRelativePath(STRPTR file)
 DLLIMP Bool AddPart(STRPTR path, STRPTR src, int max)
 {
 	STRPTR p    = strchr(path, 0);
-	STRPTR file = src;
+	STRPTR file = p;
 	int    n    = 0;
 	TEXT   sep;
 
@@ -189,7 +189,8 @@ DLLIMP Bool AddPart(STRPTR path, STRPTR src, int max)
 		sep = (*p ? *p : '\\');
 	}
 	else sep = *p;
-	p = strchr(path, 0);
+	p = file;
+	file = src;
 
 	/* Is file a fully qualified path ? */
 	if (isalpha(file[0]) && file[1] == ':')
@@ -219,8 +220,7 @@ DLLIMP Bool AddPart(STRPTR path, STRPTR src, int max)
 		}
 		else if (file[0] == '.' && strchr("/\\", file[1]))
 		{
-			file ++;
-			if (file[0]) file ++;
+			if (file[1]) file ++;
 		}
 		else /* Append part */
 		{
@@ -1118,7 +1118,7 @@ DLLIMP void ThreadPause(int delay)
 
 DLLIMP float RandRange(float min, float max)
 {
-	return (max - min) * rand() * (1.0 / RAND_MAX) + min;
+	return (max - min) * rand() * (1.0f / RAND_MAX) + min;
 }
 
 /*

@@ -20,7 +20,7 @@ static int SIT_DialogCorner(SIT_Widget w, float x, float y)
 {
 	#define dialog   ((SIT_Dialog)w)
 	int corner = 0;
-	REAL min = w->style.font.size * 0.5;
+	REAL min = w->style.font.size * 0.5f;
 
 	x = x + w->layout.pos.left - w->box.left;
 	y = y + w->layout.pos.top  - w->box.top;
@@ -67,8 +67,8 @@ static int SIT_DialogMove(SIT_Widget w, APTR cd, APTR ud)
 				dialog->cornerHover = corner;
 				if (HAS_EVT(sit.root, SITE_OnChange))
 				{
-					struct SIT_OnChange_t msg = {.type = SIT_CHANGE_CURSOR, .arg = corner};
-					SIT_ApplyCallback(sit.root, &msg, SITE_OnChange);
+					struct SIT_OnChange_t call_data = {.type = SIT_CHANGE_CURSOR, .arg = corner};
+					SIT_ApplyCallback(sit.root, &call_data, SITE_OnChange);
 				}
 			}
 		}

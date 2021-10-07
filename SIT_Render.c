@@ -134,7 +134,7 @@ static REAL renderToPoints(RectF * box, ULONG fixed, int side, REAL ratio)
 	switch (fixed & 3) {
 	case 0: return res; /* direct value (pt, px) */
 	case 1: return res * ratio; /* em or ex */
-	case 2: return (&box->width)[side] * res / 100.0;
+	case 2: return (&box->width)[side] * res / 100.0f;
 	}
 	return 0;
 }
@@ -273,8 +273,8 @@ static void renderCacheBorderImg(SIT_Widget node, RectF * box)
 
 	/* cache some values */
 	REAL max[2];
-	max[0] = (rect.width - rect.left) * 0.5;
-	max[1] = (rect.height - rect.top) * 0.5;
+	max[0] = (rect.width - rect.left) * 0.5f;
+	max[1] = (rect.height - rect.top) * 0.5f;
 	if (max[0] > max[1]) max[0] = max[1];
 
 	cache.width = bimg->widthFloat;
@@ -316,7 +316,7 @@ static void renderCacheBorderImg(SIT_Widget node, RectF * box)
 			continue;
 		case BorderImageRepeat:
 			cache.count[i] = count = ceil(pos2 / range);
-			cache.start[i] = pos1 + (pos2 - count * range) * 0.5;
+			cache.start[i] = pos1 + (pos2 - count * range) * 0.5f;
 			cache.space[i] = 0;
 			break;
 		case BorderImageRound:
@@ -328,7 +328,7 @@ static void renderCacheBorderImg(SIT_Widget node, RectF * box)
 		case BorderImageSpace:
 			cache.count[i] = count = floor(pos2 / range);
 			cache.space[i] = (pos2 - count * range) / (count + 1);
-			cache.start[i] = pos1 + (pos2 - count * (range + cache.space[i]) + cache.space[i]) * 0.5;
+			cache.start[i] = pos1 + (pos2 - count * (range + cache.space[i]) + cache.space[i]) * 0.5f;
 		}
 	}
 	bimg->cache = cache;
@@ -491,10 +491,10 @@ static void renderBackground(SIT_Widget node, RectF * alt, int sides)
 				x -= rect.left, y -= rect.top;
 
 			if ((bg->x & 3) == 2) /* % unit */
-				x = (rect.width - w - border.left - border.right) * ToPoints(NULL, node, bg->x & ~3, 0) * 0.01 + border.left;
+				x = (rect.width - w - border.left - border.right) * ToPoints(NULL, node, bg->x & ~3, 0) * 0.01f + border.left;
 
 			if ((bg->y & 3) == 2)
-				y = (rect.height - h - border.top - border.bottom) * ToPoints(NULL, node, bg->y & ~3, 0) * 0.01 + border.top;
+				y = (rect.height - h - border.top - border.bottom) * ToPoints(NULL, node, bg->y & ~3, 0) * 0.01f + border.top;
 
 			x += rect.left;
 			y += rect.top;
@@ -607,7 +607,7 @@ static void renderBoxShadow(SIT_Widget node, RectF * box, Bool inset)
 		bbox[0] += shadow->XYSfloat[0] - spreadX;   bbox[2] += spreadX*2;
 		bbox[1] += shadow->XYSfloat[1] - spreadY;   bbox[3] += spreadY*2;
 		/* radius */
-		bbox[4] = node->layout.majorRadius.top; spreadX = shadow->XYSfloat[2] + shadow->blurFloat * (0.5+inset);
+		bbox[4] = node->layout.majorRadius.top; spreadX = shadow->XYSfloat[2] + shadow->blurFloat * (0.5f+inset);
 		if (shadow->blurFloat > 0 && bbox[4] < spreadX)
 			bbox[4] = spreadX;
 		/* feather: yeah, way bigger than what's asked :-/ */
@@ -1046,7 +1046,7 @@ static void renderBorderImg(SIT_Widget node, RectF * box, int flag)
 
 			nvgBeginPath(sit.nvgCtx);
 			nvgRect(sit.nvgCtx, xr, yr, wr, hr);
-			nvgFillPaint(sit.nvgCtx, nvgImagePattern(sit.nvgCtx, xr + (wr - wi) * 0.5, yi, wi, hi, 0, img->handle, 1));
+			nvgFillPaint(sit.nvgCtx, nvgImagePattern(sit.nvgCtx, xr + (wr - wi) * 0.5f, yi, wi, hi, 0, img->handle, 1));
 			nvgFill(sit.nvgCtx);
 		}
 		else /* repeat/space/round */
@@ -1091,7 +1091,7 @@ static void renderBorderImg(SIT_Widget node, RectF * box, int flag)
 
 			nvgBeginPath(sit.nvgCtx);
 			nvgRect(sit.nvgCtx, xr, yr, wr, hr);
-			nvgFillPaint(sit.nvgCtx, nvgImagePattern(sit.nvgCtx, xi, yr + (hr - hi) * 0.5, wi, hi, 0, img->handle, 1));
+			nvgFillPaint(sit.nvgCtx, nvgImagePattern(sit.nvgCtx, xi, yr + (hr - hi) * 0.5f, wi, hi, 0, img->handle, 1));
 			nvgFill(sit.nvgCtx);
 		}
 		else /* repeat/space/round */
@@ -1277,7 +1277,7 @@ typedef struct Decoration_t     Decor;
 static void renderFlushDeco(Decor * deco, REAL endX)
 {
 	RectF line;
-	REAL  thick = deco->thick * (deco->bold ? 1/8. : 1/16.);
+	REAL  thick = deco->thick * (deco->bold ? 1/8.f : 1/16.f);
 
 	if (deco->startX >= endX) return;
 	line.top = deco->lineY;
@@ -1286,9 +1286,9 @@ static void renderFlushDeco(Decor * deco, REAL endX)
 	line.height = thick;
 
 	switch (deco->type) { /* order: under / over / strike */
-	case 1: line.top += deco->height - thick * 1.2; break;
+	case 1: line.top += deco->height - thick * 1.2f; break;
 	case 2: break;
-	case 3: line.top += (deco->height - thick) * 0.5;
+	case 3: line.top += (deco->height - thick) * 0.5f;
 	}
 
 	/* otherwise, it will a blurry mess */
@@ -1300,7 +1300,7 @@ static void renderFlushDeco(Decor * deco, REAL endX)
 		if (deco->type == 3) line.top -= thick;
 		renderRect(&line);
 		nvgFill(sit.nvgCtx);
-		endX = 2.5 * thick;
+		endX = 2.5f * thick;
 		if (deco->type == 1) line.top -= endX;
 		else line.top += endX;
 		/* no break; */
@@ -1326,10 +1326,10 @@ static void renderFlushDeco(Decor * deco, REAL endX)
 
 		for (i = 0; i < n; i ++, x += h)
 		{
-			#define INVPI    (1/M_PI)
+			#define INVPI    ((float)(1/M_PI))
 			switch (i&1) {
-			case 0: nvgBezierTo(sit.nvgCtx, x+h*INVPI, y+hy*0.5, x+2*h*INVPI, y+hy, x+h, y+hy); break;
-			case 1: nvgBezierTo(sit.nvgCtx, x+h-2*h*INVPI, y+hy, x+h-h*INVPI, y+hy*0.5, x+h, y); hy = -hy;
+			case 0: nvgBezierTo(sit.nvgCtx, x+h*INVPI, y+hy*0.5f, x+2*h*INVPI, y+hy, x+h, y+hy); break;
+			case 1: nvgBezierTo(sit.nvgCtx, x+h-2*h*INVPI, y+hy, x+h-h*INVPI, y+hy*0.5f, x+h, y); hy = -hy;
 			}
 		}
 		nvgStroke(sit.nvgCtx);
@@ -1432,7 +1432,7 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 		if (node->style.verticalAlign == VerticalAlignMiddle)
 		{
 			/* vertical-align: middle on container box will vertically center text box in container */
-			cy += (node->layout.pos.height - node->layout.textarea.height) * 0.5;
+			cy += (node->layout.pos.height - node->layout.textarea.height) * 0.5f;
 		}
 
 		if (count == 0)
@@ -1498,7 +1498,7 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 				if (colDeco.val == 0)
 					colDeco = old->style.color;
 
-				if (fabs(thick - deco.thick) > EPSILON ||
+				if (fabsf(thick - deco.thick) > EPSILON ||
 				    colDeco.val != deco.color.val ||
 				    old->style.font.decoration != deco.type ||
 				    old->style.decoStyle != deco.style)
@@ -1534,7 +1534,7 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 				goto case_OVERFLOW_LEFT;
 			case OVERFLOW_MIDDLE:
 				overflow.skip = 0;
-				overflow.width = node->layout.pos.width * 0.5;
+				overflow.width = node->layout.pos.width * 0.5f;
 				goto case_OVERFLOW_LEFT;
 			case OVERFLOW_LEFT:
 				overflow.width = node->layout.pos.width;
@@ -1568,7 +1568,7 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 					else
 					{
 						overflow.state = OVERFLOW_RIGHT;
-						overflow.width = node->layout.pos.width * 0.5;
+						overflow.width = node->layout.pos.width * 0.5f;
 					}
 				}
 				else { overflow.state = OVERFLOW_NONE; break; }
@@ -1621,7 +1621,7 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 			}
 			yf = word.h + word.y;
 			if (h < yf) h = yf;
-			x += fabs(word.marginL);
+			x += fabsf(word.marginL);
 			xf = x + offX;
 			yf = y + offY;
 			deco.lineY = word.y + yf;
@@ -1733,7 +1733,7 @@ int SIT_FrameRender(SIT_Widget w, APTR cd, APTR ud)
 	box.top    = w->box.top;
 	box.width  = w->box.right  - w->padding[2] - box.left;
 	box.height = w->box.bottom - w->padding[3] - box.top;
-	box.left   = roundf(box.left + w->offsetX - w->layout.padding.left + w->padding[0] * 0.25);
+	box.left   = roundf(box.left + w->offsetX - w->layout.padding.left + w->padding[0] * 0.25f);
 	box.top   += w->offsetY - w->layout.padding.top;
 
 	renderWords(w, &box, 0);
@@ -1753,7 +1753,7 @@ int SIT_FrameRender(SIT_Widget w, APTR cd, APTR ud)
 		}
 
 		box.left   = w->box.left + w->layout.border.left;
-		box.top    = roundf(w->box.top + frame->title.height * 0.6);
+		box.top    = roundf(w->box.top + frame->title.height * 0.6f);
 		box.width  = w->box.right  - box.left - w->layout.border.right;
 		box.height = w->box.bottom - box.top - w->layout.border.bottom;
 		box.left  += w->offsetX;
@@ -1862,8 +1862,8 @@ static void renderNode(SIT_Widget node)
 
 	if (node->type == SIT_DIALOG)
 	{
-		box.left += node->style.font.size * 0.3;
-		box.top  -= (pad[1] + node->style.font.size) * 0.5;
+		box.left += node->style.font.size * 0.3f;
+		box.top  -= (pad[1] + node->style.font.size) * 0.5f;
 	}
 	if (node->layout.flags & LAYF_HasImg)
 	{

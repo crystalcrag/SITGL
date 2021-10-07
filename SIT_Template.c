@@ -172,7 +172,10 @@ static STRPTR SIT_ParseLine(STRPTR line, va_list * list, TagList * classArgs, PL
 				case SIT_U16:
 				case SIT_BOOL: cur->key.val = e < p ? strtol(e, &e, 0) : 0; break;
 				case SIT_CTRL:
-					cur->key.ptr = e < p ? SIT_FindControl(cd->parent, e, p - e + 1, False) : NULL;
+					if (p - e == 5 && strncmp(e, "#LAST", 5) == 0)
+						cur->key.ptr = TAIL(((SIT_Widget)cd->parent)->children);
+					else
+						cur->key.ptr = e < p ? SIT_FindControl(cd->parent, e, p - e + 1, False) : NULL;
 					break;
 				case SIT_UNIT:
 					if (strncasecmp(p-2, "em", 2) == 0)

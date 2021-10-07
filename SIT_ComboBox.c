@@ -44,7 +44,7 @@ static int SIT_ComboMeasure(SIT_Widget w, APTR cd, APTR unused)
 	}
 	w->title = title;
 
-	min.width  += w->padding[0] + w->padding[2] + roundf(w->style.font.size * 1.2);
+	min.width  += w->padding[0] + w->padding[2] + roundf(w->style.font.size * 1.2f);
 	min.height += w->padding[1] + w->padding[3];
 
 	if (pref->width  < min.width)  pref->width  = min.width;

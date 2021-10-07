@@ -450,7 +450,7 @@ Bool cssParseColor(STRPTR * value, CSSColor * color)
 		if (sscanf(p+4, "%d, %d%%, %d%%)%n", hsv, hsv+1, hsv+2, &n) >= 3)
 		{
 			/* normalized in range 255-255-255 from range 360-100-100 */
-			int i, f, m, n, v;
+			int i, f, m, N, v;
 			if (hsv[1] < 0) hsv[1] = 0;
 			if (hsv[1] > 100) hsv[1] = 100;
 			if (hsv[2] < 0) hsv[2] = 0;
@@ -462,16 +462,16 @@ Bool cssParseColor(STRPTR * value, CSSColor * color)
 			f = ((hsv[0] - 60*i) << 8) / 60;
 			if ((i&1) == 0) f = 256 - f; /* if i is even */
 			m = v * (100 - hsv[1]) * 255 / 10000;
-			n = v * (100 - (hsv[1] * f >> 8)) * 255 / 10000;
+			N = v * (100 - (hsv[1] * f >> 8)) * 255 / 10000;
 			v = v * 255 / 100;
 			switch (i) {
 			case 6:
-			case 0: r = v; g = n; b = m; break;
-			case 1: r = n; g = v; b = m; break;
-			case 2: r = m; g = v; b = n; break;
-			case 3: r = m; g = n; b = v; break;
-			case 4: r = n; g = m; b = v; break;
-			case 5: r = v; g = m; b = n;
+			case 0: r = v; g = N; b = m; break;
+			case 1: r = N; g = v; b = m; break;
+			case 2: r = m; g = v; b = N; break;
+			case 3: r = m; g = N; b = v; break;
+			case 4: r = N; g = m; b = v; break;
+			case 5: r = v; g = m; b = N;
 			}
 		}
 		else return False;
@@ -558,12 +558,12 @@ ULONG cssFromUnit(int unit, REAL val)
 	switch (unit) {
 	case Pixel:      break;
 	case Points:     break;
-	case Centimeter: val *= 72 / 2.54; break;
-	case Millimeter: val *= 72 / 25.4; break;
+	case Centimeter: val *= 72 / 2.54f; break;
+	case Millimeter: val *= 72 / 25.4f; break;
 	case Inch:       val *= 72; break;
 	case Em:         rel  = 1; break;
-	case VpWidth:    val *= sit.scrWidth  * 0.01; break;
-	case VpHeight:   val *= sit.scrHeight * 0.01; break;
+	case VpWidth:    val *= sit.scrWidth  * 0.01f; break;
+	case VpHeight:   val *= sit.scrHeight * 0.01f; break;
 	case Percentage: rel  = 2;
 	}
 
@@ -1073,8 +1073,8 @@ static CSSRule cssCompileSelector(STRPTR start, int prevRule)
 
 	if (prevRule >= 0)
 	{
-		CSSRule rule = (CSSRule) (sit.theme + prevRule);
-		rule->next = sit.themeSize;
+		CSSRule previous = (CSSRule) (sit.theme + prevRule);
+		previous->next = sit.themeSize;
 	}
 	rule = sit.themeSize;
 	cssAllocThemeBytes(sizeof cssr, &cssr);

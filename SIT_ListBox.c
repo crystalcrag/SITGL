@@ -152,8 +152,7 @@ static int SIT_ListMeasure(SIT_Widget w, APTR cd, APTR ud)
 		{
 			if ((hdr->flags & CELL_HASLAYOUT) == 0 && hdr->obj)
 			{
-				SIT_Widget w = hdr->obj;
-				w->optimalWidth(hdr->obj, &hdr->sizeObj, NULL);
+				((SIT_Widget)hdr->obj)->optimalWidth(hdr->obj, &hdr->sizeObj, NULL);
 				hdr->flags |= CELL_HASLAYOUT;
 			}
 			hdr->sizeCell.width = hdr->sizeObj.width;
@@ -289,6 +288,8 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 				node->box.top = cell->sizeCell.top - list->scrollTop + w->padding[1];
 				node->box.right = cell->sizeCell.left + w->layout.pos.width - list->scrollPad;
 				node->box.bottom = node->box.top + cell->sizeCell.height;
+				node->title = NULL;
+				node->layout.wordwrap.count = 0;
 
 				SIT_LayoutCSSSize(node);
 				SIT_RenderNode(node);
@@ -320,7 +321,7 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 			if (cell->sizeObj.width <= maxw)
 			{
 				switch (align) {
-				case TextAlignCenter: node->box.left += (maxw - cell->sizeObj.width) * 0.5; break;
+				case TextAlignCenter: node->box.left += (maxw - cell->sizeObj.width) * 0.5f; break;
 				case TextAlignRight:  node->box.left += (maxw - cell->sizeObj.width) - node->padding[2] - node->padding[0];
 				}
 			}
@@ -499,8 +500,8 @@ static int SIT_ListResize(SIT_Widget w, APTR cd, APTR ud)
 			for (row = STARTCELL(list), j = list->cells.count; j > 0 && (row->flags & (CELL_CATEGORY|CELL_HIDDEN)); j --, row ++);
 			if (j > 0)
 			{
-				j = (max - 0.01) / row->sizeCell.width;
-				list->borderSpacingH = j > 1 ? (max - j * row->sizeCell.width - 0.01) / (j-1) : 0;
+				j = (max - 0.01f) / row->sizeCell.width;
+				list->borderSpacingH = j > 1 ? (max - j * row->sizeCell.width - 0.01f) / (j-1) : 0;
 			}
 		}
 		if (start > 0)
@@ -1240,12 +1241,12 @@ static Cell SIT_ListMovePage(SIT_ListBox list, int dir)
 		sit.dirty = 1;
 		if (list->selIndex >= 0)
 		{
-			Cell top = list->rowTop;
-			if (top->sizeCell.top < list->scrollTop)
-				top += top->colLeft;
+			Cell topRow = list->rowTop;
+			if (topRow->sizeCell.top < list->scrollTop)
+				topRow += topRow->colLeft;
 			sel += list->selIndex;
 			/* select the first/last visible item */
-			if (sel < top)
+			if (sel < topRow)
 			{
 				while (sel->sizeCell.top - list->scrollTop < 0)
 					sel += sel->colLeft;
@@ -1454,9 +1455,9 @@ static void SIT_ListSetColumns(SIT_ListBox list)
 		if (total > 0 && list->columnWidths)
 		{
 			/* normalize between 0 and 1 */
-			REAL * widths;
-			for (i = 0, widths = list->realWidths; i < count; i ++, widths ++)
-				widths[0] = widths[0] / total;
+			REAL * norm;
+			for (i = 0, norm = list->realWidths; i < count; i ++, norm ++)
+				norm[0] = norm[0] / total;
 		}
 		if (IsDef(list->columnAlign))
 		{
@@ -2113,7 +2114,7 @@ DLLIMP Bool SIT_ListSetCell(SIT_Widget w, int row, int col, APTR rowTag, int ali
 		{
 			SIT_Widget td = list->td;
 			STRPTR mem;
-			Cell   row;
+			Cell   cells;
 			int    i, sz;
 			cell->obj = text;
 
@@ -2121,11 +2122,11 @@ DLLIMP Bool SIT_ListSetCell(SIT_Widget w, int row, int col, APTR rowTag, int ali
 			layoutMeasureWords(td, &cell->sizeObj);
 
 			/* not the most efficient way of doing this :-/ */
-			for (row = cell-col, sz = 0, i = list->columnCount; i > 0; row ++, i --)
+			for (cells = cell-col, sz = 0, i = list->columnCount; i > 0; cells ++, i --)
 			{
-				if (row->flags & CELL_ISCONTROL) continue;
-				int len = strlen(row->obj) + 1;
-				row->obj = strcpy(alloca(len), row->obj);
+				if (cells->flags & CELL_ISCONTROL) continue;
+				int len = strlen(cells->obj) + 1;
+				cells->obj = strcpy(alloca(len), cells->obj);
 				sz += len;
 			}
 
@@ -2133,10 +2134,10 @@ DLLIMP Bool SIT_ListSetCell(SIT_Widget w, int row, int col, APTR rowTag, int ali
 			str = realloc(str, sizeof *str + sz);
 			ListInsert(&list->strPool, &str->node, str->node.ln_Prev);
 
-			for (row = cell-col, sz = 0, mem = str->mem, i = list->columnCount; i > 0; row ++, i --)
+			for (cells = cell-col, sz = 0, mem = str->mem, i = list->columnCount; i > 0; cells ++, i --)
 			{
-				if (row->flags & CELL_ISCONTROL) continue;
-				row->obj = strcpy(mem, row->obj);
+				if (cells->flags & CELL_ISCONTROL) continue;
+				cells->obj = strcpy(mem, cells->obj);
 				mem = strchr(mem, 0) + 1;
 			}
 		}
@@ -2250,9 +2251,9 @@ DLLIMP void SIT_ListReorgColumns(SIT_Widget w, STRPTR fmt)
 	{
 		for (i = 0; i < col; i ++)
 		{
-			REAL w = cell[i].sizeObj.width;
-			if (widths[i] < w)
-				widths[i] = w;
+			REAL width = cell[i].sizeObj.width;
+			if (widths[i] < width)
+				widths[i] = width;
 		}
 	}
 	uint8_t hdr = (list->lbFlags & SITV_NoHeaders) == 0;
@@ -2262,9 +2263,9 @@ DLLIMP void SIT_ListReorgColumns(SIT_Widget w, STRPTR fmt)
 		memset(fmt = alloca(col), 0, col);
 	for (i = 0, cell = list->columns, keep = fmt; i < col; i ++, keep ++)
 	{
-		REAL w;
-		if (hdr && (w = cell[i].sizeObj.width) > widths[i])
-			widths[i] = w;
+		REAL width;
+		if (hdr && (width = cell[i].sizeObj.width) > widths[i])
+			widths[i] = width;
 		widths[i] += pad;
 		total += widths[i];
 		if (*keep == '*') fixed += widths[i];

@@ -13,7 +13,7 @@
 #include <math.h>
 #include "SIT_CSSParser.h"
 
-vector_t styles;
+vector_t cssStyles;
 
 struct CSSAttr_t /* keep it private */
 {
@@ -141,7 +141,7 @@ int CSS_Init(STRPTR theme, int isPath)
 	CSSAttr attr = GET(cssAttrFontSize);
 	attr->defval = defval;
 
-	vector_init(styles, sizeof (struct CSSStyle_t));
+	vector_init(cssStyles, sizeof (struct CSSStyle_t));
 
 	return cssParse(theme, isPath);
 }
@@ -252,7 +252,7 @@ uint32_t crc32(uint32_t crc, DATA8 buf, int max)
 
 void cssFreeGlobals(void)
 {
-	vector_free(styles);
+	vector_free(cssStyles);
 }
 
 DLLIMP Bool SIT_GetCSSValue(SIT_Widget w, STRPTR property, APTR mem)
@@ -508,7 +508,7 @@ static REAL cssApplyFontSize(SIT_Widget parent, ULONG size)
 	switch (size & 3) {
 	case 0:  break; /* direct value */
 	case 1:  res *= ref; break; /* em */
-	case 2:  res *= ref / 100.0; break; /* percentage */
+	case 2:  res *= ref / 100.0f; break; /* percentage */
 	default:
 		switch (frac) {
 		case 1:  res = ref - 4; break; /* smaller */
@@ -855,14 +855,14 @@ static Bool cssApplyMultipleParam(SIT_Widget node, CSSAttr a, STRPTR value)
 		for (list = last = layer, count = 0; list; count ++, last = list, list = list->next);
 		if (count > node->style.oldBgCount)
 		{
-			Background bg = realloc(node->style.background, count * sizeof *bg);
-			if (bg == NULL) return False;
-			node->style.background = bg;
-			bg += node->style.oldBgCount;
+			Background back = realloc(node->style.background, count * sizeof *back);
+			if (back == NULL) return False;
+			node->style.background = back;
+			back += node->style.oldBgCount;
 			/* clear bg that have been added */
-			memset(bg, 0, (count - node->style.oldBgCount) * sizeof *bg);
-			for (node->style.bgCount = node->style.oldBgCount; node->style.bgCount < count; bg ++, node->style.bgCount++)
-				bg->x = bg->y = AUTOVAL;
+			memset(back, 0, (count - node->style.oldBgCount) * sizeof *back);
+			for (node->style.bgCount = node->style.oldBgCount; node->style.bgCount < count; back ++, node->style.bgCount++)
+				back->x = back->y = AUTOVAL;
 			node->style.oldBgCount = node->style.bgCount;
 		}
 		else if (count < node->style.bgCount && a != GET(cssAttrBgColor))
@@ -1083,24 +1083,24 @@ static void cssApplyAttribute(SIT_Widget node, STRPTR attr, STRPTR value)
 	{
 		SIT_Widget parent = node->parent;
 		CSSAttr    ref;
-		ULONG *    attr;
+		ULONG *    args;
 		APTR       stack[6];
 
 		if (parent == NULL) return; /* has to be set */
 
 		#define depth    arg
-		for (p = a->format, ref = a, attr = &ref->arg1, depth = 0; p; )
+		for (p = a->format, ref = a, args = &ref->arg1, depth = 0; p; )
 		{
 			STRPTR next = strchr(p, ' ');
 
 			if (*p == '-') { /* back ref */
-				push(next, attr, ref, p);
+				push(next, args, ref, p);
 				continue;
 			}
-			int offset = *attr;
+			int offset = *args;
 			memcpy((APTR) node + offset, (APTR) parent + offset, a->sz);
-			p = next; attr ++;
-			if (!p && depth) pop(p, attr, ref);
+			p = next; args ++;
+			if (!p && depth) pop(p, args, ref);
 			if (p) p ++;
 		}
 		#undef depth
@@ -1130,17 +1130,17 @@ static void cssApplyAttribute(SIT_Widget node, STRPTR attr, STRPTR value)
 		}
 		else if (*p == '|')
 		{
-			CSSArg arg = {.type = CSSArg_NotSet};
-			ok = cssFindInList(p + 1, value, &arg, True) + 1;
-			switch (arg.type) {
+			CSSArg cssarg = {.type = CSSArg_NotSet};
+			ok = cssFindInList(p + 1, value, &cssarg, True) + 1;
+			switch (cssarg.type) {
 			case CSSArg_NotSet:
 			case CSSArg_Ptr: break; // only background-image uses this
 			case CSSArg_U32:
-				if (a->sz == 1) *(DATA8) mem = arg.val.u32 > 255 ? 255 : arg.val.u32;
-				else * (ULONG *) mem = arg.val.u32;
+				if (a->sz == 1) *(DATA8) mem = cssarg.val.u32 > 255 ? 255 : cssarg.val.u32;
+				else * (ULONG *) mem = cssarg.val.u32;
 				break;
-			case CSSArg_Str:   memcpy(mem, &arg.val.str, sizeof arg.val.str); break;
-			case CSSArg_Color: memcpy(mem, &arg.val.col, sizeof arg.val.col);
+			case CSSArg_Str:   memcpy(mem, &cssarg.val.str, sizeof cssarg.val.str); break;
+			case CSSArg_Color: memcpy(mem, &cssarg.val.col, sizeof cssarg.val.col);
 			}
 		}
 		else if ('A' <= *p && *p <= 'Z')
@@ -1450,13 +1450,13 @@ int cssApply(SIT_Widget node)
 	uint8_t      applied, level, state;
 	int          i;
 
-	styles.count = 0;
+	cssStyles.count = 0;
 
 	for (level = 0, parent = node; parent; level ++, parent = parent->parent);
 	stack = alloca(sizeof *stack * level);
 	for (i = level-1, parent = node; parent; stack[i] = parent, i --, parent = parent->parent);
 
-	styles.count = 0;
+	cssStyles.count = 0;
 	applied = node->style.flags & CSSF_APPLIED;
 	state   = node->state;
 	state = state2crc[state];
@@ -1466,16 +1466,16 @@ int cssApply(SIT_Widget node)
 	for (rule = (CSSRule) sit.theme, i = 0; ; rule = (CSSRule) (sit.theme + rule->next), i ++)
 	{
 		if (cssMatchSelector(stack, level, rule))
-			cssAddStyles(&styles, (STRPTR *) (sit.theme + rule->styles), rule->nbstyles, rule->specif, 1);
+			cssAddStyles(&cssStyles, (STRPTR *) (sit.theme + rule->styles), rule->nbstyles, rule->specif, 1);
 		if (rule->next == 0) break;
 	}
 
 	if (node->inlineStyles)
-		cssAddStyles(&styles, node->inlineStyles, 1e6, 0xff<<16, 2);
+		cssAddStyles(&cssStyles, node->inlineStyles, 1e6, 0xff<<16, 2);
 
-	qsort(styles.buffer, styles.count, sizeof *style, cssSortStyle);
+	qsort(cssStyles.buffer, cssStyles.count, sizeof *style, cssSortStyle);
 
-	i = cssCRC32(&styles);
+	i = cssCRC32(&cssStyles);
 	if (i == node->layout.curCRC32 && applied)
 	{
 		node->layout.crc32[state] = i;
@@ -1499,13 +1499,13 @@ int cssApply(SIT_Widget node)
 	if (strcmp(node->name, "fname") == 0)
 	{
 		fprintf(stderr, "*** styles for state %d [%d] = %x\n", node->state, state, i);
-		for (i = 0, style = vector_first(styles); i < styles.count; i ++, style ++)
+		for (i = 0, style = vector_first(cssStyles); i < cssStyles.count; i ++, style ++)
 			fprintf(stderr, "    %s: %s\n", style->attr, style->value);
 	}
 	#endif
 
-	/* DEBUG: ((CSSStyle)styles.buffer) */
-	for (i = 0, style = vector_first(styles); i < styles.count; i ++, style ++)
+	/* DEBUG: ((CSSStyle)cssStyles.buffer) */
+	for (i = 0, style = vector_first(cssStyles); i < cssStyles.count; i ++, style ++)
 	{
 		STRPTR sep = strchr(style->value, '!');
 		TEXT   old = 0;
@@ -1517,7 +1517,7 @@ int cssApply(SIT_Widget node)
 	/* check for layout change: has to be done after everything has been processed */
 	if (applied)
 	{
-		for (i = 0, style = vector_first(styles); i < styles.count; i ++, style ++)
+		for (i = 0, style = vector_first(cssStyles); i < cssStyles.count; i ++, style ++)
 			node->style.reflow |= cssCheckChange(node, &oldStyles, cssAttrSearch(style->attr));
 	}
 	cssPostProcess(node);

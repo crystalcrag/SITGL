@@ -674,8 +674,8 @@ void SIT_ActionDispatch(double time)
 		int extend = proc(act->ctrl, (APTR) (act->end < time), act->ud);
 		if (extend > 0)
 		{
-			double next = time + extend;
-			SIT_ActionReschedule(act, next, next + (act->end - act->start));
+			double nextTS = time + extend;
+			SIT_ActionReschedule(act, nextTS, nextTS + (act->end - act->start));
 			continue;
 		}
 

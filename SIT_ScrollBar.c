@@ -168,7 +168,7 @@ static int SIT_ScrollBarClick(SIT_Widget w, APTR cd, APTR ud)
 		range = w->layout.pos.width - max;
 		step *= range / (sb->max-sb->min);
 		if (! ud && (sit.keyQual & SITK_FlagShift))
-			sb->isDragged = max * 0.5,
+			sb->isDragged = max * 0.5f,
 			pos = msg->x - sb->isDragged;
 		if (msg->x < pos)
 			/* click before thumb */
@@ -192,7 +192,7 @@ static int SIT_ScrollBarClick(SIT_Widget w, APTR cd, APTR ud)
 		range = w->layout.pos.height - max;
 		step *= range / (sb->max-sb->min);
 		if (! ud && (sit.keyQual & SITK_FlagShift))
-			sb->isDragged = max * 0.5,
+			sb->isDragged = max * 0.5f,
 			pos = msg->y - sb->isDragged;
 		else if (msg->y < pos)
 			pos -= step;

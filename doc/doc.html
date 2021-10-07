@@ -87,6 +87,7 @@
   <a class="sub3" href="#editmem">Memory management</a>
   <a class="sub3" href="#editprop">Editbox properties</a>
   <a class="sub3" href="#editevents">Events</a>
+  <a class="sub3" href="#editsyn">Syntax highlighting</a>
   <a class="sub3" href="#editkbd">Keyboard shortcuts</a>
 
  <a class="sub2" href="#SIT_COMBOBOX">SIT_COMBOBOX</a>
@@ -122,6 +123,12 @@
   <a class="sub3" href="#vt100prop">Custom properties</a>
   <a class="sub3" href="#vt100css">Styling</a>
   <a class="sub3" href="#vt100kbd">Keyboard shortcuts</a>
+ <a class="sub2" href="#lexer">Editbox lexer</a>
+  <a class="sub3" href="#lexerinit">Parsing file</a>
+  <a class="sub3" href="#lexeruse">Edit box link</a>
+  <a class="sub3" href="#lexerformat">Syntax file</a>
+  <a class="sub3" href="#lexerexp">Regular expressions</a>
+  <a class="sub3" href="#lexersamp">Example</h4>
 
 <a class="sub1" href="#i18n"><span>Internationalization</span></a>
  <a class="sub2" href="#localeinfo">Locale information</a>
@@ -3565,8 +3572,32 @@ when talking about <a href="#geometry">geometry management</a>. There are a few 
   on the widget type, this text might be displayed at different places. For exemple, edit boxes use this
   property to store the text being edited, while dialogs use it to set the text within the title bar.
 
-  <li><tt class="dt">SIT_UserData</tt> (<tt class="t">APTR</tt>)
+  <li><tt class="dt" id="SIT_UserData">SIT_UserData</tt> (<tt class="t">APTR</tt>)
   <p>An <b>arbitrary pointer</b> you want to associate with your widget.
+  
+  <p><span class="n">Note</span>: it is possible to pre-fill that property with a pointer to a memory
+  buffer with a size of your choosing. It is extremely likely, you'll have to allocate some memory along
+  with a widget. Since some memory will have to be allocated for the widget itself, you might as well
+  ask for a bit more for your own usage. The extra benefit being that, the memory will be free()'ed
+  automatically when the widget will be destroyed.
+
+  <p>To request some <b>extra memory to be allocated</b>, it depends on which interface you'll use
+  to create your widgets:
+  <ul>
+    <li><tt><a href="#SIT_CreateWidget">SIT_CreateWidget()</a></tt>: you need to add the amount of extra
+	bytes to alloc to the <tt>type</tt> parameter using the <tt>SIT_EXTRA</tt> macro, like this:
+	<pre>SIT_Widget w = SIT_CreateWidget(<val>"edit"</val>, SIT_EDITBOX + <b>SIT_EXTRA</b>(<kwd>sizeof</kwd> ExtraData_t), parent, ..., <val>NULL</val>);</pre>
+
+	<li><tt><a href="#serialized">SIT_CreateWidgets()</a></tt>: the string property to use for requesting
+	more memory is simply <tt>"extra"</tt>, like this:
+	<pre>SIT_CreateWidgets(parent, <val>"&lt;editbox name=edit <b>extra</b>="</val>, <kwd>sizeof</kwd> ExtraData_t, <val>">"</val>);</pre>
+  </ul>
+  <p>After that, you can retrieve a pointer to the start of this memory by reading the property
+  <tt>SIT_UserData</tt>. Also, that memory buffer <b>cannot</b> be resized, and don't try to free it
+  yourself or write past or before the strict amount you requested.
+  
+  <p><span class="n">Note</span>: the memory will be aligned on a 4 bytes boundary, which is usually
+  less than what <tt>malloc()</tt> provides (usually 8 or 16 bytes alignment).
 
   <li><tt class="dt">SIT_Enabled</tt> (<tt class="t">Bool</tt>)
   <p><b>Enable or disable the control</b>. If it is disabled, all children will also be disabled.
@@ -4614,12 +4645,12 @@ allocation at the start).
   <p>The title property is used to set or get the content of the edit box. Keep in mind that cursor
   position will be reset to 0 when setting this property. Also, just like for other controls, when getting
   the value, you'll get the raw pointer that is used internally to store the text. <b>Do not modify</b>
-  anything: any modification will lead to undefined behavior.
+  anything as long as the text is displayed: any modification will lead to undefined behavior.
 
   <p><span class="n">Note</span>: end of line will be converted to <tt class="s">'\n'</tt> (ie: newline,
   line feed, LF or ASCII code 10). If you provide text with Windows line ending (<tt class="s">"\r\n"</tt>), they will
   be automatically converted to <tt class="s">'\n'</tt>, and thus, when you'll read that buffer back,
-  they will still use the LF character.
+  the line endings will still use the LF character.
 
   <p>The only character that cannot be entered in the buffer is the NUL byte (because it is used as an
   end of buffer marker almost everywhere in the code). Other than that, any (valid) sequence of UTF-8 is
@@ -4790,9 +4821,168 @@ property. Keep in mind, that cursor position will be reset to 0.
 is in the editbox. You can register a <tt>SITE_OnRawKey</tt> callback, and process events you might be
 interested in. Don't forget to return 1 to signal that you've processed the event and do not want it
 to be given to the edit box again. That being said, <b>a better way to catch certain keystrokes</b> is to
-register a global <a href="#SIT_AccelTable">accelerator table</a>, either at the dialog or at the application level.
+register a global <a href="#SIT_AccelTable">accelerator table</a>, either at the dialog or at the application
+level.
 
 
+<h4 id="editsyn">Syntax highlighting</h4>
+
+<p>By default, the text color in this widget will always be uniform. However there are some facilities to
+add colors on the fly, but it involves a bit of work from a user callback. <b>In a nutshell</b>, the widget
+will provide your callback with 2 buffers: one containing the characters of the current line and one
+that your callback will have to fill, which contains indices within a color map to paint each character
+with.
+
+<p>For this, there are <b>3 properties</b> you'll need to setup to get anything done:
+<ul>
+  <li><tt class="dt">SIT_ColorMap</tt> (<tt><type>uint8_t</type> *</tt>): this array will contains the
+  RGB colors to use to highlight section of text. <b>The first byte</b> must contains the number of entries
+  in the colormap. The max number is 27. Any more will be ignored. Then, that number must be immediately
+  followed by colormap entries, each being 9 bytes long:
+  <ul>
+    <li><b>Foreground color</b>: 4 bytes specifying the R, G, B and A component of the foreground color, in
+	that order. If you want to use the default text color, you can set the alpha part to 0.
+	<li><b>Background color</b>: 4 bytes for background color, if you don't want to change background color,
+	simply set alpha part to 0.
+	<li><b>Text attribute</b>: 1 byte for 2 text attributes. It is a bit field, where each bit has the
+	following meaning:
+	  <ul>
+	    <li><b>bit 1</b>: text will be drawn bolder for this token. Note that it is a fake bold: the
+		text will be simply drawn twice, the second one being slightly offseted. It usually gives better
+		results with a fixed font.
+		<li><b>bit 2</b>: text will have an underline style.
+	  </ul>
+  </ul>
+  <p><span class="n">Note</span>: a copy of this buffer will be made by the widget.
+
+  <li><tt class="dt">SIT_Lexer</tt> (<tt>SIT_CallProc</tt>): a callback whose purpose is to fill a
+  colormap that indicate in which color the text has to be rendered. This callback will be explained
+  more in detail just below.
+
+  <li><tt class="dt">SIT_LexerData</tt>  (<tt><type>APTR</type></tt>): an arbitrary pointer that will
+  be given to the user callback as the <tt>user_data</tt> parameter.
+</ul>
+
+<p>Note: <tt>SIT_ColorMap</tt> and <tt>SIT_Lexer</tt> are required, if any of them is missing, nothing
+will happen.
+
+<h5>Lexer callback</h5>
+
+<p>This is where the magic will happen: your callback will be given <b>one line of text</b> and a
+buffer of bytes to tell what color to choose from the color map for each character of the text. For
+this, a pointer to the following datatype will be given for the <tt>call_data</tt> parameter:
+
+<pre><type>struct</type> SIT_OnEditBox_t   <com>/* custom lexer for SIT_EDITBOX */</com>
+{
+	DATA8 lexerCMap;     <com>/* callback must fill &lt;length&gt; bytes into this ... */</com>
+	DATA8 textBuffer;    <com>/* ... according to the content of this buffer */</com>
+	DATA8 cmap;          <com>/* colormap from user */</com>
+	<type>int</type>   length;        <com>/* size in bytes of both buffers */</com>
+	<type>int</type>   line;          <com>/* 0-based line number being rendered */</com>
+	<type>int</type>   byte;          <com>/* byte offset within SIT_Title */</com>
+	<type>int</type>   totalRow;      <com>/* total rows of text */</com>
+};</pre>
+
+<p><b>First</b>: keep in mind that this feature has a potentially very serious limitation: the <tt>SIT_EDITBOX</tt>
+<b>will not</b> do any caching of the information you provide with this callback. Your callback will
+always be provided with the content of all the visible lines currently displayed by the widget, whenever
+a refresh occur. It means that, your callback better have an algorithmic complexity as close as possible
+to linear, for performance to not suffer too much.
+
+<p>Doing so for anything but trivial pattern recognition <b>is not an easy task</b>: it involves quite a bit
+of advanced data structures (graph, trees, hashmap, ...) to get anything done quickly. In the extra widgets
+chapter, there is an <a href="#lexer">example</a> of a non-trivial pattern recognition module, based
+on regular expressions. Fortunately, its usage is way simpler than its implementation.
+
+
+<p>That being said each field is rather straightforward:
+<ul>
+  <li><tt>lexerCMap</tt>: this is the field your callback will have to fill. It must contain <b>index</b>
+  (<b>not</b> byte offset) in the colormap to paint this particular character with. The first entry
+  in the colormap is numbered 0, the last valid index being the first byte of the <tt>SIT_ColorMap</tt>
+  minus 1.
+
+  <p>This buffer <b>will be initially set to all 0</b>.
+
+  <li><tt>textBuffer</tt>: this buffer will contain the characters of line being rendered. It is a direct
+  pointer to the internal buffer of the widget. Obviously, <b>strictly read-only</b>, unless you like hardcore
+  debugging.
+  <p>However, this buffer is not necessarily limited to <tt>length</tt> bytes though: since edit buffer
+  within <tt>SIT_EDITBOX</tt> are always contiguous, you can access bytes before or after the current
+  line by reading beyond the bounds of this bufffer. To help you not accessing invalid memory, you can
+  use the <tt>byte</tt> field to know how many bytes there are before or read the property
+  <tt>SIT_EditLength</tt> to know how many bytes there are after.
+
+  <p>It might be necessary to read a bit beyond or before in case the text is wordwrapped (or more
+  likely: character-wrapped): if you want to hilight certain word, that word might be split in two
+  because of word-wrapping.
+
+  <li><tt>cmap</tt>: color map used by this widget. It is not the original pointer given to the
+  <tt>SIT_ColorMap</tt>. The purpose is to add color map entries on the fly.
+
+  <li><tt>length</tt>: the number of bytes the current line has. The line will include a newline character
+  at the end. If it does not, it means the line is wrapped.
+
+  <li><tt>line</tt>: current line number being rendered (relative to the beginning of the file).
+
+  <li><tt>byte</tt>: offset within the internal edit buffer this line currently is: useful to know
+  how many bytes you can read before <tt>textBuffer</tt>.
+
+  <li><tt>totalRow</tt>: number of rows of text there is in the entire file. This field is useful to
+  implement some kind of caching mechanism. The typical use case is to save some state per line (it is
+  usually overkill to do this per character).
+</ul>
+
+<p>For example, here is a simple callback to highlight <b>one</b> word, within the text of a <tt>SIT_EDITBOX</tt>:
+<pre>
+<com>/* initialize the control */</com>
+<type>static int</type> highlightWord(SIT_Widget, <type>APTR</type>, <type>APTR</type>);
+<type>static void</type> init(<type>void</type>)
+{
+	<type>static uint8_t</type> colorMap[] = {
+		<val>2</val>,
+		<val>0x00</val>, <val>0x00</val>, <val>0x00</val>, <val>0x00</val>,    <val>0x00</val>, <val>0x00</val>, <val>0x00</val>, <val>0x00</val>,    <val>0x00</val>,   <com>/* normal text: use default */</com>
+		<val>0x00</val>, <val>0x00</val>, <val>0x00</val>, <val>0xff</val>,    <val>0xff</val>, <val>0xea</val>, <val>0x4d</val>, <val>0xff</val>,    <val>0x00</val>,   <com>/* text highlight colors */</com>
+	};
+
+	SIT_Widget parent = ...;
+	SIT_Widget edit = SIT_CreateWidget(<val>"edit"</val>, SIT_EDITBOX, parent,
+		SIT_Lexer,     highlightWord,
+		SIT_LexerData, <val>"text"</val>, <com>/* text to highlight - you should have one buffer per SIT_EDITBOX obviously */</com>
+		SIT_ColorMap,  colormap,
+		<val>NULL</val>
+	);
+
+	<com>/* ... */</com>
+}
+
+<com>/* user callback implementation */</com>
+<type>static int</type> highlightWord(SIT_Widget w, <type>APTR</type> call_data, <type>APTR</type> user_data)
+{
+	SIT_OnEditBox * msg = call_data;
+	DATA8 text = user_data, src, lex;
+
+	<kwd>if</kwd> (text == NULL || text[<val>0</val>] == <val>0</val>) <kwd>return</kwd> <val>0</val>;
+	<type>int</type>     len  = strlen(text) - <val>1</val>, i;
+	<type>uint8_t</type> chrA = text[<val>0</val>];
+	<type>uint8_t</type> chrB = isupper(chrA) ? tolower(chrA) : toupper(chrA);
+
+	<kwd>for</kwd> (i = msg->length - len, src = msg->textBuffer, lex = msg->lexerCMap; i > <val>0</val>; i --, src ++, lex ++)
+	{
+		<com>/* ASCII only case insensitive */</com>
+		<kwd>if</kwd> ((src[<val>0</val>] == chrA || src[<val>0</val>] == chrB) && strncasecmp(src + <val>1</val>, text + <val>1</val>, len) == <val>0</val>)
+			memset(lex, <val>1</val>, len + <val>1</val>), i -= len, src += len, lex += len;
+	}
+	<kwd>return</kwd> <val>1</val>;
+}</pre>
+
+<p>As you can see, even for something as simple as this, there is quite a bit a work involved. If you
+want anything more complicated, you really should have a look at the <a href="#lexer">Lexer</a> module
+given in the examples section.
+
+<p><span class="n">Note</span>: this callback will work for any type of <tt>SIT_EDITBOX</tt> though:
+multi-line, single line, and numeric. <tt>SITV_Passowrd</tt> won't though (that's a feature, not a
+limitation).
 
 <h4 id="editkbd">Keyboard shortcuts</h4>
 
@@ -5450,7 +5640,7 @@ a code like this:
 			<kwd>return</kwd> <val>1</val>;
 		}
 
-		SIT_SetValurs(label, SIT_ImagePath, item-&gt;iconPath, <val>NULL</val>);
+		SIT_SetValues(label, SIT_ImagePath, item-&gt;iconPath, <val>NULL</val>);
 		item-&gt;iconLoaded = <val>1</val>;
 	}
 	<kwd>return</kwd> <val>1</val>;
@@ -6401,7 +6591,7 @@ it is implemented using nothing more than stock widgets from this library:
   <img src="images/SIT_FILECHOOSER.png">
 </div>
 
-<p>Its usage is pretty straightforward, there is only one public functions:
+<p>Its usage is pretty straightforward, there is only one public function:
 <pre>SIT_Widget FSOpen(SIT_Widget parent, STRPTR initdir, SIT_CallProc cb, APTR ud, int flags);</pre>
 
 <p>Each arguments have the following meaning:
@@ -6723,6 +6913,310 @@ keyboard events to this control (typical use case: redirect some events from a s
   <li><span class="key">Ctrl+L</span>: clear entire content.
   <li><span class="key">Ctrl+V</span>: paste clipboard into content buffer.
 </ul>
+
+
+
+
+<h3 id="lexer"><span>Editbox lexer</span></h3>
+
+<p>This module can add on-the-fly keywords highlight on a <a href="#SIT_EDITBOX"><tt>SIT_EDITBOX</tt></a>
+control. It is <b>based on a custom regular expression parser</b>, and as such can handle arbitrarily complex
+lexical recognition in almost linear time (based on the amount of characters to process). This module
+will also implement some caching mechanism, therefore CPU usage should be kept very low.
+
+<p>Depending on the complexity of the lexical patterns, <b>memory usage can be quite high though</b>. It is
+still in the range of tens of kilobytes for a moderately complex recognition pattern list, but since
+this widget is designed to edit a few kilobytes of text at a time, it is still way more than it should,
+and it is one of the primary reason why it is not integrated in <tt>SITGL</tt>. Another reason being
+that this module is <b>massively</b> overkill for an immediate mode interface toolkit.
+
+<div class="photo" id="lexercap">
+  <img src="images/lexer.png"><br>
+  Edit box with a C-like lexical highlighting applied on the fly.
+</div>
+
+<p><span class="n">Trivia</span>: it is a slightly modified version of this module that was used to
+generate all the lexically highlighted code samples in this document.
+
+<h4 id="lexerinit">Parsing syntax file</h4>
+
+<p>This module uses external text files to describe what patterns need to be highlighted. The format
+of this file will be described in the next section. In order to be usable, those <b>file must first be
+compiled</b> using the following function:
+
+<pre><type>int</type> SYN_Parse(<type>STRPTR</type> path, <type>STRPTR</type> buffer, CFA * ret);</pre>
+
+<p>If everything went fine, <b><tt class="o">0</tt> will be returned</b> and the compiled file will be stored
+in the <b>output parameter <tt>ret</tt></b>. This object must be seen as an opaque pointer, that can be used
+by the function doing the actual pattern recognition. This object is indenpendant of any <tt>SIT_EDITBOX</tt>:
+it can be reused as many times as necessary. That way, you can save those pointers into a cache, and
+reuse them whenever a given <tt>SIT_EDITBOX</tt> use the same syntax file.
+
+<p>This function can be used to parse a <b>regular file or a buffer</b> already containing the content
+of a syntax file. If you provide a non-<tt class="o">NULL</tt> argument for <tt>path</tt> parameter, a
+regular file will be looked for (and <tt>buffer</tt> will be ignored). If you set <tt>path</tt> to
+<tt class="o">NULL</tt>, you must provide a <tt class="o">NULL</tt>-terminated string as for the
+<tt>buffer</tt> parameter. Whatever method you choose, no references will be kept inside the return
+value, therefore you are free to do whatever you want with those buffers once this function has
+returned.
+
+<p>If a non-zero value is returned, there was a problem parsing the file. The returned value will encode
+the error code in the lower 8bits and the line number in the remaining. The code can be matched against
+the enumeration values <tt>REGEXP_*</tt>.
+
+
+<h4 id="lexeruse">Edit box link</h4>
+
+<p>Once you have a compiled syntax, you can use it on any edit box. For this, you'll have to provide
+<b>4 parameters for colors to appear</b>:
+<ul>
+  <li><tt class="dt">SIT_Lexer</tt>: the function you need to provide is <tt>SYN_HighlightText</tt>.
+  <li><tt class="dt">SIT_LexerData</tt>: a pointer to a compiled syntax.
+  <li><tt class="dt">SIT_UserData</tt>: some extra memory need to be allocated for the <tt>SYN_HighlightText()</tt>
+  to work. The buffer needs to be stored in this property, which means you <b>cannot</b> use it for your
+  own purpose. The buffer size is stored in the macro <tt>LEXER_EXTRA</tt>. The typical use case is to
+  allocate that memory using the <tt><a href="#SIT_UserData">SIT_EXTRA()</a></tt>.
+  <li><tt class="dt">SIT_ColorMap</tt>: the syntax file have 10 pre-defined tokens, therefore it will
+  require the colormap to have exactly 10 entries (that is exactly 91 bytes). This is the colormap
+  that was used for all the code snipets in this document:
+  <pre><type>static uint8_t</type> colorMap[] = {
+	<val>10</val>,
+	<val>0x00</val>, <val>0x00</val>, <val>0x00</val>, <val>0xff</val>,      <val>0x00</val>, <val>0x00</val>, <val>0x00</val>, <val>0x00</val>,    <val>0x00</val>,    <com>/* normal text */</com>
+	<val>0x14</val>, <val>0x6a</val>, <val>0x31</val>, <val>0xff</val>,      <val>0x00</val>, <val>0x00</val>, <val>0x00</val>, <val>0x00</val>,    <val>0x01</val>,    <com>/* type */</com>
+	<val>0x54</val>, <val>0xaa</val>, <val>0xaa</val>, <val>0xff</val>,      <val>0x00</val>, <val>0x00</val>, <val>0x00</val>, <val>0x00</val>,    <val>0x00</val>,    <com>/* identifier */</com>
+	<val>0xa6</val>, <val>0x28</val>, <val>0x28</val>, <val>0xff</val>,      <val>0x00</val>, <val>0x00</val>, <val>0x00</val>, <val>0x00</val>,    <val>0x01</val>,    <com>/* keywords */</com>
+	<val>0x22</val>, <val>0x22</val>, <val>0xaa</val>, <val>0xff</val>,      <val>0x00</val>, <val>0x00</val>, <val>0x00</val>, <val>0x00</val>,    <val>0x00</val>,    <com>/* comments */</com>
+	<val>0xa6</val>, <val>0x00</val>, <val>0xf7</val>, <val>0xff</val>,      <val>0x00</val>, <val>0x00</val>, <val>0x00</val>, <val>0x00</val>,    <val>0x00</val>,    <com>/* directive */</com>
+	<val>0xff</val>, <val>0x00</val>, <val>0xff</val>, <val>0xff</val>,      <val>0x00</val>, <val>0x00</val>, <val>0x00</val>, <val>0x00</val>,    <val>0x00</val>,    <com>/* constants */</com>
+	<val>0x77</val>, <val>0x00</val>, <val>0xff</val>, <val>0xff</val>,      <val>0x00</val>, <val>0x00</val>, <val>0x00</val>, <val>0x00</val>,    <val>0x00</val>,    <com>/* special */</com>
+	<val>0xff</val>, <val>0xff</val>, <val>0xff</val>, <val>0xff</val>,      <val>0xff</val>, <val>0x33</val>, <val>0x33</val>, <val>0xff</val>,    <val>0x00</val>,    <com>/* errors */</com>
+	<val>0x00</val>, <val>0x00</val>, <val>0x00</val>, <val>0xff</val>,      <val>0xff</val>, <val>0xea</val>, <val>0x4d</val>, <val>0xff</val>,    <val>0x00</val>,    <com>/* notes */</com>
+};</pre>
+  <p><span class="n">Note</span>: a syntax file will be able to add more entries on the fly.
+</ul>
+
+<p>If for whatever reason, you want to change the syntax being used to highlight patterns, <b>you will
+need to set 2 properties</b>: <tt>SIT_LexerData</tt> and <tt>SIT_ColorMap</tt>. <tt>SIT_ColorMap</tt>
+will reset the cache used by SYN_HighlightText().
+
+
+
+<h4 id="lexerformat">Syntax file</h4>
+
+<p>Syntax files are used to <b>describe what patterns to highlight</b> in the text. Patterns are based on
+(simplified) regular expressions, and as such, they are "only" suited for lexical recognition. The
+patterns in this module are not Türing-complete and cannot recognize arbitrary pattern, like for example
+identifying correctly nested parenthesis.
+
+<p>The basic structure of this file format is pretty simple: to give a pattern to highlight, first give
+a class name (that will be turned into an index in the colormap) and then a list of regular expressions
+separated by one or more spaces. For example:
+<pre><inc>identifier</inc> if else while switch do</pre>
+
+<p><span class="n">Note</span>: the encoding of the file must be UTF-8.
+
+<p>Will highlight the words <val>"if"</val>, <val>"else"</val>, <val>"while"</val>, <val>"switch"</val>
+and <val>"do"</val> using the color index 2 from the color map. The 10 pre-defined classes you can use are:
+(case not sensitive)
+
+<table class="listview pad">
+<thead><tr><td>#<td>Class<td>Typical usage
+<tbody>
+  <tr><td>0<td><tt>TEXT</tt><td>Normal text.
+  <tr><td>1<td><tt><type>TYPE</type></tt><td>Pre-defined datatypes.
+  <tr><td>2<td><tt><inc>IDENTIFIER</inc></tt><td>Pre-defined tokens.
+  <tr><td>3<td><tt><kwd>KEYWORD</kwd></tt><td>Reserved words from the language.
+  <tr><td>4<td><tt><com>COMMENTS</com></tt><td>Text that will be ignored.
+  <tr><td>5<td><tt><def>DIRECTIVE</def></tt><td>special processing instructions, usually independant from the language.
+  <tr><td>6<td><tt><val>CONSTANT</val></tt><td>Tokens that will be processed at compiled time.
+  <tr><td>7<td><tt><spe>SPECIAL</spe></tt><td>Special tokens.
+  <tr><td>8<td><tt><err>ERROR</err></tt><td>Invalid constructs.
+  <tr><td>9<td><tt><note>NOTE</note></tt><td>Text to catch user attention.
+</table>
+
+<p>You can use the classes however you want though, for this module they are just index to use from the
+colormap. Syntax file also have the abilities to <b>define more classes</b> if needed. For this you can
+use the following directive:
+
+<pre><inc>class</inc> &lt;name&gt; &lt;fg&gt; &lt;bg&gt; bold<val>?</val> underline<val>?</val></pre>
+
+<p>Where:
+<ul>
+  <li><tt>&lt;name&gt;</tt>: an arbitrary name you want to use as a class name.
+  <li><tt>&lt;fg&gt;</tt>, <tt>&lt;bg&gt;</tt>: a color specification that can be any type of CSS color or another class name
+  (to use the same color as the class).
+  <li><tt>bold</tt>: an optional token to use a bolder style for this class.
+  <li><tt>underline</tt>: another optional token to make the text underlined.
+</ul>
+
+<p>For example:
+<pre><inc>class</inc> cdoc comment comment bold</pre>
+<p>Will create an extra class <tt>CDOC</tt> that will use the same colors as the <tt>COMMENT</tt> class
+(both foreground and background colors), but the text will be rendered using a bolder style.
+
+<p>There are other <b>special directives</b> you might be interested in:
+
+<ul>
+  <li><tt class="dt">match noseparator</tt> / <tt class="dt">match wordonly</tt>:
+  <p>This directive will affect all expressions given after (not the ones before). <tt>noseparator</tt>
+  will match your expressions wherever it appears in the text, while <tt>wordonly</tt> will spare you
+  the hassle to enclose all your patterns by "\&lt;" and "\&gt;".
+
+  <li><tt class="dt">case sensitive</tt> / <tt class="dt">case insensitive</tt>:
+  <p>Whether text should be matched case-sensitively or not. Case insensitivity will only check ASCII range though.
+  The change will take effect at the location where this directive is, up to the end of the file (or next
+  <tt>case</tt> directive). 
+
+  <li><tt class="dt" id="lexsep">separators "<em>&lt;list&gt;</em>"</tt>:
+  <p>Specify which characters are considered word boundaries. The argument must be a string, enumerating
+  all the characters which will break words. You can specify a range of characters using an ASCII dash.
+  The default separators are: <tt class="o">"!-/:-?[-]^`{-\x7f"</tt>. This directive should appear only
+  once at most. If use multiple times, only the last one will be used.
+
+  <li><tt class="dt">include <em>&lt;file&gt;</em></tt>:
+  <p>Include the content of <em>file</em>, as if the text was written in place of the <tt>include</tt>
+  directive. Path will be relative to the current syntax file. The directive can be nested, but no
+  circular check is done. <span class="n">Note</span>: the file name does not have to be a string.
+  everything after the <tt>include</tt> directive will be used as a filename (up to the next new line).
+  
+  <li><tt class="dt">#</tt>:
+  <p>If this character is used at the start of a line, everything until the end of this line will be ignored
+  (ie: comment).
+</ul>
+
+<p>Patterns you speficy in class directives have a pretty big limitation: they <b>can only match characters
+within a single line</b>. Yet, if you look at the <a href="lexercap">screenshot</a>, a multi-line comment
+was highlighted correctly. The way it is achieved in this module is through starting/ending region, the
+beginning/ending patterns being limited to a single line, but everything between can extend any number
+of lines. For this <b>there are 2 directives</b>:
+
+<ul>
+  <li><tt class="dt">begin <em>&lt;class&gt; &lt;pattern&gt;</em></tt>:
+  <p>Define the beginning of a region whenever the given pattern is matched in the text. The pattern
+  itself will be highlighted using given class and everything that follows, until the ending pattern
+  is found.
+
+  <li><tt class="dt">end <em>&lt;pattern&gt;</em></tt>:
+  <p>Stop current region when the given pattern is found. <em>&lt;pattern&gt;</em> is optional,
+  in which case, the region will stop at the end of the line.
+</ul>
+
+<p>Any class directive between <tt>begin</tt> and <tt>end</tt> will only appear in this region, and
+won't have any effect outside of this. For example, in the screenshot above, the comment region were
+defined this way:
+<pre>begin comment /\*
+end \*/</pre>
+
+<p><span class="n">Note</span>: these directives can be nested.
+
+
+<h4 id="lexerexp">Regular expressions</h4>
+
+<p>Besides alphabet letters and numbers, there are special characters you can use to facilitate pattern
+recognition:
+<ul>
+  <li><tt>*</tt>: match zero or more times the preceding token.
+  <li><tt>+</tt>: match pattern one or more times.
+  <li><tt>?</tt>: match pattern zero or exactly one time.
+  <li><tt>(</tt>, <tt>)</tt>: group pattern(s).
+  <li><tt>|</tt>: combination operator: will match either the pattern before, or the one after.
+  <li><tt>.</tt>: match any character, but newline (ASCII code 10).
+  <li><tt>[</tt>, <tt>]</tt>: match a character set: uses same format than <a href="#lexsep">separators</a> directive.
+  <li><tt>\d</tt>: match decimal numbers 0 to 9.
+  <li><tt>\o</tt>: match octal numbers 0 to 7.
+  <li><tt>\h</tt>: match lowercase hexadecimal digits.
+  <li><tt>\H</tt>: match lower and upper case hexadecimal digits.
+  <li><tt>\s</tt>: match a space (ASCII codes 9, 10, 13 or 32).
+  <li><tt>\xXX</tt>: where XX must be replaced by 2 hex digit: match the ASCII code character.
+  <li><tt>\&lt;</tt>: match the beginning of a word.
+  <li><tt>\&gt;</tt>: match the end of a word.
+  <li><tt>\^</tt>: match the beginning of a line.
+  <li><tt>\n</tt>: match character ASCII code 10.
+  <li><tt>\r</tt>: match character ASCII code 13.
+  <li><tt>\t</tt>: match character ASCII code 9.
+</ul>
+
+<p><span class="n">Note</span>: to use any non-backslash special characters as a normal character, you'll
+have to add a back-slash before.
+
+<h4 id="lexersamp">Example</h4>
+
+<p>Knowing all of this, this is the syntax file that was used to highlight the text in the <a href="#lexercap">screenshot</a> above.
+You can find other samples in the <tt>examples/syntax</tt> directory.
+<pre><com># C language syntax highlighting for SITGL lexer</com>
+
+<kwd>case</kwd> sensitive
+<kwd>match</kwd> wordonly
+
+<type>type</type> char int long unsigned signed short const static extern
+<type>type</type> volatile void register auto struct union typedef enum
+<type>type</type> float double inline restrict
+<type>type</type> APTR STRPTR TEXT FILE DIR
+<type>type</type> va_list size_t int8_t int16_t int32_t int64_t
+<type>type</type> uint8_t uint16_t uint32_t uint64_t [bB]ool
+
+<kwd>keyword</kwd> if else while do for switch goto break continue
+<kwd>keyword</kwd> return sizeof case default
+
+<com># Some very common declarations</com>
+<val>constant</val> [tT]rue [fF]alse NULL \d+(\.\d*)?([eE][-+]?\d+)?f? 0[xX]\H+ \d+U?L?L?
+
+<kwd>match</kwd> noseparator
+
+<com># Non-opened comment and unbreakable space</com>
+<err>error</err> \*/ \xA0
+
+<com># C character declaration</com>
+<spe>special</spe> '\\.'
+<val>constant</val> '.' 
+<err>error</err> '\\'
+<spe>special</spe> '\\\o\o\o'
+
+<com># String definition</com>
+<kwd>begin</kwd> <val>constant</val> L?\"
+<spe>special</spe> \\\\ \\n \\t \\r \\b \\" \\x\H\H \\\o\o\o
+<com># This is printf() format tokens</com>
+<spe>special</spe> %(\d+$)?[+-]?\d*(\.\d*)?(l|ll|L)?[diuoxXfeEgGcCsSpn]
+<spe>special</spe> %%
+<err>error</err> \\e
+<kwd>end</kwd> [\"\n]
+
+<com># Standard C comment</com>
+<kwd>class</kwd> cdoc <com>comment comment</com> <kwd>bold</kwd>
+<kwd>begin</kwd> comment /\*
+<note>note</note> TODO NOTE
+<err>error</err> XXX /\*
+cdoc \<(SYNOPSIS|NAME|INTRODUCTION|INPUTS|RESULT|SEE\ ALSO|FUNCTION|EXAMPLE|BUGS|WARNING)\>
+<kwd>end</kwd> \*/
+
+<com># C++ Comment style</com>
+<kwd>begin</kwd> <com>comment</com> //
+<spe>special</spe> \\\n
+<note>note</note> TODO
+<err>error</err> XXX
+<kwd>end</kwd>
+
+<kwd>begin</kwd> <def>directive</def> \#\s*include
+<kwd>begin</kwd> <val>constant</val> &lt;
+<kwd>end</kwd> &gt;
+<kwd>begin</kwd> <val>constant</val> \"
+<kwd>end</kwd> \"
+<kwd>end</kwd>
+
+<kwd>match</kwd> wordonly
+<kwd>begin</kwd> <inc>directive</inc> \#\s*(if|ifdef|ifndef|elif|undef|pragma|define|error|warning)
+<kwd>match</kwd> noseparator
+<inc>identifier</inc> .
+<spe>special</spe> \\\n
+<kwd>begin</kwd> <com>comment</com> /\*
+<kwd>end</kwd> \*/
+<kwd>end</kwd>
+
+<def>directive</def> \#\s*else \#\s*endif
+</pre>
+
+
+
 
 <h2 id="i18n">Internationalization</h2>
 
@@ -7481,7 +7975,7 @@ whole process should looks something like this:
 	progress = <val>0</val>;
 	ThreadCreate(myCostlyOperation, <val>NULL</val>);
 
-	<com>/* asynchronous callback that will on the thread progress */</com>
+	<com>/* asynchronous callback that will monitor the thread progress */</com>
 	double curTime = FrameGetTime();
 	SIT_ActionAdd(w, curTime, curTime + <val>1e9</val>, myProgressCheck, <val>NULL</val>);
 }</pre>
@@ -7502,7 +7996,7 @@ couple of milliseconds, it will be largely enough. <b>To know when the thread ha
 mutex: create one before starting the thread. In the thread, lock that mutex immediately and release
 it only at the very end. If you want to cancel the operation, simply set that global variable to
 notify the thread to exit immediately and then attempt to lock and then unlock the mutex: once unlocked
-you know the thread has exited.
+you know the thread has exited (or at least freed its resources).
 
 
 <h3 class="annex" id="timer"><span>Timer functions</span></h3>

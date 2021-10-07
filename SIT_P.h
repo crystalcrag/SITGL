@@ -253,6 +253,7 @@ struct SIT_Callback_t
 	uint8_t      sc_Event;
 	uint8_t      sc_Malloc;
 	uint8_t      sc_Priority;
+	uint8_t      sc_Padding;
 };
 
 struct SIT_Dialog_t

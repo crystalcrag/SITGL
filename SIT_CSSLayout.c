@@ -21,7 +21,7 @@ void layoutCheckRel(SIT_Widget node, REAL len, int side)
 	REAL * rel = &node->layout.format.width + 1 - (side & 1);
 	if (*rel == 0)
 		*rel = len > 0 ? len : EPSILON/2;
-	else if (fabs(*rel - len) > EPSILON)
+	else if (fabsf(*rel - len) > EPSILON)
 		node->layout.flags |= LAYF_SizeChanged;
 }
 
@@ -51,7 +51,7 @@ REAL ToPoints(SIT_Widget parent, SIT_Widget node, ULONG fixed, int side)
 		layoutCheckRel(parent, a, side);
 		if (pad) a += (&parent->layout.padding.top)[side&1] + (&parent->layout.padding.top)[(side&1)+2];
 		if (bdr) a += (&parent->layout.border.top)[side&1]  + (&parent->layout.border.top)[(side&1)+2];
-		return roundf(a * res / 100.0);
+		return roundf(a * res / 100.0f);
 	default: return 0; /* auto */
 	}
 }
@@ -80,10 +80,10 @@ Bool layoutSizeChanged(SIT_Widget node)
 {
 	SIT_Widget parent = node->parent;
 	REAL       size   = node->layout.format.width;
-	if (size > 0 && fabs(size - parent->layout.pos.width) > EPSILON)
+	if (size > 0 && fabsf(size - parent->layout.pos.width) > EPSILON)
 		return True;
 	size = node->layout.format.height;
-	return size > 0 && fabs(size - parent->layout.pos.width) > EPSILON;
+	return size > 0 && fabsf(size - parent->layout.pos.width) > EPSILON;
 }
 
 REAL layoutCalcLineHeight(SIT_Widget node)
@@ -95,7 +95,7 @@ REAL layoutCalcLineHeight(SIT_Widget node)
 		/* style.lineHeight is only the minimum required - relative value are relative to font size not parent box */
 		switch (node->style.lineHeight & 3) {
 		case 1: lineHeight *= node->style.font.size; break; /* em, ex or multiplier */
-		case 2: lineHeight *= node->style.font.size * 0.01; break; /* percentage */
+		case 2: lineHeight *= node->style.font.size * 0.01f; break; /* percentage */
 		}
 		return lineHeight;
 	}
@@ -233,7 +233,7 @@ static REAL layoutGetSpaceLen(STRPTR s, int len, int ws, REAL xcur, REAL spclen,
 		/* we have to also take care of tabs */
 		REAL x, tab;
 		for (x = xcur, tab = spclen * tabchr; len > 0; len --, s ++) {
-			if (*s == '\t') x = tab * ceil((x+EPSILON) / tab);
+			if (*s == '\t') x = tab * ceilf((x+EPSILON) / tab);
 			else x += spclen;
 		}
 		return x - xcur;
@@ -1130,7 +1130,7 @@ void layoutMeasureWords(SIT_Widget node, SizeF * ret)
 		switch (node->style.text.align) {
 		case TextAlignLeft:   width = 0; break;
 		case TextAlignRight:  width = node->layout.pos.width - width; break;
-		case TextAlignCenter: width = (node->layout.pos.width - width) * 0.5;
+		case TextAlignCenter: width = (node->layout.pos.width - width) * 0.5f;
 		}
 		node->layout.wordSpacing = width;
 		return;
@@ -1193,16 +1193,16 @@ void layoutMeasureWords(SIT_Widget node, SizeF * ret)
 			/* compute height and assign baseline to each word */
 			while (word <= w)
 			{
-				REAL h = word->h;
+				REAL wordh = word->h;
 				switch (word->va) {
 				case VerticalAlignTextBottom:
-				case VerticalAlignBottom:   word->y = height - h; break;
+				case VerticalAlignBottom:   word->y = height - wordh; break;
 				case VerticalAlignTextTop:
 				case VerticalAlignTop:      word->y = 0; break;
-				case VerticalAlignMiddle:   word->y = (height - h) * 0.5; break;
+				case VerticalAlignMiddle:   word->y = (height - wordh) * 0.5f; break;
 				case VerticalAlignBaseline: word->y = asc - word->bl; break;
-				case VerticalAlignSub:      word->y = asc - word->bl + h/5; break;
-				case VerticalAlignSuper:    word->y = asc - word->bl - h/5; break;
+				case VerticalAlignSub:      word->y = asc - word->bl + wordh/5; break;
+				case VerticalAlignSuper:    word->y = asc - word->bl - wordh/5; break;
 				default:                    word->y += asc - word->bl;
 				}
 				word->y = roundf(word->y);
@@ -1249,7 +1249,7 @@ void layoutAlignText(SIT_Widget node)
 			switch (ta) {
 			case TextAlignLeft:   width = 0; break;
 			case TextAlignRight:  width = maxWidth - width; break;
-			case TextAlignCenter: width = (maxWidth - width) * 0.5;
+			case TextAlignCenter: width = (maxWidth - width) * 0.5f;
 			}
 			node->layout.wordSpacing = width;
 		}
@@ -1266,7 +1266,7 @@ void layoutAlignText(SIT_Widget node)
 			REAL pos = 0;
 			switch (ta) {
 			case TextAlignRight:  pos = width - maxWidth; break;
-			case TextAlignCenter: pos = (width - maxWidth) * 0.5;
+			case TextAlignCenter: pos = (width - maxWidth) * 0.5f;
 			}
 			if (pos < 0) start->marginL = pos;
 			start = w + 1;
