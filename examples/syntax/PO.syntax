@@ -1,0 +1,16 @@
+#
+# Syntax for gettext Portable Object file
+#
+
+name Gettext Portable Object:*.po,*.pot
+match wordonly
+case insensitive
+
+keyword msgid msgstr
+
+match noseparator
+
+begin comment \#
+end
+
+include c-string

@@ -3024,16 +3024,20 @@ background parameters. You'll have to use individual properties instead.
   is set to linear, which might produced extremely blurry results in cases like this. To <b>disable
   linear filtering</b>, prefix the path with <tt>nearest:</tt>.
 
-  <li><b>OpenGL texture</b>: it is possible to reuse a texture ID from OpenGL and use to it to paint
-  background with it. The syntax for this is: <tt>id(&lt;textureId&gt;)</tt>, where <tt>textureId</tt>
-  has to be an integer returned by <tt>glGenTextures()</tt>. <b>If you modify the texture</b> after assigning
-  it to a background, especially if its size has changed (since this library will have to cache that
-  information), you can refresh its internal state by reassigning the <tt>background</tt> property
-  with the same value.
+  <li><b>nanovg image</b>: it is possible to reuse an image from <tt>nanovg</tt> and use to it to paint
+  background with it. The syntax for this is: <tt>id(<em>imageId</em>)</tt>, where <tt>imageId</tt>
+  has to be an integer returned by one the <tt>nvgCreateImage*()</tt> functions. <b>If you modify the
+  image</b> after assigning it to a background, especially if its size has changed (since this library
+  will have to cache that information), you can refresh its internal state by reassigning the
+  <tt>background</tt> property with the same value.
+  
+  <p><span class="n">Note</span>: if you want to reuse an OpenGL texture, you'll first have to create
+  an image with <tt>nanovg</tt> using the flag <tt>NVG_IMAGE_GLTEX</tt>.
 
   <p><span class="n">Note</span>: if you want to use the render buffer (FBO) as a texture, be careful
   to get the content of this buffer as a RGB texture and <b>not</b> as RGBA. E.g. using a code like this:
   <pre>SIT_Widget app = ...;
+NVGcontext nvg;
 <type>int</type> texId;
 <type>int</type> width = <val>1920</val>;
 <type>int</type> height = <val>1080</val>;
@@ -3047,8 +3051,12 @@ glTexImage2D(GL_TEXTURE_2D, <val>0</val>, GL_RGB8, width, height, <val>0</val>, 
 glCopyTexImage2D(GL_TEXTURE_2D, <val>0</val>, GL_RGB8, <val>0</val>, <val>0</val>, width, height, <val>0</val>);
 glGenerateMipmap(GL_TEXTURE_2D);
 
+SIT_GetValues(app, SIT_NVGcontext, &nvg, <val>NULL</val>);
+
+<type>int</type> nvgImage = nvgCreateImage(nvg, (<type>const char</type> *) texId, NVG_IMAGE_FLIPY | NVG_IMAGE_GLTEX);
+
 <com>/* set it as background of a SIT element */</com>
-SIT_SetValues(app, SIT_Style|XfMt, <val>"background: id(%d)"</val>, texId, <val>NULL</val>);
+SIT_SetValues(app, SIT_Style|XfMt, <val>"background: id(%d)"</val>, nvgImage, <val>NULL</val>);
  </pre>
 </ul>
 

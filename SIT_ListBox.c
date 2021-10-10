@@ -288,8 +288,6 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 				node->box.top = cell->sizeCell.top - list->scrollTop + w->padding[1];
 				node->box.right = cell->sizeCell.left + w->layout.pos.width - list->scrollPad;
 				node->box.bottom = node->box.top + cell->sizeCell.height;
-				node->title = NULL;
-				node->layout.wordwrap.count = 0;
 
 				SIT_LayoutCSSSize(node);
 				SIT_RenderNode(node);

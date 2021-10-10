@@ -37,6 +37,10 @@
 		{ SIT_WordWrap,    "wordWrap",    C__, SIT_INT,  OFFSET(SIT_EditBox, wordWrap) },
 		{ SIT_TabStyle,    "tabStyle",    _SG, SIT_INT,  OFFSET(SIT_EditBox, tabStyle) },
 		{ SIT_RoundTo,     "roundTo",     _SG, SIT_INT,  OFFSET(SIT_EditBox, roundTo) },
+		{ SIT_ColorMap,    "colorMap",    _SG, SIT_PTR,  OFFSET(SIT_EditBox, colorMap) },
+		{ SIT_Lexer,       "lexer",       _SG, SIT_PTR,  OFFSET(SIT_EditBox, lexer) },
+		{ SIT_LexerData,   "lexerData",   _SG, SIT_PTR,  OFFSET(SIT_EditBox, lexerData) },
+		{ SIT_EditAddText, "editAddText", _S_, SIT_PTR,  0 },
 		{ SIT_TagEnd }
 	};
 
@@ -141,6 +145,8 @@ static int SIT_TextEditFinalize(SIT_Widget w, APTR cd, APTR ud)
 	if (edit->caretBlink)
 		SIT_ActionReschedule(edit->caretBlink, -1, -1);
 
+	if (edit->colorMap)
+		free(edit->colorMap);
 	if ((edit->flags & FLAG_FIXEDUNDO) == 0)
 		free(edit->undoBuffer);
 	if ((edit->flags & FLAG_FIXEDSIZE) == 0)
@@ -191,6 +197,26 @@ static int SIT_TextEditSetValue(SIT_Widget w, APTR call_data, APTR user_data)
 		if (pos < 0)  pos = 0;
 		if (pos > 16) pos = 16;
 		edit->roundTo = pos;
+		break;
+	case SIT_ColorMap:
+		if (val->pointer)
+		{
+			DATA8 p, end;
+			if (edit->colorMap == NULL)
+				edit->colorMap = calloc(9, 28);
+			for (p = edit->colorMap, end = p + 9 * 28; p < end; p[8] = 0xfc, p += 9);
+			p = val->pointer;
+			memcpy(edit->colorMap, p + 1, 9 * MIN(p[0], 27));
+		}
+		else if (edit->colorMap)
+		{
+			free(edit->colorMap);
+			edit->colorMap = NULL;
+		}
+		break;
+	case SIT_EditAddText: /* insert text at current cursor location */
+		if (val->pointer)
+			SIT_TextEditPaste(edit, val->pointer, strlen(val->pointer));
 		break;
 	default:
 		SIT_SetWidgetValue(w, call_data, user_data);
@@ -667,6 +693,13 @@ DLLIMP int SIT_TextGetWithSoftline(SIT_Widget w, STRPTR buffer, int max)
 	return length;
 }
 
+DLLIMP int SIT_TextEditLineLength(SIT_Widget w, int line)
+{
+	if (w == NULL || w->type != SIT_EDITBOX) return -1;
+	SIT_EditBox edit = (SIT_EditBox) w;
+	if (line >= edit->rowCount) return -1;
+	return edit->rows[line].bytes;
+}
 
 /*
  * TextEdit implementation
@@ -675,6 +708,7 @@ DLLIMP int SIT_TextGetWithSoftline(SIT_Widget w, STRPTR buffer, int max)
 #define UNDOSIZE           128
 #define ROUND(length)      ((length+255) & ~255)
 #define HASFLAG(flag)      (state->flags & flag)
+#define SEL_INDEX_CODE     255
 
 enum /* undo opcode */
 {
@@ -705,14 +739,19 @@ static uint8_t ASCIIclass[] = { /* quick'n dirty ASCII classifier for chr 0 ~ 12
 
 #define NEXTCHAR(str)    (str + utf8Next[*(str) >> 4])
 
-static int SIT_IsSeprator(uint8_t chr)
+static inline int SIT_IsSeprator(uint8_t chr)
 {
 	return chr < 128 && ASCIIclass[chr] != 0;
 }
 
-static int SIT_IsSpace(uint8_t chr)
+static inline int SIT_IsSpace(uint8_t chr)
 {
 	return chr < 128 && ASCIIclass[chr] == SPC;
+}
+
+static inline int SIT_ChrClass(uint8_t chr)
+{
+	return chr < 128 ? ASCIIclass[chr] : 0;
 }
 
 /* try to fit at most <max> chars in <maxwidth>, taking tab into account */
@@ -795,13 +834,14 @@ static int SIT_TextEditBreakAt(SIT_EditBox state, DATA8 text, int max, REAL maxw
 }
 
 /* need to take care of tab and ctrl characters */
-static REAL SIT_TextEditRenderLine(SIT_EditBox state, DATA8 str, int length, REAL x, REAL y, Bool sel)
+static REAL SIT_TextEditRenderLine(SIT_EditBox state, DATA8 str, int length, REAL x, REAL y, Bool sel, DATA8 lexer)
 {
 	DATA8 end  = str + length, p;
 	REAL  off  = state->offsetAlign, w;
 	REAL  offy = state->padLineY;
 	APTR  vg   = sit.nvgCtx;
 	char  chr  = 32;
+
 	if (state->super.style.text.align == TextAlignJustify && state->space.count > 0)
 	{
 		/* justify text */
@@ -809,6 +849,7 @@ static REAL SIT_TextEditRenderLine(SIT_EditBox state, DATA8 str, int length, REA
 	}
 	if (state->editType == SITV_Password)
 	{
+		/* password entry: simplified rendering */
 		w = (state->fh - state->padLineY * 2) * 0.5f;
 		if (sel)
 		{
@@ -828,20 +869,37 @@ static REAL SIT_TextEditRenderLine(SIT_EditBox state, DATA8 str, int length, REA
 			nvgCircle(vg, x + off, y, w*0.4f);
 			nvgFill(vg);
 		}
+		return x;
 	}
-	else for (p = str; p < end; str = ++ p)
+
+	for (p = str; p < end; str = ++ p)
 	{
-		while (p < end && *p >= chr) p ++;
+		uint8_t code, attr;
+		if (lexer)
+			for (code = lexer[0]; p < end && *p >= chr && code == lexer[0]; p ++, lexer ++);
+		else
+			for (code = 0; p < end && *p >= chr; p ++);
+
+		attr = 0;
 		if (p > str)
 		{
-			if (sel)
+			/* normal text */
+			if (sel || code > 0)
 			{
-				w = nvgTextBounds(vg, 0, 0, str, p, NULL);
-				nvgFillColorRGBA8(vg, state->bgSel.rgba);
-				nvgBeginPath(vg);
-				nvgRect(vg, x + off, y-1-state->extendT, w, state->fh+state->extendB);
-				nvgFill(vg);
-				nvgFillColorRGBA8(vg, state->super.style.fgSel.rgba);
+				DATA8 cmap;
+				if (sel || code == SEL_INDEX_CODE)
+					cmap = state->super.style.fgSel.rgba;
+				else
+					cmap = state->colorMap + code * 9, attr = cmap[8];
+				if (cmap[7] > 0) /* background color */
+				{
+					w = nvgTextBounds(vg, 0, 0, str, p, NULL);
+					nvgFillColorRGBA8(vg, cmap + 4);
+					nvgBeginPath(vg);
+					nvgRect(vg, x + off, y-1-state->extendT, w, state->fh+state->extendB);
+					nvgFill(vg);
+				}
+				nvgFillColorRGBA8(vg, cmap[3] > 0 ? cmap : state->super.style.color.rgba);
 			}
 			else
 			{
@@ -862,61 +920,110 @@ static REAL SIT_TextEditRenderLine(SIT_EditBox state, DATA8 str, int length, REA
 				}
 				nvgFillColorRGBA8(vg, state->super.style.color.rgba);
 			}
-			x = nvgText(vg, x + off, y + offy, str, p) - off;
+			/* handle underline style */
+			if (attr)
+			{
+				REAL x2 = nvgText(vg, x + off, y + offy, str, p) - off;
+				if (attr & 1) nvgText(vg, x + off + 1, y + offy, str, p);
+
+				if (attr & 2)
+				{
+					NVGcolor fg;
+					REAL thick = state->super.style.font.size * (1/12.f);
+					REAL liney = y + offy + state->super.style.font.size - thick * 0.75f;
+					nvgGetCurTextColor(vg, &fg);
+					nvgStrokeWidth(vg, thick);
+					nvgStrokeColor(vg, fg);
+					nvgBeginPath(vg);
+					nvgMoveTo(vg, x2 + off, liney);
+					nvgLineTo(vg, x  + off, liney);
+					nvgStroke(vg);
+				}
+				x = x2;
+			}
+			else x = nvgText(vg, x + off, y + offy, str, p) - off;
+			if (lexer) { p --; continue; }
 		}
 		if (p < end)
 		{
-			if (*p == '\t')
+			DATA8 cmap;
+			uint8_t specialChr = *p;
+			/* special characters */
+			if (specialChr == '\t')
 			{
 				w = state->tabSize - fmodf(x, state->tabSize);
-				if (sel)
+				if (sel || code > 0)
 				{
-					nvgFillColorRGBA8(vg, state->bgSel.rgba);
-					nvgBeginPath(vg);
-					nvgRect(vg, x + off, y-1, w, state->fh);
-					nvgFill(vg);
+					if (sel || code == SEL_INDEX_CODE)
+						cmap = state->super.style.fgSel.rgba;
+					else
+						cmap = state->colorMap + code * 9;
+					if (cmap[7] > 0)
+					{
+						nvgFillColorRGBA8(vg, cmap + 4);
+						nvgBeginPath(vg);
+						nvgRect(vg, x + off, y-1-state->extendT, w, state->fh+state->extendB);
+						nvgFill(vg);
+					}
 				}
 				x += w;
 			}
-			else if (*p == ' ')
+			else if (specialChr == ' ')
 			{
 				/* justified space */
 				if (state->space.count == 0) continue;
 				w = (int) state->space.total / (int) state->space.count;
 				state->space.total -= w;
 				state->space.count --;
-				if (sel)
+				if (sel || code > 0)
 				{
-					nvgFillColorRGBA8(vg, state->bgSel.rgba);
-					nvgBeginPath(vg);
-					nvgRect(vg, x + off, y-1, w, state->fh + 1);
-					nvgFill(vg);
+					if (sel || code == SEL_INDEX_CODE)
+						cmap = state->super.style.fgSel.rgba;
+					else
+						cmap = state->colorMap + code * 9;
+					if (cmap[7] > 0)
+					{
+						nvgFillColorRGBA8(vg, cmap + 4);
+						nvgBeginPath(vg);
+						nvgRect(vg, x + off, y-1-state->extendT, w, state->fh+state->extendB);
+						nvgFill(vg);
+					}
 				}
 				x += w;
 			}
-			else /* ASCII code < 32 */
+			else /* ctrl codes (ASCII 1 ~ 31) */
 			{
-				DATA8 code = chrCodes + (*p<<1);
-				w = nvgTextBounds(vg, 0, 0, code, code+2, NULL);
+				DATA8 ctrlCode = chrCodes + (specialChr<<1);
+				w = nvgTextBounds(vg, 0, 0, ctrlCode, ctrlCode + 2, NULL);
 
-				nvgFillColorRGBA8(vg, sel ? state->super.style.fgSel.rgba : state->super.style.color.rgba);
+				nvgFillColorRGBA8(vg, sel || code == 255 ? state->super.style.fgSel.rgba : code > 0 ? state->colorMap + code * 9 : state->super.style.color.rgba);
 				nvgBeginPath(vg);
 				nvgRect(vg, x + off, y-1, w, state->fh);
 				nvgFill(vg);
-				if (! sel)
+				if (! sel && code != SEL_INDEX_CODE)
 				{
-					Background bg = state->super.style.background;
-					if (! bg || bg->color.rgba[3] < 64)
+					if (code == 0)
+					{
+						Background bg = state->super.style.background;
+						if (! bg || bg->color.rgba[3] < 64)
+						{
+							cmap = NULL;
+						}
+						else cmap = bg->color.rgba;
+					}
+					else cmap = state->colorMap + code * 9 + 4;
+					if (cmap == NULL || cmap[3] == 0)
 					{
 						/* invert text color */
 						DATA8 col = state->super.style.color.rgba;
 						nvgFillColor(vg, nvgRGBA(col[0] ^ 255, col[1] ^ 255, col[2] ^ 255, col[3]));
 					}
-					else nvgFillColorRGBA8(vg, bg->color.rgba);
+					else nvgFillColorRGBA8(vg, cmap);
 				}
 				else nvgFillColorRGBA8(vg, state->bgSel.rgba);
-				x = nvgText(vg, x + off, y + offy, code, code + 2) - off;
+				x = nvgText(vg, x + off, y + offy, ctrlCode, ctrlCode + 2) - off;
 			}
+			if (lexer) lexer ++;
 		}
 	}
 	return x;
@@ -928,6 +1035,7 @@ static int SIT_TextEditRender(SIT_Widget w, APTR unused1, APTR unused2)
 	SIT_EditBox state = (SIT_EditBox) w;
 	DOMRow row;
 	APTR   vg = sit.nvgCtx;
+	DATA8  lexer = NULL;
 	DATA8  s, p, c, s1, s2;
 	REAL   x, y, ycursor = -1, height, width, offX, offTA;
 	char   ta = w->style.text.align, spcLen = 0;
@@ -973,6 +1081,21 @@ static int SIT_TextEditRender(SIT_Widget w, APTR unused1, APTR unused2)
 		}
 		else nvgText(vg, x, y, state->cueBanner, eof);
 	}
+
+	/* render line at once */
+	if (state->lexer && state->colorMap)
+	{
+		int  bytes = 0;
+		REAL top;
+		for (sel1 = state->rowTop, row = state->rows + sel1, max = state->rowCount, top = y; sel1 < max && top < height;
+			 sel1 ++, row ++, top += state->fh)
+		{
+			if (bytes < row->bytes) bytes = row->bytes;
+		}
+		/* XXX single line edit can be pretty big :-/ */
+		lexer = alloca(bytes);
+	}
+
 
 	for (sel1 = state->rowTop, row = state->rows + sel1, max = state->rowCount; sel1 < max && y < height;
 	     s += row->bytes, sel1 ++, row ++)
@@ -1025,30 +1148,56 @@ static int SIT_TextEditRender(SIT_Widget w, APTR unused1, APTR unused2)
 			}
 		}
 		state->offsetAlign = offX + offTA;
-		/* selection */
-		if (s1 != s2 && s <= s1 && s1 <= p)
+		if (lexer)
 		{
-			x = SIT_TextEditRenderLine(state, s, s1 - s, 0, y, False);
+			SIT_OnEditBox msg = {.lexerCMap = lexer, .totalRow = state->rowCount, .cmap = state->colorMap, .textBuffer = s,
+				.length = row->bytes, .line = sel1, .byte = s - state->text};
+			memset(lexer, 0, msg.length);
+
+			state->lexer(&state->super, &msg, state->lexerData);
+
+			/* selection will take priority */
+			if (s1 != s2 && s <= s1 && s1 <= p)
+			{
+				if (s2 <= p)
+					memset(lexer + (s1 - s), SEL_INDEX_CODE, s2 - s1), sel2 = 0;
+				else
+					memset(lexer + (s1 - s), SEL_INDEX_CODE, msg.length - (s1 - s)), sel2 = 1;
+			}
+			else if (sel2)
+			{
+				if (s <= s2 && s2 <= p)
+					memset(lexer, SEL_INDEX_CODE, s2 - s), sel2 = 0;
+				else
+					memset(lexer, SEL_INDEX_CODE, msg.length);
+			}
+
+			x = SIT_TextEditRenderLine(state, s, p-s, 0, y, False, lexer);
+		}
+		/* selection */
+		else if (s1 != s2 && s <= s1 && s1 <= p)
+		{
+			x = SIT_TextEditRenderLine(state, s, s1 - s, 0, y, False, NULL);
 			if (s2 <= p)
 			{
 				/* selection starts and ends on this line */
-				x = SIT_TextEditRenderLine(state, s1, s2 - s1, x, y, True);
-				x = SIT_TextEditRenderLine(state, s2, p  - s2, x, y, False); sel2 = 0;
+				x = SIT_TextEditRenderLine(state, s1, s2 - s1, x, y, True, NULL);
+				x = SIT_TextEditRenderLine(state, s2, p  - s2, x, y, False, NULL); sel2 = 0;
 			}
 			else
 			{
-				x = SIT_TextEditRenderLine(state, s1, p - s1, x, y, True);
+				x = SIT_TextEditRenderLine(state, s1, p - s1, x, y, True, NULL);
 				sel2 = s1 != p || p[0] == '\n'; /* selection not finished */
 			}
 		}
 		else if (sel2 && s <= s2 && s2 <= p)
 		{
 			/* selection ends on this line */
-			x = SIT_TextEditRenderLine(state, s, s2 - s, 0, y, True);
-			x = SIT_TextEditRenderLine(state, s2, p - s2, x, y, False);
+			x = SIT_TextEditRenderLine(state, s, s2 - s, 0, y, True, NULL);
+			x = SIT_TextEditRenderLine(state, s2, p - s2, x, y, False, NULL);
 			sel2 = 0;
 		}
-		else x = SIT_TextEditRenderLine(state, s, p - s, 0, y, sel2);
+		else x = SIT_TextEditRenderLine(state, s, p - s, 0, y, sel2, NULL);
 		if (sel2)
 		{
 			/* clear up to end of line */
@@ -1468,6 +1617,8 @@ static int SIT_TextEditInsertChars(SIT_EditBox state, int pos, char * text, int 
 		int line = i + modif - add;
 		memmove(rows + line + add, rows + line, (state->rowCount - line) * sizeof *rows);
 	}
+	//if (rows + i + modif >= state->rows + state->rowMax)
+	//	puts("here");
 	for (p = lines+1, end = p+lines[0], state->rowCount += add; modif > 0; modif --, i ++)
 	{
 		int num = p[0];
@@ -1521,7 +1672,8 @@ static int SIT_TextEditMoveToPreviousWord(SIT_EditBox state, int c, int move)
 	DATA8 text = state->text;
 	DATA8 str  = text + c;
 	if (str == text || state->editType == SITV_Password) return 0;
-	for (str -= move; str > text && (move || str[-1] != '\n') && !SIT_IsWordBoundary(state, str); str --);
+	if (str > text && str[-1] == '\n') return str - text - 1;
+	for (str -= move; str > text && str[-1] != '\n' && !SIT_IsWordBoundary(state, str); str --);
 	return str - text;
 }
 
@@ -1530,14 +1682,14 @@ static int SIT_TextEditMoveToNextWord(SIT_EditBox state, int c, int move)
 	DATA8 text = state->text;
 	DATA8 str  = text + c;
 	DATA8 eof  = text + state->length;
-	int   i1, i2;
 	if (state->editType == SITV_Password) return state->length;
 	if (str < eof)
 	{
-		if (move) str = NEXTCHAR(str), i1 = -1, i2 = 0;
-		else i1 = 0, i2 = -1;
-		while (str < eof && *str != '\n' && !(SIT_IsSeprator(str[i1]) && !SIT_IsSeprator(str[i2])))
-			str = NEXTCHAR(str);
+		uint8_t cls;
+		for (cls = SIT_ChrClass(*str); str < eof && *str != '\n' && SIT_ChrClass(*str) == cls; str = NEXTCHAR(str));
+		if (str < eof && *str != '\n' && SIT_ChrClass(*str) == SPC)
+			for (str ++; str < eof && *str != '\n' && SIT_ChrClass(*str) == SPC; str = NEXTCHAR(str));
+		if (move && str == text + c && str < eof) str ++;
 	}
 	return str - text;
 }
@@ -1575,6 +1727,7 @@ static void SIT_TextEditMakeCursorVisible(SIT_EditBox state)
 	DOMRow rows;
 	int    i, max, pos, c = state->cursor;
 
+	if (state->rowVisible == 0) return; /* not yet visible */
 	/* cannot rely on ypos: it is set when content is redrawn */
 	if (state->editType == SITV_Multiline)
 	{
@@ -2043,7 +2196,7 @@ static void SIT_TextEditMoveViewUpOrDown(SIT_EditBox state, int dir)
 		i = state->charTop;
 		if (c >= i)
 		{
-			for (j = state->rowVisible, rows = state->rows+top; j > 0 && rows->bytes && i + rows->bytes <= c; i += rows->bytes, j --, top ++, rows ++);
+			for (j = state->rowVisible, rows = state->rows+top; j > 0 && rows->bytes && i + rows->bytes <= c; i += rows->bytes, j --, rows ++);
 			if (i + rows->bytes > c) return;
 		}
 		SIT_TextEditMoveCursorUpOrDown(state, dir, 0);

@@ -1,0 +1,113 @@
+#
+# CSS lexical highlighting for keywords mostly recognized by SITGL.
+#
+name CSS:*.css
+case insensitive
+match wordonly
+
+keyword a b big br button div fieldset form frame close spin bpx
+keyword html img i label table td dialog title client editbox
+keyword combobox listbox progress slider checkbox radio fieldset
+keyword canvas hscroll vscroll tab tooltip thumb gauge bar popup
+
+match noseparator
+
+special :checked :kbdfocus :active :focus :hover :link :disabled
+
+begin text {
+
+# font styles
+match wordonly
+type font(-(family|style|variant|weight|size|stretch))?
+type background(-(color|repeat|image|attachment|position))?
+type (word|letter)-spacing text(-(decoration|transform|align|index|shadow))?
+type vertical-align unicode-bidi ine-height
+type (margin|padding|border)(-(top|right|bottom|left))?
+type border-(((top|right|bottom|left)-)?(width|color|style))?
+type border-radius(-topleft|-topright|-bottomleft|-bottomright)?
+type box-shadow
+type width z-index (min|max)-(width|height)
+type counter-(reset|increment) list-style(-(type|position|image))?
+type page(-break-(before|after|inside))?
+type outline(-(width|style|color))?
+type float clear overflow clip visibility
+type display marker-offset unicode-bidi white-space list-item run-in inline-table
+type top bottom left right color
+type border-spacing width height content
+
+identifier (repeating-)?linear-gradient radial-gradient rgba rgb url
+
+# Extensions
+special -([a-zA-Z]|-)+
+
+# Number and units
+directive -?\d+(\.\d*)?(em|px|%|vw|vh)?
+
+constant \#\H\H\H(\H\H\H)? selback selfore transparent
+
+error \#\H\H? \#\H\H\H\H\H?
+
+# Various
+constant auto none inherit
+constant top bottom
+constant medium normal
+constant right top left bottom
+
+# Font attributes
+constant (sans-)?serif small(-(caps|caption))? (xx?-)?(large|small)
+constant ((ultra|extra|semi|status-bar)-)?(condensed|expanded)
+constant fantasy monospace italic oblique
+constant bold bolder lighter larger smaller icon menu
+constant large smaller larger narrower wider
+
+# background
+constant center scroll fixed repeat(-[xy])? no-repeat
+
+# Text properties
+constant line-through text-indent (text-)?(top|bottom)
+constant underline overline blink sub super middle
+constant capitalize uppercase lowercase center justify baseline
+
+# margin attributes and arguments
+constant thin thick both hidden visible scroll collapse
+constant dotted dashed solid double groove ridge inset outset
+
+constant (no-)?(open|close)-quote
+constant lower (lower|upper)-(roman|alpha|greek|latin)
+constant (hiragana|katakana)(-iroha)?
+constant decimal(-leading-zero)? cjk-ideographic
+constant disc circle square hebrew armenian georgian inside outside
+
+constant size marks inside orphans widows
+constant landscape portrait crop cross always avoid
+
+constant [ns]?[ew]?-resize default crosshair pointer move wait help
+constant thin thick dotted dashed solid double groove ridge inset outset
+constant contained invert
+
+# CSS Positionning
+constant block inline compact
+constant table(-(row-gorup|(header|footer)-group|row|column(-group)?|cell|caption))?
+constant static relative absolute ltr rtl embed bidi-override pre nowrap
+constant bidi-override
+
+# Aural attributes
+constant (x-)?(soft|loud) silent spell-out non mix
+constant (left|right)-side (far|center)-(left|center|right)
+constant leftwards rightwards behind below level above higher
+constant (x-)?(slow|fast) faster slower male female child code digits continuous
+
+constant collapse separate show hide once
+
+match noseparator
+
+special !important
+
+begin comment /\*
+end \*/
+
+end }
+
+match noseparator
+begin comment /\*
+end \*/

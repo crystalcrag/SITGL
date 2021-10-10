@@ -1,0 +1,27 @@
+#
+# Syntax file lexical highlighting for lexer module
+#
+name Syntax:*.syntax
+case insensitive
+match noseparator
+
+begin keyword \^match
+constant noseparator wordonly
+end
+
+begin keyword \^case
+constant sensitive insensitive
+end
+
+match wordonly
+
+keyword \^(separators|begin|end|include|name|class)
+
+type \^(text|type|keyword|comment|constant|special|error|note|directive|tabstop|identifier)
+
+match noseparator
+
+special \\. \\x\H\H
+
+begin comment #
+end

@@ -23,7 +23,6 @@
 
 typedef struct TagList_t          TagList;
 typedef struct SIT_Widget_t *     SIT_Widget;
-typedef struct SIT_TextNode_t *   SIT_TextNode;
 typedef struct SIT_Dialog_t *     SIT_Dialog;
 typedef struct SIT_App_t *        SIT_App;
 typedef struct SIT_Label_t *      SIT_Label;
@@ -124,9 +123,9 @@ struct SIT_Action_t
 {
 	ListNode     node;
 	SIT_Widget   ctrl;
+	APTR         ud;
 	double       start, end;
 	SIT_CallProc cb;
-	APTR         ud;
 };
 
 /* don't care if it is not defined: we will use it as an opaque pointer anyway */
@@ -377,6 +376,9 @@ struct SIT_EditBox_t
 	int          maxLines;             /* public */
 	int          tabStyle;             /* public */
 	int          roundTo;              /* public */
+	DATA8        colorMap;             /* public */
+	SIT_CallProc lexer;                /* public */
+	APTR         lexerData;            /* public */
 	CSSColor     caret;
 	CSSColor     bgSel;
 	int16_t      msgX, msgY;           /* last clicked pos */

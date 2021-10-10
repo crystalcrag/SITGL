@@ -1,6 +1,6 @@
 /*
- * VTerm.c: console widget to dump VT100 byte stream. Text will wordwrapped, and can be selected using
- *          mouse or keyboard. See doc/doc.html for more information on how to use this code.
+ * VTerm.c: console widget to dump VT100 byte stream. Text will wordwrapped, and can be selected
+ *          with mouse. See doc/doc.html for more information on how to use this code.
  *
  * written by T.Pierron, May 2021.
  */
@@ -165,9 +165,9 @@ static void VTAdjustScroll(VirtualTerm vt)
 
 	if (height > vt->height)
 	{
+		//fprintf(stderr, "height = %d, total = %d\n", height, vt->totalLines);
 		if (! vt->hasScroll)
 		{
-			fprintf(stderr, "scroll bar visible\n");
 			SIT_SetValues(vt->scroll, SIT_Visible, 1, NULL);
 			vt->hasScroll = 1;
 		}
@@ -181,7 +181,6 @@ static void VTAdjustScroll(VirtualTerm vt)
 	}
 	else if (vt->hasScroll)
 	{
-		fprintf(stderr, "scroll bar hide\n");
 		SIT_SetValues(vt->scroll, SIT_Visible, 0, NULL);
 		vt->topLine   = 0;
 		vt->scrollPad = 0;
@@ -333,7 +332,7 @@ static int VTTextFit(VirtualTerm vt, NVGcontext * vg, float max, DATA8 start, DA
 			break;
 		case 28: /* custom alignment */
 			width = (frag[1] << 8) | frag[2];
-			if (x + (round ? width * 0.5 : width) > max) goto break_all;
+			if (x + (round ? width * 0.5f : width) > max) goto break_all;
 			len += 3;
 			break;
 		case 29: /* indent */
@@ -343,7 +342,7 @@ static int VTTextFit(VirtualTerm vt, NVGcontext * vg, float max, DATA8 start, DA
 			break;
 		case '\t': /* tab characters need special processing */
 			width = vt->tabSizePx - (int) x % vt->tabSizePx;
-			if (x + (round ? width * 0.5 : width) > max) goto break_all;
+			if (x + (round ? width * 0.5f : width) > max) goto break_all;
 			len ++;
 			break;
 		default:
@@ -357,7 +356,7 @@ static int VTTextFit(VirtualTerm vt, NVGcontext * vg, float max, DATA8 start, DA
 					next = NEXTCHAR(frag);
 					x += width;
 					width = *frag == '\t' ? vt->tabSizePx - (int) x % vt->tabSizePx : nvgTextBounds(vg, 0, 0, frag, next, NULL);
-					if (x + width * 0.5 < max) len += next - frag;
+					if (x + width * 0.5f < max) len += next - frag;
 				}
 				goto break_all;
 			}
@@ -414,10 +413,10 @@ static void VTReformat(VirtualTerm vt, NVGcontext * vg)
 	if (total >= 0 && total < vt->totalLines)
 	{
 		/* character added at the end: don't reformat the whole content buffer */
-		VTLine line = vt->lines + total;
-		memcpy(attrs, &line->styles, 4);
+		VTLine last = vt->lines + total;
+		memcpy(attrs, &last->styles, 4);
 		attrs[0] &= ~VT_PRIMARY;
-		start = next = vt->buffer + line->offset;
+		start = next = vt->buffer + last->offset;
 		total = vt->totalLines-1;
 		if (total < 0) total = 0;
 	}
@@ -454,12 +453,11 @@ static void VTReformat(VirtualTerm vt, NVGcontext * vg)
 		total ++;
 		if (total >= vt->allocLines)
 		{
-			int max = (total + VT_LINES) & ~(VT_LINES-1);
-
-			line = realloc(vt->lines, max * sizeof *line);
+			int maxLines = (total + VT_LINES) & ~(VT_LINES-1);
+			line = realloc(vt->lines, maxLines * sizeof *line);
 			if (!line) return;
 			vt->lines = line;
-			vt->allocLines = max;
+			vt->allocLines = maxLines;
 		}
 
 		line = vt->lines + total - 1;
@@ -525,8 +523,8 @@ static float nvgTextWithTabs(VirtualTerm vt, NVGcontext * vg, float x, float y, 
 				NVGcolor fg;
 				float    thick, liney;
 				underline:
-				thick = vt->fontSize * (1/12.);
-				liney = y + vt->fontSize - thick * 0.75;
+				thick = vt->fontSize * (1/12.f);
+				liney = y + vt->fontSize - thick * 0.75f;
 				nvgGetCurTextColor(vg, &fg);
 				nvgStrokeWidth(vg, thick);
 				nvgStrokeColor(vg, fg);
@@ -774,6 +772,7 @@ static int VTPaint(SIT_Widget w, APTR cd, APTR ud)
 		/* redo line wrapping */
 		vt->formatWidth = vt->width - vt->scrollPad - vt->scrollOff;
 		VTReformat(vt, vg);
+		vt->waitConf |= 2;
 		if (vt->topLine != vt->topTarget)
 			VTAdjustTop(vt, vt->topTarget);
 	}
@@ -890,15 +889,15 @@ static int VTPaint(SIT_Widget w, APTR cd, APTR ud)
 			for (next = p + 1; next < bg && curBg == *next; next ++);
 			if (curBg > 0 || next < bg)
 			{
-				float w = nvgTextBoundsWithTabs(vt, vg, x2, start + (p - bgAttr), start + (next - bgAttr), vt->lineAttr) - x2;
+				float width = nvgTextBoundsWithTabs(vt, vg, x2, start + (p - bgAttr), start + (next - bgAttr), vt->lineAttr) - x2;
 				if (curBg > 0)
 				{
 					nvgFillColorRGBA8(vg, curBg == 3 ? vt->selColors + 4 : vt->palette + (curBg >> 4) * 4);
 					nvgBeginPath(vg);
-					nvgRect(vg, x2, y, w, vt->lineHeight - vt->linePadding);
+					nvgRect(vg, x2, y, width, vt->lineHeight - vt->linePadding);
 					nvgFill(vg);
 				}
-				x2 += w;
+				x2 += width;
 			}
 			p = next;
 		}

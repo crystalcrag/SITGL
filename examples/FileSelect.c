@@ -309,7 +309,7 @@ SIT_Widget FSOpen(SIT_Widget parent, STRPTR curdir, SIT_CallProc cb, APTR ud, in
 		{0}
 	};
 	struct FileSelect_t * file;
-	SIT_Widget diag = SIT_CreateWidget("fileselect.bg", SIT_DIALOG + SIT_EXTRA(sizeof (struct FileSelect_t)), parent,
+	SIT_Widget diag = SIT_CreateWidget("fileselecte.bg", SIT_DIALOG + SIT_EXTRA(sizeof (struct FileSelect_t)), parent,
 		SIT_Title,        "Select file",
 		SIT_DialogStyles, SITV_Movable | SITV_Resizable | SITV_Plain,
 		SIT_AccelTable,   accels,
@@ -338,10 +338,10 @@ SIT_Widget FSOpen(SIT_Widget parent, STRPTR curdir, SIT_CallProc cb, APTR ud, in
 	/* get root widget */
 	for (;;)
 	{
-		SIT_Widget parent;
-		SIT_GetValues(app, SIT_Parent, &parent, NULL);
-		if (parent == NULL) break;
-		app = parent;
+		SIT_Widget root;
+		SIT_GetValues(app, SIT_Parent, &root, NULL);
+		if (root == NULL) break;
+		app = root;
 	}
 
 	if (curdir == NULL)

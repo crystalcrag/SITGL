@@ -1,0 +1,71 @@
+# C language syntax highlighting file for SITGL lexer
+# Written by T.Pierron, sep 2021
+
+case sensitive
+match wordonly
+
+type char int long unsigned signed short const static extern
+type volatile void register auto struct union typedef enum
+type float double inline
+type APTR APTR STRPTR TEXT FILE DIR
+type va_list size_t int8_t int16_t int32_t int64_t
+type uint8_t uint16_t uint32_t uint64_t [bB]ool
+
+keyword if else while do for switch goto break continue
+keyword return sizeof case default
+
+# Some very common declarations
+constant [tT]rue [fF]alse NULL \d+(\.\d*)?([eE][-+]?\d+)?f? 0[xX]\H+ \d+U?L?L?
+
+match noseparator
+
+# Non-opened comment and unbreakable space
+error \*/ \xA0
+
+# C character declaration
+special '\\.'
+constant '.' 
+error '\\'
+special '\\\o\o\o'
+
+# String definition
+begin constant L?\"
+special \\\\ \\n \\t \\r \\b \\" \\x\H\H \\\o\o\o
+# This is printf() format tokens
+special %(\d+$)?[+-]?\d*(\.\d*)?(l|ll|L)?[diuoxXfeEgGcCsSpn]
+special %%
+error \\e
+end [\"\n]
+
+# Standard C comment
+class cdoc comment comment bold
+begin comment /\*
+note TODO NOTE
+error XXX /\*
+cdoc \<(SYNOPSIS|NAME|INTRODUCTION|INPUTS|RESULT|SEE\ ALSO|FUNCTION|EXAMPLE|BUGS|WARNING)\>
+end \*/
+
+# C++ Comment style
+begin comment //
+special \\\n
+note TODO
+error XXX
+end
+
+begin directive \#\s*include
+begin constant <
+end >
+begin constant \"
+end \"
+end
+
+match wordonly
+begin directive \#\s*(if|ifdef|ifndef|elif|undef|pragma|define|error|warning)
+match noseparator
+identifier .
+special \\\n
+begin comment /\*
+end \*/
+end
+
+directive \#\s*else \#\s*endif

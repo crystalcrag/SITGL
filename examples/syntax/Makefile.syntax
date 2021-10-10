@@ -1,0 +1,42 @@
+# Syntax file for GNU Makefile
+# Written by T.Pierron. March 7, 2004.
+
+name Makefile:*[mM]akefile*
+match noseparator
+
+begin comment \#
+end
+
+keyword % \^\s*(vpath|export|unexport|override)\>
+
+directive \^\$*([-s]?include|ifeq|else|endif|ifneq|ifdef|ifndef)\>
+
+special @
+
+constant $.
+
+# Okay this is not totally correct since $() variables can be recursively defined
+begin identifier $\(
+
+match wordonly
+keyword subst addprefix addsuffix basename call dir error filter-out filter findstring
+keyword firstword foreach if join notdir origin patsubst shell sort strip suffix warning
+keyword wildcard word wordlist words
+match noseparator
+
+end \)
+
+begin constant \"
+special \\"
+end \"
+
+begin constant '
+special \\'
+end '
+
+# Special targets
+match wordonly
+special \.(SUFFIXES|PHONY|DEFAULT|PRECIOUS|IGNORE|SILENT|EXPORT_ALL_VARIABLES|KEEP_STATE)::?
+special \.(LIBPATTERNS|NOTPARALLEL|DELETE_ON_ERROR|INTERMEDIATE|POSIX|SECONDARY)::?
+
+
