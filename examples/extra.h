@@ -8,12 +8,15 @@
 #ifndef SITGL_EXTRA_H
 #define SITGL_EXTRA_H
 
+typedef struct CFA_t *     CFA;
+
 SIT_Widget CCOpen(SIT_Widget parent, DATA8 rgb, SIT_CallProc cb, APTR ud);
 SIT_Widget FSOpen(SIT_Widget parent, STRPTR curdir, SIT_CallProc cb, APTR ud, int flags);
 void       VTInit(SIT_Widget canvas, SIT_Widget scroll);
 SIT_Widget FSInit(SIT_Widget parent, STRPTR path, int options, SIT_CallProc cb);
 int        SYN_Parse(STRPTR path, STRPTR buffer, CFA * ret);
 int        SYN_HighlightText(SIT_Widget, APTR cd, APTR ud);
+void       SYN_Free(CFA cfa);
 
 /* amount of bytes that the SIT_UserData must point to if you want to use SYN_HighlightText() */
 #define LEXER_EXTRA       (sizeof (vector_t) + 2 * sizeof (int)) /* can't use sizeof (struct LexerExtra_t): datatype is private */

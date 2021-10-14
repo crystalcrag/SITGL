@@ -4678,6 +4678,14 @@ allocation at the start).
   was given as arguments to this function. If you want to be sure to get everything, you should call
   this function a first time with <tt>max</tt> set to <val>0</val>.
 
+  <li><tt class="dt">SIT_EditAddText</tt> (<tt class="t">STRPTR</tt>) <span class="ro">write-only</span>
+  <p>This property allows you to insert text at current cursor location, just like if it was typed
+  by the user. The text will therefore go through the same pipeline: case transform, newline filtering,
+  max length clipping. Cursor will also be moved at the end of string. Undo log will be disabled as
+  long as the control has not been managed (ie: <tt>SIT_ManageWidget()</tt> was not call on the
+  parent dialog).
+
+
   <li><tt class="dt">SIT_StartSel</tt>, <tt class="dt">SIT_EndSel</tt> (<tt class="t">int</tt>)
   <p>These properties allow you to set the cursor (if you specify only one of them) or the part of
   text being selected (if you specify both, with different values). If you select text, the position

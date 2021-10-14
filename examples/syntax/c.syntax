@@ -1,6 +1,7 @@
 # C language syntax highlighting file for SITGL lexer
 # Written by T.Pierron, sep 2021
 
+name C language:*.c,*.h
 case sensitive
 match wordonly
 

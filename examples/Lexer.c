@@ -74,7 +74,7 @@ static int IsSep(CFA cfa, STRPTR str, int dir)
 	else start -= length, end -= length; \
 }
 
-NFAState SYN_Exec(APTR automaton, DATA8 line, int max, int state, DATA8 spec, int start, int end)
+NFAState SYN_Exec(APTR automaton, DATA8 line, int max, int maxNext, int state, DATA8 spec, int start, int end)
 {
 	CFA      dfa = automaton;
 	DATA8    p, accept, endstr;
@@ -128,7 +128,7 @@ NFAState SYN_Exec(APTR automaton, DATA8 line, int max, int state, DATA8 spec, in
 		}
 		else /* we can reach a new state */
 		{
-			NFAState hilight, match, next = dfa->transitions[offset + *(DATA8)p];
+			NFAState hilight, match, next = dfa->transitions[offset + *p];
 			if (next < dfa->nbFinal)
 			{
 				hilight = dfa->hlType[next];
@@ -168,10 +168,42 @@ NFAState SYN_Exec(APTR automaton, DATA8 line, int max, int state, DATA8 spec, in
 	}
 	if (accept < p)
 	{
+		/* we are in an potential accepting state: continue matching (if we have room) */
+		if (maxNext > 0)
+		{
+			/* roll the state machine for a bit longer until we reach a final state */
+			DATA8 s;
+			NFAState cur = curState;
+			for (s = p, endstr = p + maxNext; s < endstr; s ++)
+			{
+				/* this is greatly simplified thankfully (only a linear scan, no backtrack) */
+				int offset = dfa->base[cur];
+				if (dfa->valid[offset + *s] != cur) break; /* no final state within reach: abort */
+				NFAState hilight, match, next = dfa->transitions[offset + *s];
+				if (next < dfa->nbFinal)
+				{
+					hilight = dfa->hlType[next];
+					match   = dfa->hlFlag[next];
+				}
+				else hilight = match = 0;
+
+				if (hilight == 0 || ((match & FLG_END_OF_WORD) && ! IsSep(dfa, s, 1)))
+				{
+					/* not not a final state */
+					cur = next;
+				}
+				else /* final state: continue parsing in case we match a longer RegExp */
+				{
+					defState = hilight;
+					if (defState > 0) defState --;
+					break;
+				}
+			}
+		}
 		SYN_RegMatch(spec, p - accept, defState);
 	}
 
-	return forward ? trash : curState;
+	return /*forward ? trash :*/ curState;
 }
 
 static int SYN_FreeLexer(SIT_Widget w, APTR cd, APTR ud)
@@ -245,11 +277,11 @@ int SYN_HighlightText(SIT_Widget w, APTR cd, APTR ud)
 		for (i = lex->lastLine, byte = lex->lastByte; i < line; i ++, byte += length)
 		{
 			length = SIT_TextEditLineLength(w, i);
-			STARTSTATE(lex, i+1) = SYN_Exec(cfa, text + byte, length, STARTSTATE(lex, i), NULL, 0, length);
+			STARTSTATE(lex, i+1) = SYN_Exec(cfa, text + byte, length, 0, STARTSTATE(lex, i), NULL, 0, length);
 		}
 	}
 	/* this is where the magic happens */
-	int last = SYN_Exec(cfa, msg->textBuffer, msg->length, STARTSTATE(lex, line), msg->lexerCMap, 0, msg->length);
+	int last = SYN_Exec(cfa, msg->textBuffer, msg->length, SIT_TextEditLineLength(w, line+1), STARTSTATE(lex, line), msg->lexerCMap, 0, msg->length);
 	int prev = STARTSTATE(lex, line+1);
 	STARTSTATE(lex, line+1) = last;
 	if (prev != last || line > lex->lastLine)
@@ -1519,7 +1551,7 @@ CFA DFA_Compress(DFA dfa, STRPTR sep)
 	return cfa;
 }
 
-void CFA_Free(CFA cfa)
+void SYN_Free(CFA cfa)
 {
 	if (cfa) {
 		vector_free(cfa->classes);

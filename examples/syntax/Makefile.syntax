@@ -1,7 +1,7 @@
 # Syntax file for GNU Makefile
 # Written by T.Pierron. March 7, 2004.
 
-name Makefile:*[mM]akefile*
+name Makefile:*makefile*
 match noseparator
 
 begin comment \#

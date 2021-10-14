@@ -695,9 +695,9 @@ DLLIMP int SIT_TextGetWithSoftline(SIT_Widget w, STRPTR buffer, int max)
 
 DLLIMP int SIT_TextEditLineLength(SIT_Widget w, int line)
 {
-	if (w == NULL || w->type != SIT_EDITBOX) return -1;
+	if (w == NULL || w->type != SIT_EDITBOX) return 0;
 	SIT_EditBox edit = (SIT_EditBox) w;
-	if (line >= edit->rowCount) return -1;
+	if (line >= edit->rowCount) return 0;
 	return edit->rows[line].bytes;
 }
 
@@ -1617,8 +1617,6 @@ static int SIT_TextEditInsertChars(SIT_EditBox state, int pos, char * text, int 
 		int line = i + modif - add;
 		memmove(rows + line + add, rows + line, (state->rowCount - line) * sizeof *rows);
 	}
-	//if (rows + i + modif >= state->rows + state->rowMax)
-	//	puts("here");
 	for (p = lines+1, end = p+lines[0], state->rowCount += add; modif > 0; modif --, i ++)
 	{
 		int num = p[0];
@@ -1849,6 +1847,7 @@ static int SIT_TextEditClick(SIT_Widget w, APTR cd, APTR ud)
 			}
 			sit.dirty = 1;
 			lastClick = TimeMS();
+			SIT_TextEditRefreshCaret(state);
 			return 1;
 		}
 		else if (state->editType >= SITV_Integer && (msg->button == 3 || msg->button == 4))
@@ -1902,8 +1901,8 @@ static void SIT_TextEditStartAutoScroll(SIT_EditBox state, int dir)
 /* on mouse drag, move the cursor and selection endpoint to the clicked location */
 static int SIT_TextEditDrag(SIT_Widget w, APTR cd, APTR ud)
 {
-	SIT_EditBox   state = (SIT_EditBox) w;
 	SIT_OnMouse * msg = cd;
+	SIT_EditBox   state = (SIT_EditBox) w;
 
 	if (msg->state == SITOM_CaptureMove)
 	{
@@ -1916,6 +1915,7 @@ static int SIT_TextEditDrag(SIT_Widget w, APTR cd, APTR ud)
 
 		if (state->selStart == state->selEnd)
 			state->selStart = state->cursor;
+		SIT_TextEditRefreshCaret(state);
 
 		if (y < 0)
 		{
@@ -2129,7 +2129,8 @@ static int SIT_TextEditPaste(SIT_EditBox state, DATA8 text, int len)
 	if (SIT_TextEditInsertChars(state, state->cursor, text, len) && ! init)
 	{
 		len = state->lenInsert;
-		SIT_TextEditRegUndo(state, state->cursor, len, UNDO_INSERT);
+		if (state->width > 0) /* not yet fully initialized */
+			SIT_TextEditRegUndo(state, state->cursor, len, UNDO_INSERT);
 		state->cursor += len;
 		state->hasPreferredX = 0;
 		SIT_TextEditMakeCursorVisible(state);
@@ -2163,6 +2164,7 @@ static void SIT_TextEditMoveCursorUpOrDown(SIT_EditBox state, int dir, int sel)
 	}
 	else xpos = state->preferredX;
 	row += dir;
+	state->ypos += dir;
 	if (row >= 0)
 	{
 		DOMRow rows;
@@ -2197,7 +2199,7 @@ static void SIT_TextEditMoveViewUpOrDown(SIT_EditBox state, int dir)
 		if (c >= i)
 		{
 			for (j = state->rowVisible, rows = state->rows+top; j > 0 && rows->bytes && i + rows->bytes <= c; i += rows->bytes, j --, rows ++);
-			if (i + rows->bytes > c) return;
+			if (j > 0) return;
 		}
 		SIT_TextEditMoveCursorUpOrDown(state, dir, 0);
 	}
@@ -2265,7 +2267,7 @@ int SIT_TextEditInsertText(SIT_EditBox state, DATA8 utf8)
 		0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1
 	};
 	/* can't add newline in single-line mode */
-	if (utf8[0] == '\n' && state->maxLines > 0 && state->rowCount == state->maxLines)
+	if ((utf8[0] == '\n' || utf8[0] == '\r') && state->maxLines > 0 && state->rowCount == state->maxLines)
 		return False;
 
 	if (utf8[0] == '\t')
@@ -2329,14 +2331,23 @@ int SIT_TextEditInsertText(SIT_EditBox state, DATA8 utf8)
 	return True;
 }
 
-/* assume: line >= state->rowTop */
+/* return starting/ending character where cursor is */
 static int SIT_TextEditStartLine(SIT_EditBox state, int next)
 {
-	DOMRow row = state->rows + state->rowTop;
-	int    pos = state->charTop;
-	int    line;
+	DOMRow row  = state->rows + state->rowTop;
+	int    pos  = state->charTop;
+	int    line = state->ypos - state->rowTop + next;
 
-	for (line = state->ypos - state->rowTop + next; line > 0; pos += row->bytes, row ++, line --);
+	if (line > 0)
+	{
+		while (line > 0)
+			pos += row->bytes, row ++, line --;
+	}
+	else if (line < 0)
+	{
+		while (line < 0)
+			row --, pos -= row->bytes, line ++;
+	}
 	if (next && SIT_IsSpace(state->text[pos-1])) pos --;
 
 	return pos;

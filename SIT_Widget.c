@@ -1206,26 +1206,41 @@ DLLIMP void SIT_GetValues(SIT_Widget w, ...)
 						va_arg(vargs, APTR);
 					continue;
 				case SIT_CurrentDir: SIT_AppGetCWD(w); break;
-				case SIT_Title:
 					if (w->type == SIT_EDITBOX)
 					{
-						/* direct low-level pointer access :-/ */
-						va_arg(vargs, STRPTR *)[0] = ((SIT_EditBox)w)->text;
-						continue;
 					}
 					break;
 				case SIT_StartSel:
 				case SIT_EndSel:
+				case SIT_EditLength:
+				case SIT_MaxLines:
+				case SIT_Title:
 					if (w->type == SIT_EDITBOX)
 					{
 						/* if nothing selected use cursor pos */
 						SIT_EditBox edit = (SIT_EditBox) w;
-						if (edit->selStart == edit->selEnd)
-						{
-							va_arg(vargs,int *)[0] = edit->cursor;
+						switch (args->tl_TagID) {
+						case SIT_StartSel:
+						case SIT_EndSel:
+							if (edit->selStart == edit->selEnd)
+							{
+								va_arg(vargs,int *)[0] = edit->cursor;
+								continue;
+							}
+							break;
+						case SIT_EditLength:
+							va_arg(vargs, int *)[0] = edit->length;
+							continue;
+						case SIT_MaxLines:
+							va_arg(vargs, int *)[0] = edit->rowCount;
+							continue;
+						case SIT_Title:
+							/* direct low-level pointer access :-/ */
+							va_arg(vargs, STRPTR *)[0] = edit->text;
 							continue;
 						}
 					}
+					break;
 				}
 				switch (args->tl_Type) {
 				case SIT_ABBR: break;

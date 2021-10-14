@@ -562,8 +562,8 @@ ULONG cssFromUnit(int unit, REAL val)
 	case Millimeter: val *= 72 / 25.4f; break;
 	case Inch:       val *= 72; break;
 	case Em:         rel  = 1; break;
-	case VpWidth:    val *= sit.scrWidth  * 0.01f; break;
-	case VpHeight:   val *= sit.scrHeight * 0.01f; break;
+	case VpWidth:    val *= sit.scrWidth  * 0.01f; if (val < sit.defFontHeight) val = sit.defFontHeight; break;
+	case VpHeight:   val *= sit.scrHeight * 0.01f; if (val < sit.defFontHeight) val = sit.defFontHeight; break;
 	case Percentage: rel  = 2;
 	}
 

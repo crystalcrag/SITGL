@@ -188,12 +188,12 @@ int main(int nb, char * argv[])
 	}
 	SDL_WM_SetCaption("SITGL Test", "SITGL Test");
 
-	app = SIT_Init(NVG_ANTIALIAS | NVG_STENCIL_STROKES, width, height, "css/windows7.css", 1);
+	app = SIT_Init(SIT_NVG_FLAGS, width, height, "css/windows7.css", 1);
 
 	if (app == NULL)
 	{
 		SIT_Log(SIT_ERROR, "could not init SITGL: %s.\n", SIT_GetError());
-		return -1;
+		return 1;
 	}
 
 	static SIT_Accel accels[] = {
