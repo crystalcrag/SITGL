@@ -716,7 +716,8 @@ enum /* bitfield for style.flags */
 	CSSF_LINK        = 0x0080,       /* set on anchor and its descendant (used in render.c) */
 	CSSF_BORDERIMG   = 0x0100,       /* cache for border-image is done */
 	CSSF_TEXTSHADOW  = 0x0200,       /* style.shadow struct need recompute */
-	CSSF_BOXSHADOW   = 0x0400        /* style.boxShadow need recompute */
+	CSSF_BOXSHADOW   = 0x0400,       /* style.boxShadow need recompute */
+	CSSF_BACKGROUND  = 0x0800        /* style.background need update (dim and offset) */
 };
 
 enum /* bitfield for state */

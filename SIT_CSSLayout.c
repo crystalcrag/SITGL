@@ -819,6 +819,19 @@ static void layoutSetOutline(SIT_Widget node)
 		node->layout.flags |= LAYF_NoOutline;
 }
 
+static void layoutSetBackgroundPos(SIT_Widget node)
+{
+	/* convert background-position to pixels (percentage will need adjustment) */
+	int i;
+	for (i = node->style.bgCount-1; i >= 0; i --)
+	{
+		Background bg = node->style.background + i;
+		if (bg->x != AUTOVAL) bg->dim.left = ToPoints(node, node, bg->x, CSS_LEFT);
+		if (bg->y != AUTOVAL) bg->dim.top  = ToPoints(node, node, bg->y, CSS_TOP);
+	}
+	node->style.flags &= ~CSSF_BACKGROUND;
+}
+
 void layoutCalcBox(SIT_Widget node)
 {
 	SIT_Widget parent = node->parent;
@@ -905,15 +918,8 @@ void layoutCalcBox(SIT_Widget node)
 		}
 	}
 
-	/* convert background-position to pixels (percentage will need adjustment) */
-	for (i = node->style.bgCount-1; i >= 0; i --)
-	{
-		Background bg = node->style.background + i;
-		if (bg->x != AUTOVAL) bg->dim.left = ToPoints(node, node, bg->x, CSS_LEFT);
-		if (bg->y != AUTOVAL) bg->dim.top  = ToPoints(node, node, bg->y, CSS_TOP);
-	}
-
 	node->layout.margin = ToPoints(parent, node, node->style.margin, CSS_WIDTH);
+	layoutSetBackgroundPos(node);
 
 	/* combined padding and border (SIT order) */
 	for (i = 0; i < 4; i ++)
@@ -1070,6 +1076,9 @@ int layoutUpdateStyles(SIT_Widget node)
 
 		if (node->style.flags & CSSF_BOXSHADOW)
 			layoutSetBoxShadow(node);
+
+		if (node->style.flags & CSSF_BACKGROUND)
+			layoutSetBackgroundPos(node);
 
 		if (node->style.font.handle < 0)
 			layoutFindFont(node);

@@ -168,7 +168,7 @@ handled by another layer (typically: SDL, GLFW, SFML, ...). Typical usage for th
 into a video game engine.
 
 <p><b>Pre-requisite</b>: basic knowledge of OpenGL, advanced knowledge of the C programming language
-and decent knowledge adout <a href="https://www.w3.org/TR/CSS22/">CSS</a>.
+and decent knowledge about <a href="https://www.w3.org/TR/CSS22/">CSS</a>.
 </div>
 
 <p id="auth">Written by T.Pierron, September 2020</p>
@@ -193,13 +193,14 @@ footprint and ease of integration:
 <ul>
   <li><b>Productivity</b>: write as little code as possible, while still allowing you freedom to build
   complex interface.
-  <li><b>Small footprint</b>: the first point being a nebulous target, a line had to be drawn in
-  order to keep the project away from feature creep: only basic controls with room to build more complex
-  one from this basic building blocks.
+  <li><b>Small footprint</b>: to avoid this library from crumbling under its own weight, a line had to
+  be drawn in order to keep the project away from feature creep: only basic controls with room to build
+  more complex one from these basic building blocks.
   <li><b>Ease of integration</b>: these kind of libraries always require some boilerplate code
   in order to integrate it with existing system. This part has been designed to limit the amount of
   code needed to get something on the screen, while still allowing a decent amount of freedom in the
   way rendering is done (at the cost of more boilerplate, the more complex your needs are).
+  <p>But if your needs are pretty basic, the integration should be rather straightforward.
 </ul>
 
 <p>Inspiration for this library comes from various frameworks from the industry than spans several
@@ -207,11 +208,10 @@ decades: the API of SITGL is strongly inspired by <a href="https://en.wikipedia.
 layout of the controls within forms and screen is inspired by <a href="https://en.wikipedia.org/wiki/Motif_%28software%29">Motif</a>
 <tt>XmForm</tt> widget, and theming is done using 99% standard-compliant CSS.
 
-<p>That being said, OpenGL and user-interface will always imply a decent amount of boilerplate code
-and careful consideration on how to properly use this library. Care has been taken for this to be as
-painless as possible, but don't expect miraculously dropping a few files on your project and start
-coding your interface right after. You'll have to read this documentation further, at least until
-chapter 11: controls.
+<p>That being said, OpenGL and user-interface will always imply a decent amount careful planning on
+how to properly use this library. Care has been taken for this to be as painless as possible, but
+don't expect dropping a few files on your project and start coding your interface right after.
+You'll have to read this documentation a bit further.
 
 
 
@@ -702,6 +702,9 @@ environment provided are largely sufficient) or <a href="http://mingw-w64.org/do
 <p>Once the tool chain has been setup, the way to compile this into a DLL is simply to compile all the
 source files into a dynamic library, like this:
 <pre>gcc -DBUILDING_DLL -Wall -Os -shared *.c -o SITGL.dll -static-libgcc -s</pre>
+
+<p><span class="n">Note</span>: you can also use the GNU Makefile, but you'll certainly have to edit
+the compiler path.
 
 <p><span class="n">Note</span>: due to the use of UTF-8 strings and libc functions, your compiler might
 complain of signed/unsigned types mismatch. UTF-8 strings have to be accessed through a
@@ -1224,7 +1227,7 @@ NVGLUframebuffer * nvgFBO = nvgluCreateFramebuffer(vg, width, height, NVG_IMAGE_
 <type>void</type> renderScene(<type>void</type>)
 {
 	glActiveTexture(GL_TEXTURE0);
-	<com>/* XXX need to use nvgFBO->image field if off-screen bitmap is to be used as CSS background, why? */</com>
+	<com>/* note: need to use nvgFBO->image field if off-screen bitmap is to be used as CSS background */</com>
 	glBindTexture(GL_TEXTURE_2D, nvgFBO->texture);
 
 	<com>/* ... */</com>

@@ -914,6 +914,7 @@ static Bool cssApplyMultipleParam(SIT_Widget node, CSSAttr a, STRPTR value)
 				memcpy(bg, list->payload, offsetp(Background, image));
 			}
 		}
+		node->style.flags |= CSSF_BACKGROUND;
 		break;
 
 	case 2: /* text-shadow */
