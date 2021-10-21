@@ -64,25 +64,28 @@ static void SIT_ComboSetList(SIT_ComboBox cb)
 	cb->values  = NULL;
 	cb->rowTags = NULL;
 	cb->count   = cb->items = 0;
-
-	/* initValues is a user supplied pointer: consider it read-only */
-	for (max = 0, next = p = cb->initValues; *p; p = next)
+	p = cb->initValues;
+	if (IsDef(p))
 	{
-		for (next = p; *next && *next != '\t'; next ++);
-		i = next - p + 1;
-		if (max < i) max = i;
-		if (*next) next ++;
-	}
+		/* initValues is a user supplied pointer: consider it read-only */
+		for (max = 0, next = p; *p; p = next)
+		{
+			for (next = p; *next && *next != '\t'; next ++);
+			i = next - p + 1;
+			if (max < i) max = i;
+			if (*next) next ++;
+		}
 
-	buf = alloca(max);
+		buf = alloca(max);
 
-	/* add new */
-	for (p = cb->initValues; *p; p = next)
-	{
-		for (next = p; *next && *next != '\t'; next ++);
-		CopyString(buf, p, next - p + 1);
-		if (*next) next ++;
-		SIT_ComboInsertItem(&cb->super, -1, buf, NULL);
+		/* add new */
+		for (p = cb->initValues; *p; p = next)
+		{
+			for (next = p; *next && *next != '\t'; next ++);
+			CopyString(buf, p, next - p + 1);
+			if (*next) next ++;
+			SIT_ComboInsertItem(&cb->super, -1, buf, NULL);
+		}
 	}
 	if (idx < 0) idx = 0;
 	if (idx >= cb->items)
@@ -90,7 +93,7 @@ static void SIT_ComboSetList(SIT_ComboBox cb)
 
 	if (idx != cb->selIndex)
 	{
-		cb->super.title = cb->rowTags[idx].entry;
+		cb->super.title = idx >= 0 ? cb->rowTags[idx].entry : NULL;
 		cb->selIndex = idx;
 	}
 }
@@ -103,8 +106,19 @@ static int SIT_ComboSetStyles(SIT_Widget w, APTR cd, APTR ud)
 	if (w->flags & SITF_Style1Changed) /* combo list changed */
 		SIT_ComboSetList(cb);
 
-//	if (w->flags & SITF_Style2Changed)
-//		SendMessage(w->sw_Handle, CB_SETCURSEL, cb->sc_SelIndex, 0);
+	if (w->flags & SITF_Style2Changed)
+	{
+		int i = cb->oldSel;
+		if (i < 0) i = 0;
+		if (i >= cb->items) i = cb->items-1;
+		if (i != cb->selIndex)
+		{
+			cb->selIndex = i;
+			cb->super.title = cb->rowTags[i].entry;
+			sit.dirty = 1;
+			SIT_ApplyCallback(w, (APTR) i, SITE_OnChange);
+		}
+	}
 
 	w->postProcess = NULL;
 	w->flags &= ~SITF_StylesChanged;
@@ -124,7 +138,7 @@ static int SIT_ComboSetValues(SIT_Widget w, APTR cd, APTR ud)
 		w->flags |= SITF_Style1Changed;
 		break;
 	case SIT_SelectedIndex:
-		cb->selIndex = value->integer;
+		cb->oldSel = value->integer;
 		w->flags |= SITF_Style2Changed;
 		break;
 	case SIT_ReadOnly: /* create only */
@@ -498,7 +512,7 @@ static int SIT_ComboClick(SIT_Widget w, APTR cd, APTR ud)
 			popup->visible = 0;
 			sit.dirty = 1;
 			if (cb->oldSel != cb->selIndex)
-				SIT_ApplyCallback(w, (APTR) cb->selIndex, SITE_OnChange);
+				SIT_ApplyCallback(w->parent, (APTR) cb->selIndex, SITE_OnChange);
 		}
 		if (cb->anim)
 		{

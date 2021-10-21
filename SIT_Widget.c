@@ -517,7 +517,7 @@ DLLIMP SIT_Widget SIT_CreateWidget(STRPTR name, SIT_TYPE type, SIT_Widget parent
 	if (parent && parent->type == SIT_DIALOG && ((SIT_Dialog)parent)->clientArea)
 		parent = ((SIT_Dialog)parent)->clientArea;
 
-	if (type == SIT_DIALOG)
+	if (type == SIT_DIALOG || type == SIT_FILESELECT || type == SIT_DIRSELECT)
 		while ((parent->flags & SITF_TopLevel) == 0)
 			parent = parent->parent;
 

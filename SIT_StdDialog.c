@@ -16,7 +16,6 @@
 		{ SIT_SelFilter,  "selFilter",  _SG, SIT_INT, OFFSET(SIT_FileDialog, selFilter) },
 		{ SIT_InitPath,   "initPath",   _SG, SIT_STR, OFFSET(SIT_FileDialog, initPath) },
 		{ SIT_DlgFlags,   "dlgFlags",   _SG, SIT_INT, OFFSET(SIT_FileDialog, flags) },
-		{ SIT_SaveState,  "saveState",  _SG, SIT_PTR, OFFSET(SIT_FileDialog, saveState) },
 		{ SIT_SelPath,    NULL,         __G, SIT_PTR, OFFSET(SIT_FileDialog, filePtr) },
 		{ SIT_NbSelect,   NULL,         __G, SIT_INT, OFFSET(SIT_FileDialog, nbSelect) },
 		{ SIT_TagEnd }
@@ -32,6 +31,7 @@
 
 	static HANDLE comdlg;
 	static HANDLE ole32;
+	extern HANDLE mainWnd;
 
 	BOOL (*pGetSaveFileName)(LPOPENFILENAMEW);
 	BOOL (*pGetOpenFileName)(LPOPENFILENAMEW);
@@ -124,7 +124,7 @@ static int SIT_ManageFileDialog(SIT_Widget w, APTR cd, APTR ud)
 
 	memset(&dlg->ofn, 0, sizeof dlg->ofn);
 	dlg->ofn.lStructSize = sizeof dlg->ofn;
-	dlg->ofn.hwndOwner   = NULL; //SIT_GetContainer(w);
+	dlg->ofn.hwndOwner   = mainWnd;
 	dlg->ofn.lpstrFile   = dlg->fileName;
 	dlg->ofn.nMaxFile    = DIM(dlg->fileName);
 	dlg->ofn.Flags       = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_NOCHANGEDIR;
@@ -242,7 +242,7 @@ static int SIT_ManageFolderDialog(SIT_Widget w, APTR cd, APTR ud)
 	LPBROWSEINFO  bi = (APTR) f->info;
 
 	memset(bi, 0, sizeof *bi);
-	bi->hwndOwner      = NULL; //SIT_GetContainer(w);
+	bi->hwndOwner      = mainWnd;
 	bi->pszDisplayName = f->path;
 	bi->lpfn           = SIT_PostInitBrowse;
 	bi->lParam         = (LPARAM) w;

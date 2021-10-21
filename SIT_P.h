@@ -564,7 +564,6 @@ struct SIT_FileDialog_t
 	int          selFilter;
 	STRPTR       initPath;
 	int          flags;
-	STRPTR *     saveState;
 	int          nbSelect;
 	STRPTR       filePtr;
 	#ifdef PLATFORM_H

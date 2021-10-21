@@ -132,7 +132,7 @@ Bool SIT_LoadImg(CSSImage img, STRPTR path, int len, int flags)
 	{
 		if (len == 0)
 		{
-			if (sit.relPath[0])
+			if (sit.relPath[0] && IsRelativePath(path))
 			{
 				AddPart(sit.relPath, path, sizeof sit.relPath);
 				himg = nvgCreateImage(sit.nvgCtx, sit.relPath, flags);

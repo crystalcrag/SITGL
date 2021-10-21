@@ -273,6 +273,12 @@ DLLIMP Bool SIT_GetCSSValue(SIT_Widget w, STRPTR property, APTR mem)
 			/* there got to be a special case :-/ */
 			* (float *) mem = layoutCalcLineHeight(w);
 		}
+		else if (attr == GET(cssAttrBgImage))
+		{
+			Background bg = w->style.background;
+			if (bg == NULL) return False;
+			* (int *) mem = ((CSSImage)bg->image)->handle;
+		}
 		else if (attr->get > 0)
 		{
 			/* yes, completely safe as long a mem can hold 4 bytes */
@@ -292,8 +298,8 @@ DLLIMP Bool SIT_GetCSSValue(SIT_Widget w, STRPTR property, APTR mem)
 				memcpy(mem, (DATA8)w + attr->arg1, 4);
 			}
 			else return False;
-			return True;
 		}
+		return True;
 	}
 	return False;
 }

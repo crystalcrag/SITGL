@@ -82,7 +82,14 @@ DLLIMP int SIT_ApplyCallback(SIT_Widget w, APTR cd, int type)
 static SIT_Widget SIT_EventBubble(SIT_Widget w, int type)
 {
 	/* bubble up until we have a control that has an event registered */
-	if (w->type == SIT_BUTTON || (w->type == SIT_HTMLTAG && (w->style.flags & CSSF_LINK))) return w;
+	if (w->type == SIT_BUTTON) return w;
+	if (w->type == SIT_HTMLTAG && (w->style.flags & CSSF_LINK))
+	{
+		if (HAS_EVT(w, type)) return w;
+		SIT_Widget parent;
+		for (parent = w->parent; parent && parent->type == SIT_HTMLTAG; parent = parent->parent);
+		return parent && HAS_EVT(parent, type) ? parent : w;
+	}
 	while (w && (w->enabled == 0 || ! HAS_EVT(w, type)))
 		w = w->parent;
 	return w;
