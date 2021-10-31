@@ -40,6 +40,9 @@
 		{ SIT_FirstChild,   NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, children.lh_Head) },
 		{ SIT_LastChild,    NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, children.lh_Tail) },
 		{ SIT_CtrlType,     NULL,           __G, SIT_INT,  OFFSET(SIT_Widget, type) },
+		{ SIT_TagPrivate1,  NULL,           C__, SIT_PTR,  0}, /* BuddyCtrl */
+		{ SIT_TagPrivate2,  NULL,           C__, SIT_STR,  OFFSET(SIT_Widget, buddyText) },
+		{ SIT_BuddyLabel,   "buddyLabel",   C__, SIT_ABBR, ABBR(1, 1, 0, 0)},
 		{ SIT_Composited,   "composited",   _SG, SIT_BOOL, OFFSET(SIT_Widget, composited) },
 		{ SIT_NVGcontext,   NULL,           __G, SIT_PTR,  0},
 		{ SIT_ToolTip,      "toolTip",      C__, SIT_STR,  0},
@@ -268,10 +271,10 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 		if (w->type == SIT_DIALOG) w->box.bottom = w->box.top + w->fixed.height, w->flags |= SITF_KeepDiagSize;
 		w->flags |= SITF_FixedHeight;
 		break;
-//	case SIT_TagPrivate1:
-//		if (w->sw_BuddyText)
-//			SIT_CreateBuddyLabel(w, w->buddyText, ((SIT_Variant *)ud)->pointer);
-//		break;
+	case SIT_TagPrivate1:
+		if (w->buddyText)
+			SIT_CreateBuddyLabel(w, w->buddyText, ((SIT_Variant *)ud)->pointer);
+		break;
 	case SIT_MaxWidth:
 		if (val->pointer)
 		{

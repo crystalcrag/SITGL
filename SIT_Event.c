@@ -215,7 +215,7 @@ DLLIMP int SIT_ProcessKey(int key, int modifier, int pressed)
 			case '\n': key = SITK_Return; break;
 			case '\b': key = SITK_BackSpace; break;
 			default:
-				if (modifier == SITK_FlagCtrl && 'a' <= key && key <= 'z')
+				if (modifier == SITK_FlagCtrl && 'a' <= key && key <= 'z' && key != 'i')
 					return SIT_ProcessChar(key - 'a' + 1, 0);
 			}
 			return False;

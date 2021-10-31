@@ -3647,6 +3647,31 @@ when talking about <a href="#geometry">geometry management</a>. There are a few 
   <p>Set the <b>inline CSS styles</b> of the widget. This property is <b>write-only</b>. You can specify
   any number of css property you want, but syntax must remain valid. This property uses the same error
   recovery than when parsing a complete stylesheet.
+  
+  <li><tt class="dt">SIT_BuddyLabel</tt> (<tt class="t">STRPTR</tt>, <tt>SIT_Widget *</tt>) <span class="ro">create-only</span>
+  <p>This property will allow you to <b>create a label to the left of a given control</b>. It is extremely
+  common to have a label next to an editbox or combobox, although this property can be applied to any
+  control. Having to create these labels manually will get old very quickly.
+
+  <p>This property expect exactly <b>two arguments</b>: the first is the text of the label, the second is a
+  pointer to a <tt>SIT_Widget</tt>, that will receive the label. If the second parameter is not
+  <tt class="o">NULL</tt>, this value will be linked with the newly created label through a <tt>SIT_MaxWidth</tt>
+  chain (so <b>don't forget</b> to initialize your pointer to <tt class="o">NULL</tt> before giving it
+  as argument). You can also retrieve this widget using <tt>SIT_GetById()</tt>, the name will the same
+  as the control for which this property has been set, but prefixed with a <tt class="o">b</tt> (for
+  buddy).
+
+  <p>For example the controls here:
+  <div class="image">
+    <img src="images/BuddyLabel.png">
+  </div>
+  <p>Were created this way: (the alignment is achieved by the <tt>SIT_MaxWidth</tt> chain)
+  <pre>SIT_Widget max = <val>NULL</val>;
+SIT_CreateWidgets(dialog,
+	<val>"&lt;editbox name=level width=15em buddyLabel="</val>, <val>"Level name:"</val>, &max, <val>"&gt;"</val>
+	<val>"&lt;editbox name=seed  width=15em top=WIDGET,level,0.5em buddyLabel="</val>, <val>"Seed:"</val>, &max, <val>"&gt;"</val>
+	<val>"&lt;editbox name=days  width=6em  top=WIDGET,seed,0.5em buddyLabel="</val>, <val>"Days:"</val>, &max, <val>"&gt;"</val>
+);</pre>
 
   <li><tt class="dt">SIT_TagList</tt> (<tt class="t">KeyVal</tt>)
   <p>This tag is useful if you want to use an array instead of a vararg to pass arguments to

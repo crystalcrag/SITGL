@@ -104,6 +104,7 @@ void SIT_MeasureWidget(SIT_Widget);
 int  SIT_ListGetItemCount(SIT_Widget);
 void SIT_ListGetArg(SIT_Widget, int type, APTR arg);
 void SIT_NukeCSS(void);
+void SIT_CreateBuddyLabel(SIT_Widget buddy, STRPTR text, SIT_Widget * max);
 
 int  SIT_TextEditKey(SIT_EditBox, int key);
 int  SIT_TextEditInsertText(SIT_EditBox, DATA8 utf8);
@@ -205,6 +206,7 @@ struct SIT_Widget_t
 	STRPTR       title, tagName;       /* public */
 	STRPTR       name, classes;        /* public */
 	STRPTR *     inlineStyles;         /* public */
+	STRPTR       buddyText;
 	ListHead     children;
 	ListHead     callbacks;
 	int          evtFlags;             /* which evt has been set (quick filter): 1<<SITE_* */
@@ -379,6 +381,7 @@ struct SIT_EditBox_t
 	DATA8        colorMap;             /* public */
 	SIT_CallProc lexer;                /* public */
 	APTR         lexerData;            /* public */
+	DATA8        fixedMem;
 	CSSColor     caret;
 	CSSColor     bgSel;
 	int16_t      msgX, msgY;           /* last clicked pos */

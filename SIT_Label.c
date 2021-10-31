@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <malloc.h>
 #include <math.h>
 #include <ctype.h>
 #include "SIT_P.h"
@@ -187,26 +188,20 @@ Bool SIT_InitLabel(SIT_Widget w, va_list args)
 	return True;
 }
 
-#if 0
+/* EXTREMELY common use case: add a label to the left of a widget */
 void SIT_CreateBuddyLabel(SIT_Widget buddy, STRPTR text, SIT_Widget * max)
 {
-	int    len  = WideCharToMultiByte(CP_UTF8, 0, buddy->sw_Name, -1, NULL, 0, NULL, NULL);
-	STRPTR name = alloca(len+1);
+	STRPTR name = alloca(strlen(buddy->name) + 1);
 
 	name[0] = 'b';
-	WideCharToMultiByte(CP_UTF8, 0, buddy->sw_Name, -1, name + 1, len, NULL, NULL);
-	SIT_Widget label = SIT_CreateWidget(name, SIT_LABEL, buddy->sw_Parent,
-		SIT_AlignHoriz, SITV_AlignRight,
+	strcpy(name + 1, buddy->name);
+
+	SIT_Widget label = SIT_CreateWidget(name, SIT_LABEL, buddy->parent,
 		SIT_Title,      text,
 		SIT_Top,        SITV_AttachMiddle, buddy, 0,
 		SIT_MaxWidth,   max ? *max : NULL,
-		SIT_TabOrder,   buddy->sw_TabOrder - 1,
 		NULL
 	);
-	LOGFONT font;
-	GetObject(label->sw_Font, sizeof font, &font);
-	len = ABS(font.lfHeight) / 2;
-	SIT_SetValues(buddy, SIT_Left, SITV_AttachWidget, label, len, NULL);
+	SIT_SetValues(buddy, SIT_Left, SITV_AttachWidget, label, SITV_Em(0.5), NULL);
 	if (max) *max = label;
 }
-#endif

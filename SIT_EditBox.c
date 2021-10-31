@@ -46,14 +46,14 @@
 
 	enum
 	{
-		FLAG_REPLACE   = 1,
-		FLAG_HASSCROLL = 2,
-		FLAG_FIXEDSIZE = 4,
-		FLAG_FIXEDUNDO = 8,
-		FLAG_SETSTART  = 16,
-		FLAG_SETEND    = 32,
-		FLAG_CLEARCLIP = 64,
-		FLAG_IGNOREEVT = 128
+		FLAG_REPLACE   = 0x01,
+		FLAG_HASSCROLL = 0x02,
+		FLAG_FIXEDSIZE = 0x04,
+		FLAG_FIXEDUNDO = 0x08,
+		FLAG_SETSTART  = 0x10,
+		FLAG_SETEND    = 0x20,
+		FLAG_CLEARCLIP = 0x40,
+		FLAG_IGNOREEVT = 0x80
 	};
 
 static uint32_t lastClick;
@@ -153,7 +153,7 @@ static int SIT_TextEditFinalize(SIT_Widget w, APTR cd, APTR ud)
 		free(edit->text);
 	if (edit->maxLines == 0)
 		free(edit->rows);
-	free(edit->fixedBuffer);
+	free(edit->fixedMem);
 	return 1;
 }
 
@@ -484,11 +484,11 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 		edit->stepValue = round(edit->stepValue);
 	}
 	/* buffer provided by user: don't alloc anything here */
-	edit->fixedBuffer = NULL;
 	if (edit->fixedSize > 0)
 	{
 		DATA8 fixed = edit->fixedBuffer;
 		edit->flags |= FLAG_FIXEDSIZE;
+		edit->maxText = edit->fixedSize;
 		if (fixed)
 			edit->text = fixed;
 		else
@@ -520,7 +520,7 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 
 	if (fixedMem > 0)
 	{
-		DATA8 mem = edit->fixedBuffer = malloc(fixedMem);
+		DATA8 mem = edit->fixedMem = malloc(fixedMem);
 		if (edit->maxLines > 0)
 		{
 			int sz = sizeof *edit->rows * edit->maxLines;
@@ -528,7 +528,7 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 			memset(mem, 0, sz);
 			mem += sz;
 		}
-		if (edit->fixedSize > 0)
+		if (edit->text == NULL && (edit->flags & FLAG_FIXEDSIZE))
 		{
 			edit->maxText = edit->fixedSize;
 			edit->text = mem;
@@ -541,7 +541,7 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 	}
 
 	layoutCalcBox(w);
-	STRPTR init = w->title;
+	STRPTR init = edit->fixedBuffer ? edit->fixedBuffer : w->title;
 	SizeF  ret;
 	w->title = " ";
 	layoutMeasureWords(w, &ret);

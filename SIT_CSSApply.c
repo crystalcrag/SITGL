@@ -276,7 +276,7 @@ DLLIMP Bool SIT_GetCSSValue(SIT_Widget w, STRPTR property, APTR mem)
 		else if (attr == GET(cssAttrBgImage))
 		{
 			Background bg = w->style.background;
-			if (bg == NULL) return False;
+			if (bg == NULL || bg->image == NULL) return False;
 			* (int *) mem = ((CSSImage)bg->image)->handle;
 		}
 		else if (attr->get > 0)
