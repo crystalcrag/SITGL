@@ -640,7 +640,7 @@ DLLIMP Bool SIT_ActionReschedule(SIT_Action act, double start, double end)
 		else
 			free(act);
 		if (act->node.ln_Prev == NULL)
-			sit.nextAction = next ? next->start : INFINITY;
+			sit.nextAction = next ? next->start : (double) INFINITY;
 
 		return False;
 	}

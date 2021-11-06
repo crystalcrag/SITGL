@@ -258,6 +258,12 @@ DLLIMP int SIT_ProcessKey(int key, int modifier, int pressed)
 				/* EDITBOX will process all keys */
 				if (SIT_TextEditKey((SIT_EditBox) sit.focus, key | modifier))
 					return 1;
+				if (HAS_EVT(focus, SITE_OnRawKey))
+				{
+					SIT_OnKey msg = {.keycode = key, .flags = modifier};
+					if (SIT_ApplyCallback(focus, &msg, SITE_OnRawKey))
+						return 1;
+				}
 			}
 			if ((key == SITK_Space || key == SITK_Return) && focus->type == SIT_BUTTON && (focus->state & STATE_KBDFOCUS))
 			{
@@ -410,6 +416,17 @@ DLLIMP int SIT_ProcessClick(float x, float y, int button, int pressed)
 	}
 	else if (pressed && button == SITOM_ButtonLeft)
 	{
+		/* SITV_Transcient: discard popup if clicked outside */
+		if (sit.activeDlg->type == SIT_DIALOG && (((SIT_Dialog)sit.activeDlg)->customStyles & SITV_Transcient) && hover && hover != sit.focus)
+		{
+			SIT_Widget w;
+			for (w = hover; w && w != sit.activeDlg; w = w->parent);
+			if (w == NULL)
+			{
+				SIT_CloseDialog(sit.activeDlg);
+			}
+		}
+
 		if (hover && hover->enabled)
 		{
 			SIT_Widget w;

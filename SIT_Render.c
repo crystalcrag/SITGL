@@ -809,7 +809,7 @@ void renderBorder(SIT_Widget node, RectF * box, int flag)
 		/* drawn in the order: top, right, bottom, left (CSS order) */
 		for (i = 0, merge = (flag^0xf)<<8, border = &node->style.borderTop; i < 4; i ++, border ++)
 		{
-			if ((&borders.top)[i] <= 0 || border->color.val == 0 || (merge & (0x100<<i))) continue;
+			if ((&borders.top)[i] <= 0 || border->color.val == 0 || border->style <= BorderStyleHidden || (merge & (0x100<<i))) continue;
 
 			switch (border->style) {
 			case BorderStyleDouble:
@@ -845,7 +845,7 @@ void renderBorder(SIT_Widget node, RectF * box, int flag)
 				CSSColor col;
 				Border * b = &node->style.borderTop + j;
 
-				if (b->color.val == 0 || (&borders.top)[j] <= 0 || (merge & (0x100<<j)) || (merge & (5<<(j-1))) == 0)
+				if (b->color.val == 0 || (&borders.top)[j] <= 0 || border->style <= BorderStyleHidden || (merge & (0x100<<j)) || (merge & (5<<(j-1))) == 0)
 					continue;
 
 				colorFromBorderStyle(&b->color, &col, j+(pass<<2), b->style);
@@ -1961,8 +1961,9 @@ DLLIMP SIT_RENDER SIT_RenderNodes(double time)
 
 	if (sit.geomList)
 	{
-		SIT_ReflowLayout(sit.geomList);
+		SIT_Widget list = sit.geomList;
 		sit.geomList = NULL;
+		SIT_ReflowLayout(list);
 		sit.dirty = 1;
 	}
 

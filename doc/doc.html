@@ -4021,10 +4021,12 @@ freely between all windows in this mode.
 	<p>Check out the <tt>examples</tt> folder on how to properly handle this event, even though in
 	practice it is better <b>not to use this flag</b>.
 
-	<li><tt class="dt">SITV_NoActivate</tt>: this one is can be used to <b>display a temporary window</b>.
+	<li><tt class="dt">SITV_Transcient</tt>: this one is can be used to <b>display a temporary window</b>.
 	If you want to open a popup menu from within a dialog, you might not want the parent dialog to
 	lose its focus, and thus preventing the title bar from flashing its color from active to inactive
 	for a brief moment (assuming the dialog has been themed to reflect those states).
+
+	<p>Also, if you click outside the dialog window, the dialog will be forcibly closed.
 
 	<li><tt class="dt">SITV_Movable</tt>: will let the user <b>move the dialog</b>. Otherwise it will fixed
 	and can only be moved programmatically. The active area for a normal dialog will be its border and
@@ -5542,6 +5544,7 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
 	<type>uint8_t</type> fgColor[<val>4</val>];
 	<type>uint8_t</type> bgColor[<val>4</val>];
 	<type>int</type>     rowColumn; <com>/* 0 based */</com>
+	<type>float</type>   LTWH[<val>4</val>];
 };
 </pre>
   <p><tt>rowColumn</tt> encodes the column and row of the cell in one field: first 8 bits encode the
@@ -6697,11 +6700,16 @@ SIT_GetValues(w, SIT_Width, &amp;width, SIT_Height, &amp;height, <val>NULL</val>
 <p>There are no color chooser in the list of stock widgets, but it is relatively easy to develop one.
 Here is a simple implementation, that will <b>allow you to select an RGB color</b> using the HSV color space:
 
-<div class="image">
+<div class="image vmargin" style="float: left">
   <img src="images/SIT_COLORCHOOSER.png">
+  <span class="caption">Full dialog</span>
+</div>
+<div class="image vmargin" style="float: left">
+  <img src="images/SIT_CC_Transcient.png">
+  <span class="caption">Transcient dialog<br></span>
 </div>
 
-<p>This utility will display the HSV color space split into 2 parts: left part show a slice of the 
+<p style="clear: left">This utility will display the HSV color space split into 2 parts: left part show a slice of the 
 saturation/value space, and right part is the hue selection. The input button let you copy/paste color
 name/value: it uses the same function that is used by <tt>SITGL</tt> to parse color value, therefore
 you can enter value like: <tt>blue</tt>, <tt>pink</tt>, <tt>#123456</tt>, <tt>rgb(255,20,20)</tt>, ...
@@ -6709,7 +6717,7 @@ If the value was parsed successfully, it will always be converted to <tt>#RRGGBB
 
 <p>Its usage is very similar to the <a href="#filechooser">file chooser</a> widget. There is only one
 public function to instanciate this control:
-<pre>SIT_Widget CCOpen(SIT_Widget parent, DATA8 rgb, SIT_CallProc cb, <type>APTR</type> ud);</pre>
+<pre>SIT_Widget CCOpen(SIT_Widget parent, DATA8 rgb, SIT_CallProc cb, <type>APTR</type> ud, <type>int</type> arrowUp);</pre>
 
 <p>Where each parameters have the following meaning:
 <ul>
@@ -6719,6 +6727,11 @@ public function to instanciate this control:
   point to an array of 4 <tt class="t">uint8_t</tt>, containing, in that order, the red, green, blue
   and the value 255 (ie: fully opaque) of the selected color.
   <li><tt>ud</tt>: the user data parameter that will be transmitted to the callback.
+  <li><tt>arrowUp</tt>: if you use a transcient dialog style, you might want to add an small arrow on
+  to indicate what colors is going to be targeted by the dialog (c.f. screenshot above). You'll have
+  to position your dialog manually though.
+  <p>This parameter specifies the distance in pixels from the left border. 0 or negative to disable.
+  Also only works if the background color is solid.
 </ul>
 
 <p>Like with the file chooser, the return value is the pointer to the dialog containing all the controls

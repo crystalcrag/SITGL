@@ -18,7 +18,7 @@
 					<Add directory="examples" />
 				</Compiler>
 				<Linker>
-					<Add library=".\glfw3.dll" />
+					<Add library=".\sdl.dll" />
 					<Add library="opengl32" />
 				</Linker>
 			</Target>
@@ -139,7 +139,7 @@
 		<Unit filename="UtilityLibLite.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="exampleGLFW.c">
+		<Unit filename="exampleSDL.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 		</Unit>

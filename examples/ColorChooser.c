@@ -104,8 +104,6 @@ static void CCSetColor(ColorChooser cc, DATA8 rgb)
 	rgb16[2] = rgb[2];
 	RGB_to_HSV(rgb16, cc->hsv);
 
-	fprintf(stderr, "hue = %f, satvat = %f, %f\n", 100 - cc->hsv[0] / 3.60, (double) cc->hsv[2], 100. - cc->hsv[1]);
-
 	uint16_t hsv[] = {cc->hsv[0], 100, 100};
 	HSV_to_RGB(hsv, rgb8);
 
@@ -213,20 +211,20 @@ static int CCSelect(SIT_Widget w, APTR cd, APTR ud)
 	return 1;
 }
 
-SIT_Widget CCOpen(SIT_Widget app, DATA8 rgb, SIT_CallProc cb, APTR ud)
+SIT_Widget CCOpen(SIT_Widget app, DATA8 rgb, SIT_CallProc cb, APTR ud, int arrowUp)
 {
 	static TEXT bgSV[] =
 		"background: linear-gradient(to bottom, #f00, #f0f 17%, #00f 33%, #0ff 50%, #0f0 67%, #ff0 83%, #f00)";
 	static TEXT bgCursorSV[] =
-		"background: url(data:image/gif;base64,R0lGODlhDwAPAKEBAAAAAP///////////yH5BAEKAAIALAAAAAAPAA8AAAIklB8Qx53b4otSUWcvyiz4/4AeQJbmKY4p1HHapBlwPL/uVRsFADs=);"
-		"top: -7px; left: -7px";
+		"background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPAgMAAABGuH3ZAAAACVBMVEUAAAD///8AAABzxoNxA"
+		"AAAAXRSTlMAQObYZgAAABxJREFUCNdjYGBzYMBNhIaFhjCsWrVqBZiFXzEAQP4Ilyq2pVsAAAAASUVORK5CYII=); top: -7px; left: -7px";
 	static TEXT bgCursorHue[] =
-		"background: url(data:image/gif;base64,R0lGODlhBwALAKECAAAAAP///6g8eKg8eCH5BAEKAAIALAAAAAAHAAsAAAITTIQYcLnsgGxvijrxqdQq6DRJAQA7);"
-		"top: -5px; left: -7px";
+		"background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAALAgMAAADO/n87AAAACVBMVEUAAAAAAAD///+D3c/SAAAAAX"
+		"RSTlMAQObYZgAAACNJREFUCNdjWMDAMIOBYRoDw9QGhqkJDFMjgCSIPQ0kDpQFAJB2CJ7cfMrnAAAAAElFTkSuQmCC); top: -5px; left: -7px";
 
 	SIT_Widget diag = SIT_CreateWidget("colorchooser", SIT_DIALOG + SIT_EXTRA(sizeof (struct ColorChooser_t)), app,
 		SIT_Title,        "Select color",
-		SIT_DialogStyles, SITV_Movable | SITV_Resizable,
+		SIT_DialogStyles, SITV_Plain | SITV_Transcient,
 		NULL
 	);
 	ColorChooser cc;
@@ -244,6 +242,22 @@ SIT_Widget CCOpen(SIT_Widget app, DATA8 rgb, SIT_CallProc cb, APTR ud)
 		"<button name=ko title=Cancel top=MIDDLE,color left=WIDGET,ok,0.3em buttonType=", SITV_CancelButton, ">"
 	);
 	SIT_SetAttributes(diag, "<SV left=FORM top=FORM right=WIDGET,hue,0.8em bottom=WIDGET,color,0.3em>");
+
+	if (arrowUp > 0)
+	{
+		/* add an arrow pointing up (user will have to manually place the popup though) */
+		uint8_t bg[4];
+		TEXT    style[96];
+		SIT_GetCSSValue(diag, "background-color", bg);
+		sprintf(style, "border-bottom: 1em solid #%02x%02x%02x; border-width: 0 1em 1em 1em; top: -1em", bg[0], bg[1], bg[2]);
+		SIT_CreateWidget("arrow", SIT_CANVAS, diag,
+			SIT_Left,   SITV_AttachForm, NULL, arrowUp,
+			SIT_Style,  style,
+			SIT_Width,  SITV_Em(2),
+			SIT_Height, SITV_Em(1),
+			NULL
+		);
+	}
 
 	cc->SV       = SIT_GetById(diag, "SV");
 	cc->hue      = SIT_GetById(diag, "hue");

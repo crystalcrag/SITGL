@@ -975,6 +975,9 @@ void SIT_ReflowLayout(SIT_Widget list)
 		REAL       dim[4];
 		int        i, flag;
 
+		if (list->flags & SITF_FixedWidth)  pref.width  = list->fixed.width;
+		if (list->flags & SITF_FixedHeight) pref.height = list->fixed.height;
+
 		if (parent == NULL)
 		{
 			SIT_LayoutWidgets(list, FitUsingCurrentBox);
@@ -1093,6 +1096,7 @@ void SIT_ReflowLayout(SIT_Widget list)
 		}
 		list = list->geomChanged;
 	}
+	SIT_ProcessMouseMove(sit.mouseX, sit.mouseY);
 }
 
 void SIT_MeasureWidget(SIT_Widget w)

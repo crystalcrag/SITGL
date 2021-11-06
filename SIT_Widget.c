@@ -520,9 +520,15 @@ DLLIMP SIT_Widget SIT_CreateWidget(STRPTR name, SIT_TYPE type, SIT_Widget parent
 	if (parent && parent->type == SIT_DIALOG && ((SIT_Dialog)parent)->clientArea)
 		parent = ((SIT_Dialog)parent)->clientArea;
 
-	if (type == SIT_DIALOG || type == SIT_FILESELECT || type == SIT_DIRSELECT)
+	if (type == SIT_DIALOG)
+	{
+		parent = sit.root;
+	}
+	else if (type == SIT_FILESELECT || type == SIT_DIRSELECT)
+	{
 		while ((parent->flags & SITF_TopLevel) == 0)
 			parent = parent->parent;
+	}
 
 	w->name     = (STRPTR) w + sz + cbs + extra;   /* id for CSS */
 	w->tagName  = widgetNames[type];               /* tag name for CSS */
@@ -1155,14 +1161,13 @@ DLLIMP void SIT_GetValues(SIT_Widget w, ...)
 				APTR field = (STRPTR) w + args->tl_Arg;
 				/* tags that require some special processing */
 				switch (args->tl_TagID) {
-				//case SIT_HotKey:      SIT_EditGetText((APTR)w); break;
 				case SIT_X:
-				case SIT_Y:           va_arg(vargs, REAL *)[0] = (&w->box.left)[SIT_X - args->tl_TagID]; continue;
+				case SIT_Y:       va_arg(vargs, REAL *)[0] = (&w->box.left)[SIT_X - args->tl_TagID]; continue;
 				case SIT_AbsX:
-				case SIT_AbsY:        va_arg(vargs, REAL *)[0] = (&w->box.left)[args->tl_TagID - SIT_AbsX] + (&w->offsetX)[args->tl_TagID - SIT_AbsX]; continue;
+				case SIT_AbsY:    va_arg(vargs, REAL *)[0] = (&w->box.left)[args->tl_TagID - SIT_AbsX] + (&w->offsetX)[args->tl_TagID - SIT_AbsX]; continue;
 				case SIT_Width:
-				case SIT_Height:      va_arg(vargs, REAL *)[0] = (&w->box.right)[SIT_Width - args->tl_TagID] - (&w->box.left)[SIT_Width - args->tl_TagID]; continue;
-				case SIT_Visible:     va_arg(vargs, Bool *)[0] = IsVisible(w); continue;
+				case SIT_Height:  va_arg(vargs, REAL *)[0] = (&w->box.right)[SIT_Width - args->tl_TagID] - (&w->box.left)[SIT_Width - args->tl_TagID]; continue;
+				case SIT_Visible: va_arg(vargs, Bool *)[0] = IsVisible(w); continue;
 				case SIT_NVGcontext:
 					field = sit.nvgCtx;
 					nvgFillColorRGBA8(field, w->style.color.rgba);

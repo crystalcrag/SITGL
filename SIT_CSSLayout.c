@@ -867,8 +867,7 @@ void layoutCalcBox(SIT_Widget node)
 		REAL * bdWidth = &node->layout.border.top + i;
 
 		/* relative units are always relative to width */
-		*bdWidth = (border->style != BorderStyleHidden && border->style != BorderStyleNone ?
-			ToPoints(parent, node, border->width, CSS_WIDTH) : 0);
+		*bdWidth = ToPoints(parent, node, border->width, CSS_WIDTH);
 
 		(&node->layout.padding.top)[i] = ToPoints(parent, node, (&node->style.padding.top)[i], CSS_WIDTH);
 	}

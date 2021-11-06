@@ -174,7 +174,7 @@ static int SIT_ListMeasure(SIT_Widget w, APTR cd, APTR ud)
 		{
 			for (hdr = list->columns, i = 0; i < count; i ++, hdr ++)
 			{
-				if (list->columnWidths == NULL)
+				if (list->columnWidths == NULL && list->realWidths[i] >= 0)
 					list->realWidths[i] = hdr->sizeCell.width / size.width;
 				hdr->sizeCell.height = size.height;
 			}
@@ -345,7 +345,8 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 						node->box.right - node->box.left,
 						node->box.bottom - node->box.top
 					}};
-					paint(w, &ocp, cell[-j].userData);
+					if (paint(w, &ocp, cell[-j].userData))
+						continue;
 					if (! forceSel)
 					{
 						if (ocp.bgColor[3] > 0)
@@ -587,7 +588,7 @@ static int SIT_ListResize(SIT_Widget w, APTR cd, APTR ud)
 
 		SIT_ListAdjustScroll(list);
 	}
-	else if (list->realWidths && list->realWidths[0] > 0) /* report view: adjust column proportionally */
+	else if (list->realWidths) /* report view: adjust column proportionally */
 	{
 		Cell  cell, row, hdr;
 		REAL  max, total, x, top;
@@ -604,7 +605,8 @@ static int SIT_ListResize(SIT_Widget w, APTR cd, APTR ud)
 		{
 			if (i < count-1)
 			{
-				hdr->sizeCell.width = roundf(max * list->realWidths[i]);
+				REAL colWidth = list->realWidths[i];
+				hdr->sizeCell.width = colWidth < 0 ? - colWidth /* fixed width */ : roundf(max * colWidth);
 				total += hdr->sizeCell.width;
 			}
 			else hdr->sizeCell.width = max - total;
@@ -1599,7 +1601,6 @@ Bool SIT_InitListBox(SIT_Widget w, va_list args)
 
 	SIT_AddCallback(w, SITE_OnResize,     SIT_ListResize, NULL);
 	SIT_AddCallback(w, SITE_OnClickMove,  SIT_ListClick, NULL);
-//	SIT_AddCallback(w, SITE_OnMouseMove,  SIT_ListMouseMove, NULL);
 	SIT_AddCallback(w, SITE_OnRawKey,     SIT_ListKeyboard, NULL);
 	SIT_AddCallback(w, SITE_OnVanillaKey, SIT_ListAutoComplete, NULL);
 	SIT_AddCallback(w, SITE_OnFocus,      SIT_ListResetSearch, NULL);
@@ -2090,17 +2091,20 @@ DLLIMP Bool SIT_ListSetCell(SIT_Widget w, int row, int col, APTR rowTag, int ali
 		cell->userData = rowTag;
 	cell += col;
 
-	while (align & 0xff)
+	if (align > 0)
 	{
-		switch (align & 0xff) {
-		case 'R': cell->flags &= ~(CELL_ALIGNR | CELL_ALIGNC); cell->flags |= CELL_ALIGNR; break;
-		case 'C': cell->flags &= ~(CELL_ALIGNR | CELL_ALIGNC); cell->flags |= CELL_ALIGNC; break;
-		case 'L': cell->flags &= ~(CELL_ALIGNR | CELL_ALIGNC); break;
-		case 'B': cell->flags &= ~(CELL_VALIGNB | CELL_VALIGNC); cell->flags |= CELL_VALIGNB; break;
-		case 'M': cell->flags &= ~(CELL_VALIGNB | CELL_VALIGNC); cell->flags |= CELL_VALIGNC; break;
-		case 'T': cell->flags &= ~(CELL_VALIGNB | CELL_VALIGNC); break;
+		while (align & 0xff)
+		{
+			switch (align & 0xff) {
+			case 'R': cell->flags &= ~(CELL_ALIGNR | CELL_ALIGNC); cell->flags |= CELL_ALIGNR; break;
+			case 'C': cell->flags &= ~(CELL_ALIGNR | CELL_ALIGNC); cell->flags |= CELL_ALIGNC; break;
+			case 'L': cell->flags &= ~(CELL_ALIGNR | CELL_ALIGNC); break;
+			case 'B': cell->flags &= ~(CELL_VALIGNB | CELL_VALIGNC); cell->flags |= CELL_VALIGNB; break;
+			case 'M': cell->flags &= ~(CELL_VALIGNB | CELL_VALIGNC); cell->flags |= CELL_VALIGNC; break;
+			case 'T': cell->flags &= ~(CELL_VALIGNB | CELL_VALIGNC); break;
+			}
+			align >>= 8;
 		}
-		align >>= 8;
 	}
 
 	if (text != DontChangePtr)
@@ -2208,17 +2212,20 @@ DLLIMP Bool SIT_ListSetColumn(SIT_Widget w, int col, int width, int align, STRPT
 		}
 		else max = width;
 
-		max /= w->layout.pos.width;
-		diff = list->realWidths[col] - max;
-		list->realWidths[col] = max;
+		list->realWidths[col] = - max;
+		if (w->layout.pos.width > 0)
+		{
+			max /= w->layout.pos.width;
+			diff = list->realWidths[col] - max;
 
-		/* redistribute widths among other columns */
-		count = list->columnCount;
-		if (count > 1)
-		for (i = 0, diff /= count-1; i != col; i ++)
-			list->realWidths[i] += diff;
+			/* redistribute widths among other columns */
+			count = list->columnCount;
+			if (count > 1)
+			for (i = 0, diff /= count-1; i != col; i ++)
+				list->realWidths[i] += diff;
 
-		SIT_ListResize(w, NULL, NULL);
+			SIT_ListResize(w, NULL, NULL);
+		}
 	}
 
 	sit.dirty = 1;
@@ -2291,4 +2298,48 @@ DLLIMP void SIT_ListReorgColumns(SIT_Widget w, STRPTR fmt)
 		list->realWidths[i] = widths[i] / total;
 	}
 	sit.dirty = 1;
+}
+
+/* get row/column of item being hovered at pos <mouseX>, <mouseY */
+DLLIMP int SIT_ListGetItemOver(SIT_Widget w, float rect[4], float mouseX, float mouseY, SIT_Widget mouseIsRelTo)
+{
+	if (w == NULL || rect == NULL || w->type != SIT_LISTBOX) return -1;
+	SIT_ListBox list = (SIT_ListBox) w;
+
+	if (mouseIsRelTo != w)
+	{
+		/* need to be relative to <w> */
+		SIT_Widget parent = mouseIsRelTo ? mouseIsRelTo : sit.root;
+
+		mouseX -= (w->offsetX - w->box.left) - (parent->offsetX + parent->box.left);
+		mouseY -= (w->offsetY - w->box.top)  - (parent->offsetY + parent->box.top);
+	}
+
+	Cell cell;
+	REAL height = w->layout.pos.height + w->layout.padding.bottom + w->layout.padding.top;
+	REAL offX   = w->offsetX + w->layout.pos.left;
+	REAL offY   = w->offsetY + w->layout.pos.top;
+	int  row, col, i, j;
+	for (cell = list->rowTop, row = cell - STARTCELL(list), col = list->columnCount, i = list->cells.count - row, row /= col; i > 0; i -= col, row ++)
+	{
+		if (cell->flags & (CELL_HIDDEN|CELL_CATEGORY)) { cell += col; continue; }
+		for (j = 0; j < col; j ++, cell ++)
+		{
+			rect[0] = cell->sizeCell.left + w->padding[0];
+			rect[1] = cell->sizeCell.top - list->scrollTop + w->padding[1];
+			rect[2] = rect[0] + cell->sizeCell.width;
+			rect[3] = rect[1] + cell->sizeCell.height;
+			if (rect[1] > height)
+				return -1;
+
+			if (rect[0] <= mouseX && mouseX <= rect[2] &&
+			    rect[1] <= mouseY && mouseY <= rect[3])
+			{
+				rect[0] += offX;   rect[2] += offX;
+				rect[1] += offY;   rect[3] += offY;
+				return j | (row << 8);
+			}
+		}
+	}
+	return -1;
 }

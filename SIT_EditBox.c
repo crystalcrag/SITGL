@@ -58,7 +58,6 @@
 
 static uint32_t lastClick;
 
-#define	edit    ((SIT_EditBox)w)
 static int SIT_MeasureEditBox(SIT_Widget w, APTR cd, APTR unused)
 {
 	STRPTR old = w->title;
@@ -74,7 +73,6 @@ static int SIT_MeasureEditBox(SIT_Widget w, APTR cd, APTR unused)
 	if (pref->height < ret.height) pref->height = ret.height;
 	return 0;
 }
-#undef edit
 
 #define INVALID_STEP    INT_MAX
 
@@ -600,6 +598,7 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 
 	if (edit->editType != SITV_Multiline)
 	{
+		/* extend selection background a bit for single line edit */
 		edit->extendT = MIN(w->layout.padding.top, 2);
 		edit->extendB = MIN(w->layout.padding.bottom, 2) + edit->extendT;
 	}
@@ -1050,6 +1049,10 @@ static int SIT_TextEditRender(SIT_Widget w, APTR unused1, APTR unused2)
 	p = s = state->text;   s2 = p + sel2;
 	c = p + state->cursor; s1 = p + sel1; s += state->charTop;
 	sel2 = s1 != s2 && s1 < s && s2 >= s;
+	if (state->editType != SITV_Multiline)
+		/* vertically center text */
+		y = roundf(y + (w->layout.pos.height - state->fh) * 0.5f);
+
 	if (s1 < s) s1 = s;
 	if (s2 < s) s2 = s;
 	height = state->super.layout.pos.height + y;

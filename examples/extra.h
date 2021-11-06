@@ -10,7 +10,7 @@
 
 typedef struct CFA_t *     CFA;
 
-SIT_Widget CCOpen(SIT_Widget parent, DATA8 rgb, SIT_CallProc cb, APTR ud);
+SIT_Widget CCOpen(SIT_Widget parent, DATA8 rgb, SIT_CallProc cb, APTR ud, int arrowUp);
 SIT_Widget FSOpen(SIT_Widget parent, STRPTR curdir, SIT_CallProc cb, APTR ud, int flags);
 void       VTInit(SIT_Widget canvas, SIT_Widget scroll);
 SIT_Widget FSInit(SIT_Widget parent, STRPTR path, int options, SIT_CallProc cb);

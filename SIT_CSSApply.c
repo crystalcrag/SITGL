@@ -279,6 +279,12 @@ DLLIMP Bool SIT_GetCSSValue(SIT_Widget w, STRPTR property, APTR mem)
 			if (bg == NULL || bg->image == NULL) return False;
 			* (int *) mem = ((CSSImage)bg->image)->handle;
 		}
+		else if (attr == GET(cssAttrBgColor))
+		{
+			Background bg = w->style.background;
+			if (bg == NULL) return False;
+			memcpy(mem, bg->color.rgba, 4);
+		}
 		else if (attr->get > 0)
 		{
 			/* yes, completely safe as long a mem can hold 4 bytes */
@@ -1503,7 +1509,7 @@ int cssApply(SIT_Widget node)
 	node->layout.top = 0;
 
 	#if 0
-	if (strcmp(node->name, "fname") == 0)
+	if (strcmp(node->name, "arrow") == 0)
 	{
 		fprintf(stderr, "*** styles for state %d [%d] = %x\n", node->state, state, i);
 		for (i = 0, style = vector_first(cssStyles); i < cssStyles.count; i ++, style ++)
