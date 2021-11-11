@@ -496,7 +496,6 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 	if (edit->editType != SITV_Multiline)
 	{
 		edit->maxLines = 1;
-		edit->rowMax = 1;
 		edit->wordWrap = SITV_WWNone;
 	}
 	else if (edit->maxLines == 0)
@@ -506,7 +505,10 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 		edit->rowMax = 16;
 	}
 	if (edit->maxLines > 0)
+	{
 		fixedMem += sizeof *edit->rows * edit->maxLines;
+		edit->rowMax = edit->maxLines;
+	}
 	if (edit->undoSize >= 0)
 	{
 		if (edit->undoSize < 16)
@@ -1603,9 +1605,10 @@ static int SIT_TextEditInsertChars(SIT_EditBox state, int pos, char * text, int 
 	/* how many new lines added? */
 	if (add > 0)
 	{
-		int max = (state->rowCount + add + 15) & ~15;
+		int max = state->rowCount + add;
 		if (state->rowMax < max)
 		{
+			max = (max + 15) & ~15;
 			DOMRow buf = realloc(state->rows, max * sizeof *rows);
 			if (buf == NULL) return 0;
 			state->rowMax = max;

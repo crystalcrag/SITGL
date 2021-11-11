@@ -110,7 +110,7 @@ static int SIT_SetLabelValues(SIT_Widget w, APTR cd, APTR ud)
 	switch (tag->tl_TagID) {
 	case SIT_ImagePath:
 		/* only display an image: set label to the size of the image */
-		img = cssAddImage(val->pointer, False);
+		img = cssAddImage(val->pointer, False, False);
 		if (img)
 		{
 			w->minBox.width  = img->width  + w->padding[0] + w->padding[2];
@@ -122,6 +122,12 @@ static int SIT_SetLabelValues(SIT_Widget w, APTR cd, APTR ud)
 			label->image = img;
 			SIT_AddCallback(w, SITE_OnGeometrySet, SIT_ImageProp, NULL);
 			sit.dirty = True;
+		}
+		else if (label->image)
+		{
+			w->layout.flags &= ~LAYF_HasImg;
+			SIT_UnloadImg(label->image);
+			label->image = NULL;
 		}
 		w->flags |= SITF_GeometryChanged;
 		break;

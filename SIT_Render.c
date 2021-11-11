@@ -250,7 +250,7 @@ static void renderCacheBorderImg(SIT_Widget node, RectF * box)
 	rect.top  = 0;
 	if ((node->layout.flags & LAYF_BImgLoaded) == 0 && ! img)
 	{
-		img = bimg->image = cssAddImage(bimg->source, False);
+		img = bimg->image = cssAddImage(bimg->source, False, True);
 		node->layout.flags |= LAYF_BImgLoaded;
 		if (img)
 		{

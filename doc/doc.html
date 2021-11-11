@@ -30,7 +30,6 @@
  <a class="sub2" href="#NVGUBO">Uniform Buffer Object location</a>
  <a class="sub2" href="#NVGcaveats">Caveats</a>
  <a class="sub2" href="#NVGoffscreen">Off-screen rendering</a>
- <a class="sub2" href="#NVGext">Extensions</a>
 
 <a class="sub1" href="#geometry"><span>Controls and Geometry</span></a>
  <a class="sub2" href="#hierarchy">Creating the hierarchy</a>
@@ -1239,9 +1238,6 @@ NVGLUframebuffer * nvgFBO = nvgluCreateFramebuffer(vg, width, height, NVG_IMAGE_
 nvgluDeleteFramebuffer(nvgFBO);
 nvgFBO = <val>NULL</val>;
 </pre>
-
-
-<h3 id="NVGext"><span>Extensions</span></h3>
 
 
 
@@ -4196,7 +4192,10 @@ layout, that can accommodate almost every situation, with very little effort.
 
   <p>To get a text label again, you can set the <tt>SIT_Title</tt> property.
 
-  <p>Note: due to code reuse, <b class="n"><u>THE PATH MUST BE RELATIVE TO WHERE THE STYLESHEET IS</u></b>
+  <p><span class="n">Note</span>: if you ever <b>change the file on disk</b> and want to refresh the image,
+  you'll first have to unlink the image from the control, then reset the property to its previous value,
+  using a code similar to this:
+  <pre>SIT_SetValues(label, SIT_ImagePath, <val>""</val>, SIT_ImagePath, path, <val>NULL</val>);</pre>
 
   <li><tt class="dt">SIT_LabelSize</tt> (<tt class="t">int</tt>)
   <p>This is used to <b>reserve some space</b> for the label. It is like having an image of the size
@@ -4735,7 +4734,7 @@ allocation at the start).
   by this reference. Obviously, do not give a reference to a local variable, it will corrupt your stack.
 
   <p>The initial value for this property will be used to set the content of the edit box. In that case,
-  the value given to <tt>SIT_Title</tt> (if any) <b>will be ignored</b>. If you modify the value,
+  the value given to <tt>SIT_Title</tt> (if any) <b>will be ignored</b>. <b>If you modify the value</b>,
   you'll have to notify <tt>SITGL</tt> obviously. To do so, simply set the <tt>SIT_Title</tt> property
   to <tt class="o">NULL</tt> just <b>after</b> having changed the value.
 
@@ -6800,6 +6799,8 @@ ignore that offset).
 the following function:
 <pre><type>void</type> VTInit(SIT_Widget canvas, SIT_Widget scroll);</pre>
 
+<p><tt>scroll</tt> can be <tt class="o">NULL</tt>, but <tt>canvas</tt> can't.
+
 <h4 id="vt100prop">Custom properties</h4>
 
 <p>After that, the widget will be ready to receive text and/or configured using the custom properties.
@@ -8322,6 +8323,22 @@ the image.
 
 <p>If there was an error while decoding the image, <tt class="o">NULL</tt> will be returned.
 
+<h5>Default compilation on Windows</h5>
+
+<p><span class="n">Note</span>: on windows with the default compilation optios, the <tt>stb_image</tt>
+funtions use <tt>gdiplus.dll</tt> internally to load image (this saves about 35Kb of binary size). Sadly,
+<tt>gdiplus</tt> does not support as many formats as <tt>stb_image.h</tt>. Here are the one that have
+been tested:
+<ul>
+  <li>PNG: 8bpp grayscale, 24bit RGB and 32bit RGBA.
+  <li>JPG: 24bit RGB.
+  <li>TIFF: 24bit RGB.
+  <li>GIF: 24bit RGB.
+  <li>BMP: 24bit RGB.
+</ul>
+<p>For whatever reason, GIF does not work if you ask for a 32bit RGBA bitmap.
+
+
 <h2 class="annex" id="annexC"><span>Advanced rendering API</h2>
 
 <p>At some point, you might want to render graphics on top of <tt>SITGL</tt> elements, outside of the
@@ -8344,7 +8361,7 @@ particular area. Consider the following example:
 border was copied to give the illusion of a grid like pattern. Inside each cell, graphics were rendered
 using OpenGL commands, completely outside of <tt>SITGL</tt> control. On top of all this, a tooltip
 (managed by <tt>SITGL</tt>) was finally rendered (if you zoom in this image, you can also see that the
-tooltip background is partially transparent). Both have been created this way:
+tooltip background is slightly transparent). Both have been created this way:
 
 <pre>SIT_CreateWidgets(diag,
 	<com>/* some declarations have been removed for clarity */</com>

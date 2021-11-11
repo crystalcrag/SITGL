@@ -41,13 +41,12 @@ static void HSV_to_RGB(DATA16 hsv, DATA8 rgb)
 	n = v * (100 - (hsv[1] * f >> 8)) * 255 / 10000;
 	v = v * 255 / 100;
 	switch (i) {
-	case 6:
-	case 0: rgb[0] = v; rgb[1] = n; rgb[2] = m; break;
-	case 1: rgb[0] = n; rgb[1] = v; rgb[2] = m; break;
-	case 2: rgb[0] = m; rgb[1] = v; rgb[2] = n; break;
-	case 3: rgb[0] = m; rgb[1] = n; rgb[2] = v; break;
-	case 4: rgb[0] = n; rgb[1] = m; rgb[2] = v; break;
-	case 5: rgb[0] = v; rgb[1] = m; rgb[2] = n;
+	default: rgb[0] = v; rgb[1] = n; rgb[2] = m; break;
+	case 1:  rgb[0] = n; rgb[1] = v; rgb[2] = m; break;
+	case 2:  rgb[0] = m; rgb[1] = v; rgb[2] = n; break;
+	case 3:  rgb[0] = m; rgb[1] = n; rgb[2] = v; break;
+	case 4:  rgb[0] = n; rgb[1] = m; rgb[2] = v; break;
+	case 5:  rgb[0] = v; rgb[1] = m; rgb[2] = n;
 	}
 }
 
@@ -124,14 +123,18 @@ static void CCSetSVCursor(ColorChooser cc, int x, int y)
 
 	if (x < 0) x = 0; if (x >= width)  x = width-1;
 	if (y < 0) y = 0; if (y >= height) y = height-1;
+	y = 100 - (y / (height-1)) * 100;
+	x = (x / (width-1)) * 100;
 
-	cc->hsv[1] = 100 - (y / height) * 100;
-	cc->hsv[2] = (x / width) * 100;
-
-	uint8_t rgb[4];
-	HSV_to_RGB(cc->hsv, rgb);
-	CCSetColorRGB(cc, rgb);
-	SIT_SetValues(cc->SVindic, SIT_TopObject, SITV_AttachPos(y * 100 / height), SIT_LeftObject, SITV_AttachPos(x * 100 / width), NULL);
+	if (cc->hsv[1] != y || cc->hsv[2] != x)
+	{
+		uint8_t rgb[4];
+		cc->hsv[1] = y;
+		cc->hsv[2] = x;
+		HSV_to_RGB(cc->hsv, rgb);
+		CCSetColorRGB(cc, rgb);
+		SIT_SetValues(cc->SVindic, SIT_TopObject, SITV_AttachPos(100-y), SIT_LeftObject, SITV_AttachPos(x), NULL);
+	}
 }
 
 static void CCSetHueCursor(ColorChooser cc, int y)
@@ -140,11 +143,14 @@ static void CCSetHueCursor(ColorChooser cc, int y)
 	SIT_GetValues(cc->hue, SIT_Height, &height, NULL);
 	if (y < 0) y = 0;
 	if (y >= height) y = height-1;
+	y = 359 - (y * 359 / height);
 
-	cc->hsv[0] = 360 - (y * 360 / height);
-	HSV_to_RGB(cc->hsv, cc->rgb);
-
-	CCSetColor(cc, cc->rgb);
+	if (y != cc->hsv[0])
+	{
+		cc->hsv[0] = y;
+		HSV_to_RGB(cc->hsv, cc->rgb);
+		CCSetColor(cc, cc->rgb);
+	}
 }
 
 static int CCMoveHS(SIT_Widget w, APTR cd, APTR ud)
@@ -187,10 +193,11 @@ static int CCMoveHue(SIT_Widget w, APTR cd, APTR ud)
 
 static int CCParseColor(SIT_Widget w, APTR cd, APTR ud)
 {
-	STRPTR str;
-	uint8_t rgb[4];
+	ColorChooser cc = ud;
+	STRPTR       str;
+	uint8_t      rgb[4];
 	SIT_GetValues(w, SIT_Title, &str, NULL);
-	if (SIT_ParseCSSColor(str, rgb))
+	if (SIT_ParseCSSColor(str, rgb) && memcmp(cc->rgb, rgb, 3))
 		CCSetColor(ud, rgb);
 	return 0;
 }
@@ -222,7 +229,7 @@ SIT_Widget CCOpen(SIT_Widget app, DATA8 rgb, SIT_CallProc cb, APTR ud, int arrow
 		"background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAALAgMAAADO/n87AAAACVBMVEUAAAAAAAD///+D3c/SAAAAAX"
 		"RSTlMAQObYZgAAACNJREFUCNdjWMDAMIOBYRoDw9QGhqkJDFMjgCSIPQ0kDpQFAJB2CJ7cfMrnAAAAAElFTkSuQmCC); top: -5px; left: -7px";
 
-	SIT_Widget diag = SIT_CreateWidget("colorchooser", SIT_DIALOG + SIT_EXTRA(sizeof (struct ColorChooser_t)), app,
+	SIT_Widget diag = SIT_CreateWidget("colorchooser.mc", SIT_DIALOG + SIT_EXTRA(sizeof (struct ColorChooser_t)), app,
 		SIT_Title,        "Select color",
 		SIT_DialogStyles, SITV_Plain | SITV_Transcient,
 		NULL
@@ -238,8 +245,8 @@ SIT_Widget CCOpen(SIT_Widget app, DATA8 rgb, SIT_CallProc cb, APTR ud, int arrow
 		" <canvas name=Hindic width=7 height=11 top=POSITION style=", bgCursorHue, "/>"
 		"</canvas>"
 		"<editbox name=color width=5em bottom=FORM>"
-		"<button name=ok title=Select top=MIDDLE,color left=WIDGET,color,0.3em buttonType=", SITV_DefaultButton, ">"
-		"<button name=ko title=Cancel top=MIDDLE,color left=WIDGET,ok,0.3em buttonType=", SITV_CancelButton, ">"
+		"<button name=ok.act title=Select top=MIDDLE,color left=WIDGET,color,0.3em buttonType=", SITV_DefaultButton, ">"
+		"<button name=ko.act title=Cancel top=MIDDLE,color left=WIDGET,ok,0.3em buttonType=", SITV_CancelButton, ">"
 	);
 	SIT_SetAttributes(diag, "<SV left=FORM top=FORM right=WIDGET,hue,0.8em bottom=WIDGET,color,0.3em>");
 

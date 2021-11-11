@@ -60,7 +60,7 @@ enum ResizePolicy_t /* values for 'adjust' parameter of SIT_LayoutWidgets() */
 typedef enum ResizePolicy_t   ResizePolicy;
 
 int  CSS_Init(STRPTR theme, int isPath);
-Bool SIT_LoadImg(CSSImage, STRPTR path, int len, int flags);
+Bool SIT_LoadImg(CSSImage, STRPTR path, int len, int flags, Bool fromCSS);
 void SIT_UnloadImg(CSSImage);
 void SIT_GetImageSize(CSSImage);
 Bool SIT_InitApp(SIT_Widget, va_list args);
@@ -105,6 +105,7 @@ int  SIT_ListGetItemCount(SIT_Widget);
 void SIT_ListGetArg(SIT_Widget, int type, APTR arg);
 void SIT_NukeCSS(void);
 void SIT_CreateBuddyLabel(SIT_Widget buddy, STRPTR text, SIT_Widget * max);
+Bool SIT_IsImageModified(CSSImage img, STRPTR path, Bool fromCSS);
 
 int  SIT_TextEditKey(SIT_EditBox, int key);
 int  SIT_TextEditInsertText(SIT_EditBox, DATA8 utf8);

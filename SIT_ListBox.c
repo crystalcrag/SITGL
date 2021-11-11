@@ -1033,6 +1033,7 @@ static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 			list->msgX = 65535;
 			for (cell = list->rowTop, i = list->cells.count - (cell - STARTCELL(list)); i > 0; )
 			{
+				Cell rowStart = cell;
 				for (j = MIN(col, i); j > 0; i --, j --, cell ++)
 				{
 					REAL top = cell->sizeCell.top - list->scrollTop;
@@ -1052,7 +1053,7 @@ static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 					if (cell->sizeCell.left <= x && x < cell->sizeCell.left + cell->sizeCell.width)
 					{
 						static uint32_t lastClick;
-						if (cell == vector_nth(&list->cells, list->selIndex) && TimeMS() - lastClick < sit.dblClickMS)
+						if (rowStart == vector_nth(&list->cells, list->selIndex) && TimeMS() - lastClick < sit.dblClickMS)
 						{
 							SIT_ApplyCallback(w, cell->userData, SITE_OnActivate);
 						}
@@ -1923,13 +1924,15 @@ DLLIMP void SIT_ListDeleteRow(SIT_Widget w, int row)
 	{
 		/* start from scratch */
 		SIT_ListFreeCells(list, STARTCELL(list), list->cells.count);
+
+		/* need to be changed before callback */
+		list->selIndex = -1;
 		if (list->selIndex >= 0 && HAS_EVT(&list->super, SITE_OnChange))
 			SIT_ApplyCallback(&list->super, NULL, SITE_OnChange);
 		list->cells.count = 0;
 		list->rowCount = 0;
 		list->scrollTop = 0;
 		list->scrollHeight = 0;
-		list->selIndex = -1;
 		list->catCount = 0;
 		list->catVisible = 0;
 		list->rowTop = NULL;
@@ -1956,9 +1959,9 @@ DLLIMP void SIT_ListDeleteRow(SIT_Widget w, int row)
 		list->catCount --;
 	if (list->selIndex == row)
 	{
+		list->selIndex = -1;
 		if ((list->lbFlags & SITV_SelectMultiple) == 0 && HAS_EVT(&list->super, SITE_OnChange))
 			SIT_ApplyCallback(&list->super, NULL, SITE_OnChange);
-		list->selIndex = -1;
 	}
 
 	StrPool str = SIT_ListGetStrPool(list, cells);

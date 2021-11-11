@@ -176,6 +176,7 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 
 		if (tag->tl_TagID == SIT_Enabled)
 			w->oldEna = w->enabled;
+		#ifdef SIT_DEBUG
 		if (tag->tl_Flags == C__)
 		{
 			if (w->flags & SITF_InitDone)
@@ -185,6 +186,7 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 		{
 			fprintf(stderr, "warning: %s: setting read-only property '%s'\n", w->name, tag->tl_TagName);
 		}
+		#endif
 		switch (tag->tl_Type) {
 		case SIT_ABBR: break;
 		case SIT_CTRL:
@@ -929,6 +931,15 @@ void SIT_DestroyWidget(SIT_Widget w)
 		return;
 	}
 
+	if (w->flags & SITF_GeomNotified)
+	{
+		/* in sit.geomList, need to be removed */
+		SIT_Widget * prev;
+		SIT_Widget   list;
+		for (prev = &sit.geomList, list = *prev; list && list != w; prev = &list->geomChanged, list = *prev);
+		if (list) *prev = list->geomChanged;
+	}
+
 	if (sit.activeDlg  == w) sit.activeDlg  = sit.root;
 	if (sit.curTooltip == w) sit.curTooltip = NULL;
 	if (sit.active     == w) sit.active     = NULL;
@@ -950,7 +961,7 @@ void SIT_DestroyWidget(SIT_Widget w)
 			{
 				if (tags->tl_Type != SIT_STR) continue;
 				STRPTR * str = (APTR) w + tags->tl_Arg;
-				if (*str) free(*str);
+				if (*str) free(*str), *str = NULL;
 			}
 		}
 	}
@@ -958,6 +969,18 @@ void SIT_DestroyWidget(SIT_Widget w)
 
 	if (w->title) free(w->title);
 	if (w->inlineStyles) free(w->inlineStyles);
+
+	if (w->layout.flags & LAYF_HasImg)
+	{
+		/* inlilne image needs to be released to be clear from the cache at some point */
+		CSSImage img;
+		switch (w->type) {
+		case SIT_HTMLTAG: img = (CSSImage) w->manage; break;
+		case SIT_LABEL:   img = ((SIT_Label)w)->image; break;
+		default:          img = NULL;
+		}
+		if (img) SIT_UnloadImg(img);
+	}
 
 	/* unregister events */
 	for (cbl = HEAD(w->callbacks); cbl; cbl = next)

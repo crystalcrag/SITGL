@@ -38,7 +38,7 @@ void   cssDumpRules();
 DATA8  cssIdent(DATA8);
 int    cssIsSpace(int chr);
 
-CSSImage cssAddImage(STRPTR uri, Bool mask);
+CSSImage cssAddImage(STRPTR uri, Bool mask, Bool fromCSS);
 CSSImage cssAddGradient(Gradient * grad, int w, int h, REAL fh);
 
 void gradientGetParam(CSSImage, Gradient * grad);
@@ -111,13 +111,16 @@ struct CSSImage_t
 	int      height;
 	uint8_t  bpp;         /* bits per pixel (8, 24 or 32) */
 	uint8_t  usage;
-	uint8_t  stretch;
+	uint8_t  stretch;     /* gradient: used by linear-gradient corner */
 	uint8_t  externAlloc; /* 1 if handle was not alloced by SIT (don't dispose of handle) */
 	uint32_t crc32;
-	DATA8    bitmap;
+	DATA8    bitmap;      /* gradient: temporary bitmap to transfer to nanovg */
 	float    angle;       /* rotate before draw (rad) */
-	float    rect[4];
 	int      handle;      /* NVG handle of image */
+	union {
+		float rect[4];    /* linear-gradient parameters */
+		uint32_t lastMod; /* lat modification timestamp */
+	};
 };
 
 #define	AUTOVAL      3

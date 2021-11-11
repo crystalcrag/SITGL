@@ -224,15 +224,13 @@ static int SIT_AppSetValues(SIT_Widget w, APTR call_data, APTR user_data)
 		if (! FileExists(val->pointer))
 		{
 			TEXT sysfont[128];
-			if (! SIT_GetFontFile(val->pointer, sysfont) || nvgCreateFont(sit.nvgCtx, app->fontName, sysfont) < 0)
-				fprintf(stderr, "can't find font '%s'\n", (STRPTR) val->pointer);
-			else
+			if (SIT_GetFontFile(val->pointer, sysfont) && nvgCreateFont(sit.nvgCtx, app->fontName, sysfont) >= 0)
 				layoutFindFont(w);
 		}
-		else if (nvgCreateFont(sit.nvgCtx, app->fontName, val->pointer) < 0)
-			fprintf(stderr, "can't find font '%s'\n", (STRPTR) val->pointer);
-		else
+		else if (nvgCreateFont(sit.nvgCtx, app->fontName, val->pointer) >= 0)
+		{
 			layoutFindFont(w);
+		}
 		break;
 	case SIT_TagPrivate+1:
 		app->fontName = val->pointer;

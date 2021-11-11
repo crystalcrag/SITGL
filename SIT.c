@@ -122,7 +122,7 @@ void SIT_ClearGL(void)
 	glClear(GL_STENCIL_BUFFER_BIT);
 }
 
-Bool SIT_LoadImg(CSSImage img, STRPTR path, int len, int flags)
+Bool SIT_LoadImg(CSSImage img, STRPTR path, int len, int flags, Bool fromCSS)
 {
 	int himg;
 	if (flags) flags = NVG_IMAGE_NEAREST;
@@ -132,13 +132,16 @@ Bool SIT_LoadImg(CSSImage img, STRPTR path, int len, int flags)
 	{
 		if (len == 0)
 		{
-			if (sit.relPath[0] && IsRelativePath(path))
+			if (fromCSS && sit.relPath[0] && IsRelativePath(path))
 			{
-				AddPart(sit.relPath, path, sizeof sit.relPath);
-				himg = nvgCreateImage(sit.nvgCtx, sit.relPath, flags);
-				sit.relPath[sit.relPathSz] = 0;
+				/* do not overwrite relPath */
+				STRPTR temp = alloca(strlen(sit.relPath) + strlen(path) + 4);
+				strcpy(temp, sit.relPath);
+				AddPart(temp, path, 1e6);
+				path = temp;
 			}
-			else himg = nvgCreateImage(sit.nvgCtx, path, flags);
+			img->lastMod = TimeStamp(path, 2);
+			himg = nvgCreateImage(sit.nvgCtx, path, flags);
 		}
 		else /* "data:" URI */
 			himg = nvgCreateImageMem(sit.nvgCtx, flags|NVG_IMAGE_GENERATE_MIPMAPS, (DATA8) path, len);
@@ -181,6 +184,29 @@ void SIT_UnloadImg(CSSImage img)
 	if (img->usage == 0 && ! sit.imageCleanup)
 		/* don't delete image: might be needed a short time after */
 		sit.imageCleanup = SIT_ActionAdd(NULL, sit.curTime + 30000, -1, SIT_FreeImg, NULL);
+}
+
+Bool SIT_IsImageModified(CSSImage img, STRPTR path, Bool fromCSS)
+{
+	/* bitmap might have changed */
+	if (fromCSS && sit.relPath[0] && IsRelativePath(path))
+	{
+		/* do not overwrite relPath */
+		STRPTR temp = alloca(strlen(sit.relPath) + strlen(path) + 4);
+		strcpy(temp, sit.relPath);
+		AddPart(temp, path, 1e6);
+		path = temp;
+	}
+	uint32_t lastMod = TimeStamp(path, 2);
+	//fprintf(stderr, "lastMod: %d, cache = %d\n", lastMod, img->lastMod);
+	if (lastMod != img->lastMod)
+	{
+		if (img->externAlloc == 0) nvgDeleteImage(sit.nvgCtx, img->handle);
+		ListRemove(&sit.images, &img->node);
+		img->externAlloc = 0;
+		return True;
+	}
+	return False;
 }
 
 /* retrieve the value of given HTML attribute */
@@ -259,7 +285,7 @@ DLLIMP void SIT_MoveNearby(SIT_Widget ctrl, int XYWH[4], int defAlign)
 	x -= ctrl->offsetX;
 	y -= ctrl->offsetY;
 
-//	fprintf(stderr, "setting ctrl to %d, %d - [%d, %d, %d, %d]\n", x, y, XYWH[0], XYWH[1], XYWH[2], XYWH[3]);
+	//fprintf(stderr, "setting ctrl to %d, %d - [%d, %d, %d, %d]\n", x, y, XYWH[0], XYWH[1], XYWH[2], XYWH[3]);
 
 	SIT_SetValues(ctrl, SIT_X, x, SIT_Y, y, NULL);
 }
@@ -540,7 +566,6 @@ void SIT_NukeCSS(void)
 	CSSImage   img;
 	for (list = sit.root; ; )
 	{
-		fprintf(stderr, "clearing node %s\n", list->name);
 		cssClear(list);
 
 		if (! list->children.lh_Head)

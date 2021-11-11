@@ -1352,7 +1352,7 @@ static void cssPostProcess(SIT_Widget node)
 		int count;
 		for (count = node->style.bgCount, bg = node->style.background; count > 0; count --, bg ++)
 		{
-			CSSImage img = cssAddImage(bg->uriBg, False);
+			CSSImage img = cssAddImage(bg->uriBg, False, True);
 
 			if (img)
 			{
@@ -1652,7 +1652,7 @@ DATA8 cssParseDataURI(DATA8 mem, int * len, int type /*0:auto, 1:b64, 2:uri*/)
 }
 
 /* add image (background-image and img.src) into a cache */
-CSSImage cssAddImage(STRPTR uri, Bool mask)
+CSSImage cssAddImage(STRPTR uri, Bool mask, Bool fromCSS)
 {
 	CSSImage img;
 	uint32_t crc;
@@ -1700,6 +1700,10 @@ CSSImage cssAddImage(STRPTR uri, Bool mask)
 
 	if (img)
 	{
+		//fprintf(stderr, "image %s already exists\n", uri);
+		if (img->usage == 0 && cssGetURI(uri, path, sizeof path) == 1 && SIT_IsImageModified(img, path, fromCSS))
+			goto reload_image;
+
 		if (handle > 0)
 			SIT_GetImageSize(img);
 		img->usage ++;
@@ -1711,6 +1715,7 @@ CSSImage cssAddImage(STRPTR uri, Bool mask)
 	img->bpp = mask ? 8 : 32;
 	img->crc32 = crc;
 
+	reload_image:
 	#ifdef DEBUG_SIT
 	fprintf(stderr, "adding image %s\n", uri);
 	#endif
@@ -1727,15 +1732,16 @@ CSSImage cssAddImage(STRPTR uri, Bool mask)
 		{
 			cssParseDataURI(path, NULL, 2);
 
-			if (! SIT_LoadImg(img, path, 0, flags)) {
+			if (! SIT_LoadImg(img, path, 0, flags, fromCSS)) {
 				free(img); return NULL;
 			}
 		}
 		img->bitmap = uri;
 		break;
 	case 2:
+		/* note: bitmap is an aliassed pointer of uri, no need to free anything */
 		img->bitmap = cssParseDataURI(uri, &len, 0);
-		SIT_LoadImg(img, img->bitmap, len, flags);
+		SIT_LoadImg(img, img->bitmap, len, flags, fromCSS);
 		/* URI will be modified by cssParseDataURI(). We need to keep a link if it is further referenced */
 		/* This hack is self-contained in this function, so we can afford it */
 		memcpy(uri, "\1\0c", 4);
@@ -1777,7 +1783,7 @@ CSSImage cssAddGradient(Gradient * grad, int w, int h, REAL fh)
 			gradientDrawRadial(img, grad, fh);
 		else
 			gradientDrawLinear(img, grad, fh);
-		SIT_LoadImg(img, NULL, 0, 0);
+		SIT_LoadImg(img, NULL, 0, 0, False);
 		/* a copy will be made by opengl */
 		free(img->bitmap);
 		img->bitmap = "grad";

@@ -371,7 +371,7 @@ static DATA8 layoutParseEntities(DATA8 text, int max)
 /* add an image as if it is a regular character */
 static void layoutAddSymbol(SIT_Widget node, STRPTR uri, Bool fullH)
 {
-	CSSImage img = cssAddImage(uri, True);
+	CSSImage img = cssAddImage(uri, True, True);
 	SIT_Widget offset;
 
 	if (img == NULL) return;
@@ -929,7 +929,7 @@ void layoutCalcBox(SIT_Widget node)
 
 	if (node->style.flags & CSSF_IMG)
 	{
-		CSSImage img = cssAddImage(SIT_GetHTMLAttr(node, "src"), False);
+		CSSImage img = cssAddImage(SIT_GetHTMLAttr(node, "src"), False, False);
 
 		if (img)
 		{
