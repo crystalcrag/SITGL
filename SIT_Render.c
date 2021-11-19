@@ -1983,10 +1983,6 @@ DLLIMP SIT_RENDER SIT_RenderNodes(double time)
 	if (sit.refreshMode == SITV_RefreshAsNeeded && ! sit.dirty)
 		return SIT_RenderNothing;
 
-	#ifdef DEBUG_SIT
-//	static int render = 1;
-//	fprintf(stderr, "frame render = %d\r", render ++);
-	#endif
 	sit.dirty = False;
 
 	SIT_ClearGL();

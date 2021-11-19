@@ -605,7 +605,7 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 		sit.dragCb(sit.root, &msg, NULL);
 	}
 
-	if (sit.active)
+	if (sit.active && sit.captureEvt)
 	{
 		/* capture move event */
 		SIT_Widget evt = SIT_EventBubble(sit.active, SITE_OnMouseMove);
@@ -615,11 +615,7 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 			msg.flags = sit.keyQual;
 			msg.x     = x - evt->offsetX - evt->layout.pos.left;
 			msg.y     = y - evt->offsetY - evt->layout.pos.top;
-			if (SIT_ApplyCallback(evt, &msg, SITE_OnMouseMove))
-			{
-				sit.captureEvt = 1;
-				return;
-			}
+			SIT_ApplyCallback(evt, &msg, SITE_OnMouseMove);
 		}
 	}
 	if (sit.curTooltip && sit.curTooltip->visible && ((SIT_Tooltip)sit.curTooltip)->anchor == SITV_TooltipFollowMouse)

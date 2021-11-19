@@ -857,15 +857,15 @@ void SIT_LayoutCSSSize(SIT_Widget root)
 	/* in SIT_Geometry we only set <box> */
 	SIT_Widget c;
 	SizeF      size;
-	REAL       pad[4];
 
-	memcpy(pad, root->padding, sizeof pad);
 	size.width  = root->layout.pos.width;
 	size.height = root->layout.pos.height;
-	root->layout.pos.left   = root->box.left + pad[0];
-	root->layout.pos.top    = root->box.top  + pad[1];
-	root->layout.pos.width  = root->box.right  - pad[2] - root->layout.pos.left;
-	root->layout.pos.height = root->box.bottom - pad[3] - root->layout.pos.top;
+	if (root->layout.format.width > 0)
+		layoutCalcPadding(root);
+	root->layout.pos.left   = root->box.left + root->padding[0];
+	root->layout.pos.top    = root->box.top  + root->padding[1];
+	root->layout.pos.width  = root->box.right  - root->padding[2] - root->layout.pos.left;
+	root->layout.pos.height = root->box.bottom - root->padding[3] - root->layout.pos.top;
 	c = root->parent;
 	if (c && root->type != SIT_DIALOG)
 	{
@@ -888,16 +888,17 @@ void SIT_LayoutCSSSize(SIT_Widget root)
 		if ((c->flags & SITF_TopLevel) || ! c->visible) continue;
 		if (c->children.lh_Head == NULL || (c->flags & SITF_RenderChildren) == 0)
 		{
-			memcpy(pad, c->padding, sizeof pad);
 			size.width  = c->layout.pos.width;
 			size.height = c->layout.pos.height;
-			c->layout.pos.left   = c->box.left + pad[0];
-			c->layout.pos.top    = c->box.top  + pad[1];
-			c->layout.pos.width  = c->box.right  - pad[2] - c->layout.pos.left;
-			c->layout.pos.height = c->box.bottom - pad[3] - c->layout.pos.top;
+			c->layout.pos.left   = c->box.left + c->padding[0];
+			c->layout.pos.top    = c->box.top  + c->padding[1];
+			c->layout.pos.width  = c->box.right  - c->padding[2] - c->layout.pos.left;
+			c->layout.pos.height = c->box.bottom - c->padding[3] - c->layout.pos.top;
 			c->offsetX = root->offsetX + root->box.left;
 			c->offsetY = root->offsetY + root->box.top;
 			c->style.flags &= ~CSSF_BORDERIMG;
+			if (c->layout.format.width > 0)
+				layoutCalcPadding(c);
 			layoutAdjustBorderRadius(c);
 			layoutAlignText(c);
 			if (HAS_EVT(c, SITE_OnResize) && ! (ALMOST0(size.width-c->layout.pos.width) && ALMOST0(size.height-c->layout.pos.height)))

@@ -4197,6 +4197,9 @@ layout, that can accommodate almost every situation, with very little effort.
   using a code similar to this:
   <pre>SIT_SetValues(label, SIT_ImagePath, <val>""</val>, SIT_ImagePath, path, <val>NULL</val>);</pre>
 
+  <p><span class="n">Note</span>: by default the path will be relative to where the stylesheet was loaded.
+  If you want your path to be relative to current directory, see the <tt>SIT_CurrentDir</tt> property.
+
   <li><tt class="dt">SIT_LabelSize</tt> (<tt class="t">int</tt>)
   <p>This is used to <b>reserve some space</b> for the label. It is like having an image of the size
   specified for this property, but without having to generate a dummy bitmap. The typical use case for
@@ -4209,6 +4212,10 @@ layout, that can accommodate almost every situation, with very little effort.
   <p>The difference between this property and manually setting <tt>SIT_Width</tt> and <tt>SIT_Height</tt>,
   is that the padding will be added to <tt>SIT_LabelSize</tt>. For the width and height, the padding
   will be subtracted.
+
+  <li><tt class="dt">SIT_CurrentDir</tt> (<tt class="t">int</tt>)
+  <p>Tells whether the path specified for <tt>SIT_ImagePath</tt> is relative to the current directory
+  (if set to a value other than zero) or relative to the stylesheet (if set to zero).
 
   <li><tt class="dt">SIT_Overflow</tt> (<tt class="t">int</tt>)
   <p>Overflow allows you to clip the text if it is bigger that the box of the label. Remember that

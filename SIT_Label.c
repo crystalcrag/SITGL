@@ -14,9 +14,10 @@
 #include "SIT_CSSLayout.h"
 
 	TagList LabelClass[] = {
-		{ SIT_ImagePath, "imagePath", CSG, SIT_PTR, OFFSET(SIT_Label, image) },
-		{ SIT_LabelSize, "labelSize", CSG, SIT_INT, OFFSET(SIT_Label, labelSize) },
-		{ SIT_Overflow,  "overflow",  CSG, SIT_INT, OFFSET(SIT_Label, overflow) },
+		{ SIT_ImagePath,  "imagePath",  CSG, SIT_PTR, OFFSET(SIT_Label, image) },
+		{ SIT_CurrentDir, "currentDir", CSG, SIT_INT, OFFSET(SIT_Label, currentDir) },
+		{ SIT_LabelSize,  "labelSize",  CSG, SIT_INT, OFFSET(SIT_Label, labelSize) },
+		{ SIT_Overflow,   "overflow",   CSG, SIT_INT, OFFSET(SIT_Label, overflow) },
 		{ SIT_TagEnd }
 	};
 
@@ -108,9 +109,15 @@ static int SIT_SetLabelValues(SIT_Widget w, APTR cd, APTR ud)
 	CSSImage      img;
 
 	switch (tag->tl_TagID) {
+	case SIT_CurrentDir:
+		if (val->integer == label->currentDir)
+			break;
+		label->currentDir = val->integer;
+		if ((w->layout.flags & LAYF_HasImg) == 0)
+			break;
 	case SIT_ImagePath:
 		/* only display an image: set label to the size of the image */
-		img = cssAddImage(val->pointer, False, False);
+		img = cssAddImage(val->pointer, False, ! label->currentDir);
 		if (img)
 		{
 			w->minBox.width  = img->width  + w->padding[0] + w->padding[2];

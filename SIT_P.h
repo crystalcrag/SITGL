@@ -303,6 +303,7 @@ struct SIT_Label_t
 	CSSImage     image;
 	int          overflow;             /* public */
 	int          labelSize;            /* public */
+	int          currentDir;           /* public */
 };
 
 struct SIT_ListBox_t
@@ -321,7 +322,6 @@ struct SIT_ListBox_t
 	int          softColumn;
 	int          recalcCell;
 	int          maxRowVisible;        /* public: SG */
-	uint16_t     msgX, msgY;           /* mousemove */
 	STRPTR       columnNames;          /* public: S */
 	STRPTR       columnWidths;         /* public: S */
 	STRPTR       columnAlign;          /* public: S */

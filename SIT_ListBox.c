@@ -889,7 +889,6 @@ static void SIT_ListReorder(SIT_ListBox list)
 		/* restore cursor/selection */
 		for (cell = STARTCELL(list), eof = cell + items; cell < eof && cell->obj != sel; cell += cols);
 		list->selIndex = cell < eof ? cell - STARTCELL(list) : -1;
-		//fprintf(stderr, "selIndex = %d       \n", list->selIndex);
 	}
 	SIT_ListResize(&list->super, NULL, NULL);
 }
@@ -1030,7 +1029,6 @@ static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 		{
 			int  col = list->softColumn;
 			if (col <= 0) col = 1;
-			list->msgX = 65535;
 			for (cell = list->rowTop, i = list->cells.count - (cell - STARTCELL(list)); i > 0; )
 			{
 				Cell rowStart = cell;
@@ -1055,7 +1053,7 @@ static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 						static uint32_t lastClick;
 						if (rowStart == vector_nth(&list->cells, list->selIndex) && TimeMS() - lastClick < sit.dblClickMS)
 						{
-							SIT_ApplyCallback(w, cell->userData, SITE_OnActivate);
+							SIT_ApplyCallback(w, rowStart->userData, SITE_OnActivate);
 						}
 						else SIT_ListSetSelection(list, cell, (msg->flags & SITK_FlagCtrl) == 0, (msg->flags & SITK_FlagShift) > 0);
 						lastClick = TimeMS();
@@ -1078,42 +1076,45 @@ static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 			SIT_ListSetSelection(list, NULL, True, False);
 		}
 
-		if (list->lbFlags & SITV_HasScroll)
-		{
-			list->msgX = msg->x;
-			list->msgY = msg->y;
-		}
-
-		if (list->lbFlags & SITV_SelectMultiple)
-		{
-			/* start lasso selection */
-			list->lassoSX = list->lassoEX = x;
-			list->lassoSY = y + list->scrollTop;
-			return 2;
-		}
-		break;
+		/* start lasso selection */
+		list->lassoSX = list->lassoEX = x;
+		list->lassoSY = y + list->scrollTop;
+		return 2;
 
 	case SITOM_CaptureMove:
-		if ((list->lbFlags & SITV_SelectMultiple) == 0)
-			return 1;
-		list->lassoEX = msg->x;
-		list->lassoEY = msg->y + list->scrollTop;
-		SIT_ListSelectLasso(list);
-		sit.dirty = 1;
-		if (msg->y < -w->padding[1])
+		if (list->lbFlags & SITV_SelectMultiple)
 		{
-			/* vertical auto-scroll */
-			SIT_ListStartAutoScroll(list, -1);
-			return 1;
+			list->lassoEX = msg->x;
+			list->lassoEY = msg->y + list->scrollTop;
+			SIT_ListSelectLasso(list);
+			sit.dirty = 1;
+			if (msg->y < -w->padding[1])
+			{
+				/* vertical auto-scroll */
+				SIT_ListStartAutoScroll(list, -1);
+				return 1;
+			}
+			else if (msg->y > w->layout.pos.height)
+			{
+				SIT_ListStartAutoScroll(list, 1);
+				return 1;
+			}
+			else /* stop auto-scrolling */
+			{
+				SIT_ListStartAutoScroll(list, 0);
+			}
 		}
-		else if (msg->y > w->layout.pos.height)
+		else if (list->super.vscroll) /* scroll content of list */
 		{
-			SIT_ListStartAutoScroll(list, 1);
-			return 1;
-		}
-		else /* stop auto-scrolling */
-		{
-			SIT_ListStartAutoScroll(list, 0);
+			max = list->scrollHeight - list->super.layout.pos.height;
+			y = list->lassoSY - msg->y;
+			if (y < 0)   y = 0;
+			if (y > max) y = max;
+			if (y != list->scrollTop)
+			{
+				SIT_ListScroll(list->super.vscroll, (APTR) (int) y, NULL);
+				SIT_ListAdjustScroll(list);
+			}
 		}
 		break;
 
@@ -1129,31 +1130,6 @@ static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 	}
 	return 1;
 }
-
-/* SITE_OnMouseMove inside list */
-#if 0
-static int SIT_ListMouseMove(SIT_Widget w, APTR cd, APTR ud)
-{
-	SIT_ListBox   list = (SIT_ListBox) w;
-	SIT_OnMouse * msg  = cd;
-
-	/* XXX auto-scroll based on what ? */
-	if (msg->state == SITOM_CaptureMove && list->msgX < 65535)
-	{
-		REAL max = list->scrollHeight - list->super.layout.pos.height;
-		REAL y = list->scrollTop + (list->msgY - msg->y);
-		if (y < 0)   y = 0;
-		if (y > max) y = max;
-		if (y != list->scrollTop)
-		{
-			SIT_ListScroll(list->super.vscroll, (APTR) (int) y, NULL);
-			SIT_ListAdjustScroll(list);
-		}
-		list->msgY = msg->y;
-	}
-	return 1;
-}
-#endif
 
 static void SIT_ListClearAndFree(SIT_Widget td)
 {
@@ -1591,7 +1567,6 @@ Bool SIT_InitListBox(SIT_Widget w, va_list args)
 
 	/* default values */
 	list->selIndex  = list->sortColumn = -1;
-	list->msgX      = 65535;
 	list->defAlign  = -1;
 	w->optimalWidth = SIT_ListMeasure;
 	w->finalize     = SIT_ListFinalize;

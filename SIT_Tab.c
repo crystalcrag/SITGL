@@ -36,8 +36,6 @@ static int SIT_TabAutoManage(SIT_Widget w, APTR cd, APTR ud)
 			c->visible = n <= 0 || n-1 == nth;
 		else /* some controls can be visible over multiple tabs */
 			c->visible = n == 0 || (n & (1<<nth)) > 0;
-
-//		if (c->visible) fprintf(stderr, "auto showing %S\n", c->name);
 	}
 	if (ud) return 0;
 

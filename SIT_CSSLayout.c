@@ -21,8 +21,6 @@ void layoutCheckRel(SIT_Widget node, REAL len, int side)
 	REAL * rel = &node->layout.format.width + 1 - (side & 1);
 	if (*rel == 0)
 		*rel = len > 0 ? len : EPSILON/2;
-	else if (fabsf(*rel - len) > EPSILON)
-		node->layout.flags |= LAYF_SizeChanged;
 }
 
 /* convert a CSS fixed-point unit into pt. <side> is CSS_{TOP|LEFT|BOTTOM|RIGHT} */
@@ -832,6 +830,29 @@ static void layoutSetBackgroundPos(SIT_Widget node)
 	node->style.flags &= ~CSSF_BACKGROUND;
 }
 
+void layoutCalcPadding(SIT_Widget node)
+{
+	/* compute padding and border offset */
+	SIT_Widget parent = node;
+	int i;
+	node->layout.pos.width  = node->box.right  - node->box.left;
+	node->layout.pos.height = node->box.bottom - node->box.top;
+	for (i = 0; i < 4; i ++)
+	{
+		Border * border = &node->style.borderTop + i;
+		REAL * bdWidth = &node->layout.border.top + i;
+
+		/* relative units are always relative to width */
+		*bdWidth = ToPoints(parent, node, border->width, CSS_WIDTH);
+
+		(&node->layout.padding.top)[i] = ToPoints(parent, node, (&node->style.padding.top)[i], CSS_WIDTH);
+	}
+	/* combined padding and border (SIT order) */
+	for (i = 0; i < 4; i ++)
+		node->padding[i] = roundf((&node->layout.padding.top)[(i+3)&3] + (&node->layout.border.top)[(i+3)&3]) + node->layout.margin;
+}
+
+
 void layoutCalcBox(SIT_Widget node)
 {
 	SIT_Widget parent = node->parent;
@@ -860,17 +881,7 @@ void layoutCalcBox(SIT_Widget node)
 	if (node->style.flags & CSSF_BOXSHADOW)
 		layoutSetBoxShadow(node);
 
-	/* compute padding, border and margin offset */
-	for (i = 0; i < 4; i ++)
-	{
-		Border * border = &node->style.borderTop + i;
-		REAL * bdWidth = &node->layout.border.top + i;
-
-		/* relative units are always relative to width */
-		*bdWidth = ToPoints(parent, node, border->width, CSS_WIDTH);
-
-		(&node->layout.padding.top)[i] = ToPoints(parent, node, (&node->style.padding.top)[i], CSS_WIDTH);
-	}
+	layoutCalcPadding(node);
 
 	if (node->type == SIT_LISTBOX)
 	{
@@ -884,19 +895,6 @@ void layoutCalcBox(SIT_Widget node)
 	if (node->style.letterSpacing != AUTOVAL)
 		node->layout.letterSpacing = ToPoints(parent, node, node->style.letterSpacing, CSS_WIDTH);
 
-	#if 0
-	if (parent == NULL)
-	{
-		REAL w = node->fixed.width;
-        REAL h = node->fixed.height;
-
-		w -= layoutNCSize(node, CSS_LEFT) + layoutNCSize(node, CSS_RIGHT);
-		h -= layoutNCSize(node, CSS_TOP)  + layoutNCSize(node, CSS_BOTTOM);
-
-		node->layout.pos.width = w;
-		node->layout.pos.height = h;
-	}
-	#endif
 	layoutFindFont(node);
 	layoutSetOutline(node);
 
@@ -919,10 +917,6 @@ void layoutCalcBox(SIT_Widget node)
 
 	node->layout.margin = ToPoints(parent, node, node->style.margin, CSS_WIDTH);
 	layoutSetBackgroundPos(node);
-
-	/* combined padding and border (SIT order) */
-	for (i = 0; i < 4; i ++)
-		node->padding[i] = roundf((&node->layout.padding.top)[(i+3)&3] + (&node->layout.border.top)[(i+3)&3]) + node->layout.margin;
 
 	node->layout.left = ToPoints(parent, node, node->style.left, CSS_WIDTH);
 	node->layout.top  = ToPoints(parent, node, node->style.top,  CSS_HEIGHT);
