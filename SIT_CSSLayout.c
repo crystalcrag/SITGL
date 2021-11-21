@@ -252,7 +252,6 @@ static void layoutBreakWords(SIT_Widget node, STRPTR text, int length)
 
 	tab   = offset->style.tabSize;
 	ws    = node->style.whiteSpace;
-//	var   = node->style.font.variant;
 	trans = node->style.text.transform;
 	p     = text;
 	end   = p + length;
@@ -835,8 +834,6 @@ void layoutCalcPadding(SIT_Widget node)
 	/* compute padding and border offset */
 	SIT_Widget parent = node;
 	int i;
-	node->layout.pos.width  = node->box.right  - node->box.left;
-	node->layout.pos.height = node->box.bottom - node->box.top;
 	for (i = 0; i < 4; i ++)
 	{
 		Border * border = &node->style.borderTop + i;
@@ -933,13 +930,13 @@ void layoutCalcBox(SIT_Widget node)
 			node->layout.flags |= LAYF_HasImg;
 			node->manage = (APTR) img;
 
-			if (node->style.width != AUTOVAL)
+			if (node->style.width != 0)
 				node->layout.pos.width = ToPoints(parent, node, node->style.width, CSS_WIDTH);
 
-			if (node->style.height != AUTOVAL)
+			if (node->style.height != 0)
 				node->layout.pos.height = ToPoints(parent, node, node->style.height, CSS_HEIGHT);
 
-			switch ((node->style.width == AUTOVAL) | ((node->style.height == AUTOVAL) << 1)) {
+			switch ((node->style.width == 0) | ((node->style.height == 0) << 1)) {
 			case 0: /* width & height set: override image's dimension */
 				w = node->layout.pos.width;
 				h = node->layout.pos.height;
@@ -1219,6 +1216,40 @@ void layoutMeasureWords(SIT_Widget node, SizeF * ret)
 	ret->height = maxh;
 	ret->width  = MIN(maxw, maxWidth);
 	node->layout.textarea = *ret;
+}
+
+/* font size changed, but words remain the same */
+void layoutRecalcWords(SIT_Widget w)
+{
+	WordWrap word;
+	NVGCTX   vg = sit.nvgCtx;
+	REAL     fh, bl, space;
+	int      i = w->layout.wordwrap.count;
+
+	nvgFontFaceId(vg, w->style.font.handle);
+	nvgFontSize(vg,   w->style.font.size);
+	nvgTextMetrics(vg, &bl, NULL, &fh);
+	space = nvgTextBounds(vg, 0, 0, " ", NULL, NULL);
+
+	for (word = vector_first(w->layout.wordwrap); i > 0; word ++, i --)
+	{
+		if (word->n > 0)
+		{
+			word->h     = fh;
+			word->bl    = bl;
+			word->width = nvgTextBounds(vg, 0, 0, word->word, word->word+word->n, NULL);
+			word->space = space;
+		}
+	}
+
+	/* while we are here, recalc rel unit fields */
+	TagList * args;
+	for (i = LAYF_RelUnit, args = WidgetClass + SIT_Height - 2; i <= LAYF_RelUnitLast; i <<= 1, args ++)
+	{
+		if ((w->layout.flags & i) == 0) continue;
+		/* not pretty, but does the job with minimal effort */
+		* (REAL *) ((STRPTR)w + args->tl_Arg) = SIT_EmToReal(w, (&w->style.height)[args->tl_TagID-SIT_Height]);
+	}
 }
 
 REAL layoutLineWidth(WordWrap wrap, int max)

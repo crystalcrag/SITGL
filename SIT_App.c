@@ -18,15 +18,18 @@
 		{ SIT_CurrentDir,      "currentDir",  _SG, SIT_PTR,  OFFSET(SIT_App, currentDir) },
 		{ SIT_ScreenWidth,     NULL,          __G, SIT_INT,  OFFSET(SIT_App, screen.width) },
 		{ SIT_ScreenHeight,    NULL,          __G, SIT_INT,  OFFSET(SIT_App, screen.height) },
-		{ SIT_TagPrivate+2,    NULL,          _S_, SIT_PTR,  0}, /* font-file */
+		{ SIT_TagPrivate+2,    NULL,          _S_, SIT_PTR,  0 }, /* font-file */
 		{ SIT_TagPrivate+1,    NULL,          _S_, SIT_PTR,  OFFSET(SIT_App, fontName) },
 		{ SIT_AddFont,         "addFont",     _S_, SIT_ABBR, ABBR(1, 1, 0, 0) },
 		{ SIT_AccelTable,      "accelTable",  _SG, SIT_PTR,  OFFSET(SIT_App, accel) },
 		{ SIT_StyleSheet,      "styleSheet",  _S_, SIT_PTR,  OFFSET(SIT_App, styles) },
 		{ SIT_ExitCode,        "exitCode",    _SG, SIT_PTR,  OFFSET(SIT_App, exitCode) },
+		{ SIT_SetAppIcon,      NULL,          _S_, SIT_INT,  0 },
 		{ SIT_CompositedAreas, NULL,          __G, SIT_PTR,  0 },
 		{ SIT_TagEnd }
 	};
+	static WNDPROC mainWndProc;
+	HANDLE mainWnd;
 
 void SIT_AppGetCWD(SIT_Widget w)
 {
@@ -150,26 +153,36 @@ static STRPTR SIT_GetFontFile(STRPTR fmt, STRPTR dest)
 }
 
 /* replace the entire stylesheet */
-static void SIT_ChangeStyleSheet(SIT_Widget w, STRPTR path)
+void SIT_ChangeStyleSheet(SIT_Widget w, STRPTR path, int mode)
 {
-	SIT_NukeCSS();
-	sit.dirty = 1;
+	if (path)
+	{
+		SIT_NukeCSS();
+		sit.dirty = 1;
 
-	/* don't care if it fails */
-	cssParse(path, True);
-	if (! cssParse(path, True))
-		SIT_SetValues(sit.root, SIT_Style, "background: white", NULL);
+		/* don't care if it fails */
+		cssParse(path, True);
+		if (! cssParse(path, True))
+			SIT_SetValues(sit.root, SIT_Style, "background: white", NULL);
+	}
 
 	/* reapply new styles to all widgets */
+	sit.geomList = NULL;
 	SIT_Widget list;
 	for (list = sit.root; ; )
 	{
+		memset(list->layout.crc32, 0xff, sizeof list->layout.crc32);
+		list->layout.curCRC32 = -1;
+		list->style.flags &= ~CSSF_APPLIED;
+		list->flags &= ~SITF_GeomNotified;
+		list->layout.pos.width = 0;
 		layoutCalcBox(list);
+		layoutRecalcWords(list);
 		if (list->parent)
 		{
 			list->minBox.width = list->minBox.height = -1;
 			list->optimalBox   = list->maxBox = list->minBox;
-			if ((list->flags & SITF_TopLevel) == 0)
+			if ((list->flags & SITF_TopLevel) == 0 || mode == FitUsingInitialBox)
 				list->currentBox = list->childBox = list->minBox;
 		}
 
@@ -190,7 +203,7 @@ static void SIT_ChangeStyleSheet(SIT_Widget w, STRPTR path)
 	for (list = sit.root; ; )
 	{
 		if (list->flags & SITF_TopLevel)
-			SIT_LayoutWidgets(list, KeepDialogSize);
+			SIT_LayoutWidgets(list, mode);
 
 		if (! list->children.lh_Head)
 		{
@@ -239,7 +252,7 @@ static int SIT_AppSetValues(SIT_Widget w, APTR call_data, APTR user_data)
 		sit.refreshMode = app->refreshMode = val->integer;
 		break;
 	case SIT_StyleSheet:
-		SIT_ChangeStyleSheet(w, val->pointer);
+		SIT_ChangeStyleSheet(w, val->pointer, FitUsingCurrentBox);
 		break;
 	case SIT_CurrentDir:
 		/* note: value->string is a user-supplied buffer (SIT_PTR), not a copy: do not modify */
@@ -249,6 +262,13 @@ static int SIT_AppSetValues(SIT_Widget w, APTR call_data, APTR user_data)
 			allocaUTF8ToUTF16(val->string, str);
 			SetCurrentDirectory(str);
 		}
+		break;
+	case SIT_SetAppIcon:
+		/* SDL1 does not set the icon of the title bar window to the application's icon */
+		SetClassLongPtr(mainWnd, GCLP_HICON, (LONG_PTR) (val->integer == 0 ?
+			LoadIcon(NULL, IDI_APPLICATION) :
+			LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(val->integer)))
+		);
 		break;
 	default:
 		SIT_SetWidgetValue(w, call_data, user_data);
@@ -323,9 +343,6 @@ static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
 	}
 	return 1;
 }
-
-static WNDPROC mainWndProc;
-HANDLE mainWnd;
 
 static LRESULT CALLBACK SIT_AppSubClassHandler(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {

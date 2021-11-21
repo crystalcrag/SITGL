@@ -64,8 +64,6 @@
 		<Unit filename="SIT.h" />
 		<Unit filename="SITGL.rc">
 			<Option compilerVar="WINDRES" />
-			<Option target="Release" />
-			<Option target="ReleaseBTE" />
 		</Unit>
 		<Unit filename="SIT_App.c">
 			<Option compilerVar="CC" />

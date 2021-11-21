@@ -86,7 +86,7 @@ static int SIT_DialogMove(SIT_Widget w, APTR cd, APTR ud)
 				dialog->moveOffY = msg->y;
 				rightEdge  = w->box.right;
 				bottomEdge = w->box.bottom;
-				return 1;
+				return 2;
 			}
 		}
 		if (dialog->customStyles & SITV_Movable)
@@ -97,7 +97,7 @@ static int SIT_DialogMove(SIT_Widget w, APTR cd, APTR ud)
 			dialog->moveOffX = msg->x;
 			dialog->moveOffY = msg->y;
 			dialog->customStyles |= SITV_DoMove;
-			return 1;
+			return 2;
 		}
 		break;
 	case SITOM_CaptureMove:

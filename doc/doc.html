@@ -1015,15 +1015,20 @@ produce a standalone executable. Be aware, that if you have manually changed the
 program, those settings will be kept into a cache. Before producing an executable, delete manually
 the program first.
 
-<h4>Program icon</h4>
+<h4 id="progicon">Program icon</h4>
 
 <p>While you are at it, you might as well add a <b>dedicated icon for your program</b>. This is also
 done in the resource file, by adding the following line:
 
-<pre>1 ICON "&lt;app&gt;.ico"</pre>
+<pre><val>1</val> <spe><b>ICON</b></spe> <dim>"&lt;app&gt;.ico"</dim></pre>
 
 <p>As usual, replace <em>&lt;app&gt;</em> by the name of your application, then use your favorite paint
 program to generate an icon named <tt>&lt;app&gt;.ico</tt> in the same folder where the program is.
+
+<p><tt class="o">1</tt> is the ID of the icon. <b>This number will be needed</b> if you want this icon
+to appear in the different places of the operating system (title bar, task bar, alt-tab application
+switcher, ...). Some frameworks (like SDL) don't load this icon by default, <tt>SITGL</tt> can do it
+instead using the <a href="#SIT_SetAppIcon">SIT_SetAppIcon</a> property.
 
 <h4>Version information</h4>
 
@@ -1199,6 +1204,9 @@ is to render text for use as decals over your models.
  *		discard;
  *
  *	color = vec4(text.r, text.g, text.b, col.x);
+ *
+ * Note: another flag you can use is NVG_IMAGE_DEPTH: it will add a depth buffer to the FBO. It is not
+ * needed by nanovg, but if you want to apply OpenGL draw command, you'll probably need one.
  */</com>
 <type>int</type> width = <val>1920</val>;
 <type>int</type> height = <val>1080</val>;
@@ -1781,10 +1789,6 @@ related to geometry management:
   <td><tt>SIT_Right</tt></td>
 </tr><tr>
   <td><tt>SIT_Bottom</tt></td>
-</tr><tr>
-  <td><tt>SIT_Margins</tt></td>
-  <td><type>int</type>, <type>int</type>, <type>int</type>, <type>int</type></td>
-  <td>Shortcut for specifying top, right, bottom and left offset.</td>
 </tr><tr>
   <td><tt>SIT_X</tt></td>
   <td rowspan="4"><type>int</type></td>
@@ -3689,11 +3693,11 @@ SIT_CreateWidgets(dialog,
   <tt>tag</tt> member. To initialize such a table, you can use the C99
   notation:</p>
   <pre>KeyVal_t my_args[] = {
-	{SIT_Title,   {.ptr = <val>"Options"</val>}},
-	{SIT_Margins, {.val = SITV_Em(<val>1</val>)}},
-	{<val>0</val>,           {.val = SITV_Em(<val>1</val>)}},
-	{<val>0</val>,           {.val = SITV_Em(<val>1</val>)}},
-	{<val>0</val>,           {.val = SITV_Em(<val>1</val>)}},
+	{SIT_Title, {.ptr = <val>"Options"</val>}},
+	{SIT_Rect,  {.val = SITV_Em(<val>1</val>)}},
+	{<val>0</val>,         {.val = SITV_Em(<val>1</val>)}},
+	{<val>0</val>,         {.val = SITV_Em(<val>10</val>)}},
+	{<val>0</val>,         {.val = SITV_Em(<val>4</val>)}},
 	{SIT_TagEnd}
 };</pre>
   <p>Take note that any arguments after a <tt>SIT_TagList</tt> will be ignored.</p>
@@ -3732,6 +3736,11 @@ other properties:
   </ul>
   <p>Then the second property (<tt>SIT_DefSBSize</tt>) will let you set the default width (height if
   horizontal) of the scrollbar. By default this value is set to 1em.
+
+  <li id="SIT_SetAppIcon"><tt class="dt">SIT_SetAppIcon</tt> (<tt class="t">int</tt>)
+  <p>Some windowing framework on Windows <b>do not set the application title</b> bar to the icon defined in
+  the resource file (most notably: SDL1). You can do it with this property: the argument must be the
+  ID of the icon defined in your <a href="#progicon">resource file</a> (typically: 1).
 
   <li><tt class="dt">SIT_RefreshMode</tt> (<tt class="t">enum</tt>)
   <p>As discussed in the <a href="#SIT_RenderNodes"><tt>SIT_RenderNodes</tt></a> section, this will define
@@ -4432,8 +4441,8 @@ with <tt>SITE_OnActivate</tt>. If you are providing <b>sound feedback</b>, you s
 
 <h3 id="SIT_FRAME"><span>SIT_FRAME</span></h3>
 
-<p>Frame or group box are a way to organize your controls to help users recognize
-related features. It can be seen as a label with an etched border:</p>
+<p>Frame or group box are a way to organize your controls to help users recognize related features.
+It can be seen as a label with an etched border:
 
 <div class="image">
   <img src="images/SIT_FRAME.png" alt="Group box">
@@ -4450,15 +4459,14 @@ related features. It can be seen as a label with an etched border:</p>
 
 <p>Frames are one of the few controls that act as container for other controls, they can be given as
 <tt>parent</tt> parameter of the <tt>SIT_CreateWidget()</tt> function. They behave exactly as dialogs
-in terms of geometry management, they can be seen as dialog within the dialog: the <tt>SIT_Margins</tt>
-related properties applies, <tt>SITV_AttachForm</tt> attachment is relative to frame's border (and not
-the dialog), and unless explicitly set, their size will be set so that all controls within the frame
-are visible.</p>
+in terms of geometry management, they can be seen as dialog within the dialog: <tt>SITV_AttachForm</tt>
+attachment is relative to frame's border (and not the dialog), and unless explicitly set, their size
+will be set so that all controls within the frame are visible.
 
 <p>The frame widget has no specific properties and fire no events. Margins will be set so that they will
 leave about 5 pixels from each borders, which might be a little tight. Also take note that border itself
 is about 3 pixels wide (it depends on theme setting, but does not vary that much). Although discouraged,
-remember that margins can be overridden using negative offset for <tt>SITV_AttachForm</tt>.</p>
+remember that margins can be overridden using negative offset for <tt>SITV_AttachForm</tt>.
 
 
 

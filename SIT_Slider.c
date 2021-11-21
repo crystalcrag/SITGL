@@ -207,7 +207,7 @@ static int SIT_SliderClick(SIT_Widget w, APTR cd, APTR ud)
 			pos += s->pageSize;
 			if (pos > s->maxValue) pos = s->maxValue;
 		}
-		else { s->isDragged = 1; return 1; }
+		else { s->isDragged = 1; return 2; }
 
 		if (pos != s->sliderPos)
 		{

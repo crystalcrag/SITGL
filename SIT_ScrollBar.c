@@ -222,7 +222,7 @@ static int SIT_ScrollBarClick(SIT_Widget w, APTR cd, APTR ud)
 		sb->scrollPos = pos;
 		SIT_ApplyCallback(w, (APTR) lround(sb->scrollPos), SITE_OnScroll);
 	}
-	return 1;
+	return sb->isDragged ? 2 : 1;
 }
 
 /* SITE_OnMouseMove with thumb */
@@ -232,7 +232,7 @@ static int SIT_ScrollBarMove(SIT_Widget w, APTR cd, APTR ud)
 	SIT_Widget thumb = sb->thumb;
 	SIT_OnMouse * msg = cd;
 
-	if (sb->isDragged)
+	if (msg->state == SITOM_CaptureMove && sb->isDragged)
 	{
 		REAL pos, max, old;
 		if (sb->isHoriz)

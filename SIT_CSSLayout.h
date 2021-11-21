@@ -30,6 +30,7 @@ void layoutGetTextContent(SIT_Widget, STRPTR dest, int max);
 void layoutSetSize(SIT_Widget);
 Bool layoutSizeChanged(SIT_Widget);
 void layoutCalcPadding(SIT_Widget);
+void layoutRecalcWords(SIT_Widget);
 
 enum /* possible values for 'side' parameter of ToPoints() */
 {

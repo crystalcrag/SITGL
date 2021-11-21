@@ -84,6 +84,7 @@ static int SIT_TabMeasure(SIT_Widget w, APTR cd, APTR ud)
 		return 1;
 	}
 
+	/* measure size of tabs (labels on top) */
 	for (i = n = 0, nb = tab->nbTab, tab->maxHeight = 0; i < nb; i ++)
 	{
 		SIT_Widget label = tab->items[i].label;
@@ -97,6 +98,7 @@ static int SIT_TabMeasure(SIT_Widget w, APTR cd, APTR ud)
 		if (tab->maxHeight < h)
 			tab->maxHeight = h;
 	}
+	fprintf(stderr, "tab size = %dx%d\n", n, (int) tab->maxHeight);
 	sz.width  = n+6;
 	sz.height = 0;
 
@@ -114,7 +116,7 @@ static int SIT_TabMeasure(SIT_Widget w, APTR cd, APTR ud)
 			{
 				int order = c->tabOrder;
 
-				if (c->tabOrder == -1) continue;
+				if (order == -1) continue;
 
 				if (! tab->visiBitField)
 					order = order <= 0 || order-1 == i;
@@ -139,17 +141,6 @@ static int SIT_TabMeasure(SIT_Widget w, APTR cd, APTR ud)
 
 	if (res->width  <= 0) res->width  = sz.width;
 	if (res->height <= 0) res->height = sz.height;
-	sz.height += tab->maxHeight;
-
-	#if 0
-	if (mode == FitUsingOptimalBox)
-	{
-		if (w->minBox.width  < 0) w->minBox.width  = sz.width;
-		if (w->minBox.height < 0) w->minBox.height = sz.height;
-	}
-	#endif
-
-//	fprintf(stderr, "*** tab size '%s' = %gx%g, mode = %d\n", w->name, res->width, res->height, mode);
 
 	return 0;
 }

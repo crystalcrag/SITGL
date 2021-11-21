@@ -106,6 +106,7 @@ void SIT_ListGetArg(SIT_Widget, int type, APTR arg);
 void SIT_NukeCSS(void);
 void SIT_CreateBuddyLabel(SIT_Widget buddy, STRPTR text, SIT_Widget * max);
 Bool SIT_IsImageModified(CSSImage img, STRPTR path, Bool fromCSS);
+void SIT_ChangeStyleSheet(SIT_Widget, STRPTR path, int mode);
 
 int  SIT_TextEditKey(SIT_EditBox, int key);
 int  SIT_TextEditInsertText(SIT_EditBox, DATA8 utf8);
@@ -640,87 +641,89 @@ enum /* bitfield for tl_Flags */
 #define	OFFSET(ptrType, fieldName)    ((ULONG) &((ptrType)0L)->fieldName)
 
 /* check if an event is defined for given control */
-#define	HAS_EVT(w, type)           ((w)->evtFlags & (1 << (type)))
-#define HAS_1OF2EVT(w, e1, e2)     ((w)->evtFlags & ((1 << (e1)) | (1 << (e2))))
-#define	SET_EVT(type)              (1 << type)
-#define	HAS_TAB(w)                 (w->flags & SITF_InFocusRing)
-#define FOCUSRING(w)               ((SIT_Dialog)w)->focusRing
-#define NoFocusRing                ((APTR)1)
+#define	HAS_EVT(w, type)              ((w)->evtFlags & (1 << (type)))
+#define HAS_1OF2EVT(w, e1, e2)        ((w)->evtFlags & ((1 << (e1)) | (1 << (e2))))
+#define	SET_EVT(type)                 (1 << type)
+#define	HAS_TAB(w)                    (w->flags & SITF_InFocusRing)
+#define FOCUSRING(w)                  ((SIT_Dialog)w)->focusRing
+#define NoFocusRing                   ((APTR)1)
 
 enum /* bitfield for flags */
 {
 	SITF_GeometrySet     = 0x00000001,
 	SITF_GeometryChanged = 0x00000002,
-	SITF_FixedX          = 0x00000004, /* inform layout manager */
+	SITF_FixedX          = 0x00000004,  /* inform layout manager */
 	SITF_FixedY          = 0x00000008,
 	SITF_FixedWidth      = 0x00000010,
 	SITF_FixedHeight     = 0x00000020,
-	SITF_IsLocked        = 0x00000040, /* an event has a pending process */
-	SITF_BeingDestroyed  = 0x00000080, /* user ask to delete that control */
-	SITF_CanResizeW      = 0x00000100, /* at least one control has a right attach on the form */
-	SITF_CanResizeH      = 0x00000200, /* a control has a bottom attach on the form */
-	SITF_KeepDiagSize    = 0x00000400, /* width/height changed on dialog - keep it */
-	SITF_TopLevel        = 0x00000800, /* top level window, not part of children layout */
-	SITF_GeomNotified    = 0x00001000, /* geometry modification message has been posted */
-	SITF_AutoHeight      = 0x00002000, /* need to set control's size before triggering OnResize */
+	SITF_IsLocked        = 0x00000040,  /* an event has a pending process */
+	SITF_BeingDestroyed  = 0x00000080,  /* user ask to delete that control */
+	SITF_CanResizeW      = 0x00000100,  /* at least one control has a right attach on the form */
+	SITF_CanResizeH      = 0x00000200,  /* a control has a bottom attach on the form */
+	SITF_KeepDiagSize    = 0x00000400,  /* width/height changed on dialog - keep it */
+	SITF_TopLevel        = 0x00000800,  /* top level window, not part of children layout */
+	SITF_GeomNotified    = 0x00001000,  /* geometry modification message has been posted */
+	SITF_AutoHeight      = 0x00002000,  /* need to set control's size before triggering OnResize */
 	SITF_RestoreSize     = 0x00004000,
 	SITF_ReflowW         = 0x00008000,
 	SITF_ReflowH         = 0x00010000,
-	SITF_PrivateChildren = 0x00020000, /* children are managed by widget, not by geometry module */
-	SITF_NoResetSize     = 0x00040000, /* for handling SITE_OnGemetrySet */
+	SITF_PrivateChildren = 0x00020000,  /* children are managed by widget, not by geometry module */
+	SITF_NoResetSize     = 0x00040000,  /* for handling SITE_OnGemetrySet */
 	SITF_RenderChildren  = 0x00080000,
 	SITF_Style1Changed   = 0x00100000,
 	SITF_Style2Changed   = 0x00200000,
 	SITF_StylesChanged   = 0x00300000,
-	SITF_InitDone        = 0x00800000, /* set at the end of SIT_CreateWidget() */
-	SITF_ToggleButon     = 0x01000000, /* toggle button: ignore mouse button release event */
-	SITF_ImmediateActive = 0x02000000, /* onclick = activate event */
-	SITF_InFocusRing     = 0x10000000, /* will act as a tab stop */
+	SITF_InitDone        = 0x00800000,  /* set at the end of SIT_CreateWidget() */
+	SITF_ToggleButon     = 0x01000000,  /* toggle button: ignore mouse button release event */
+	SITF_ImmediateActive = 0x02000000,  /* onclick = activate event */
+	SITF_InFocusRing     = 0x10000000,  /* will act as a tab stop */
 	SITF_RecalcStyles    = 0x20000000,
-	SITF_FallthroughEvt  = 0x40000000, /* mouse events are sent to widgets below this one */
+	SITF_FallthroughEvt  = 0x40000000,  /* mouse events are sent to widgets below this one */
 	SITF_HasAccel        = 0x80000000
 };
 
 
 enum /* bitfield for 'layout.flags' */
 {
-	LAYF_IgnoreWords     = 0x0000001,  /* don't render node->title or node->layout.wordwrap */
-	LAYF_NodeAdded       = 0x0000002,  /* added in rendering */
-	LAYF_SizeChanged     = 0x0000004,  /* reflow necessary for this node and its children */
-	LAYF_NoBorders       = 0x0000008,  /* skip border rendering without having to check the whole layout.border[] array */
-	LAYF_NoRoundBorder   = 0x0000010,  /* no boder-radius */
-	LAYF_NoOutline       = 0x0000020,  /* no outline - no need to call border rendering */
-	LAYF_HasBoxShadow    = 0x0000040,
-	LAYF_HasInset        = 0x0000080,
-	LAYF_HasLeftAttach   = 0x0000100,
-	LAYF_HasTopAttach    = 0x0000200,
-	LAYF_HasRightAttach  = 0x0000400,
-	LAYF_HasBottomAttach = 0x0000800,
-	LAYF_HasAttach       = 0x0000f00,
-	LAYF_NoTextShadow    = 0x0001000,
-	LAYF_NoChanges       = 0x0002000,  /* private children have no changes when hovering */
-	LAYF_HasImg          = 0x0004000,
-	LAYF_CompactText     = 0x0008000,  /* will ignore descending part of font metric */
-	LAYF_BImgLoaded      = 0x0010000,
-	LAYF_AdjustHitRect   = 0x0020000,  /* use optimalWidth() callback to adjust hit box */
-	LAYF_AdjustRect      = 0x0040000,  /* adjust render rect in renderNode() via optimalWidth() cb */
-	LAYF_RenderWordBg    = 0x0080000,
+	LAYF_IgnoreWords     = 0x00000001,  /* don't render node->title or node->layout.wordwrap */
+	LAYF_NodeAdded       = 0x00000002,  /* added in rendering */
+	LAYF_SizeChanged     = 0x00000004,  /* reflow necessary for this node and its children */
+	LAYF_NoBorders       = 0x00000008,  /* skip border rendering without having to check the whole layout.border[] array */
+	LAYF_NoRoundBorder   = 0x00000010,  /* no boder-radius */
+	LAYF_NoOutline       = 0x00000020,  /* no outline - no need to call border rendering */
+	LAYF_HasBoxShadow    = 0x00000040,
+	LAYF_HasInset        = 0x00000080,
+	LAYF_HasLeftAttach   = 0x00000100,
+	LAYF_HasTopAttach    = 0x00000200,
+	LAYF_HasRightAttach  = 0x00000400,
+	LAYF_HasBottomAttach = 0x00000800,
+	LAYF_HasAttach       = 0x00000f00,
+	LAYF_NoTextShadow    = 0x00001000,
+	LAYF_NoChanges       = 0x00002000,  /* private children have no changes when hovering */
+	LAYF_HasImg          = 0x00004000,
+	LAYF_CompactText     = 0x00008000,  /* will ignore descending part of font metric */
+	LAYF_BImgLoaded      = 0x00010000,
+	LAYF_AdjustHitRect   = 0x00020000,  /* use optimalWidth() callback to adjust hit box */
+	LAYF_AdjustRect      = 0x00040000,  /* adjust render rect in renderNode() via optimalWidth() cb */
+	LAYF_RenderWordBg    = 0x00080000,
+	LAYF_RelUnit         = 0x00100000,  /* 6 bits needed ... */
+	LAYF_RelUnitLast     = 0x02000000   /* ... up to here */
 };
 
 enum /* bitfield for style.flags */
 {
-	CSSF_APPLIED     = 0x0001,       /* cssApply() has been called */
-	CSSF_ANON        = 0x0002,       /* anonymous elements (no effect for css selector) */
-	CSSF_INLINE      = 0x0004,       /* HTML "inline" elements (set after processing CSS rules) */
-	CSSF_OBJECT      = 0x0008,       /* content of node requires special processing */
-	CSSF_CLOSEP      = 0x0010,       /* this starting node must auto-close any opened <p> tag */
-	CSSF_OPT         = 0x0020,       /* elements with an optional end tag */
-	CSSF_IMG         = 0x0040,       /* need to load external ressources */
-	CSSF_LINK        = 0x0080,       /* set on anchor and its descendant (used in render.c) */
-	CSSF_BORDERIMG   = 0x0100,       /* cache for border-image is done */
-	CSSF_TEXTSHADOW  = 0x0200,       /* style.shadow struct need recompute */
-	CSSF_BOXSHADOW   = 0x0400,       /* style.boxShadow need recompute */
-	CSSF_BACKGROUND  = 0x0800        /* style.background need update (dim and offset) */
+	CSSF_APPLIED         = 0x0001,      /* cssApply() has been called */
+	CSSF_ANON            = 0x0002,      /* anonymous elements (no effect for css selector) */
+	CSSF_INLINE          = 0x0004,      /* HTML "inline" elements (set after processing CSS rules) */
+	CSSF_OBJECT          = 0x0008,      /* content of node requires special processing */
+	CSSF_CLOSEP          = 0x0010,      /* this starting node must auto-close any opened <p> tag */
+	CSSF_OPT             = 0x0020,      /* elements with an optional end tag */
+	CSSF_IMG             = 0x0040,      /* need to load external ressources */
+	CSSF_LINK            = 0x0080,      /* set on anchor and its descendant (used in render.c) */
+	CSSF_BORDERIMG       = 0x0100,      /* cache for border-image is done */
+	CSSF_TEXTSHADOW      = 0x0200,      /* style.shadow struct need recompute */
+	CSSF_BOXSHADOW       = 0x0400,      /* style.boxShadow need recompute */
+	CSSF_BACKGROUND      = 0x0800       /* style.background need update (dim and offset) */
 };
 
 enum /* bitfield for state */

@@ -689,6 +689,8 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 			for (c = sit.hover; c; c = c->parent)
 			{
 				stack[count++] = c;
+				if (count == 10)
+					puts("here");
 				c->oldState = c->state;
 				if (! ((c->flags & SITF_ToggleButon) && (c->type != SIT_BUTTON || ((SIT_Button)c)->state)))
 					c->state &= ~STATE_HOVER;
@@ -788,10 +790,18 @@ DLLIMP void SIT_ProcessResize(int width, int height)
 
 		w->box.right  = w->fixed.width  = w->maxBox.width  = width;
 		w->box.bottom = w->fixed.height = w->maxBox.height = height;
-		layoutCalcBox(w);
+		if ((w->style.fontSize & 3) == 3)
+		{
+			/* font proportionnal to viewport: recalc everything */
+			w->style.font.size = cssApplyFontSize(w, w->style.fontSize);
+			SIT_ChangeStyleSheet(w, NULL, FitUsingInitialBox);
+		}
+		else
+		{
+			layoutCalcBox(w);
 
-		SIT_LayoutWidgets(w, KeepDialogSize);
-
+			SIT_LayoutWidgets(w, KeepDialogSize);
+		}
 		sit.dirty = True;
 
 		for (w = HEAD(w->children); w; NEXT(w))

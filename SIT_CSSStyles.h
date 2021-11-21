@@ -218,8 +218,8 @@ struct Style_t /* this structure will contain more or less a direct dump of CSS 
 	uint8_t    active, reflow, oldBgCount, shadowTotal;
 	uint16_t   inheritSet;
 	ULONG      lineHeight, letterSpacing, wordSpacing, verticalAlign;
-	ULONG      width, height, fontSize, outlineOffset, margin;
-	ULONG      transformX, transformY, flags, left, top;
+	ULONG      transformX, transformY;
+	ULONG      fontSize, outlineOffset, margin, flags, left, top;
 	CSSColor   color, decoColor, fgSel, bgSel;
 	STRPTR     transform, textOverflow;
 	Text       text;
@@ -232,6 +232,7 @@ struct Style_t /* this structure will contain more or less a direct dump of CSS 
 	BoxShadow  boxShadow;
 	Background background;
 	BorderImg  borderImg;
+	ULONG      height, width, offset[4];
 };
 
 struct Layout_t               /* this structure will contain usable values for the layout module */

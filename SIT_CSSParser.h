@@ -28,6 +28,7 @@ Bool   cssParseURI(STRPTR fmt, STRPTR * pend, STRPTR * mem);
 Bool   cssParse(STRPTR css, int isPath);
 void   cssParseInlineStyles(SIT_Widget, STRPTR styles);
 ULONG  cssColorSearch(STRPTR name);
+REAL   cssApplyFontSize(SIT_Widget, ULONG size);
 
 int    cssApply(SIT_Widget);
 void   cssClear(SIT_Widget);

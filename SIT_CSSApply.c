@@ -506,7 +506,7 @@ static Bool cssFindInList(STRPTR list, STRPTR word, CSSArg * value, Bool deref)
 }
 
 /* transform CSS value into pt */
-static REAL cssApplyFontSize(SIT_Widget parent, ULONG size)
+REAL cssApplyFontSize(SIT_Widget parent, ULONG size)
 {
 	int  num  = size >> 16;
 	int  frac = (size & 0xfffc) >> 2;
@@ -518,19 +518,17 @@ static REAL cssApplyFontSize(SIT_Widget parent, ULONG size)
 		ref = parent->style.font.size;
 
 	switch (size & 3) {
-	case 0:  break; /* direct value */
-	case 1:  res *= ref; break; /* em */
-	case 2:  res *= ref / 100.0f; break; /* percentage */
-	default:
-		switch (frac) {
-		case 1:  res = ref - 4; break; /* smaller */
-		case 2:  res = ref + 4; break; /* larger */
-		default: res = ref; /* auto */
-		}
+	case 0: break; /* direct value */
+	case 1: res *= ref; break; /* em */
+	case 2: res *= ref / 100.0f; break; /* percentage */
+	case 3:
+		res *= sit.scrWidth * 0.01f; /* vw */
+		//if (res < sit.defFontHeight)
+		//	res = sit.defFontHeight;
 	}
 	/* blurry mess otherwise */
 	res = roundf(res);
-	return MAX(res,1);
+	return MAX(res,4);
 }
 
 static void cssMultAssign(CSSAttr attr, APTR mem)
@@ -1368,7 +1366,6 @@ static void cssPostProcess(SIT_Widget node)
 	if (node->style.opacity > 1) node->style.opacity = 1;
 	if (node->style.opacity < 0) node->style.opacity = 0;
 	if (node->parent)            node->style.opacity *= node->parent->style.opacity;
-	else sit.defFontHeight = node->style.font.size;
 }
 
 /* check if geometric reflow is required after some CSS properties have been changed */

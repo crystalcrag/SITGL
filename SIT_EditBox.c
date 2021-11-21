@@ -93,6 +93,29 @@ static int SIT_TextEditResize(SIT_Widget w, APTR cd, APTR ud)
 	SIT_EditBox state = (SIT_EditBox) w;
 	state->rowVisible = w->layout.pos.height / state->fh;
 	state->width = w->layout.pos.width;
+
+	if (w->style.lineHeight != AUTOVAL)
+	{
+		state->fh = ToPoints(NULL, w, w->style.lineHeight & ~3, 0 /* only needed for relative value */);
+
+		/* style.lineHeight is only the minimum required - relative value are relative to font size not parent box */
+		switch (w->style.lineHeight & 3) {
+		case 1: state->fh *= w->style.font.size; break; /* em */
+		case 2: state->fh *= w->style.font.size * 0.01f; break; /* % */
+		}
+	}
+	else state->fh = w->style.font.size;
+
+	if (state->editType != SITV_Multiline)
+	{
+		/* extend selection background a bit for single line edit */
+		state->extendT = MIN(w->layout.padding.top, 2);
+		state->extendB = MIN(w->layout.padding.bottom, 2) + state->extendT;
+	}
+
+	state->fh = roundf(state->fh);
+	state->padLineY = roundf((state->fh - w->style.font.size) * 0.5f); /* for selection */
+
 	if (state->flags & FLAG_HASSCROLL)
 		state->width -= state->scrollPad;
 	if (state->length > 0 && state->wordWrap && state->formatWidth != state->width)
@@ -585,28 +608,6 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 			init = edit->text;
 		}
 	}
-
-	if (w->style.lineHeight != AUTOVAL)
-	{
-		edit->fh = ToPoints(NULL, w, w->style.lineHeight & ~3, 0 /* only needed for relative value */);
-
-		/* style.lineHeight is only the minimum required - relative value are relative to font size not parent box */
-		switch (w->style.lineHeight & 3) {
-		case 1: edit->fh *= w->style.font.size; break; /* em */
-		case 2: edit->fh *= w->style.font.size * 0.01f; break; /* % */
-		}
-	}
-	else edit->fh = w->style.font.size;
-
-	if (edit->editType != SITV_Multiline)
-	{
-		/* extend selection background a bit for single line edit */
-		edit->extendT = MIN(w->layout.padding.top, 2);
-		edit->extendB = MIN(w->layout.padding.bottom, 2) + edit->extendT;
-	}
-
-	edit->fh = roundf(edit->fh);
-	edit->padLineY = roundf((edit->fh - w->style.font.size) * 0.5f); /* for selection */
 
 	/* init (w->title) is not malloc for SIT_EDITBOX (see SIT_Widget.c:SIT_ParseTags()) */
 	if (IsDef(init))
@@ -1854,7 +1855,7 @@ static int SIT_TextEditClick(SIT_Widget w, APTR cd, APTR ud)
 			sit.dirty = 1;
 			lastClick = TimeMS();
 			SIT_TextEditRefreshCaret(state);
-			return 1;
+			return 2;
 		}
 		else if (state->editType >= SITV_Integer && (msg->button == 3 || msg->button == 4))
 		{

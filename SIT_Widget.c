@@ -26,8 +26,6 @@
 		{ SIT_Visible,      "visible",      CSG, SIT_BOOL, OFFSET(SIT_Widget, visible) },
 		{ SIT_NextCtrl,     "nextCtrl",     _SG, SIT_STR,  0},
 		{ SIT_TabNum,       "tabNum",       _SG, SIT_INT,  OFFSET(SIT_Widget, tabOrder) },
-		{ SIT_Height,       "height",       CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.height) },
-		{ SIT_Width,        "width",        CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.width) },
 		{ SIT_Y,            "y",            CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.top) },
 		{ SIT_X,            "x",            CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.left) },
 		{ SIT_Rect,         "rect",         CSG, SIT_ABBR, ABBR(1, 1, 1, 1) },
@@ -47,6 +45,8 @@
 		{ SIT_NVGcontext,   NULL,           __G, SIT_PTR,  0},
 		{ SIT_ToolTip,      "toolTip",      C__, SIT_STR,  0},
 		{ SIT_OuterRect,    NULL,           __G, SIT_PTR,  0},
+		{ SIT_Height,       "height",       CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.height) },
+		{ SIT_Width,        "width",        CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.width) },
 
 		/* attachments */
 		#define	ATTACH(side, field)    OFFSET(SIT_Widget, attachment[side].field)
@@ -66,7 +66,6 @@
 		{ SIT_Top,              "top",              CSG, SIT_ABBR, ABBR(4, 4, 4, 0) },
 		{ SIT_Right,            "right",            CSG, SIT_ABBR, ABBR(4, 4, 4, 0) },
 		{ SIT_Bottom,           "bottom",           CSG, SIT_ABBR, ABBR(4, 4, 4, 0) },
-		{ SIT_Margins,          "margins",          CSG, SIT_ABBR, ABBR(16,-2,-1,2) },
 		{ SIT_MaxWidth,         "maxWidth",         CSG, SIT_CTRL, 0 },
 		{ SIT_MinWidth,         "minWidth",         CSG, SIT_UNIT, OFFSET(SIT_Widget, minBox.width) },
 		{ SIT_MinHeight,        "minHeight",        CSG, SIT_UNIT, OFFSET(SIT_Widget, minBox.height) },
@@ -662,7 +661,7 @@ void SIT_ParseTags(SIT_Widget w, va_list vargs, TagList * classArgs)
 		TagList *   args;
 		SIT_Variant value;
 		ULONG       usage = 0;
-		Bool        format;
+		int         format;
 
 		if (list) tag = list->tag;
 		else      tag = va_arg(vargs, int);
@@ -720,8 +719,8 @@ void SIT_ParseTags(SIT_Widget w, va_list vargs, TagList * classArgs)
 					case SIT_REAL: value.real = list->key.real; break;
 					case SIT_CTRL: case SIT_PTR: value.pointer = list->key.ptr; break;
 					case SIT_BOOL: case SIT_U16: case SIT_INT: value.integer = list->key.val; break;
-					case SIT_UNIT: value.real = SIT_EmToReal(w, list->key.val); break;
 					case SIT_STR:  value.string = list->key.ptr; list ++; goto assign_str;
+					case SIT_UNIT: value.integer = list->key.val; list ++; goto assign_unit;
 					}
 					list ++;
 					if (list->tag == SIT_TagList)
@@ -735,7 +734,21 @@ void SIT_ParseTags(SIT_Widget w, va_list vargs, TagList * classArgs)
 				case SIT_INT:  value.integer = va_arg(vargs, int);    break;
 				case SIT_U16:  value.word    = va_arg(vargs, int);    break;
 				case SIT_REAL: value.real    = va_arg(vargs, double); break;
-				case SIT_UNIT: value.real    = SIT_EmToReal(w, va_arg(vargs, int)); break;
+				case SIT_UNIT:
+					value.integer = va_arg(vargs, int);
+					assign_unit:
+					format = args->tl_TagID - SIT_Height;
+					if (0 <= format && format < 6)
+					{
+						if (value.integer & (1<<31))
+						{
+							w->layout.flags |= LAYF_RelUnit << format;
+							(&w->style.height)[format] = value.integer;
+						}
+						else w->layout.flags &= ~(LAYF_RelUnit << format);
+					}
+					value.real = SIT_EmToReal(w, value.integer);
+					break;
 				case SIT_STR: /* strings have to be malloced ... */
 					value.string = va_arg(vargs, STRPTR);
 					assign_str:

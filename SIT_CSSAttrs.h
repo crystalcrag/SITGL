@@ -280,14 +280,14 @@
 	 .arg1    = OFF(font.family),      .get     = OFF(font.handle)},
 
 	{.attr    = "font-size",           .inherit = INHERIT(2, cssAttrFontSize), .reflow = ReflowLayout,
-	 .defval  = "=16pt",               .format  = "|xx-small=6pt|x-small=8pt|small=10pt|medium=14pt|large=20pt"
-	                                              "|x-large=28pt|xx-large=32pt|smaller=7|larger=11|POS",
+	 .defval  = NULL,                  .format  = "POS",
 	 .arg1    = OFF(fontSize),         .get     = OFF(font.size)},
 
 	{.attr    = "font-style",          .inherit = 1, .sz = 1, .reflow = ReflowLayout,
 	 .defval  = NULL,                  .format  = "|normal|italic|oblique",
 	 .arg1    = OFF(font.italic)},
 
+	// XXX not used
 	{.attr    = "font-variant",        .inherit = 1, .sz = 1, .reflow = ReflowLayout,
 	 .defval  = NULL,                  .format  = "|normal|small-caps",
 	 .arg1    = OFF(font.variant)},
@@ -301,7 +301,7 @@
 
 	/* only used for <img> tag */
 	{.attr    = "height",              .inherit = 0, .reflow = ReflowLayout,
-	 .defval  = AUTO,                  .format  = AUTOPOS,
+	 .defval  = NULL,                  .format  = "POS",
 	 .arg1    = OFF(height)},
 
 	/* positioned elements only */
@@ -494,7 +494,7 @@
 
 	/* only used for <img> tag */
 	{.attr    = "width",               .reflow  = ReflowLayout,
-	 .defval  = AUTO,                  .format  = AUTOPOS,
+	 .defval  = NULL,                  .format  = "POS",
 	 .arg1    = OFF(width)},
 
 	{.attr    = "word-spacing",        .reflow  = ReflowLayout, .inherit = 2,
