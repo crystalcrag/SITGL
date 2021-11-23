@@ -107,6 +107,7 @@ void SIT_NukeCSS(void);
 void SIT_CreateBuddyLabel(SIT_Widget buddy, STRPTR text, SIT_Widget * max);
 Bool SIT_IsImageModified(CSSImage img, STRPTR path, Bool fromCSS);
 void SIT_ChangeStyleSheet(SIT_Widget, STRPTR path, int mode);
+void SIT_ListClearStyles(SIT_Widget, int flags);
 
 int  SIT_TextEditKey(SIT_EditBox, int key);
 int  SIT_TextEditInsertText(SIT_EditBox, DATA8 utf8);

@@ -2783,14 +2783,16 @@ you can use:
 
 <ul>
   <li><tt class="dt">px</tt>: this unit will guarantee that it will <b>match the pixel resolution of the
-  screen</b>: if you ask for a <tt>border-width</tt> of <tt>2px</tt>, the border will indeed be occupy
+  screen</b>: if you ask for a <tt>border-width</tt> of <tt>2px</tt>, the border will indeed occupy
   2 pixels on the screen. No attempts will be made to adjust for HiDPI monitors. This is more often
   than not, <b>not</b> the unit you want to use.
+
   <li><tt class="dt">in</tt>, <tt class="dt">cm</tt>, <tt class="dt">mm</tt>, <tt class="dt">pt</tt>: 
   these units are mostly a relic from the days this library was rendering to PDF format, since postscript
   points (pt) is the native unit of PDF. However <tt>SITGL</tt> makes no attempt at figuring the DPI
   of the monitor where the rendering occur, meaning that those units are mostly useless. <tt>SITGL</tt>
   will assume a resolution of 72 DPI, for what it is worth, which is probably not much. <b>Avoid</b>.
+
   <li><tt class="dt">em</tt>: This is more often that not, <b>the unit you want to use</b>. This unit
   will be <b>relative to the element font's height</b>. This is how you make a DPI agnostic interface:
   set the font size to some reasonable value and then derive all your user interface elements from
@@ -2798,8 +2800,12 @@ you can use:
 
   <li><tt class="dt">vw</tt>, <tt class="dt">vh</tt>: unit that is <b>relative to the viewport</b>
   width/height. This unit is particularly useful to set the font height on the root node. After that,
-  all the elements will inherit that value. <tt>1vw</tt> equals to 1% of the viewport width. A good
-  base font size is usually between <tt>1.3vw</tt> and <tt>1.7vw</tt>.
+  all the elements will inherit that value, assuming you used <tt>em</tt> unit to set the font size
+  for child controls. <tt>1vw</tt> equals to 1% of the viewport width. A good base font size is usually
+  between <tt>1.3vw</tt> and <tt>1.7vw</tt>.
+
+  <p>If the window is ever resized afterward, the base font size will be recomputed and <b>all descendant
+  controls depending on this size</b> will have their layout adjusted accordingly.
 </ul>
 
 <p>There is an important fact to keep in mind with these units: even though you can use floating

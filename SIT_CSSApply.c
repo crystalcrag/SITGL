@@ -107,7 +107,6 @@ CSSAttr cssAttrSearch(STRPTR str);
 
 int CSS_Init(STRPTR theme, int isPath)
 {
-	static char defval[10];
 	int i, j;
 
 	/* supported CSS attributes */
@@ -135,11 +134,6 @@ int CSS_Init(STRPTR theme, int isPath)
 			c = c & 1 ? 0xedb88320 ^ (c >> 1) : c >> 1;
 		crctable[i] = c;
 	}
-
-	/* this will make all font size relative unit to be somewhat HiDPI aware */
-	sprintf(defval, "=%dpt", sit.defFontHeight);
-	CSSAttr attr = GET(cssAttrFontSize);
-	attr->defval = defval;
 
 	vector_init(cssStyles, sizeof (struct CSSStyle_t));
 
@@ -1222,7 +1216,11 @@ void cssSetDefault(SIT_Widget node)
 	node->style.oldBgCount = oldBg;
 
 	if (! parent)
+	{
 		node->style.font.size = sit.defFontHeight;
+		memcpy(&node->style.color, &black, sizeof black);
+	}
+	else node->style.fontSize = cssFromUnit(Em, 1);
 
 	for (a = cssattrs; a < EOT(cssattrs); a ++)
 	{
@@ -1262,11 +1260,6 @@ void cssSetDefault(SIT_Widget node)
 
 	if (node->type == SIT_EDITBOX)
 		((SIT_EditBox)node)->caret.val = 0;
-	if (parent == NULL)
-	{
-		node->style.font.size = cssApplyFontSize(NULL, node->style.fontSize);
-		memcpy(&node->style.color, &black, sizeof black);
-	}
 	node->layout.flags &= ~LAYF_HasBoxShadow;
 	node->style.overflow = oldFlow; /* hmm, not set through CSS :-/ */
 

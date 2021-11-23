@@ -1218,27 +1218,59 @@ void layoutMeasureWords(SIT_Widget node, SizeF * ret)
 	node->layout.textarea = *ret;
 }
 
+void layoutClearStyles(SIT_Widget w, int clear)
+{
+	if (clear & 1) /* stylesheet changed: clear all styles */
+	{
+		memset(w->layout.crc32, 0xff, sizeof w->layout.crc32);
+		w->layout.curCRC32 = -1;
+		w->style.flags &= ~CSSF_APPLIED;
+	}
+	else w->style.font.size = cssApplyFontSize(w->parent, w->style.fontSize);
+
+	//fprintf(stderr, "font size for '%s' = %d\n", w->name, (int) w->style.font.size);
+
+	w->flags &= ~SITF_GeomNotified;
+	w->layout.pos.width = 0;
+	if (w->parent)
+	{
+		w->minBox.width = w->minBox.height = -1;
+		w->optimalBox   = w->maxBox = w->minBox;
+		if ((w->flags & SITF_TopLevel) == 0 || (clear & 2))
+		{
+			memset(&w->currentBox, 0, sizeof w->currentBox);
+			memset(&w->childBox,   0, sizeof w->childBox);
+		}
+	}
+	layoutCalcBox(w);
+}
+
 /* font size changed, but words remain the same */
 void layoutRecalcWords(SIT_Widget w)
 {
+	SIT_Widget old;
 	WordWrap word;
 	NVGCTX   vg = sit.nvgCtx;
 	REAL     fh, bl, space;
 	int      i = w->layout.wordwrap.count;
 
-	nvgFontFaceId(vg, w->style.font.handle);
-	nvgFontSize(vg,   w->style.font.size);
-	nvgTextMetrics(vg, &bl, NULL, &fh);
-	space = nvgTextBounds(vg, 0, 0, " ", NULL, NULL);
-
-	for (word = vector_first(w->layout.wordwrap); i > 0; word ++, i --)
+	for (word = vector_first(w->layout.wordwrap), old = NULL, space = 0; i > 0; word ++, i --)
 	{
+		if (old != word->node)
+		{
+			old = word->node;
+			nvgFontFaceId(vg, old->style.font.handle);
+			nvgFontSize(vg,   old->style.font.size);
+			nvgTextMetrics(vg, &bl, NULL, &fh);
+			space = nvgTextBounds(vg, 0, 0, " ", NULL, NULL);
+		}
 		if (word->n > 0)
 		{
 			word->h     = fh;
 			word->bl    = bl;
 			word->width = nvgTextBounds(vg, 0, 0, word->word, word->word+word->n, NULL);
-			word->space = space;
+			if (word->space > 0)
+				word->space = space;
 		}
 	}
 

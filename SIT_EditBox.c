@@ -29,7 +29,6 @@
 		{ SIT_StepValue,   "stepValue",   _SG, SIT_REAL, OFFSET(SIT_EditBox, stepValue) },
 		{ SIT_CurValue,    "curValue",    _SG, SIT_PTR,  OFFSET(SIT_EditBox, curValue) },
 		{ SIT_PlaceHolder, "placeHolder", _SG, SIT_STR,  OFFSET(SIT_EditBox, cueBanner) },
-		{ SIT_HotKey,      "hotKey",      _SG, SIT_INT,  OFFSET(SIT_EditBox, hotKey) },
 		{ SIT_EditBuffer,  "editBuffer",  C__, SIT_PTR,  OFFSET(SIT_EditBox, fixedBuffer) },
 		{ SIT_EditLength,  "editLength",  C__, SIT_INT,  OFFSET(SIT_EditBox, fixedSize) },
 		{ SIT_MaxUndo,     "maxUndo",     C__, SIT_INT,  OFFSET(SIT_EditBox, undoSize) },

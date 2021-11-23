@@ -40,16 +40,16 @@
 	static uint8_t textLookAhead[63];
 	static uint8_t textLength;
 
-typedef struct StrPool_t *        StrPool;
+typedef struct StrPool_t *       StrPool;
 
 struct Cell_t
 {
 	SizeF    sizeObj;
 	RectF    sizeCell;
-	APTR     obj;
+	APTR     obj;                /* STRPTR or SIT_Widget */
 	APTR     userData;
-	uint16_t flags;
-	uint16_t colLeft;
+	uint16_t flags;              /* CELL_* */
+	uint16_t colLeft;            /* to get back to start of row */
 };
 
 struct StrPool_t
@@ -70,9 +70,8 @@ enum /* bitfield for Cell->flags */
 	CELL_CATEGORY   = 0x0080,    /* thead */
 	CELL_CATVISIBLE = 0x0100,    /* initially hidden if no item in cat */
 	CELL_COLSTART   = 0x0200,    /* start of a row */
-	CELL_HASLAYOUT  = 0x0400,    /* header cell has computed label's size */
-	CELL_HIDDEN     = 0x0800,    /* temporarily hidden */
-	CELL_PRESELECT  = 0x1000,    /* pre-select by lasso */
+	CELL_HIDDEN     = 0x0400,    /* temporarily hidden */
+	CELL_PRESELECT  = 0x0800,    /* pre-select by lasso */
 };
 
 #define CELL_HASSELECT       (CELL_PRESELECT | CELL_SELECT)
@@ -150,10 +149,10 @@ static int SIT_ListMeasure(SIT_Widget w, APTR cd, APTR ud)
 		}
 		for (cell = STARTCELL(list), i = count; i > 0; i --, cell ++, hdr ++)
 		{
-			if ((hdr->flags & CELL_HASLAYOUT) == 0 && hdr->obj)
+			if ((hdr->flags & CELL_HASSIZE) == 0 && hdr->obj)
 			{
 				((SIT_Widget)hdr->obj)->optimalWidth(hdr->obj, &hdr->sizeObj, NULL);
-				hdr->flags |= CELL_HASLAYOUT;
+				hdr->flags |= CELL_HASSIZE;
 			}
 			hdr->sizeCell.width = hdr->sizeObj.width;
 			if (size.height < hdr->sizeObj.height)
@@ -168,6 +167,7 @@ static int SIT_ListMeasure(SIT_Widget w, APTR cd, APTR ud)
 			}
 			size.width += hdr->sizeCell.width;
 		}
+		// fprintf(stderr, "header height = %d\n", (int) size.height);
 		list->hdrHeight = size.height;
 		/* header height */
 		if (size.width > 0)
@@ -1558,6 +1558,32 @@ int SIT_ListGetItemCount(SIT_Widget w)
 		return list->cells.count - list->catCount;
 	}
 	else return list->cells.count / list->columnCount;
+}
+
+
+static void SIT_ListClearCell(Cell cell, int flags)
+{
+	cell->flags &= ~CELL_HASSIZE;
+	memset(&cell->sizeObj, 0, sizeof cell->sizeObj + sizeof cell->sizeCell);
+	if (cell->flags & CELL_ISCONTROL)
+	{
+		layoutClearStyles(cell->obj, flags);
+		layoutRecalcWords(cell->obj);
+	}
+}
+
+/* stylesheet changed/screen resized: recompute everything */
+void SIT_ListClearStyles(SIT_Widget w, int flags)
+{
+	SIT_ListBox list = (SIT_ListBox) w;
+	Cell cell;
+	int  i;
+
+	list->lbFlags &= ~SITV_ListMeasured;
+	for (i = list->columnCount, cell = list->columns;   i > 0; SIT_ListClearCell(cell, flags), i --, cell ++);
+	for (i = list->cells.count, cell = STARTCELL(list); i > 0; SIT_ListClearCell(cell, flags), i --, cell ++);
+	layoutClearStyles(list->td, flags);
+	layoutClearStyles(list->tdSel, flags);
 }
 
 

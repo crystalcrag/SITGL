@@ -12,7 +12,7 @@
 #include "SIT_P.h"
 #include "SIT_CSSLayout.h"
 
-//#define	DEBUG_GEOM     /* warning: verbose */
+// #define	DEBUG_GEOM     /* warning: verbose */
 
 /* 1 if sa_Arg points to a SIT_Widget according to sa_Type (SITV_Attach*) */
 static uint8_t relative[] = {0, 0, 0, 1, 1, 1, 1, 0};
@@ -330,8 +330,8 @@ static int SIT_LayoutChildren(SIT_Widget root, ResizePolicy mode)
 		for (list = HEAD(root->children); list; list->flags &= ~SITF_Style1Changed, NEXT(list));
 
 	#ifdef DEBUG_GEOM
-	fprintf(stderr, "=== %s: %s (%gx%gx%gx%g): min: [%g, %g]", root->name, "Keep\0   Optimal\0Current\0Initial" + mode*8,
-		root->box.left, root->box.top, root->box.right, root->box.bottom, root->minBox.width, root->minBox.height);
+	fprintf(stderr, "=== %s: %s (%dx%dx%dx%d): min: [%d, %d]", root->name, "Keep\0   Optimal\0Current\0Initial" + mode*8,
+		(int) root->box.left, (int) root->box.top, (int) root->box.right, (int) root->box.bottom, (int) root->minBox.width, (int) root->minBox.height);
 	#endif
 
 	/* perform 2 steps: one for horizontal constraints, a second for vertical */
@@ -412,13 +412,13 @@ static int SIT_LayoutChildren(SIT_Widget root, ResizePolicy mode)
 //	root->box.right  += root->padding[0] + root->padding[2];
 //	root->box.bottom += root->padding[1] + root->padding[3];
 	#ifdef DEBUG_GEOM
-	fprintf(stderr, " box: %g, %g - %g, %g:\n", root->box.left, root->box.top, root->box.right, root->box.bottom);
+	fprintf(stderr, " box: %d, %d - %d, %d:\n", (int) root->box.left, (int) root->box.top, (int) root->box.right, (int) root->box.bottom);
 	for (list = HEAD(root->children); list; NEXT(list))
 	{
 		if (list->visible && (list->flags & SITF_TopLevel) == 0)
-			fprintf(stderr, "    %s: %gx%g - %gx%g (%gx%g)\n",
-				list->name, list->box.left, list->box.top, list->box.right,
-				list->box.bottom, list->box.right - list->box.left, list->box.bottom - list->box.top);
+			fprintf(stderr, "    %s: %dx%d - %dx%d (%dx%d)\n",
+				list->name, (int) list->box.left, (int) list->box.top, (int) list->box.right,
+				(int) list->box.bottom, (int) (list->box.right - list->box.left), (int) (list->box.bottom - list->box.top));
 	}
 	#endif
 
@@ -759,8 +759,8 @@ static int SIT_LayoutInitial(SIT_Widget root, ResizePolicy mode)
 			    BoxSizeDiffers(&list->currentBox, &list->childBox))
 			{
 				#ifdef DEBUG_GEOM
-				fprintf(stderr, "%s: current box: %gx%g, child box: %gx%g\n", list->name, list->currentBox.width,
-					list->currentBox.height, list->childBox.width, list->childBox.height);
+				fprintf(stderr, "%s: current box: %dx%d, child box: %dx%d\n", list->name, (int) list->currentBox.width,
+					(int) list->currentBox.height, (int) list->childBox.width, (int) list->childBox.height);
 				#endif
 				SizeF old = list->currentBox;
 				if (list->optimalWidth(list, &list->currentBox, (APTR) (mode == FitUsingInitialBox ? FitUsingCurrentBox : mode)) == 1)
@@ -945,9 +945,9 @@ Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode)
 			root->box.top  += box[1]; root->box.bottom += box[1];
 		}
 		#ifdef DEBUG_GEOM
-		fprintf(stderr, "layout initial %s: %gx%g", root->name, root->box.right-root->box.left, root->box.bottom-root->box.top);
+		fprintf(stderr, "layout initial %s: %dx%d", root->name, (int) (root->box.right-root->box.left), (int) (root->box.bottom-root->box.top));
 		if (root->type == SIT_DIALOG)
-			fprintf(stderr, " min: [%g, %g]\n", ((SIT_Dialog)root)->minSize.width, ((SIT_Dialog)root)->minSize.height);
+			fprintf(stderr, " min: [%d, %d]\n", (int) ((SIT_Dialog)root)->minSize.width, (int) ((SIT_Dialog)root)->minSize.height);
 		else
 			fputc('\n', stderr);
 		#endif

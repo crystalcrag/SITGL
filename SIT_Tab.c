@@ -98,7 +98,7 @@ static int SIT_TabMeasure(SIT_Widget w, APTR cd, APTR ud)
 		if (tab->maxHeight < h)
 			tab->maxHeight = h;
 	}
-	fprintf(stderr, "tab size = %dx%d\n", n, (int) tab->maxHeight);
+	// fprintf(stderr, "tab size = %dx%d\n", n, (int) tab->maxHeight);
 	sz.width  = n+6;
 	sz.height = 0;
 

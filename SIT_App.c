@@ -169,30 +169,28 @@ void SIT_ChangeStyleSheet(SIT_Widget w, STRPTR path, int mode)
 	/* reapply new styles to all widgets */
 	sit.geomList = NULL;
 	SIT_Widget list;
+	int flags = 0;
+	if (path != NULL) flags |= 1;
+	if (mode == FitUsingInitialBox) flags |= 2;
 	for (list = sit.root; ; )
 	{
-		memset(list->layout.crc32, 0xff, sizeof list->layout.crc32);
-		list->layout.curCRC32 = -1;
-		list->style.flags &= ~CSSF_APPLIED;
-		list->flags &= ~SITF_GeomNotified;
-		list->layout.pos.width = 0;
-		layoutCalcBox(list);
-		layoutRecalcWords(list);
-		if (list->parent)
-		{
-			list->minBox.width = list->minBox.height = -1;
-			list->optimalBox   = list->maxBox = list->minBox;
-			if ((list->flags & SITF_TopLevel) == 0 || mode == FitUsingInitialBox)
-				list->currentBox = list->childBox = list->minBox;
-		}
+		layoutClearStyles(list, flags);
+		if (list->type == SIT_LISTBOX)
+			SIT_ListClearStyles(list, flags);
 
 		if (! list->children.lh_Head)
 		{
 			while (list->node.ln_Next == NULL)
 			{
+				if (list->layout.wordwrap.count)
+					/* can only be done once chiildren have their styles cleared */
+					layoutRecalcWords(list);
 				list = list->parent;
 				if (list == NULL) goto layout;
 			}
+			if (list->layout.wordwrap.count)
+				/* can only be done once chiildren have their styles cleared */
+				layoutRecalcWords(list);
 			list = (SIT_Widget) list->node.ln_Next;
 		}
 		else list = (SIT_Widget) list->children.lh_Head;
