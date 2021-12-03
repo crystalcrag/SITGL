@@ -162,6 +162,11 @@ static int SIT_SetLabelValues(SIT_Widget w, APTR cd, APTR ud)
 			w->currentBox = w->optimalBox;
 			sit.dirty = True;
 		}
+		else
+		{
+			free(w->layout.wordwrap.buffer);
+			vector_init(w->layout.wordwrap, sizeof (struct WordWrap_t));
+		}
 		w->flags |= SITF_GeometryChanged;
 		break;
 	case SIT_Overflow:

@@ -127,7 +127,7 @@
   <a class="sub3" href="#lexeruse">Edit box link</a>
   <a class="sub3" href="#lexerformat">Syntax file</a>
   <a class="sub3" href="#lexerexp">Regular expressions</a>
-  <a class="sub3" href="#lexersamp">Example</h4>
+  <a class="sub3" href="#lexersamp">Example</a>
 
 <a class="sub1" href="#i18n"><span>Internationalization</span></a>
  <a class="sub2" href="#localeinfo">Locale information</a>
@@ -1540,7 +1540,7 @@ to be used within containers/dialogs:
 <p>All of them take a <b>single argument: the type of attachment</b> you might want to apply to the specified
 border (<tt>SITV_Attach*</tt>). The <tt>SITV_Widget</tt>, <tt>SITV_Opposite</tt>, <tt>SITV_NoOverlap</tt>
 and <tt>SITV_Middle</tt> types of attachment <b>require a relative widget</b> to do their job, otherwise
-you'll get an error, and your program will exit immediately (harsh, but let it motivate you to test
+you'll get an error, and your program will exit immediately (harsh, but hopefully it will motivate you to test
 your code). This is done using another set of attributes:
 
 <ol class="compact">
@@ -2164,14 +2164,28 @@ corresponding integer:</p>
 </tbody>
 </table>
 
-<p>Also, for the <tt>SIT_*Object</tt> group, if you use a string specification,
-the argument will be <b>interpreted as a widget name</b>, that will be searched with
-<tt>SIT_GetById()</tt>. You have to be sure the widget exists though: this
-is the primary reason why widgets are first created, and then you set
-their layout attributes.</p>
+<p>Also, for the <tt>SIT_*Object</tt> group, if you use a string specification, the argument will be
+<b>interpreted as a widget name</b>, that will be searched with <tt>SIT_GetById()</tt>. You have to
+be sure the widget exists though: this is the primary reason why widgets are first created, and then
+you set their layout attributes.
 
-<p>Once all arguments have been given, you can continue your string to specify
-more attributes, or create more controls.</p>
+<p><b>Another shortcut</b> is to use special name <tt>#LAST</tt> for this group of properties: it will
+use the last control that has been added in the hierarchy where the current control will be created.
+The over-typical use case is when some part of the interface is created conditionnally, like this:
+
+<pre><com>/* create a header with some widgets */</com>
+SIT_CreateWidgets(diag, <val>"..."</val>);
+
+<com>/* then some optional parts */</com>
+<kwd>if</kwd> (option1)
+	SIT_CreateWidgets(diag, <val>"&lt;button name=option1 title='Option 1' buttonType="</val>, SITV_CheckBox, <val>"top=WIDGET,#LAST,0.5em&gt;"</val>);
+
+<kwd>if</kwd> (option2)
+	SIT_CreateWidgets(diag, <val>"&lt;button name=option2 title='Option 2' buttonType="</val>, SITV_CheckBox, <val>"top=WIDGET,#LAST,0.5em&gt;"</val>);
+
+<com>/* finally a footer */</com>
+SIT_CreateWidgets(diag, <val>"&lt;button name=save title=Save top=WIDGET,#LAST,0.5em&gt;"</val>);
+</pre>
 
 <h3 id="nestedtags"><span>Nested tags</span></h3>
 
@@ -2977,7 +2991,7 @@ and finally a color. Knowing this, how does a (valid) declaration like this get 
 </ol>
 
 
-<h3 id="cssboxshadow"><span>Box shadow</atr></h3>
+<h3 id="cssboxshadow"><span>Box shadow</span></h3>
 
 <pre><com>box-shadow</com>: <atr>&lt;offsetX&gt; &lt;offsetY&gt; &lt;blurradius&gt; &lt;spreadradius&gt; inset &lt;color&gt;</atr></pre>
 
@@ -3060,7 +3074,7 @@ glTexImage2D(GL_TEXTURE_2D, <val>0</val>, GL_RGB8, width, height, <val>0</val>, 
 glCopyTexImage2D(GL_TEXTURE_2D, <val>0</val>, GL_RGB8, <val>0</val>, <val>0</val>, width, height, <val>0</val>);
 glGenerateMipmap(GL_TEXTURE_2D);
 
-SIT_GetValues(app, SIT_NVGcontext, &nvg, <val>NULL</val>);
+SIT_GetValues(app, SIT_NVGcontext, &amp;nvg, <val>NULL</val>);
 
 <type>int</type> nvgImage = nvgCreateImage(nvg, (<type>const char</type> *) texId, NVG_IMAGE_FLIPY | NVG_IMAGE_GLTEX);
 
@@ -3674,9 +3688,9 @@ when talking about <a href="#geometry">geometry management</a>. There are a few 
   <p>Were created this way: (the alignment is achieved by the <tt>SIT_MaxWidth</tt> chain)
   <pre>SIT_Widget max = <val>NULL</val>;
 SIT_CreateWidgets(dialog,
-	<val>"&lt;editbox name=level width=15em buddyLabel="</val>, <val>"Level name:"</val>, &max, <val>"&gt;"</val>
-	<val>"&lt;editbox name=seed  width=15em top=WIDGET,level,0.5em buddyLabel="</val>, <val>"Seed:"</val>, &max, <val>"&gt;"</val>
-	<val>"&lt;editbox name=days  width=6em  top=WIDGET,seed,0.5em buddyLabel="</val>, <val>"Days:"</val>, &max, <val>"&gt;"</val>
+	<val>"&lt;editbox name=level width=15em buddyLabel="</val>, <val>"Level name:"</val>, &amp;max, <val>"&gt;"</val>
+	<val>"&lt;editbox name=seed  width=15em top=WIDGET,level,0.5em buddyLabel="</val>, <val>"Seed:"</val>, &amp;max, <val>"&gt;"</val>
+	<val>"&lt;editbox name=days  width=6em  top=WIDGET,seed,0.5em buddyLabel="</val>, <val>"Days:"</val>, &amp;max, <val>"&gt;"</val>
 );</pre>
 
   <li><tt class="dt">SIT_TagList</tt> (<tt class="t">KeyVal</tt>)
@@ -3714,7 +3728,7 @@ name with the <tt>XfMt</tt> flag. You can then specify a <tt>printf</tt>-like fo
 to this property, followed by any argument needed by the format string itself. Like for example:
 
 <pre>SIT_Widget w = SIT_CreateWidget(<val>"main"</val>, SIT_DIALOG, app,
-	SIT_Title | XfMt, <val>"XMines <spe>%s</val>"</spe>, levels[game-&gt;level].name,
+	SIT_Title | XfMt, <val>"XMines <spe>%s</spe>"</val>, levels[game-&gt;level].name,
 	<val>NULL</val>
 );</pre>
 
@@ -3894,14 +3908,14 @@ SIT_SetValues(app,
   function). The typical use case is to use that variable in the outer-most loop of the main event loop, like this:
   <pre><type>static int</type> exit = <val>0</val>;
 
-SIT_SetValues(app, SIT_ExitCode, &exit, <val>NULL</val>);
+SIT_SetValues(app, SIT_ExitCode, &amp;exit, <val>NULL</val>);
 FrameSetFPS(<val>60</val>);
 
 <kwd>while</kwd> (! exit)
 {
 	SDL_Event event;
 
-	<kwd>while</kwd> (SDL_PollEvent(&event))
+	<kwd>while</kwd> (SDL_PollEvent(&amp;event))
 	{
 		<kwd>switch</kwd> (event.type) {
 		<com>/* dispatch events */</com>
@@ -4142,13 +4156,16 @@ However, there are a few tags that have a special meaning:
   <li><tt class="dt">&lt;br&gt;</tt>
   <p>Force a <b>line break</b>. This tag does not nest.
 
-  <li><tt class="dt">&lt;xchar&gt;</tt>
+  <li><tt class="dt">&lt;xchar&gt;</tt>, <tt class="dt">&lt;pchar&gt;</tt>
   <p>Include a <b>character symbol</b>. In some way, it is similar to an <tt>&lt;img&gt;</tt> tag, except
   its height will automatically match the current font size (its width will then be adjusted accordingly)
   and its color will be modulated using current text color (ie: using CSS <tt>color</tt> property).
 
-  <p>This tag is expecting a <tt>src</tt> attribute and just like the <tt>&lt;img&gt;</tt> tag
+  <p>These tags are expecting a <tt>src</tt> attribute and just like the <tt>&lt;img&gt;</tt> tag
   <b class="n"><u>THE IMAGE MUST BE RELATIVE TO WHERE THE STYLESHEET IS</u></b>.
+
+  <p>The difference between <tt>xchar</tt> and <tt>pchar</tt> is related to their extend: <tt>xchar</tt>
+  will extend only the ascending portion of the font, while <tt>pchar</tt> will use the whole height.
 
   <p>The typical use case for this tag, is to provide an image in case the font you are using does have
   a special character and you don't want to include an entirely new font just for that character. Note:
@@ -5573,6 +5590,10 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
   <p>If you want to change the foreground color or background color, simply give a RGBA value in the
   corresponding field. A color will be considered non default if the alpha value is greater than 0.
 
+  <p><b>The return value</b> should indicate whether (<tt class="o">1</tt>) or not (<tt class="o">0</tt>)
+  the painting of the cell is complete. If complete, no further painting operations will be done, no
+  matter what text is stored for this cell.
+
 </ul> 
 
 <h4 id="listevents">Events</h4>
@@ -6127,13 +6148,13 @@ is only a way to automatically set the <tt>SIT_Visible</tt> attribute on each ch
   <p>Specify the initial list of tabs. It is a tab (ASCII code 9) separated list of names. e.g:
   <tt class="o">"First&nbsp;tab<spe>\t</spe>Second&nbsp;tab<spe>\t</spe>Third&nbsp;tab"</tt>.
 
-  <li><tt class="dt">SIT_TabActive</tt> (<tt class="t">int</tt>)</dt>
+  <li><tt class="dt">SIT_TabActive</tt> (<tt class="t">int</tt>)
   <p>Get/set the current selected tab (0-based index).
 
-  <li><tt class="dt">SIT_TabCount</tt> (<tt class="t">int</tt>)</dt> <span class="ro">read-only</span>
+  <li><tt class="dt">SIT_TabCount</tt> (<tt class="t">int</tt>) <span class="ro">read-only</span>
   <p>Get the number of tabs currently defined in this control.
 
-  <li><tt class="dt">SIT_TabSpace</tt> (<tt class="t">int</tt>)</dt>
+  <li><tt class="dt">SIT_TabSpace</tt> (<tt class="t">int</tt>)
   <p>Define the spacing between tabs (XXX should be done using CSS though).
 </ul>
 
@@ -6298,7 +6319,7 @@ cancelled its selection. If confirmed, you can check some properties to know wha
   arbitrary name followed by tab (ASCII code 9) and then a semi-colon separated list of DOS wildcard.
   For example:
   <pre><val>"C/C++ files<spe>\t</spe>*.c;*.h;*.cpp;*.hpp<spe>\n</spe>"
-"Any<spe>\t</spe>*"</val></pre></dd>
+"Any<spe>\t</spe>*"</val></pre>
 
   <li><tt class="dt">SIT_SelFilter</tt> (<tt class="t">int</tt>)
   <p>Zero-based index within filter list that will be initially selected.
@@ -6432,7 +6453,7 @@ been mentionned so far in this document:
 
   <li><tt class="dt"><type>void</type> SIT_Exit(<type>int</type> code);</tt>
   <p>Initiate a graceful exit. Obviously, you will have to setup the <a href="#SIT_ExitCode"><tt>SIT_ExitCode</tt></a>
-  property in order to catch the this, otherwise this function is mostly useless.
+  property in order to catch this, otherwise this function is mostly useless.
 
   <li><tt class="dt"><type>void</type> SIT_Log(<type>int</type> level, <type>STRPTR</type> fmt, ...);</tt>
   <p>This function will display a message in a <b>separate window</b> (from the operating system).
@@ -6483,7 +6504,7 @@ been mentionned so far in this document:
   <li><tt class="dt">SIT_Action SIT_ActionAdd(SIT_Widget w, <type>double</type> start_ms, <type>double</type> end_ms, SIT_CallProc, <type>APTR</type> ud);</tt>
   <p>Add an asynchronous action to be called (potentially repeatedly) at a later time. Your callback
   won't be called until the control has been given back to <tt>SITGL</tt>, through the function
-  <tT>SIT_RenderNodes()</tt>. <span class"n">Note</span>: the <tt>w</tt> is kind of useless, it is simply
+  <tT>SIT_RenderNodes()</tt>. <span class="n">Note</span>: the <tt>w</tt> is kind of useless, it is simply
   a parameter that will be given back to your callback as its first argument.
 
   <p>The callback will be called repeatedly (ie: each frame) as long the current time falls between
@@ -6621,7 +6642,7 @@ hardest:</p>
   <li><b>Use macros</b>: that way you can force the order of the arguments. For example, if
   <tt>MyAttribute1</tt> must be set before <tt>MyAttribute2</tt>, simply define a macro like
   this:
-  <pre><def>#define </span><inc>MyAttribute2(param1)    MyAttribute1, param1, SIT_TagUser+100</span></pre>
+  <pre><def>#define </def><inc>MyAttribute2(param1)    MyAttribute1, param1, SIT_TagUser+100</inc></pre>
   <p>Here we used a private tag definition (<tt>SIT_TagUser+100</tt>: out of the reach of any
   auto-completion tool of a typical IDE) to be sure it is not directly set
   by the user. Then, you can use it that way:</p>
@@ -7575,7 +7596,7 @@ if you ever plan to handle that case.</p>
 
 
 
-<h2 class="annex" id="annexA"><span>UtilityLib API</h2>
+<h2 class="annex" id="annexA"><span>UtilityLib API</span></h2>
 
 <p>This library contains some utility functions that you might find useful at some point. The set of
 functions comes mostly from what's needed by <tt>SITGL</tt> itself. This part has never been intended
@@ -8296,7 +8317,7 @@ identical:
   to parse the file (otherwise, those pointers will point within the buffer you provided).
 </ul>
 
-<h2 class="annex" id="annexB"><span>stb_image API</h2>
+<h2 class="annex" id="annexB"><span>stb_image API</span></h2>
 
 <p>Any 3d engine will need at some point to load external image files. If your needs are fairly standard
 (8bits RGB or RGBA) textures, you can reuse the image loading capabilities from <tt>nanovg</tt>. These
@@ -8346,7 +8367,7 @@ the image.
 
 <h5>Default compilation on Windows</h5>
 
-<p><span class="n">Note</span>: on windows with the default compilation optios, the <tt>stb_image</tt>
+<p><span class="n">Note</span>: on windows with the default compilation options, the <tt>stb_image</tt>
 funtions use <tt>gdiplus.dll</tt> internally to load image (this saves about 35Kb of binary size). Sadly,
 <tt>gdiplus</tt> does not support as many formats as <tt>stb_image.h</tt>. Here are the one that have
 been tested:
@@ -8360,7 +8381,7 @@ been tested:
 <p>For whatever reason, GIF does not work if you ask for a 32bit RGBA bitmap.
 
 
-<h2 class="annex" id="annexC"><span>Advanced rendering API</h2>
+<h2 class="annex" id="annexC"><span>Advanced rendering API</span></h2>
 
 <p>At some point, you might want to render graphics on top of <tt>SITGL</tt> elements, outside of the
 <tt>SITGL</tt> rendering pipeline (typical use case: render some geometry using your own OpenGL commands).
@@ -8467,7 +8488,7 @@ one item per render.
 
 
 
-<h2 class="annex" id="annexD"><span>Border rendering</h2>
+<h2 class="annex" id="annexD"><span>Border rendering</span></h2>
 
 <p>This part will describe the algorithm used to handle the CSS <tt>border:</tt> property, because the
 code is not particularly clear as how this is achieved, and given how difficult it was getting that

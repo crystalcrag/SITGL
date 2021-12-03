@@ -44,7 +44,7 @@
 		{ SIT_Composited,   "composited",   _SG, SIT_BOOL, OFFSET(SIT_Widget, composited) },
 		{ SIT_NVGcontext,   NULL,           __G, SIT_PTR,  0},
 		{ SIT_ToolTip,      "toolTip",      C__, SIT_STR,  0},
-		{ SIT_OuterRect,    NULL,           __G, SIT_PTR,  0},
+		{ SIT_ClientRect,   NULL,           __G, SIT_PTR,  0},
 		{ SIT_Height,       "height",       CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.height) },
 		{ SIT_Width,        "width",        CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.width) },
 
@@ -1204,6 +1204,22 @@ DLLIMP void SIT_GetValues(SIT_Widget w, ...)
 				case SIT_Width:
 				case SIT_Height:  va_arg(vargs, REAL *)[0] = (&w->box.right)[SIT_Width - args->tl_TagID] - (&w->box.left)[SIT_Width - args->tl_TagID]; continue;
 				case SIT_Visible: va_arg(vargs, Bool *)[0] = IsVisible(w); continue;
+				case SIT_ClientRect:
+				{	int * rect = va_arg(vargs, int *);
+					rect[0] = w->layout.pos.left + w->offsetX;
+					rect[1] = w->layout.pos.top  + w->offsetY;
+					rect[2] = w->layout.pos.width;
+					rect[3] = w->layout.pos.height;
+					if (w->type == SIT_LISTBOX)
+					{
+						SIT_ListBox list = (SIT_ListBox) w;
+						if (list->viewMode == SITV_ListViewReport)
+						{
+							rect[1] += (int) list->hdrHeight;
+							rect[3] -= (int) list->hdrHeight;
+						}
+					}
+				}	continue;
 				case SIT_NVGcontext:
 					field = sit.nvgCtx;
 					nvgFillColorRGBA8(field, w->style.color.rgba);
