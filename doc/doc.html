@@ -8101,8 +8101,8 @@ you know the thread has exited (or at least freed its resources).
 
 <h3 class="annex" id="timer"><span>Timer functions</span></h3>
 
-<p>This will provide a set of functions to implement high precision timer: wait for a specified amount
-of time down to the millisecond range and get current time down to the microsecond range.
+<p>This will provide a set of functions to implement <b>high precision timer</b>: wait for a specified
+amount of time down to the millisecond range and get current time down to the microsecond range.
 
 <p><span class="n">Note</span>: avoid storing timestamp in <tt class="t">float</tt> datatype. You'll only
 have 4 hours and 40 minutes before running out of precision (at the millisecond range, after that time
@@ -8116,25 +8116,30 @@ there will be a loss of precision at the millisecond range).
 API.
 
 <ul>
-  <li><tt class="dt">void FrameSetFPS(int fps);</tt>
-  <p>Before you can use <tt>FrameWaitNext()</tt>, you need to initialize the targeted frame per
-  second you want. This function can be called at any point, but this is usually done before the main
+  <li><tt class="dt"><type>void</type> FrameSetFPS(<type>int</type> fps);</tt>
+  <p>Before you can use <tt>FrameWaitNext()</tt>, you need to initialize the <b>targeted frame per
+  second</b> you want. This function can be called at any point, but this is usually done before the main
   event loop starts.
 
-  <li><tt class="dt">void FrameWaitNext(void);</tt>
-  <p>This function will wait until the remainder of the frame time window. It will attempt to do a
+  <li><tt class="dt"><type>void</type> FrameWaitNext(<type>void</type>);</tt>
+  <p>This function will <b>wait until the remainder of the frame</b> time window. It will attempt to do a
   graceful (ie: CPU yielding) wait first, then if there is not enough time left, it will do an active
   loop. This usually happen if the delay up to the next frame is below 10ms.
 
   <p>This function is usually called last in the event processing loop.
 
-  <li><tt class="dt">double FrameGetTime(void);</tt>
-  <p>This will give the time in millisecond, double precision format. The precision of this function
+  <li><tt class="dt"><type>double</type> FrameGetFPS(<type>void</type>);</tt>
+  <p>If you used <tt>FrameWaitNext()</tt> to time the delay between frames, you can get this function
+  to get the <b>actual frames per second you manage to render</b>. This value is updated at most once per second,
+  and you can expect some fluctuations of about +/-0.5 around the target FPS.
+
+  <li><tt class="dt"><type>double</type> FrameGetTime(<type>void</type>);</tt>
+  <p>This will give the <b>time in millisecond</b>, double precision format. The precision of this function
   should be at least 1 microsecond. The origin of the epoch is when <tt>SIT_Init()</tt> was called
   (it is not from an arbitrary fixed point in time).
 
-  <li><tt class="dt">void FramePauseUnpause(Bool pause);</tt>
-  <p>If you have to implement a pause menu, you'll need to ignore the time spent while the engine
+  <li><tt class="dt"><type>void</type> FramePauseUnpause(<type>Bool</type> pause);</tt>
+  <p>If you have to implement a <b>pause menu</b>, you'll need to ignore the time spent while the engine
   is paused, otherwise any actions based on time interval will be messed up. The idea is to call this
   function with the pause parameter set to <tt class="o">True</tt> at the start of the pause, then set
   to <tt class="o">False</tt> at the end. That way, the <tt>FrameGetTime()</tt> function will return
@@ -8143,14 +8148,14 @@ API.
   <p>While pause is on, the <tt>FrameGetTime()</tt> will always report the same value. <tt>FrameWaitNext()</tt>
   will work as normal though.
 
-  <li><tt class="dt">void FrameSaveRestoreTime(Bool save);</tt>
+  <li><tt class="dt"><type>void</type> FrameSaveRestoreTime(<type>Bool</type> save);</tt>
   <p>If you want to display a temporary screen on top of your scene, that will need to stop the time
   while being displayed, the function <tt>FramePauseUnpause()</tt> might be too drastic: it will stop
   the time advance in the entirety of <tt>SITGL</tt>. That means asynchronous updates and animation
   will stop working.
 
-  <p>What this function will do, is save the current time (as returned by <tt>FrameGetTime()</tt>), when
-  the <tt>save</tt> parameter is set to <tt class="o">True</tt>, and then restore this value when this
+  <p>What this function will do, is <b>save the current time</b> (as returned by <tt>FrameGetTime()</tt>), when
+  the <tt>save</tt> parameter is set to <tt class="o">True</tt>, and <b>then restore</b> this value when this
   parameter is set to <tt class="o">False</tt>. In the meantime, the <tt>FrameGetTime()</tt> will return
   a normal advance of time. Obviously, you'll need extra logic in your main loop to avoid using that
   function. Extra logic that will not needed if you use the function <tt>FramePauseUnpause()</tt>.

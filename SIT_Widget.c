@@ -39,7 +39,7 @@
 		{ SIT_LastChild,    NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, children.lh_Tail) },
 		{ SIT_CtrlType,     NULL,           __G, SIT_INT,  OFFSET(SIT_Widget, type) },
 		{ SIT_TagPrivate1,  NULL,           C__, SIT_PTR,  0}, /* BuddyCtrl */
-		{ SIT_TagPrivate2,  NULL,           C__, SIT_STR,  OFFSET(SIT_Widget, buddyText) },
+		{ SIT_TagPrivate2,  NULL,           C__, SIT_PTR,  OFFSET(SIT_Widget, buddyText) },
 		{ SIT_BuddyLabel,   "buddyLabel",   C__, SIT_ABBR, ABBR(1, 1, 0, 0)},
 		{ SIT_Composited,   "composited",   _SG, SIT_BOOL, OFFSET(SIT_Widget, composited) },
 		{ SIT_NVGcontext,   NULL,           __G, SIT_PTR,  0},
