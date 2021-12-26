@@ -106,7 +106,7 @@ void SIT_ListGetArg(SIT_Widget, int type, APTR arg);
 void SIT_NukeCSS(void);
 void SIT_CreateBuddyLabel(SIT_Widget buddy, STRPTR text, SIT_Widget * max);
 Bool SIT_IsImageModified(CSSImage img, STRPTR path, Bool fromCSS);
-void SIT_ChangeStyleSheet(SIT_Widget, STRPTR path, int mode);
+void SIT_ChangeStyleSheet(STRPTR path, int mode);
 void SIT_ListClearStyles(SIT_Widget, int flags);
 
 int  SIT_TextEditKey(SIT_EditBox, int key);
@@ -169,6 +169,7 @@ struct SITContext_t
 	uint16_t     themeMax;             /* mem allocated in <theme> */
 	uint16_t     themeSize;            /* mem used */
 	int          lastRule;
+	float        fontScale;            /* multiply all font-size by this value */
 	ListHead     images;               /* CSSImage: keep in a cache, free after a while */
 	ListHead     actions;              /* SIT_Action */
 	ListHead     pendingDel;           /* SIT_Widget */
@@ -480,6 +481,7 @@ struct SIT_Slider_t
 	int          maxValue;             /* public */
 	int          pageSize;             /* public */
 	int          sliderPos;            /* public */
+	int *        curValue;             /* public */
 	REAL         thumbThick;           /* public */
 	REAL         thumbHeight;          /* public */
 	REAL         gaugePadding;         /* public */
@@ -593,6 +595,7 @@ union SIT_Variant_t
 	int      integer;
 	uint16_t word;
 	double   real;
+	float    real32;
 	void *   pointer;
 	Bool     boolean;
 	STRPTR   string;

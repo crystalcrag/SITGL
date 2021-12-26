@@ -512,8 +512,9 @@ Bool cssParseColor(STRPTR * value, CSSColor * color)
 	}
 	else /* named color */
 	{
-		STRPTR next = cssIdent(p), named;
+		STRPTR next, named;
 		ULONG  val;
+		for (next = p; *next && isalnum(*next); next ++);
 
 		if (*next)
 		{
@@ -521,7 +522,7 @@ Bool cssParseColor(STRPTR * value, CSSColor * color)
 			named = memcpy(alloca(r+1), p, r);
 			named[r] = 0;
 		}
-		else named = p;
+		else named = (STRPTR) p;
 		val = cssColorSearch(named);
 		p = next;
 

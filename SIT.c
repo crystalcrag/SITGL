@@ -62,6 +62,7 @@ DLLIMP SIT_Widget SIT_Init(int nvgFlags, int width, int height, STRPTR theme, in
 	sit.nextAction = INFINITY;
 	sit.dblClickMS = GetDoubleClickTime();
 	sit.caretBlinkMS = GetCaretBlinkTime();
+	sit.fontScale = 1;
 
 	if (! sit.nvgCtx)
 	{

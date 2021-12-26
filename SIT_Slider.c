@@ -20,10 +20,11 @@
 		{ SIT_ThumbHeight,  "thumbHeight",  _SG, SIT_UNIT, OFFSET(SIT_Slider, thumbHeight) },
 		{ SIT_GaugePadding, "gaugePadding", _SG, SIT_UNIT, OFFSET(SIT_Slider, gaugePadding) },
 		{ SIT_BuddyEdit,    "buddyEdit",    _SG, SIT_CTRL, OFFSET(SIT_Slider, buddy) },
+		{ SIT_CurValue,     "curValue",     _SG, SIT_PTR,  OFFSET(SIT_Slider, curValue) },
 		{ SIT_TagEnd }
 	};
 
-/* Set minimal width/height */
+/* set minimal width/height */
 static int SIT_SliderMeasure(SIT_Widget w, APTR call_data, APTR resizePolicy)
 {
 	SIT_Slider s = (SIT_Slider) w;
@@ -99,7 +100,10 @@ static int SIT_SliderSync(SIT_Widget w, APTR cd, APTR ud)
 	SIT_GetValues(w, SIT_Title, &value, NULL);
 	pos = atoi(value);
 	if (pos != s->sliderPos)
+	{
 		SIT_SetValues(ud, SIT_SliderPos, pos, NULL);
+		SIT_ApplyCallback(&s->super, (APTR) s->sliderPos, HAS_EVT(&s->super, SITE_OnChange) ? SITE_OnChange : SITE_OnScroll);
+	}
 	return 1;
 }
 
@@ -117,9 +121,13 @@ static int SIT_SliderSetValues(SIT_Widget w, APTR call_data, APTR user_data)
 		if (pos != s->sliderPos)
 		{
 			s->sliderPos = pos;
+			if (s->curValue)
+				s->curValue[0] = pos;
 			sit.dirty = 1;
 			if (w->flags & SITF_InitDone)
 				SIT_SliderResize(w, NULL, NULL);
+			if ((w = s->buddy))
+				goto reset_buddy;
 		}
 	}	break;
 	case SIT_BuddyEdit:
@@ -129,6 +137,7 @@ static int SIT_SliderSetValues(SIT_Widget w, APTR call_data, APTR user_data)
 		if (w)
 		{
 			TEXT buffer[16];
+			reset_buddy:
 			sprintf(buffer, "%d", s->sliderPos);
 			SIT_SetValues(w, SIT_Title, buffer, NULL);
 			if (w->type == SIT_EDITBOX) /* it will trigger event back to TB */
@@ -164,6 +173,8 @@ static int SIT_SliderMove(SIT_Widget w, APTR cd, APTR ud)
 		if (pos != s->sliderPos)
 		{
 			s->sliderPos = pos;
+			if (s->curValue)
+				s->curValue[0] = pos;
 			SIT_SliderResize(w, NULL, SEND_EVENT);
 			sit.dirty = 1;
 		}
@@ -212,6 +223,8 @@ static int SIT_SliderClick(SIT_Widget w, APTR cd, APTR ud)
 		if (pos != s->sliderPos)
 		{
 			s->sliderPos = pos;
+			if (s->curValue)
+				s->curValue[0] = pos;
 			SIT_SliderResize(w, NULL, SEND_EVENT);
 			sit.dirty = 1;
 		}
@@ -246,6 +259,8 @@ static int SIT_SliderKbd(SIT_Widget w, APTR cd, APTR ud)
 		if (pos != s->sliderPos)
 		{
 			s->sliderPos = pos;
+			if (s->curValue)
+				s->curValue[0] = pos;
 			SIT_SliderResize(w, NULL, SEND_EVENT);
 			sit.dirty = 1;
 		}
@@ -257,13 +272,12 @@ Bool SIT_InitSlider(SIT_Widget w, va_list args)
 {
 	SIT_Slider s = (SIT_Slider) w;
 
-	/* Subclass SetValues */
 	w->setValue = SIT_SliderSetValues;
 	w->optimalWidth = SIT_SliderMeasure;
 	w->flags |= SITF_PrivateChildren | SITF_RenderChildren;
 	w->layout.flags |= LAYF_AdjustRect;
 
-	/* Default values */
+	/* default values */
 	s->isHoriz  = True;
 	s->maxValue = 100;
 	s->pageSize = 10;
@@ -271,6 +285,21 @@ Bool SIT_InitSlider(SIT_Widget w, va_list args)
 	s->thumbThick = 1e6;
 	s->gaugePadding = 1e6;
 	SIT_ParseTags(w, args, w->attrs = SliderClass);
+	int pos = s->curValue ? *s->curValue : s->sliderPos;
+	if (pos < s->minValue) pos = s->minValue;
+	if (pos > s->maxValue) pos = s->maxValue;
+	if (pos != s->sliderPos)
+	{
+		s->sliderPos = pos;
+		if (s->curValue)
+			s->curValue[0] = pos;
+		if (s->buddy)
+		{
+			TEXT value[16];
+			sprintf(value, "%d", pos);
+			SIT_SetValues(s->buddy, SIT_Title, value, NULL);
+		}
+	}
 
 	layoutCalcBox(w);
 

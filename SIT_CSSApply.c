@@ -512,11 +512,11 @@ REAL cssApplyFontSize(SIT_Widget parent, ULONG size)
 		ref = parent->style.font.size;
 
 	switch (size & 3) {
-	case 0: break; /* direct value */
+	case 0: res *= sit.fontScale; break; /* direct value */
 	case 1: res *= ref; break; /* em */
 	case 2: res *= ref / 100.0f; break; /* percentage */
 	case 3:
-		res *= sit.scrWidth * 0.01f; /* vw */
+		res *= sit.scrWidth * sit.fontScale * 0.01f; /* vw */
 		//if (res < sit.defFontHeight)
 		//	res = sit.defFontHeight;
 	}

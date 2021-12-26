@@ -794,7 +794,7 @@ DLLIMP void SIT_ProcessResize(int width, int height)
 		{
 			/* font proportionnal to viewport: recalc everything */
 			w->style.font.size = cssApplyFontSize(w, w->style.fontSize);
-			SIT_ChangeStyleSheet(w, NULL, FitUsingInitialBox);
+			SIT_ChangeStyleSheet(NULL, FitUsingInitialBox);
 		}
 		else
 		{

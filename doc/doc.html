@@ -3845,6 +3845,14 @@ SIT_SetValues(app,
   If you get an error, you might want to try with a different font (especially if you used an operating
   system font).
 
+  <li><tt class="dt">SIT_FontScale</tt> (<tt>int</tt>)
+  <p>Use this property to set a <b>global font size multiplier</b> (expressed as an integer percentage).
+  The idea behind this parameter is that, even if you set the root font size using a relative unit (like
+  <tt>vw</tt>), getting a single value to fit everyone's needs is going to be difficult. That's the
+  purpose of this parameter: give a way to tweak the overall "scaling" of the interface (assuming you
+  used relative units, like <tt>em</tt> for the most part). You'll have to expose this value one way
+  or another within your application, to let the user choose a value that fit its needs.
+
   <li id="SIT_AccelTable"><tt class="dt">SIT_AccelTable</tt> (<tt>SIT_Accel *</tt>)
   <p>This property can be used to <b>register global shortcuts</b>, that can be checked way before dispatching
   keyboard events to individual widgets. The typical use case for this feature is to provide menu shortcuts
@@ -5963,7 +5971,7 @@ jump to other parts of the document.
 <h3 id="SIT_SLIDER"><span>SIT_SLIDER</span></h3>
 
 <p>Sliders, like scrollbar, allow the user to choose an integer among a certain
-range. But unless scrollbars, which are intended to display the relative size
+range. But unlike scrollbars, which are intended to display the relative size
 of a view within a larger part, the purpose of a slider is to point to a
 particular integer.
 
@@ -8129,7 +8137,7 @@ API.
   <p>This function is usually called last in the event processing loop.
 
   <li><tt class="dt"><type>double</type> FrameGetFPS(<type>void</type>);</tt>
-  <p>If you used <tt>FrameWaitNext()</tt> to time the delay between frames, you can get this function
+  <p>If you used <tt>FrameWaitNext()</tt> to time the delay between frames, you can use this function
   to get the <b>actual frames per second you manage to render</b>. This value is updated at most once per second,
   and you can expect some fluctuations of about +/-0.5 around the target FPS.
 

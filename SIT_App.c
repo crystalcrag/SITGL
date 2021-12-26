@@ -7,25 +7,27 @@
 #include "platform.h"
 #include <malloc.h>
 #include <stdlib.h>
+#include <math.h>
 #include "SIT_P.h"
 #include "SIT_CSSLayout.h"
 #include "nanovg.h"
 
 	TagList AppClass[] = {
-		{ SIT_DefSBArrows,     "defSBArrows", _SG, SIT_INT,  OFFSET(SIT_App, defSBArrows) },
-		{ SIT_DefSBSize,       "defSBSize",   _SG, SIT_UNIT, OFFSET(SIT_App, defSBSize) },
-		{ SIT_RefreshMode,     "refreshMode", _SG, SIT_INT,  OFFSET(SIT_App, refreshMode) },
-		{ SIT_CurrentDir,      "currentDir",  _SG, SIT_PTR,  OFFSET(SIT_App, currentDir) },
-		{ SIT_ScreenWidth,     NULL,          __G, SIT_INT,  OFFSET(SIT_App, screen.width) },
-		{ SIT_ScreenHeight,    NULL,          __G, SIT_INT,  OFFSET(SIT_App, screen.height) },
-		{ SIT_TagPrivate+2,    NULL,          _S_, SIT_PTR,  0 }, /* font-file */
-		{ SIT_TagPrivate+1,    NULL,          _S_, SIT_PTR,  OFFSET(SIT_App, fontName) },
-		{ SIT_AddFont,         "addFont",     _S_, SIT_ABBR, ABBR(1, 1, 0, 0) },
-		{ SIT_AccelTable,      "accelTable",  _SG, SIT_PTR,  OFFSET(SIT_App, accel) },
-		{ SIT_StyleSheet,      "styleSheet",  _S_, SIT_PTR,  OFFSET(SIT_App, styles) },
-		{ SIT_ExitCode,        "exitCode",    _SG, SIT_PTR,  OFFSET(SIT_App, exitCode) },
-		{ SIT_SetAppIcon,      NULL,          _S_, SIT_INT,  0 },
-		{ SIT_CompositedAreas, NULL,          __G, SIT_PTR,  0 },
+		{ SIT_DefSBArrows,     NULL, _SG, SIT_INT,  OFFSET(SIT_App, defSBArrows) },
+		{ SIT_DefSBSize,       NULL, _SG, SIT_UNIT, OFFSET(SIT_App, defSBSize) },
+		{ SIT_RefreshMode,     NULL, _SG, SIT_INT,  OFFSET(SIT_App, refreshMode) },
+		{ SIT_CurrentDir,      NULL, _SG, SIT_PTR,  OFFSET(SIT_App, currentDir) },
+		{ SIT_ScreenWidth,     NULL, __G, SIT_INT,  OFFSET(SIT_App, screen.width) },
+		{ SIT_ScreenHeight,    NULL, __G, SIT_INT,  OFFSET(SIT_App, screen.height) },
+		{ SIT_TagPrivate+2,    NULL, _S_, SIT_PTR,  0 }, /* font-file */
+		{ SIT_TagPrivate+1,    NULL, _S_, SIT_PTR,  OFFSET(SIT_App, fontName) },
+		{ SIT_AddFont,         NULL, _S_, SIT_ABBR, ABBR(1, 1, 0, 0) },
+		{ SIT_AccelTable,      NULL, _SG, SIT_PTR,  OFFSET(SIT_App, accel) },
+		{ SIT_StyleSheet,      NULL, _S_, SIT_PTR,  OFFSET(SIT_App, styles) },
+		{ SIT_ExitCode,        NULL, _SG, SIT_PTR,  OFFSET(SIT_App, exitCode) },
+		{ SIT_SetAppIcon,      NULL, _S_, SIT_INT,  0 },
+		{ SIT_CompositedAreas, NULL, __G, SIT_PTR,  0 },
+		{ SIT_FontScale,       NULL, _SG, SIT_INT,  0 },
 		{ SIT_TagEnd }
 	};
 	static WNDPROC mainWndProc;
@@ -153,7 +155,7 @@ static STRPTR SIT_GetFontFile(STRPTR fmt, STRPTR dest)
 }
 
 /* replace the entire stylesheet */
-void SIT_ChangeStyleSheet(SIT_Widget w, STRPTR path, int mode)
+void SIT_ChangeStyleSheet(STRPTR path, int mode)
 {
 	if (path)
 	{
@@ -250,7 +252,7 @@ static int SIT_AppSetValues(SIT_Widget w, APTR call_data, APTR user_data)
 		sit.refreshMode = app->refreshMode = val->integer;
 		break;
 	case SIT_StyleSheet:
-		SIT_ChangeStyleSheet(w, val->pointer, FitUsingCurrentBox);
+		SIT_ChangeStyleSheet(val->pointer, FitUsingCurrentBox);
 		break;
 	case SIT_CurrentDir:
 		/* note: value->string is a user-supplied buffer (SIT_PTR), not a copy: do not modify */
@@ -267,6 +269,14 @@ static int SIT_AppSetValues(SIT_Widget w, APTR call_data, APTR user_data)
 			LoadIcon(NULL, IDI_APPLICATION) :
 			LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(val->integer)))
 		);
+		break;
+	case SIT_FontScale:
+		val->real32 = val->integer * 0.01f;
+		if (fabsf(val->real32 - sit.fontScale) > EPSILON)
+		{
+			sit.fontScale = val->real32;
+			SIT_ChangeStyleSheet(NULL, FitUsingInitialBox);
+		}
 		break;
 	default:
 		SIT_SetWidgetValue(w, call_data, user_data);
