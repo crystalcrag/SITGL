@@ -2247,7 +2247,7 @@ static void SIT_TextEditAdjustScroll(SIT_EditBox state)
 		}
 		/* empty lines at bottom? */
 		int count = state->rowTop + state->rowVisible - state->rowCount;
-		while (count > 0)
+		while (count > 0 && state->rowTop > 0)
 		{
 			state->charTop -= state->rows[-- state->rowTop].bytes;
 			count --;

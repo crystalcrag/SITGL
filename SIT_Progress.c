@@ -25,9 +25,9 @@ static int SIT_ProgressMeasure(SIT_Widget w, APTR call_data, APTR unused)
 	SizeF *      ret = call_data;
 
 	if (! pb->isHoriz)
-		ret->width = sit.defFontHeight + 4;
+		ret->width = sit.defFontHeight + w->padding[0] + w->padding[2];
 	else
-		ret->height = sit.defFontHeight + 4;
+		ret->height = sit.defFontHeight + w->padding[1] + w->padding[3];
 	return 0;
 }
 
@@ -57,12 +57,14 @@ static int SIT_ProgressResize(SIT_Widget w, APTR cd, APTR ud)
 	int          pos = pb->max - pb->min;
 
 	if (pos <= EPSILON || bar == NULL) return 0;
-	REAL x = w->layout.pos.width * (pb->progressPos - pb->min) / pos;
+	REAL width  = w->box.right  - w->box.left - w->layout.border.left - w->layout.border.right;
+	REAL height = w->box.bottom - w->box.top  - w->layout.border.top  - w->layout.border.bottom;
+	REAL x = width * (pb->progressPos - pb->min) / pos;
 
-	bar->box.left = w->padding[0];
-	bar->box.top  = w->padding[1];
-	bar->box.right = w->padding[0] + x;
-	bar->box.bottom = w->padding[1] + w->layout.pos.height;
+	bar->box.left = w->layout.border.left;
+	bar->box.top  = w->layout.border.top;
+	bar->box.right = bar->box.left + x;
+	bar->box.bottom = bar->box.top + height;
 
 	SIT_LayoutCSSSize(bar);
 
