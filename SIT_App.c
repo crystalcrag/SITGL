@@ -154,27 +154,10 @@ static STRPTR SIT_GetFontFile(STRPTR fmt, STRPTR dest)
 	return NULL;
 }
 
-/* replace the entire stylesheet */
-void SIT_ChangeStyleSheet(STRPTR path, int mode)
+void SIT_ChangeChildrenStyle(SIT_Widget root, int flags)
 {
-	if (path)
-	{
-		SIT_NukeCSS();
-		sit.dirty = 1;
-
-		/* don't care if it fails */
-		cssParse(path, True);
-		if (! cssParse(path, True))
-			SIT_SetValues(sit.root, SIT_Style, "background: white", NULL);
-	}
-
-	/* reapply new styles to all widgets */
-	sit.geomList = NULL;
 	SIT_Widget list;
-	int flags = 0;
-	if (path != NULL) flags |= 1;
-	if (mode == FitUsingInitialBox) flags |= 2;
-	for (list = sit.root; ; )
+	for (list = root; ; )
 	{
 		layoutClearStyles(list, flags);
 		if (list->type == SIT_LISTBOX)
@@ -191,7 +174,6 @@ void SIT_ChangeStyleSheet(STRPTR path, int mode)
 				if (list == NULL) goto layout;
 			}
 			if (list->layout.wordwrap.count)
-				/* can only be done once chiildren have their styles cleared */
 				layoutRecalcWords(list);
 			list = (SIT_Widget) list->node.ln_Next;
 		}
@@ -200,10 +182,10 @@ void SIT_ChangeStyleSheet(STRPTR path, int mode)
 
 	/* need to compute CSS box first */
 	layout:
-	for (list = sit.root; ; )
+	for (list = root; ; )
 	{
 		if (list->flags & SITF_TopLevel)
-			SIT_LayoutWidgets(list, mode);
+			SIT_LayoutWidgets(list, flags & 2 ? FitUsingInitialBox : FitUsingCurrentBox);
 
 		if (! list->children.lh_Head)
 		{
@@ -216,6 +198,27 @@ void SIT_ChangeStyleSheet(STRPTR path, int mode)
 		}
 		else list = (SIT_Widget) list->children.lh_Head;
 	}
+}
+
+/* replace the entire stylesheet */
+void SIT_ChangeStyleSheet(STRPTR path, int mode)
+{
+	if (path)
+	{
+		SIT_NukeCSS();
+		sit.dirty = 1;
+
+		/* don't care if it fails */
+		if (! cssParse(path, True))
+			SIT_SetValues(sit.root, SIT_Style, "background: white", NULL);
+	}
+
+	/* reapply new styles to all widgets */
+	sit.geomList = NULL;
+	int flags = 0;
+	if (path != NULL) flags |= 1;
+	if (mode == FitUsingInitialBox) flags |= 2;
+	SIT_ChangeChildrenStyle(sit.root, flags);
 }
 
 

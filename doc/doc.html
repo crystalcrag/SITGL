@@ -6129,7 +6129,7 @@ user:
 
 <p>Placing control within a specific tab, can be done using two methods:</p>
 <ol>
-  <li><b>Automatic</b>: by setting the property <tt>SIT_TabOrder</tt> to n<sup>nth</sup> tab you want
+  <li><b>Automatic</b>: by setting the property <tt>SIT_TabNum</tt> to n<sup>nth</sup> tab you want
   the the control to appear in. <b>Tabs are numbered starting from 1</b>. A small inconsistency to the
   usual 0-based indexing, because 0 is actually a special value, that will be described below.
 
@@ -6137,7 +6137,7 @@ user:
   <tt>SIT_Visible</tt> property according to the selected tab.
 
   <li><b>Manual</b>: visibility of controls within tab can be manually managed by <b>giving 0 as the
-  parameter for the <tt>SIT_TabOrder</tt> property</b> (which is the default value when creating controls
+  parameter for the <tt>SIT_TabNum</tt> property</b> (which is the default value when creating controls
   as children of tabs). This special value means that the control will be visible on all tabs. If you
   want to hide it, you will have to catch the <tt>SITE_OnChanged</tt> event and reorganized your controls
   here.
@@ -6147,7 +6147,7 @@ user:
   their content as the selected tab change.
 </ol>
 
-<p>It is actually possible to mix both methods: remember that setting <tt>SIT_TabOrder</tt> property
+<p>It is actually possible to mix both methods: remember that setting <tt>SIT_TabNum</tt> property
 is only a way to automatically set the <tt>SIT_Visible</tt> attribute on each child controls.
 
 <p>A few more properties are available to manage tabs:

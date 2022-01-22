@@ -861,6 +861,7 @@ void SIT_LayoutCSSSize(SIT_Widget root)
 	size.width  = root->layout.pos.width;
 	size.height = root->layout.pos.height;
 	if (root->layout.format.width > 0)
+		/* relative size for padding/border */
 		layoutCalcPadding(root);
 	root->layout.pos.left   = root->box.left + root->padding[0];
 	root->layout.pos.top    = root->box.top  + root->padding[1];
@@ -960,7 +961,7 @@ Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode)
 
 	root->flags &= ~SITF_StylesChanged;
 
-	if (mode != FitUsingOptimalBox && (root->flags & SITF_TopLevel))
+	if (mode != FitUsingOptimalBox /*&& (root->flags & SITF_TopLevel)*/)
 		SIT_LayoutCSSSize(root);
 
 	return True;

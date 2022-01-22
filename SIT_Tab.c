@@ -65,6 +65,20 @@ static int SIT_TabSetSize(SIT_Widget w, APTR cd, APTR ud)
 	item->clientArea.width  = w->layout.pos.width;
 	item->clientArea.height = w->layout.pos.height;
 
+	SIT_Widget label;
+	if (tab->items && (label = tab->items[0].label))
+	{
+		int offset = 0;
+		int size = w->box.right - w->box.left;
+		switch (tab->tabStyle & 12) {
+		case SITV_AlignRight:
+			offset = size - tab->tabWidth;
+			break;
+		case SITV_AlignHCenter:
+			offset = (size - tab->tabWidth) * 0.5f;
+		}
+		SIT_SetValues(label, SIT_LeftOffset, offset, NULL);
+	}
 	return 1;
 }
 
@@ -77,6 +91,7 @@ static int SIT_TabMeasure(SIT_Widget w, APTR cd, APTR ud)
 
 	if (ud == AdjustRenderRect)
 	{
+		/* shift the tab content down to make room for tab labels */
 		RectF * rect = cd;
 		float h = tab->maxHeight;
 		rect->top += h;
@@ -99,7 +114,7 @@ static int SIT_TabMeasure(SIT_Widget w, APTR cd, APTR ud)
 			tab->maxHeight = h;
 	}
 	// fprintf(stderr, "tab size = %dx%d\n", n, (int) tab->maxHeight);
-	sz.width  = n+6;
+	sz.width  = tab->tabWidth = n+6;
 	sz.height = 0;
 
 	w->layout.padding.top = tab->padTop + tab->maxHeight;
@@ -158,7 +173,7 @@ static int SIT_TabExtendSel(SIT_Widget w, APTR cd, APTR resizePolicy)
 			/* only selected tab */
 			rect->height += tab->super.layout.border.top;
 
-		rect->top -= h;
+		rect->top -= h + tab->super.layout.border.top;
 
 		return 1;
 	}
@@ -170,11 +185,6 @@ static int SIT_TabExtendSel(SIT_Widget w, APTR cd, APTR resizePolicy)
 	}
 }
 
-static int SIT_TabRenderCorner(SIT_Widget w, APTR cd, APTR ud)
-{
-	//
-	return 1;
-}
 
 /* onclick on tab pane */
 static int SIT_TabSetCurrent(SIT_Widget w, APTR cd, APTR ud)
@@ -246,7 +256,6 @@ static void SIT_TabSet(SIT_Widget w, STRPTR tabs)
 		{
 			items->label = label = SIT_CreateWidget(i == 0 ? "#pane:active" : "#pane", SIT_LABEL, w, SIT_Title, tabs, SIT_TabNum, -1, NULL);
 			label->optimalWidth = SIT_TabExtendSel;
-			label->render = SIT_TabRenderCorner;
 			label->flags |= SITF_ToggleButon;
 			label->layout.flags |= LAYF_AdjustRect | LAYF_AdjustHitRect;
 			SIT_AddCallback(label, SITE_OnClick + EVT_PRIORITY(100), SIT_TabSetCurrent, NULL);

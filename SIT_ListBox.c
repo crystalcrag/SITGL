@@ -232,15 +232,16 @@ static int SIT_ListMeasure(SIT_Widget w, APTR cd, APTR ud)
 
 static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 {
-	SIT_ListBox  list  = (SIT_ListBox) w;
-	SIT_CallProc paint = list->cellPaint;
-	SIT_Widget   td    = list->td;
-	SIT_Widget   sel   = list->tdSel;
-	NVGcontext * vg    = sit.nvgCtx;
-	RectF        pos   = w->layout.pos;
-	uint8_t      icon  = list->viewMode == SITV_ListViewIcon;
-	uint8_t      text  = list->defAlign >= 0 ? list->defAlign : w->style.text.align;
-	int          col   = list->columnCount;
+	SIT_ListBox  list   = (SIT_ListBox) w;
+	SIT_CallProc paint  = list->cellPaint;
+	SIT_Widget   td     = list->td;
+	SIT_Widget   sel    = list->tdSel;
+	NVGcontext * vg     = sit.nvgCtx;
+	RectF        pos    = w->layout.pos;
+	uint8_t      icon   = list->viewMode == SITV_ListViewIcon;
+	uint8_t      text   = list->defAlign >= 0 ? list->defAlign : w->style.text.align;
+	uint8_t      select = 0;
+	int          col    = list->columnCount;
 	Cell         cell;
 	int          i, j, row;
 
@@ -273,9 +274,13 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 	/* we have to do clipping here, because children are managed by this control */
 	else nvgIntersectScissor(vg, pos.left, pos.top, pos.width, pos.height);
 
+	/* nested list :-/ */
+	if (w->parent->state & STATE_CHECKED)
+		select = 1;
+
 	for (cell = list->rowTop, row = cell - STARTCELL(list), i = list->cells.count - row, row /= col; i > 0; i -= col, row ++)
 	{
-		Bool forceSel = (icon == 0 && (cell->flags & CELL_HASSELECT));
+		Bool forceSel = select || (icon == 0 && (cell->flags & CELL_HASSELECT));
 		if (cell->flags & CELL_HIDDEN) { cell += col; continue; }
 		if (icon == 0)
 		{
@@ -1023,7 +1028,9 @@ static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 					SIT_ListReorder(list);
 					sit.dirty = 1;
 				}
+				return 1;
 			}
+			break;
 		}
 		else if ((list->lbFlags & SITV_SelectNone) == 0)
 		{
@@ -1077,9 +1084,13 @@ static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 		}
 
 		/* start lasso selection */
-		list->lassoSX = list->lassoEX = x;
-		list->lassoSY = y + list->scrollTop;
-		return 2;
+		if (list->lbFlags & SITV_SelectMultiple)
+		{
+			list->lassoSX = list->lassoEX = x;
+			list->lassoSY = y + list->scrollTop;
+			return 2;
+		}
+		else break;
 
 	case SITOM_CaptureMove:
 		if (list->lbFlags & SITV_SelectMultiple)
@@ -1120,7 +1131,7 @@ static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 
 	case SITOM_ButtonReleased:
 		if ((list->lbFlags & SITV_SelectMultiple) == 0)
-			return 1;
+			return 0;
 		SIT_ListStartAutoScroll(list, 0);
 		SIT_ListFinishPreselect(list);
 		list->lassoEX = list->lassoSX = 0;
@@ -1128,7 +1139,7 @@ static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 
 	default: break;
 	}
-	return 1;
+	return 0;
 }
 
 static void SIT_ListClearAndFree(SIT_Widget td)
@@ -1567,8 +1578,10 @@ static void SIT_ListClearCell(Cell cell, int flags)
 	memset(&cell->sizeObj, 0, sizeof cell->sizeObj + sizeof cell->sizeCell);
 	if (cell->flags & CELL_ISCONTROL)
 	{
-		layoutClearStyles(cell->obj, flags);
-		layoutRecalcWords(cell->obj);
+		SIT_Widget child = cell->obj;
+		/* XXX font size will be computed from parent, if this is NULL it is keep its current size :-/ */
+		child->parent = NULL;
+		SIT_ChangeChildrenStyle(child, flags);
 	}
 }
 
@@ -1580,10 +1593,10 @@ void SIT_ListClearStyles(SIT_Widget w, int flags)
 	int  i;
 
 	list->lbFlags &= ~SITV_ListMeasured;
-	for (i = list->columnCount, cell = list->columns;   i > 0; SIT_ListClearCell(cell, flags), i --, cell ++);
-	for (i = list->cells.count, cell = STARTCELL(list); i > 0; SIT_ListClearCell(cell, flags), i --, cell ++);
 	layoutClearStyles(list->td, flags);
 	layoutClearStyles(list->tdSel, flags);
+	for (i = list->columnCount, cell = list->columns;   i > 0; SIT_ListClearCell(cell, flags), i --, cell ++);
+	for (i = list->cells.count, cell = STARTCELL(list); i > 0; SIT_ListClearCell(cell, flags), i --, cell ++);
 }
 
 

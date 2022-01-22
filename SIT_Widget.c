@@ -197,7 +197,9 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 		case SIT_UNIT: SET_VALUE(w, REAL,     val->real);    break;
 		case SIT_STR:
 			str = (STRPTR *) ((STRPTR)w + tag->tl_Arg);
-			if (*str) free(*str);
+			/* SIT_Classes is more often than not a static string */
+			if (*str && (tag->tl_TagID != SIT_Classes || (w->flags & SITF_CustomClasses)))
+				if (*str) free(*str);
 			*str = val->string;
 		}
 	}
@@ -236,6 +238,10 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 			w->oldState = w->oldEna ? 0 : STATE_DISABLED;
 			w->flags |= SITF_RecalcStyles;
 		}
+		break;
+	case SIT_Classes:
+		w->flags |= SITF_RecalcStyles | SITF_CustomClasses;
+		memset(w->layout.crc32, 0xff, sizeof w->layout.crc32);
 		break;
 	case SIT_Style:
 		w->flags |= SITF_RecalcStyles;
@@ -952,6 +958,8 @@ void SIT_DestroyWidget(SIT_Widget w)
 		for (prev = &sit.geomList, list = *prev; list && list != w; prev = &list->geomChanged, list = *prev);
 		if (list) *prev = list->geomChanged;
 	}
+	if (w->flags & SITF_CustomClasses)
+		free(w->classes);
 
 	if (sit.activeDlg  == w) sit.activeDlg  = sit.root;
 	if (sit.curTooltip == w) sit.curTooltip = NULL;
@@ -1140,7 +1148,8 @@ DLLIMP void SIT_SetValues(SIT_Widget w, ...)
 			layoutSetSize(w);
 		else
 			SIT_InitiateReflow(w);
-		w->flags &= ~ SITF_GeometryChanged;
+		if (w->parent)
+			w->flags &= ~ SITF_GeometryChanged;
 	}
 }
 

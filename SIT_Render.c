@@ -408,7 +408,7 @@ static void renderBackground(SIT_Widget node, RectF * alt, int sides)
 	{
 		CSSImage img = bg->image;
 
-		if ((bg->bgw > 0 || bg->bgh > 0) && img)
+		if ((bg->bgw > 0 || bg->bgh > 0) && img && bg->gradient.colorStop < 2)
 		{
 			if (bg->bgw == 7 || bg->bgw == 11) /* cover || contain */
 			{
@@ -532,7 +532,7 @@ static void renderBackground(SIT_Widget node, RectF * alt, int sides)
 				/* linear-gradient */
 				nvgFillPaint(vg, nvgImagePattern(vg, x+img->rect[0], y+img->rect[1], img->rect[2], img->rect[3], img->angle, img->handle, 1));
 			}
-			else /* regular bitmap */
+			else /* regular bitmap/non-angled linear gradient */
 			{
 				if (bg->transform)
 				{
@@ -1629,7 +1629,9 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 			deco.baseline = word.bl;
 			if (renderBg)
 			{
+				nvgSave(vg);
 				renderInline(node, w, i, count, first, x, y);
+				nvgRestore(vg);
 				if (old->layout.flags & LAYF_HasImg)
 				{
 					/* img.src not be confused with background-image */

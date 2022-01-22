@@ -220,6 +220,7 @@ void SIT_CreateBuddyLabel(SIT_Widget buddy, STRPTR text, SIT_Widget * max)
 		SIT_MaxWidth,   max ? *max : NULL,
 		NULL
 	);
+	label->tabOrder = buddy->tabOrder;
 	SIT_SetValues(buddy, SIT_Left, SITV_AttachWidget, label, SITV_Em(0.5), NULL);
 	if (max) *max = label;
 }

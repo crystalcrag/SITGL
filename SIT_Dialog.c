@@ -74,6 +74,7 @@ static int SIT_DialogMove(SIT_Widget w, APTR cd, APTR ud)
 		}
 		break;
 	case SITOM_ButtonPressed:
+		if (msg->button != SITOM_ButtonLeft) break;
 		dialog->customStyles &= ~ (SITV_DoMove|SITV_DoResize);
 		if (dialog->customStyles & SITV_Resizable)
 		{

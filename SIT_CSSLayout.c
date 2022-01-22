@@ -46,7 +46,7 @@ REAL ToPoints(SIT_Widget parent, SIT_Widget node, ULONG fixed, int side)
 		/* auto if height is not set (CSS2.1 10.5) (width is processed differently) */
 		if (parent == NULL) return -EPSILON;
 		a = (&parent->layout.pos.width)[frac];
-		layoutCheckRel(parent, a, side);
+		layoutCheckRel(node, a, side);
 		if (pad) a += (&parent->layout.padding.top)[side&1] + (&parent->layout.padding.top)[(side&1)+2];
 		if (bdr) a += (&parent->layout.border.top)[side&1]  + (&parent->layout.border.top)[(side&1)+2];
 		return roundf(a * res / 100.0f);
@@ -832,7 +832,7 @@ static void layoutSetBackgroundPos(SIT_Widget node)
 void layoutCalcPadding(SIT_Widget node)
 {
 	/* compute padding and border offset */
-	SIT_Widget parent = node;
+	SIT_Widget parent = node->parent;
 	int i;
 	for (i = 0; i < 4; i ++)
 	{
@@ -1278,9 +1278,11 @@ void layoutRecalcWords(SIT_Widget w)
 	TagList * args;
 	for (i = LAYF_RelUnit, args = WidgetClass + SIT_Height - 2; i <= LAYF_RelUnitLast; i <<= 1, args ++)
 	{
-		if ((w->layout.flags & i) == 0) continue;
-		/* not pretty, but does the job with minimal effort */
-		* (REAL *) ((STRPTR)w + args->tl_Arg) = SIT_EmToReal(w, (&w->style.height)[args->tl_TagID-SIT_Height]);
+		if (w->layout.flags & i)
+		{
+			/* not pretty, but does the job with minimal effort */
+			* (REAL *) ((STRPTR)w + args->tl_Arg) = SIT_EmToReal(w, (&w->style.height)[args->tl_TagID-SIT_Height]);
+		}
 	}
 }
 
@@ -1333,7 +1335,9 @@ void layoutAlignText(SIT_Widget node)
 			case TextAlignRight:  pos = width - maxWidth; break;
 			case TextAlignCenter: pos = (width - maxWidth) * 0.5f;
 			}
-			if (pos < 0) start->marginL = pos;
+			/* we use negative margin to distinguish between a normal margin and a text-align push */
+			if (pos < 0)
+				start->marginL = pos;
 			start = w + 1;
 			width = 0;
 		}

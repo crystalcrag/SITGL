@@ -6,6 +6,7 @@
 
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 #include "SIT_P.h"
 #include "SIT_CSSParser.h"
 #include "SIT_CSSLayout.h"
@@ -194,7 +195,7 @@ static Bool SIT_ProcessAccel(int capture, int key)
 			}
 			else if (a->cb)
 			{
-				a->cb(w, NULL, (APTR) evt);
+				a->cb(w, (APTR) key, (APTR) evt);
 			}
 			return True;
 		}
@@ -580,7 +581,8 @@ static SIT_Widget SIT_CheckHoverForChildren(SIT_Widget c, REAL x, REAL y)
 	}
 	else for (w = vector_first(c->layout.wordwrap), top = c->padding[1], left = c->padding[0], h = 0; count > 0; count --, w ++)
 	{
-		REAL next = left + w->width + w->space + w->marginL + w->marginR;
+		REAL next = left + w->width + w->space + fabsf(w->marginL) + w->marginR;
+		if (w->marginL < 0) left -= w->marginL;
 		if (left <= x && x < next && top <= y && y < top+w->h)
 			return w->node;
 		left = next;
@@ -689,8 +691,6 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 			for (c = sit.hover; c; c = c->parent)
 			{
 				stack[count++] = c;
-				if (count == 10)
-					puts("here");
 				c->oldState = c->state;
 				if (! ((c->flags & SITF_ToggleButon) && (c->type != SIT_BUTTON || ((SIT_Button)c)->state)))
 					c->state &= ~STATE_HOVER;
@@ -704,7 +704,7 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 			}
 			c = SIT_EventBubble(sit.hover, SITE_OnMouseOut);
 			if (c) SIT_ApplyCallback(c, hover, SITE_OnMouseOut);
-			// fprintf(stderr, "exiting %s: [%d]\n", sit.hover->name, sit.hover->state);
+			//fprintf(stderr, "exiting %s: [%d]\n", sit.hover->name, sit.hover->state);
 		}
 		if (! sit.active || sit.active == hover)
 		{

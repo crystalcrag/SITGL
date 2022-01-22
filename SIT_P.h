@@ -108,6 +108,7 @@ void SIT_CreateBuddyLabel(SIT_Widget buddy, STRPTR text, SIT_Widget * max);
 Bool SIT_IsImageModified(CSSImage img, STRPTR path, Bool fromCSS);
 void SIT_ChangeStyleSheet(STRPTR path, int mode);
 void SIT_ListClearStyles(SIT_Widget, int flags);
+void SIT_ChangeChildrenStyle(SIT_Widget root, int flags);
 
 int  SIT_TextEditKey(SIT_EditBox, int key);
 int  SIT_TextEditInsertText(SIT_EditBox, DATA8 utf8);
@@ -535,7 +536,7 @@ struct SIT_TabItem_t
 struct SIT_Tab_t
 {
 	SIT_Widget_t super;
-	SIT_TabItem  items;
+	SIT_TabItem  items;                /* tab labels */
 	STRPTR       tabStr;               /* public */
 	REAL         tabSpace;             /* public */
 	int          tabStyle;             /* public */
@@ -544,6 +545,7 @@ struct SIT_Tab_t
 	int          visiBitField;
 	REAL         maxHeight;
 	REAL         padTop;
+	REAL         tabWidth;
 };
 
 struct SIT_Frame_t
@@ -681,6 +683,7 @@ enum /* bitfield for flags */
 	SITF_InitDone        = 0x00800000,  /* set at the end of SIT_CreateWidget() */
 	SITF_ToggleButon     = 0x01000000,  /* toggle button: ignore mouse button release event */
 	SITF_ImmediateActive = 0x02000000,  /* onclick = activate event */
+	SITF_CustomClasses   = 0x04000000,  /* node->classes is malloc()'ed */
 	SITF_InFocusRing     = 0x10000000,  /* will act as a tab stop */
 	SITF_RecalcStyles    = 0x20000000,
 	SITF_FallthroughEvt  = 0x40000000,  /* mouse events are sent to widgets below this one */
