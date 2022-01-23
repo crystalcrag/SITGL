@@ -436,7 +436,7 @@ static Bool SIT_ListAdjustScroll(SIT_ListBox list)
 			{
 				SIT_CreateWidgets(&list->super, "<scrollbar name=vscroll lineHeight=", (int) list->super.style.font.size,
 					"top=", SITV_AttachForm, (int) list->hdrHeight, SITV_NoPad, "bottom=FORM,,NOPAD right=FORM,,NOPAD>");
-				SIT_AddCallback(list->super.vscroll, SITE_OnScroll, SIT_ListScroll, NULL);
+				SIT_AddCallback(list->super.vscroll, SITE_OnChange, SIT_ListScroll, NULL);
 			}
 			list->lbFlags |= SITV_HasScroll;
 			list->scrollPad = ((SIT_App)sit.root)->defSBSize;

@@ -337,7 +337,7 @@ static int SIT_ComboProcessChar(SIT_Widget w, APTR cd, APTR ud)
 					w->title = row->entry;
 					cb->selIndex = i;
 					sit.dirty = 1;
-					SIT_ApplyCallback(w, (APTR) i, SITE_OnScroll);
+					SIT_ApplyCallback(w, (APTR) i, SITE_OnChange);
 				}
 				break;
 			}
@@ -537,7 +537,10 @@ static int SIT_ComboSelectItem(SIT_Widget w, APTR cd, APTR ud)
 
 	sel = (w->box.top + w->offsetY + msg->y - (cb->popupRect.top - cb->popupRect.hup + cb->popup->padding[1])) / cb->popupRect.lineh;
 
-	if (sel >= 0 && sel < cb->items && sel != cb->selIndex)
+	REAL mx = w->box.left + w->offsetX + msg->x;
+	REAL cx = cb->popupRect.left;
+
+	if (cx <= mx && mx < cx + cb->popupRect.width && sel >= 0 && sel < cb->items && sel != cb->selIndex)
 	{
 		cb->selIndex = sel;
 		cb->super.title = cb->rowTags[sel].entry;

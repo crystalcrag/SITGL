@@ -107,14 +107,14 @@ static int SIT_TabMeasure(SIT_Widget w, APTR cd, APTR ud)
 		if (label->layout.pos.width == 0)
 			SIT_MeasureWidget(label);
 
-		n += label->box.right - label->box.left;
+		n += label->box.right - label->box.left + tab->tabSpace;
 		REAL h = label->flags & SITF_FixedHeight ? label->fixed.height : label->box.bottom - label->box.top;
 		//fprintf(stderr, "tab %d h = %g\n", i, h);
 		if (tab->maxHeight < h)
 			tab->maxHeight = h;
 	}
 	// fprintf(stderr, "tab size = %dx%d\n", n, (int) tab->maxHeight);
-	sz.width  = tab->tabWidth = n+6;
+	sz.width  = tab->tabWidth = n+6-tab->tabSpace;
 	sz.height = 0;
 
 	w->layout.padding.top = tab->padTop + tab->maxHeight;

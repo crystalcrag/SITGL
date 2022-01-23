@@ -89,7 +89,7 @@ static int SIT_ScrollBarResize(SIT_Widget w, APTR cd, APTR ud)
 		if (w->layout.pos.width > 0)
 		{
 			sb->isDragged = 0;
-			SIT_ApplyCallback(w, (APTR) pos, SITE_OnScroll);
+			SIT_ApplyCallback(w, (APTR) pos, SITE_OnChange);
 		}
 	}
 
@@ -153,7 +153,7 @@ static int SIT_ScrollBarClick(SIT_Widget w, APTR cd, APTR ud)
 			sb->scrollPos = pos;
 			SIT_ScrollBarResize(w, NULL, NULL);
 			sb->isDragged = 1;
-			SIT_ApplyCallback(w, (APTR) lround(pos), SITE_OnScroll);
+			SIT_ApplyCallback(w, (APTR) lround(pos), SITE_OnChange);
 			sb->isDragged = 0;
 		}
 		return 1;
@@ -220,7 +220,7 @@ static int SIT_ScrollBarClick(SIT_Widget w, APTR cd, APTR ud)
 	if (pos != sb->scrollPos)
 	{
 		sb->scrollPos = pos;
-		SIT_ApplyCallback(w, (APTR) lround(sb->scrollPos), SITE_OnScroll);
+		SIT_ApplyCallback(w, (APTR) lround(sb->scrollPos), SITE_OnChange);
 	}
 	return sb->isDragged ? 2 : 1;
 }
@@ -272,7 +272,7 @@ static int SIT_ScrollBarMove(SIT_Widget w, APTR cd, APTR ud)
 		if (pos != sb->scrollPos)
 		{
 			sb->scrollPos = pos;
-			SIT_ApplyCallback(w, (APTR) lround(sb->scrollPos), SITE_OnScroll);
+			SIT_ApplyCallback(w, (APTR) lround(sb->scrollPos), SITE_OnChange);
 		}
 	}
 	return 1;

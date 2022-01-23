@@ -2352,7 +2352,7 @@ process the Tab key, it will be used to navigate between controls.
 
   <li><tt class="dt">SITE_OnChange</tt>
   <p>This event is to notify that an important state has changed with the control. It is triggered by
-  3 controls:
+  some controls:
   <ul>
 	<li><tt>SIT_TAB</tt>: triggered whenever the <b>active tab has changed</b>. <tt>call_data</tt>
 	will be an integer indicating which tab is now active (starting at 0).
@@ -2366,13 +2366,17 @@ process the Tab key, it will be used to navigate between controls.
 	<b>DO NOT ALTER THIS STRING</b>, in any way, shape or form, you'll mess up the rendering and/or
 	internal pointers for line editing. <b>Do not attempt to free</b> the buffer either, this pointer
 	is not necessarily malloc()'ed anyway.
-	
+
 	<p>Check out one of the following <a href="#SIT_EDITBOX">chapter</a> to know what can be done
 	with this control.
 
 	<li><tt>SIT_LISTBOX</tt>: used to signal that the <b>selection has changed</b> within the control.
 	<tt>call_data</tt> will be the <tt>user_data</tt> parameter used to create the cell of the list
 	box using the function <a href="#SIT_LISTBOX"><tt>SIT_ListInsertItem()</tt></a>
+
+	<li><tt>SIT_SCROLLBAR</tt> and <tt>SIT_SLIDER</tt>: will be sent whenever the position of thumb has
+	changed within the control. The <tt>call_data</tt> can actually be cast to a <tt>int</tt> to get
+	the position.
   </ul>
 
   <li><tt class="dt" id="SITE_OnFocus">SITE_OnFocus</tt>, <tt class="dt">SITE_OnBlur</tt>
@@ -2445,11 +2449,6 @@ process the Tab key, it will be used to navigate between controls.
   events will pass a pointer to a <tt>SIT_OnKey</tt> structure for the
   <tt>call_data</tt> argument. Returning <tt class="o">1</tt> for this
   event will prevent some default action to take place.
-
-  <li><tt class="dt">SITE_OnScroll</tt>
-  <p>Sent by Slider and ScrollBar to report the <b>new position the user
-  set the thumb</b>. The <tt>call_data</tt> can actually be cast to a ULONG
-  to get that position.
 
   <li><tt class="dt">SITE_OnGeometrySet</tt>
   <p>This is a rather low-level callback. It will give you the opportunity to
@@ -2525,7 +2524,6 @@ the event, the targeted widget will see no difference from a user-generated even
   <tr><td>SITE_OnPaint<td><tt>SIT_OnPaint *</tt><td>You can do any custom rendering within the callback.
   <tr><td>SITE_OnRawKey<td><tt>SIT_OnKey *</tt><td>A key without (obvious) unicode character has been pressed or released.
   <tr><td>SITE_OnVanillaKey<td><tt>SIT_OnKey *</tt><td>A key with unicode character has been pressed (no released event will be sent).
-  <tr><td>SITE_OnScroll<td><tt><type>ULONG</type></tt><td>Scroll position has changed for a scrollbar or a slider.
   <tr><td>SITE_OnGeometrySet<td><tt><type>float </type>[<val>3</val>]</tt><td>Fine tune size of control during layout of forms.
   <tr><td>SITE_OnSortItem<td><tt>SIT_OnSort *</tt><td>Compare two items to reorder rows of list box.
   <tr><td>SITE_OnSortColumn<td><tt><type>int</type></tt><td>Notify a new column has been selected as key for sorting in a list box.
@@ -5962,7 +5960,7 @@ jump to other parts of the document.
 
 </ul>
 
-<p>The event <tt>SITE_OnScroll</tt> will be fired whenever the position of the thumb has changed. The
+<p>The event <tt>SITE_OnChange</tt> will be fired whenever the position of the thumb has changed. The
 <tt>call_data</tt> can be cast to an <tt class="t">long</tt> integer to get thumb's position.
 
 
@@ -6013,6 +6011,9 @@ particular integer.
   <li><tt class="dt">SIT_BuddyEdit</tt> (<tt>SIT_Widget</tt>)
   <p>Pointer to an edit box or label whose content will indicate the current
   position of the slider. Changing the value of the edit box will also update the slider position.
+  <p>You can also use a simple label as well. The formatting will be limited to an integer though
+  (ie: using the <tt class="o">"%d"</tt> format specifier). If you need more control, you'll have
+  to register an <tt>SITE_OnChange</tt> event (see below).
 
   <li><tt class="dt">SIT_ThumbThick</tt> (<tt class="t">int</tt>)
   <p>Will set the width of the thumb. Can be specified in pixel of <tt>Em</tt> unit. Default value is
@@ -6025,12 +6026,33 @@ particular integer.
   <p>How much padding the gauge will have on top and bottom. Half the value specified will be given
   to the top and bottom. Default value is <tt>SITV_Em(0.5)</tt>.
 
+  <li><tt class="dt">SIT_CurValue</tt> (<tt class="t">int *</tt>)
+  <p>Will store the integer being displayed by the sliding at the provided location. Upon creation,
+  the value stored in the integer will be used to set the <tt>SIT_SliderPos</tt> property.
 </ul>
 
-<p>Sliders, like scrollbars, report any change in its value through the <tt>SITE_OnScroll</tt> event.
+<p>Sliders, like scrollbars, report any change in its value through the <tt>SITE_OnChange</tt> event.
 And like scrollbars, <tt>call_data</tt> can be cast to an integer to get the current thumb position.
 
+<p>If you want <b>more control over how the text is formatted</b>, than what is done for a buddy text/label,
+you'll have to register a <tt>SITE_OnChange</tt> event. There is one caveat however: this event cannot
+be triggered at creation time (because events must be registered after the widget is created). If you
+also set the <tt>SIT_CurValue</tt> property, the label/edit will likely not be synchronized when the
+interface is first displayed. A quick workaround, is when registering your callback, you should call
+them directly, using something like this:
 
+<pre>
+<type>static int</type> sensitivity = <val>100</val>;
+SIT_CreateWidgets(dialog,
+	<val>"&lt;slider tabNum=1 name=speed width=15em minValue=50 maxValue=200 curValue="</val>, &amp;sensitivity, <val>"buddyLabel="</val>,
+	<val>"Mouse sensitivity:"</val>, NULL, <val>"top=FORM,,0.5em&gt;"
+	"&lt;label tabNum=1 name=speedval left=WIDGET,speed,0.5em top=MIDDLE,speed&gt;"</val>
+);
+SIT_Widget slider = SIT_GetById(dialog, <val>"speed"</val>);
+SIT_Widget value  = SIT_GetById(dialog, <val>"speedval"</val>);
+SIT_AddCallback(slider, SITE_OnChange, syncSliderValue, value);
+syncSliderValue(slider, (<type>APTR</type>) sensitivity, value);
+</pre>
 
 <h3 id="SIT_PROGRESS"><span>SIT_PROGRESS</span></h3>
 
@@ -6147,6 +6169,10 @@ user:
   their content as the selected tab change.
 </ol>
 
+<p><span class="n">Caveat</span>: due to the way layout works in this library, you want to set the
+left and right attachment of the SIT_TAB to be fixed, other if all tabs don't have the same size,
+its width will be adjusted whenever the active tab is changed.
+
 <p>It is actually possible to mix both methods: remember that setting <tt>SIT_TabNum</tt> property
 is only a way to automatically set the <tt>SIT_Visible</tt> attribute on each child controls.
 
@@ -6163,7 +6189,16 @@ is only a way to automatically set the <tt>SIT_Visible</tt> attribute on each ch
   <p>Get the number of tabs currently defined in this control.
 
   <li><tt class="dt">SIT_TabSpace</tt> (<tt class="t">int</tt>)
-  <p>Define the spacing between tabs (XXX should be done using CSS though).
+  <p>Define the spacing between tabs.
+
+  <li><tt class="dt">SIT_TabStyle</tt> (<tt class="t">int</tt>)
+  <p>Control some appearance of the tabs, you can use one of the following enmeration value:
+  <ul>
+	<li><tt>SITV_AlignHCenter</tt>: will align all the tabs such that they will be centered within
+	the width of the content box.
+	<li><tt>SITV_AlignHRight</tt>: tabs will be aligned to the rightmost border.
+  </ul>
+  <p>Note: default alignment is left.
 </ul>
 
 <p>To alter the list of tabs, you can also use the specialized function <tt>SIT_TabSplice()</tt>. Its
@@ -6366,6 +6401,7 @@ be appended one after the other (separated by a 0 byte).
 	<type>static</type> SIT_Widget file;
 
 	<kwd>if</kwd> (file == <val>NULL</val>)
+	{
 		file = SIT_CreateWidget(<val>"fileselect"</val>, SIT_FILESELECT, ud,
 			SIT_Filters,   <val>"C/C++ files<spe>\t</spe>*.c;*.h;*.cpp;*.hpp<spe>\n</spe>"
 			               "Any<spe>\t</spe>*"</val>,
@@ -6373,6 +6409,7 @@ be appended one after the other (separated by a 0 byte).
 			SIT_DlgFlags,  SITV_FileMultiSelect | SITV_FileMustExist,
 			<val>NULL</val>
 		);
+	}
 
 	<kwd>if</kwd> (SIT_ManageWidget(file))
 	{
@@ -6431,11 +6468,13 @@ be interested to set when creating this kind of control:
 <pre><type>static</type> SIT_Widget dir;
 
 <kwd>if</kwd> (dir == <val>NULL</val>)
+{
 	dir = SIT_CreateWidget(<val>"dirsel"</val>, SIT_DIRSELECT, parent,
 		SIT_Title,    <val>"Select your destination path"</val>,
 		SIT_InitPath, <val>"C:/Projects/SITGL"</val>,
 		<val>NULL</val>
 	);
+}
 
 <kwd>if</kwd> (SIT_ManageWidget(dir))
 {

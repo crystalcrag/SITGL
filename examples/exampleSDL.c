@@ -259,6 +259,9 @@ int main(int nb, char * argv[])
 			case SDL_MOUSEMOTION:
 				SIT_ProcessMouseMove(event.motion.x, event.motion.y);
 				break;
+			case SDL_VIDEOEXPOSE:
+				SIT_ForceRefresh();
+				break;
 			case SDL_VIDEORESIZE:
 				width  = event.resize.w;
 				height = event.resize.h;

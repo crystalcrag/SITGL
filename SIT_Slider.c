@@ -85,8 +85,7 @@ static int SIT_SliderResize(SIT_Widget w, APTR cd, APTR ud)
 			sprintf(value, "%d", s->sliderPos);
 			SIT_SetValues(s->buddy, SIT_Title, value, NULL);
 		}
-		/* too lazy to remember which event type it is responding: support both */
-		SIT_ApplyCallback(w, (APTR) s->sliderPos, HAS_EVT(w, SITE_OnChange) ? SITE_OnChange : SITE_OnScroll);
+		SIT_ApplyCallback(w, (APTR) s->sliderPos, SITE_OnChange);
 	}
 
 	return 1;
@@ -102,7 +101,7 @@ static int SIT_SliderSync(SIT_Widget w, APTR cd, APTR ud)
 	if (pos != s->sliderPos)
 	{
 		SIT_SetValues(ud, SIT_SliderPos, pos, NULL);
-		SIT_ApplyCallback(&s->super, (APTR) s->sliderPos, HAS_EVT(&s->super, SITE_OnChange) ? SITE_OnChange : SITE_OnScroll);
+		SIT_ApplyCallback(&s->super, (APTR) s->sliderPos, SITE_OnChange);
 	}
 	return 1;
 }

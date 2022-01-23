@@ -2238,7 +2238,7 @@ static void SIT_TextEditAdjustScroll(SIT_EditBox state)
 			if (state->super.vscroll == NULL)
 			{
 				SIT_CreateWidgets(&state->super, "<scrollbar nextCtrl=NONE name=vscroll top=FORM,,NOPAD bottom=FORM,,NOPAD right=FORM,,NOPAD>");
-				SIT_AddCallback(state->super.vscroll, SITE_OnScroll, SIT_TextEditScroll, NULL);
+				SIT_AddCallback(state->super.vscroll, SITE_OnChange, SIT_TextEditScroll, NULL);
 				SIT_AddCallback(state->super.vscroll, SITE_OnResize, SIT_TextEditResizeSB, NULL);
 			}
 			else SIT_SetValues(state->super.vscroll, SIT_Visible, True, NULL);

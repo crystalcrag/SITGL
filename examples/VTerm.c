@@ -1678,7 +1678,7 @@ static int VTMouse(SIT_Widget w, APTR cd, APTR ud)
 	return 1;
 }
 
-/* SITE_OnScroll on scrollbar */
+/* SITE_OnChange on scrollbar */
 static int VTTrackPos(SIT_Widget w, APTR cd, APTR ud)
 {
 	VirtualTerm vt = ud;
@@ -2021,7 +2021,7 @@ void VTInit(SIT_Widget canvas, SIT_Widget scroll)
 	SIT_AddCallback(canvas, SITE_OnClickMove,  VTMouse,     vt);
 	SIT_AddCallback(canvas, SITE_OnRawKey,     VTRawKey,    vt);
 	SIT_AddCallback(canvas, SITE_OnVanillaKey, VTKeyboard,  vt);
-	SIT_AddCallback(scroll, SITE_OnScroll,     VTTrackPos,  vt);
+	SIT_AddCallback(scroll, SITE_OnChange,     VTTrackPos,  vt);
 	SIT_AddCallback(scroll, SITE_OnResize,     VTScrollPad, vt);
 
 	#ifdef VT_UNITTEST
