@@ -586,7 +586,8 @@ void gradientGetParam(CSSImage img, Gradient * grad)
 		case Bottom|Left:
 			img->angle = M_PI_4+M_PI_2;
 			img->rect[2] = w * M_SQRT2;
-			img->rect[3] = w;
+			img->rect[1] = h;
+			//img->rect[3] = w;
 			imgw = w;
 			break;
 		case Bottom|Right:

@@ -116,6 +116,14 @@ void renderInitBox(SIT_Widget node, RectF * out, Bool init, int flag)
 		out->height = node->box.bottom - node->padding[3] - out->top;
 		out->left  += node->offsetX + node->layout.left;
 		out->top   += node->offsetY + node->layout.top;
+		if (node->style.outlineMargin)
+		{
+			float v = node->layout.outlineWidth;
+			out->left -= v;
+			out->top  -= v;
+			out->width += v*2;
+			out->height += v*2;
+		}
 	}
 	if (flag & 1) out->top    -= node->layout.padding.top,  out->height += node->layout.padding.top;
 	if (flag & 8) out->left   -= node->layout.padding.left, out->width  += node->layout.padding.left;
@@ -519,9 +527,8 @@ static void renderBackground(SIT_Widget node, RectF * alt, int sides)
 			if (img->stretch) /* gradient */
 			{
 				/* corner linear-gradient: need to do transformation on our own */
-				nvgTranslate(vg, x+img->rect[0], y+img->rect[1]);
-				if (img->stretch == 1) nvgScale(vg, img->rect[3], 1);
-				else                   nvgScale(vg, 1, img->rect[3]);
+				if (img->stretch == 1) nvgTranslate(vg, x+img->rect[0] * img->rect[3], y+img->rect[1]), nvgScale(vg, img->rect[3], 1);
+				else                   nvgTranslate(vg, x+img->rect[0], y+img->rect[1] * img->rect[3]), nvgScale(vg, 1, img->rect[3]);
 				nvgRotate(vg, img->angle);
 				/* they are square, but need to be stretched to fill content */
 				nvgFillPaint(vg, nvgImagePattern(vg, 0, 0, img->rect[2], img->rect[2], 0, img->handle, 1));
@@ -1122,7 +1129,7 @@ static void renderOutline(SIT_Widget node, RectF * rect)
 	BoxF   oldradius[3]; /* border, minor, major */
 	RectF  box = *rect;
 
-	if (node->layout.outlineWidth < EPSILON || node->style.outline.style == BorderStyleNone)
+	if (node->layout.outlineWidth < EPSILON || node->style.outline.style == BorderStyleNone || node->style.outlineMargin)
 		return;
 
 	memcpy(oldborder, &node->style.borderTop, sizeof oldborder);
@@ -1423,6 +1430,12 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 		REAL     cy = box->top  + node->layout.padding.top;
 		REAL     x, y, h, offX, offY;
 		int      i, first;
+
+		if (node->style.outlineMargin)
+		{
+			cx += node->layout.outlineWidth;
+			cy += node->layout.outlineWidth;
+		}
 
 		nvgTextAlign(sit.nvgCtx, NVG_ALIGN_TOP);
 		memset(&deco, 0, sizeof deco);

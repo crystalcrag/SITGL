@@ -303,6 +303,7 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 		}
 		break;
 	case SIT_AccelTable:
+		sit.curAccel = NULL;
 		if (((SIT_App)w)->accel) w->flags |= SITF_HasAccel;
 		else w->flags &= ~SITF_HasAccel;
 	}

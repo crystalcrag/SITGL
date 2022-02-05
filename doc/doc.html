@@ -2402,6 +2402,13 @@ process the Tab key, it will be used to navigate between controls.
   controls might have already been deleted (especially if you have kept pointers to other widgets,
   you have to assume they do not point to valid memory anymore).
 
+  <p><span class="n">Caveat</span>: if you use that event in the hope of being notified when the application
+  exits, you'll have to call the <tt>SITV_Nuke()</tt> function before exiting. Otherwise, if you let
+  the <b>operating system do the cleanup, your callback cannot be triggered</b>. Alternatively, just
+  before exiting, you can also trigger your finalize callback manually:
+  <pre>SIT_ApplyCallback(app, <tt class="o">NULL</tt>, SITE_OnFinalize);</pre>
+  <p>And not pay the slight cost of doing some useless deallocation.
+
   <li><tt class="dt">SITE_OnClick</tt>
   <p>This event is used to report <b>mouse actions</b> (left click, right click,
   mouse wheel, ...). Mouse events will be described more in details in one of the

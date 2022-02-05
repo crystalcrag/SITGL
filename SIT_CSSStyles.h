@@ -103,7 +103,7 @@ struct Text_t
 {
 	uint8_t align;
 	uint8_t transform;
-	ULONG   indent;
+	uint8_t padding[2];
 };
 
 struct TextShadow_t
@@ -216,7 +216,7 @@ struct Style_t /* this structure will contain more or less a direct dump of CSS 
 	uint8_t    bgCount, shadowCount, boxShadowCount, boxShadowCountInset;
 	uint8_t    decoStyle, overflow, tabSize, whiteSpace;
 	uint8_t    active, reflow, oldBgCount, shadowTotal;
-	uint16_t   inheritSet;
+	uint16_t   outlineMargin, inheritSet;
 	ULONG      lineHeight, letterSpacing, wordSpacing, verticalAlign;
 	ULONG      transformX, transformY;
 	ULONG      fontSize, outlineOffset, margin, flags, left, top;

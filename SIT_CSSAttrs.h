@@ -384,6 +384,11 @@
 	{.attr    = "outline",             .inherit = 0, .sz = 1,
 	 .defval  = NULL,                  .format  = "-4 -3 -2 -1"},
 
+	/* hack: use outline-width to expand content box (don't reflow though) */
+	{.attr    = "-outline-margin",     .inherit = 0, .sz = 1,
+	 .defval  = NULL,                  .format  = "INT",
+	 .arg1    = OFF(outlineMargin)},
+
 	/* 'scroll' will be handled as visible in paged media */
 	{.attr    = "overflow",            .inherit = 0, .sz = 1,
 	 .defval  = NULL,                  .format  = "|visible|hidden|scroll|auto",
@@ -443,11 +448,6 @@
 	{.attr    = "text-decoration-style", .inherit = 0, .sz = 1,
 	 .defval  = NULL,                    .format  = "|solid|double|wavy",
 	 .arg1    = OFF(decoStyle)},
-
-	/* XXX unused */
-	{.attr    = "text-indent",         .inherit = 2, .reflow = ReflowLayout,
-	 .defval  = NULL,                  .format  = "POS",
-	 .arg1    = OFF(text.indent)},
 
 	/* XXX unused */
 	{.attr    = "text-overflow",       .inherit = 0, .reflow = ReflowLayout,

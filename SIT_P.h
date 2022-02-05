@@ -150,6 +150,7 @@ struct SITContext_t
 	SIT_Widget   composited;           /* need to be rendered in another pass */
 	SIT_Action   toolTip;              /* when to display, when to hide <curTooltip> */
 	SIT_Action   imageCleanup;         /* cache cleanup async action */
+	SIT_Accel *  curAccel;             /* current accel table processed in hash table */
 	NVGCTX       nvgCtx;               /* main nanovg context for graphics API */
 	int          defFontHeight;        /* relative value for em unit */
 	int          scrWidth;             /* root window size */

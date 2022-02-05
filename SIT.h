@@ -116,6 +116,7 @@ DLLIMP void       SIT_ListDeleteRow(SIT_Widget, int row);
 DLLIMP SIT_Widget SIT_ListInsertControlIntoCell(SIT_Widget, int row, int cell);
 DLLIMP void       SIT_ListFinishInsertControl(SIT_Widget);
 DLLIMP STRPTR     SIT_ListGetCellText(SIT_Widget, int col, int row);
+DLLIMP int        SIT_ListFindByTag(SIT_Widget w, APTR tag);
 DLLIMP int        SIT_ListGetItemOver(SIT_Widget, float rect[4], float mouseX, float mouseY, SIT_Widget mouseIsRelTo);
 DLLIMP void       SIT_ListReorgColumns(SIT_Widget, STRPTR);
 DLLIMP int        SIT_TextGetWithSoftline(SIT_Widget, STRPTR buffer, int max);
@@ -400,6 +401,7 @@ typedef enum /* SIT_Attachment */
 
 #define	SITV_AttachPos(percent)  ((ULONG)((percent) * 65536 / 100))
 #define	SITV_OffsetCenter        0x3fffffff /* SIT_AttachPosition only */
+#define SITV_AttachCenter        SITV_AttachPosition, SITV_AttachPos(50), SITV_OffsetCenter /* very common */
 
 enum         /* SIT_ButtonType */
 {
@@ -691,10 +693,11 @@ enum /* values for SIT_OnKey_t.flags */
 	SITK_FlagAlt     = 0x0400,
 	SITK_FlagCmd     = 0x0800,
 	SITK_FlagUp      = 0x2000,   /* key is released */
-	SITK_FlagCapture = 0x4000
+	SITK_FlagCapture = 0x4000,
+	SITK_Flags       = 0xff00
 };
 
-#define RAWKEY(x)      ((x) << 21)
+#define RAWKEY(x)      ((x) << 16)
 
 enum /* special values for SIT_OnKey_t.keycode field */
 {

@@ -552,7 +552,7 @@ DLLIMP int SIT_ProcessClick(float x, float y, int button, int pressed)
 
 		return sit.dragCb(sit.root, &msg, NULL);
 	}
-	return sit.hover != sit.root;
+	return sit.hover && sit.hover != sit.root;
 }
 
 /*

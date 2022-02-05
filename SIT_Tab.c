@@ -113,7 +113,7 @@ static int SIT_TabMeasure(SIT_Widget w, APTR cd, APTR ud)
 		if (tab->maxHeight < h)
 			tab->maxHeight = h;
 	}
-	// fprintf(stderr, "tab size = %dx%d\n", n, (int) tab->maxHeight);
+	//fprintf(stderr, "tab size = %dx%d\n", n, (int) tab->maxHeight);
 	sz.width  = tab->tabWidth = n+6-tab->tabSpace;
 	sz.height = 0;
 
@@ -173,7 +173,7 @@ static int SIT_TabExtendSel(SIT_Widget w, APTR cd, APTR resizePolicy)
 			/* only selected tab */
 			rect->height += tab->super.layout.border.top;
 
-		rect->top -= h + tab->super.layout.border.top;
+		rect->top -= tab->super.padding[1] - (tab->maxHeight - h);
 
 		return 1;
 	}
@@ -263,9 +263,7 @@ static void SIT_TabSet(SIT_Widget w, STRPTR tabs)
 		else SIT_SetValues(label, SIT_Title, tabs, NULL);
 
 		if (prev)
-			SIT_SetValues(label, SIT_Left, SITV_AttachWidget, prev, (int) tab->tabSpace, SIT_Top, SITV_AttachForm, NULL, SITV_BorderBox, NULL);
-		else
-			SIT_SetValues(label, SIT_Left, SITV_AttachForm, NULL, SITV_BorderBox, SIT_Top, SITV_AttachForm, NULL, SITV_BorderBox, NULL);
+			SIT_SetValues(label, SIT_Left, SITV_AttachWidget, prev, (int) tab->tabSpace, NULL);
 
 		prev = label;
 		tabs = next; items ++;

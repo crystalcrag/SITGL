@@ -263,7 +263,9 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 			hdr->box.left = x;
 			hdr->box.top = w->layout.border.top;
 			hdr->box.right = x + cell->sizeCell.width;
-			hdr->box.bottom = cell->sizeCell.height;
+			hdr->box.bottom = hdr->box.top + cell->sizeCell.height;
+			hdr->offsetX = w->offsetX + w->box.left;
+			hdr->offsetY = w->offsetY + w->box.top;
 
 			SIT_LayoutCSSSize(hdr);
 			SIT_RenderNode(hdr);
@@ -1579,8 +1581,6 @@ static void SIT_ListClearCell(Cell cell, int flags)
 	if (cell->flags & CELL_ISCONTROL)
 	{
 		SIT_Widget child = cell->obj;
-		/* XXX font size will be computed from parent, if this is NULL it is keep its current size :-/ */
-		child->parent = NULL;
 		SIT_ChangeChildrenStyle(child, flags);
 	}
 }
@@ -1776,10 +1776,10 @@ DLLIMP int SIT_ListInsertItem(SIT_Widget w, int row, APTR rowTag, ...)
 			row = list->rowCount; /* will have to be sorted later */
 	}
 
-	if (list->selIndex >= row)
-		list->selIndex ++;
 	oldVis = list->catVisible < 2;
 	cols = list->columnCount;
+	if (list->selIndex >= row * cols)
+		list->selIndex += cols;
 	list->rowCount ++;
 	i = list->rowCount * cols;
 	top = list->rowTop ? list->rowTop - STARTCELL(list) : 0;
@@ -2315,6 +2315,23 @@ DLLIMP void SIT_ListReorgColumns(SIT_Widget w, STRPTR fmt)
 		list->realWidths[i] = widths[i] / total;
 	}
 	sit.dirty = 1;
+}
+
+/* find an item by its rowTag */
+DLLIMP int SIT_ListFindByTag(SIT_Widget w, APTR tag)
+{
+	if (w == NULL || w->type != SIT_LISTBOX) return -1;
+	SIT_ListBox list = (SIT_ListBox) w;
+	Cell        cell;
+	int         row, col, i;
+
+	for (row = 0, cell = STARTCELL(list), col = list->columnCount, i = list->cells.count; i > 0; i -= col, row ++, cell += col)
+	{
+		if (cell->userData == tag)
+			return row;
+	}
+
+	return -1;
 }
 
 /* get row/column of item being hovered at pos <mouseX>, <mouseY */

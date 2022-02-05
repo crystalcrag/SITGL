@@ -1236,9 +1236,9 @@ DLLIMP INIFile ParseINI(STRPTR file)
 {
 	if (file == NULL) return NULL;
 
-	FILE *  in;
-	int     sz = FileSize(file);
-	STRPTR  buf;
+	FILE * in;
+	STRPTR buf;
+	int    sz = FileSize(file);
 
 	if (sz > 0)
 	{
@@ -1272,7 +1272,7 @@ static STRPTR ParseINILine(STRPTR line)
 
 	StripCRLF(line);
 
-	if (value == NULL || strchr("#;", *line)) return NULL;
+	if (value == NULL || line[0] == '#' || line[0] == ';') return NULL;
 
 	while (prev > line && isspace(*prev)) prev --; prev[1] = 0;
 	for (value ++; *value && isspace(*value); value ++);
@@ -1493,7 +1493,8 @@ DLLIMP Bool SetINIValue(STRPTR path, STRPTR key, STRPTR val)
 
 			if (ini->curkey) /* Section exists, only add key/value after it */
 			{
-				value = ini->curkey[0];
+				for (value = strchr(section, 0)+1; *value; value ++);
+				value ++;
 				flags = 3;
 			}
 			else /* Add section, key and value at end of file */

@@ -165,13 +165,19 @@ void SIT_ChangeChildrenStyle(SIT_Widget root, int flags)
 
 		if (! list->children.lh_Head)
 		{
+			if (list == root)
+			{
+				if (list->layout.wordwrap.count)
+					layoutRecalcWords(list);
+				break;
+			}
 			while (list->node.ln_Next == NULL)
 			{
 				if (list->layout.wordwrap.count)
 					/* can only be done once chiildren have their styles cleared */
 					layoutRecalcWords(list);
 				list = list->parent;
-				if (list == NULL) goto layout;
+				if (list == NULL || list == root) goto layout;
 			}
 			if (list->layout.wordwrap.count)
 				layoutRecalcWords(list);
@@ -189,10 +195,11 @@ void SIT_ChangeChildrenStyle(SIT_Widget root, int flags)
 
 		if (! list->children.lh_Head)
 		{
+			if (list == root) break;
 			while (list->node.ln_Next == NULL)
 			{
 				list = list->parent;
-				if (list == NULL) return;
+				if (list == NULL || list == root) return;
 			}
 			list = (SIT_Widget) list->node.ln_Next;
 		}
