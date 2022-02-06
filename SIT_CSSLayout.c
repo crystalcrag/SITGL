@@ -1234,7 +1234,9 @@ void layoutClearStyles(SIT_Widget w, int clear)
 	w->layout.pos.width = 0;
 	if (w->parent)
 	{
-		w->minBox.width = w->minBox.height = -1;
+		if (w->type != SIT_LABEL || ((SIT_Label)w)->image == NULL)
+			/* minBox is the recommended image size for icon label */
+			w->minBox.width = w->minBox.height = -1;
 		w->optimalBox   = w->maxBox = w->minBox;
 		if ((w->flags & SITF_TopLevel) == 0 || (clear & 2))
 		{

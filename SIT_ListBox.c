@@ -1060,9 +1060,10 @@ static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 					if (cell->sizeCell.left <= x && x < cell->sizeCell.left + cell->sizeCell.width)
 					{
 						static uint32_t lastClick;
-						if (rowStart == vector_nth(&list->cells, list->selIndex) && TimeMS() - lastClick < sit.dblClickMS)
+						Cell row = list->viewMode == SITV_ListViewReport ? rowStart : cell;
+						if (row == vector_nth(&list->cells, list->selIndex) && TimeMS() - lastClick < sit.dblClickMS)
 						{
-							SIT_ApplyCallback(w, rowStart->userData, SITE_OnActivate);
+							SIT_ApplyCallback(w, row->userData, SITE_OnActivate);
 						}
 						else SIT_ListSetSelection(list, cell, (msg->flags & SITK_FlagCtrl) == 0, (msg->flags & SITK_FlagShift) > 0);
 						lastClick = TimeMS();
@@ -2081,6 +2082,31 @@ DLLIMP void SIT_ListFinishInsertControl(SIT_Widget w)
 
 	ListNew(&td->children);
 	td->userData = NULL;
+
+	if (list->sortColumn != -1)
+	{
+		/* now we can sort insert that item */
+		TEXT buffer[64];
+		Cell start = STARTCELL(list);
+		int  cols = list->columnCount;
+		int  index;
+
+		/* control item will always be inserted at the end if sorting is activated */
+		list->cells.count -= cols;
+		CopyString(buffer, SIT_ListGetCellBuffer(cell), sizeof buffer);
+		index = SIT_ListInsertSort(list, cell->userData, buffer) * cols;
+
+		if (index != cell - start)
+		{
+			/* need to shift some items */
+			Cell tmp = alloca(sizeof *tmp * cols);
+			memcpy(tmp, cell, sizeof *tmp * cols);
+			cell = start + index;
+			memmove(cell + cols, cell, (list->cells.count - index) * sizeof *cell);
+			memcpy(cell, tmp, sizeof *tmp * cols);
+		}
+		list->cells.count += cols;
+	}
 
 	if (w->optimalBox.width >= 0)
 	{

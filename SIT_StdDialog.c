@@ -82,8 +82,9 @@ Bool SIT_InitFileDialog(SIT_Widget w, va_list args)
 
 	w->setValue = SIT_SetFileValues;
 	SIT_ParseTags(w, args, w->attrs = FileDialogClass);
-	w->flags  = SITF_TopLevel;
-	w->manage = SIT_ManageFileDialog;
+	w->flags   = SITF_TopLevel;
+	w->visible = False;
+	w->manage  = SIT_ManageFileDialog;
 	return TRUE;
 }
 
@@ -102,8 +103,9 @@ Bool SIT_InitDirDialog(SIT_Widget w, va_list args)
 		}
 	}
 	SIT_ParseTags(w, args, w->attrs = FolderDialogClass);
-	w->flags  = SITF_TopLevel;
-	w->manage = SIT_ManageFolderDialog;
+	w->flags   = SITF_TopLevel;
+	w->visible = False;
+	w->manage  = SIT_ManageFolderDialog;
 	return TRUE;
 }
 

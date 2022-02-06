@@ -12,7 +12,7 @@
 #include "SIT_P.h"
 #include "SIT_CSSLayout.h"
 
-// #define	DEBUG_GEOM     /* warning: verbose */
+//#define	DEBUG_GEOM     /* warning: verbose */
 
 /* 1 if sa_Arg points to a SIT_Widget according to sa_Type (SITV_Attach*) */
 static uint8_t relative[] = {0, 0, 0, 1, 1, 1, 1, 0};
@@ -110,8 +110,6 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 		margin = a->sa_Offset;
 		if (margin == SITV_NoPad)
 			margin = - (&root->layout.padding.top)[(i+3)&3] + a->sa_Arg;
-		else if (margin == SITV_BorderBox)
-			margin = - root->padding[(i+3)&3] + a->sa_Arg;
 
 		if (relative[a->sa_Type] && (s = (SIT_Widget) a->sa_Arg) && ! s->visible)
 		{
@@ -301,7 +299,6 @@ static int SIT_LayoutChildren(SIT_Widget root, ResizePolicy mode)
 	{
 		if ((list->flags & SITF_TopLevel) || ! list->visible) continue;
 		total++;
-		list->layout.flags &= ~LAYF_HasAttach;
 
 		if ((list->max.ln_Prev == NULL && list->max.ln_Next == NULL) ||
 		    (list->flags & SITF_Style1Changed)) continue;
@@ -335,6 +332,7 @@ static int SIT_LayoutChildren(SIT_Widget root, ResizePolicy mode)
 	#endif
 
 	/* perform 2 steps: one for horizontal constraints, a second for vertical */
+	root->layout.flags &= ~LAYF_HasAttach;
 	for (i = 0; i < 2; i ++)
 	{
 		redo_from_start:
@@ -605,9 +603,22 @@ static int SIT_LayoutOptimal(SIT_Widget root)
 	return 0;
 }
 
-static int BoxSizeDiffers(SizeF * box1, SizeF * box2)
+static int BoxSizeDiffers(SIT_Widget w, SizeF * box)
 {
-	return ! (ALMOST0(box1->width - box2->width) && ALMOST0(box1->height - box2->height));
+	if (w->layout.flags & LAYF_HasRightAttach)
+	{
+		if (! (ALMOST0(w->currentBox.width - box->width)))
+			return True;
+	}
+	else if (w->currentBox.width < box->width)
+	{
+		return True;
+	}
+	if (w->layout.flags & LAYF_HasBottomAttach)
+	{
+		return ! ALMOST0(w->currentBox.height - box->height);
+	}
+	else return w->currentBox.height < box->height;
 }
 
 /*
@@ -737,7 +748,7 @@ static int SIT_LayoutInitial(SIT_Widget root, ResizePolicy mode)
 					list->currentBox.width = list->fixed.width;
 				if ((list->flags & SITF_FixedHeight) && list->fixed.height > list->currentBox.height)
 					list->currentBox.height = list->fixed.height;
-				if ((list->flags & SITF_AutoHeight) && BoxSizeDiffers(&pref, &list->currentBox))
+				if ((list->flags & SITF_AutoHeight) && BoxSizeDiffers(list, &pref))
 					list->optimalWidth(list, &list->currentBox, (APTR) FitUsingInitialBox);
 			}
 		}
@@ -756,13 +767,14 @@ static int SIT_LayoutInitial(SIT_Widget root, ResizePolicy mode)
 			list->currentBox = SIT_GetContentBox(list);
 
 			if (((list->flags & SITF_AutoHeight) || (list->children.lh_Head && !(list->flags & SITF_PrivateChildren))) &&
-			    BoxSizeDiffers(&list->currentBox, &list->childBox))
+			    BoxSizeDiffers(list, &list->childBox))
 			{
 				#ifdef DEBUG_GEOM
 				fprintf(stderr, "%s: current box: %dx%d, child box: %dx%d\n", list->name, (int) list->currentBox.width,
 					(int) list->currentBox.height, (int) list->childBox.width, (int) list->childBox.height);
 				#endif
 				SizeF old = list->currentBox;
+				/* InitialBox is using CurrentBox, because at this point we are past initial phase */
 				if (list->optimalWidth(list, &list->currentBox, (APTR) (mode == FitUsingInitialBox ? FitUsingCurrentBox : mode)) == 1)
 					list->childBox = list->currentBox;
 
@@ -791,7 +803,7 @@ static int SIT_LayoutInitial(SIT_Widget root, ResizePolicy mode)
 			 * optimization: some widget will already compute optimal box recursively. This
 			 * will avoid numerous steps redoing the same thing all over again. Used by KeepDialogSize policy.
 			 */
-			if (BoxSizeDiffers(&list->childBox, &list->currentBox))
+			if (BoxSizeDiffers(list, &list->childBox))
 			{
 				// fprintf(stderr, "force recalc for '%S' %ld != %d\n", list->name, list->childBox.width, list->box.right - list->box.left);
 				list->flags |= SITF_GeometryChanged;
@@ -1046,7 +1058,7 @@ void SIT_ReflowLayout(SIT_Widget list)
 				}
 				list->currentBox.width  = list->box.right  - list->box.left;
 				list->currentBox.height = list->box.bottom - list->box.top;
-				if (BoxSizeDiffers(&list->currentBox, &oldSz))
+				if (BoxSizeDiffers(list, &oldSz))
 					SIT_LayoutCSSSize(list);
 
 				#define pwidth 	parent->layout.pos.width

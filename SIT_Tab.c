@@ -264,6 +264,8 @@ static void SIT_TabSet(SIT_Widget w, STRPTR tabs)
 
 		if (prev)
 			SIT_SetValues(label, SIT_Left, SITV_AttachWidget, prev, (int) tab->tabSpace, NULL);
+		else
+			SIT_SetValues(label, SIT_LeftAttachment, SITV_AttachForm, NULL);
 
 		prev = label;
 		tabs = next; items ++;
