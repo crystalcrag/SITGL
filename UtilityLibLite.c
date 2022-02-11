@@ -16,7 +16,9 @@
 #include <ctype.h>
 #include <process.h>
 #include "UtilityLibLite.h"
+#ifndef NOLANG
 #include "SIT_P.h"
+#endif
 
 #undef UTF8ToUTF16
 #ifdef DEBUG_MALLOC
@@ -1579,6 +1581,8 @@ DLLIMP Bool SetINIValueInt(STRPTR path, STRPTR key, int val)
 	return SetINIValue(path, key, number);
 }
 
+#ifndef NOLANG
+
 /*
  * UtilityLib/Lang
  */
@@ -1787,9 +1791,9 @@ DLLIMP Lang LangParse(STRPTR path)
 			while (langStr->message);
 
 			/* chain message */
-			DATA8 link = (DATA8) prev->message;
-			DATA8 tr   = (DATA8) str + str[-1] + (str[-2] << 8);
-			link += link[-1] + (link[-2] << 8);
+			DATA8 link = (DATA8) prev->message; /* msgid from hash */
+			DATA8 tr   = (DATA8) str + ((DATA8)str)[-1] + (((DATA8)str)[-2] << 8); /* msgstr that need insertion */
+			link += link[-1] + (link[-2] << 8); /* msgstr from hash */
 			tr[-1] = link[-1];
 			tr[-2] = link[-2];
 			link[-1] = slot & 0xff;
@@ -1856,9 +1860,12 @@ static STRPTR LangSearch(Lang lang, STRPTR msg)
 	int      max = lang->stringsMax;
 	int      pos = crc % max;
 
-	LangString * langStr;
+	LangString * langStr = lang->strings + pos;
+	if (langStr->message == NULL)
+		/* message not in translation file (or same message as original) */
+		return msg;
 
-	for (langStr = lang->strings + pos; langStr->crc != crc; )
+	while (langStr->crc != crc)
 	{
 		DATA8 tr = (DATA8) langStr->message;
 		tr += tr[-1] | (tr[-2] << 8);
@@ -1932,3 +1939,4 @@ DLLIMP void LangFree(Lang lang)
 			sit.curLang = NULL;
 	}
 }
+#endif

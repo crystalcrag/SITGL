@@ -227,6 +227,10 @@ static int CALLBACK SIT_PostInitBrowse(HWND wnd, UINT msg, LPARAM lParam, LPARAM
 		SIT_FolderSel f = (APTR) lpData;
 		LPWSTR dir;
 
+		/* obnoxious API :-/ */
+		STRPTR p;
+		for (p = f->initPath; *p; p ++)
+			if (*p == '/') *p = '\\';
 		allocaUTF8ToUTF16(f->initPath, dir);
 
 		SendMessage(wnd, BFFM_SETSELECTION, TRUE, (LPARAM) dir);

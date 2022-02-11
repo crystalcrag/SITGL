@@ -647,7 +647,7 @@ void SIT_TextEditSetText(SIT_Widget w, STRPTR title)
 			default:           val = * (double *) edit->curValue;
 			}
 			SIT_TextEditFormatDouble(edit->text, edit->maxText, val, edit->roundTo);
-			SIT_TextEditPaste(edit, edit->text, -1);
+			SIT_TextEditPaste(edit, edit->text, strlen(edit->text));
 		}
 		else SIT_TextEditPaste(edit, title ? title : "", -1);
 		if (pos > edit->length) pos = edit->length;
@@ -1372,6 +1372,8 @@ static void SIT_TextEditDeleteChars(SIT_EditBox state, int pos, int nb)
 	int     i, j, rem;
 	uint8_t wrap = state->wordWrap;
 
+	if (state->readOnly) return;
+
 	/* what line to start? */
 	if (pos < state->charTop)
 		for (i = 0, rows = state->rows, rem = 0, p = state->text;
@@ -1869,6 +1871,7 @@ static int SIT_TextEditClick(SIT_Widget w, APTR cd, APTR ud)
 /* async action callback */
 static int SIT_TextEditAutoScroll(SIT_Widget w, APTR cd, APTR ud)
 {
+	/* 1 == vertical, 2 == horizontal */
 	static uint8_t actions[] = {2, 1, 0, 1, 2};
 	SIT_EditBox state = (SIT_EditBox) w;
 	int old = state->cursor;
@@ -1956,6 +1959,7 @@ static int SIT_TextEditDrag(SIT_Widget w, APTR cd, APTR ud)
 				else if (state->autoScrollDir)
 					SIT_TextEditStartAutoScroll(state, 0);
 			}
+			SIT_TextEditMakeCursorVisible(state);
 			sit.dirty = 1;
 		}
 		return 1;
@@ -2273,7 +2277,7 @@ int SIT_TextEditInsertText(SIT_EditBox state, DATA8 utf8)
 		0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1
 	};
 	/* can't add newline in single-line mode */
-	if ((utf8[0] == '\n' || utf8[0] == '\r') && state->maxLines > 0 && state->rowCount == state->maxLines)
+	if (((utf8[0] == '\n' || utf8[0] == '\r') && state->maxLines > 0 && state->rowCount == state->maxLines) || state->readOnly)
 		return False;
 
 	if (utf8[0] == '\t')
@@ -2377,8 +2381,9 @@ int SIT_TextEditKey(SIT_EditBox state, int key)
 		}
 		break;
 
-	case 3:  /* Ctrl+C: copy to clipboard */
 	case 24: /* Ctrl+X: cut text */
+		if (state->readOnly) return 0;
+	case 3:  /* Ctrl+C: copy to clipboard */
 		if (STB_TEXT_HAS_SELECTION(state) && type != SITV_Password)
 		{
 			int s1 = state->selStart;
@@ -2393,18 +2398,21 @@ int SIT_TextEditKey(SIT_EditBox state, int key)
 		}
 		break;
 	case 22: /* Ctrl+V: paste */
-	{	int    size = 0;
-		STRPTR text = SIT_GetFromClipboard(&size);
-		if (text && size > 1)
-			SIT_TextEditPaste(state, text, size - 1);
-		if (state->editType == SITV_Password)
+		if (state->readOnly == 0)
 		{
-			/* password is still in clipboard: clear it when we are done */
-			state->flags |= FLAG_CLEARCLIP;
-			memset(text, 0, size);
+			int    size = 0;
+			STRPTR text = SIT_GetFromClipboard(&size);
+			if (text && size > 1)
+				SIT_TextEditPaste(state, text, size - 1);
+			if (state->editType == SITV_Password)
+			{
+				/* password is still in clipboard: clear it when we are done */
+				state->flags |= FLAG_CLEARCLIP;
+				memset(text, 0, size);
+			}
+			free(text);
 		}
-		free(text);
-	}	break;
+		break;
 	case 25: /* Ctrl+Y: redo */
 	case 26: /* Ctrl+Z: undo */
 		SIT_TextEditMakeCursorVisible(state);
@@ -2415,9 +2423,12 @@ int SIT_TextEditKey(SIT_EditBox state, int key)
 
 	case SITK_Space:
 	case SITK_Space | SITK_FlagShift:
-		SIT_TextEditInsertText(state, defChr);
-		sit.dirty = True;
-		return 1;
+		if (state->readOnly == 0 && SIT_TextEditInsertText(state, defChr))
+		{
+			sit.dirty = True;
+			return 1;
+		}
+		return 0;
 
 	case SITK_Insert:
 		state->flags ^= FLAG_REPLACE;
@@ -2425,7 +2436,7 @@ int SIT_TextEditKey(SIT_EditBox state, int key)
 		break;
 
 	case SITK_Return:
-		if (SIT_TextEditInsertText(state, defChr + 2))
+		if (state->readOnly == 0 && SIT_TextEditInsertText(state, defChr + 2))
 		{
 			sit.dirty = True;
 			return 1;
@@ -2560,6 +2571,7 @@ int SIT_TextEditKey(SIT_EditBox state, int key)
 	case SITK_Delete:
 	case SITK_Delete | SITK_FlagShift:
 	case SITK_Delete | SITK_FlagCtrl:
+		if (state->readOnly) return 0;
 		SIT_TextEditMakeCursorVisible(state);
 		if (! STB_TEXT_HAS_SELECTION(state))
         {
@@ -2584,6 +2596,7 @@ int SIT_TextEditKey(SIT_EditBox state, int key)
 	case SITK_BackSpace:
 	case SITK_BackSpace | SITK_FlagShift:
 	case SITK_BackSpace | SITK_FlagCtrl:
+		if (state->readOnly) return 0;
 		SIT_TextEditMakeCursorVisible(state);
 		if (! STB_TEXT_HAS_SELECTION(state))
 		{

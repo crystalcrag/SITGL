@@ -286,8 +286,6 @@ DLLIMP void SIT_MoveNearby(SIT_Widget ctrl, int XYWH[4], int defAlign)
 	x -= ctrl->offsetX;
 	y -= ctrl->offsetY;
 
-	//fprintf(stderr, "setting ctrl to %d, %d - [%d, %d, %d, %d]\n", x, y, XYWH[0], XYWH[1], XYWH[2], XYWH[3]);
-
 	SIT_SetValues(ctrl, SIT_X, x, SIT_Y, y, NULL);
 }
 

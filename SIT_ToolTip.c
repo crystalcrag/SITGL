@@ -80,7 +80,16 @@ static int SIT_TooltipResize(SIT_Widget w, APTR cd, APTR ud)
 	else /* SITV_TooltipFollowMouse */
 	{
 		int XYWH[4] = {sit.mouseX, sit.mouseY, 20, 20};
-		SIT_MoveNearby(w, XYWH, TOOLTIP_DEFALIGN);
+		if (tip->anchor == SITV_TooltipFixed)
+		{
+			REAL x, y;
+			XYWH[0] = x = w->fixed.left - tip->offX;
+			XYWH[1] = y = w->fixed.top  - tip->offY;
+			SIT_MoveNearby(w, XYWH, TOOLTIP_DEFALIGN);
+			tip->offX = w->fixed.left - x;
+			tip->offY = w->fixed.top - y;
+		}
+		else SIT_MoveNearby(w, XYWH, TOOLTIP_DEFALIGN);
 	}
 	return 1;
 }

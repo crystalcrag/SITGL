@@ -189,13 +189,13 @@ static Bool SIT_ProcessAccel(int capture, int key)
 						break;
 					}
 				default:
-					if (! SIT_ApplyCallback(w, NULL, evt) && a->cb && a->cb(w, (APTR) key, (APTR) evt) == 0)
+					if (! SIT_ApplyCallback(w, NULL, evt) && a->cb && a->cb(w, (APTR) evt, (APTR) (int) a->tag) == 0)
 						return False;
 				}
 			}
 			else if (a->cb)
 			{
-				a->cb(w, (APTR) key, (APTR) evt);
+				a->cb(w, (APTR) evt, (APTR)  (int) a->tag);
 			}
 			return True;
 		}

@@ -561,9 +561,10 @@ struct SIT_Tooltip_t
 	SIT_Widget_t super;
 	SIT_Widget   relTo;
 	uint8_t      autoTip;
-	int          anchor;
-	int          displayTime;
-	int          delayTime;
+	int          anchor;               /* public */
+	int          displayTime;          /* public */
+	int          delayTime;            /* public */
+	REAL         offX, offY;
 };
 
 #define TOOLTIP_DEFALIGN              ((SITV_AlignBottom | SITV_AlignRight) | ((SITV_AlignBottom | SITV_AlignLeft) << 8))

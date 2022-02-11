@@ -14,6 +14,7 @@ struct Msg_t
 {
 	ListNode node;
 	int      flag;
+	uint8_t  split[8];
 	TEXT     text[1];
 };
 
@@ -65,7 +66,7 @@ static Lang ParseLang(STRPTR name, STRPTR path);
 static void ExtractMessages(STRPTR folder, STRPTR prefix, STRPTR suffix, Bool escape);
 static STRPTR LangExtractStr(STRPTR old, STRPTR buffer);
 static void LangAddLine(ListHead *, STRPTR msgid, STRPTR msgstr, int * offset, int origin);
-static void WriteString(STRPTR prefix1, STRPTR prefix2, STRPTR str, FILE * out);
+static void WriteString(STRPTR prefix1, STRPTR prefix2, Msg msg, FILE * out);
 static void LangRewrite(LangFile l);
 static void FreeLang(Lang);
 static int LangCompare(STRPTR msg1, STRPTR msg2);

@@ -6,14 +6,17 @@
  * Written by T.Pierron, june 2020.
  */
 
+#define DLLIMP
+#define NOLANG
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <malloc.h>
 #include "../UtilityLibLite.h"
+#include "../UtilityLibLite.c"
 #include "msgextract.h"
-
+#define fopen fopen_enc
 
 ListHead strings = {0}; /* Msg */
 ListHead langs   = {0}; /* Lang */
@@ -216,7 +219,7 @@ static void LangRewrite(LangFile l)
 			if (! warnednew)
 				fprintf(out, "\n# NEW MESSAGES\n"), warnednew = True;
 
-			WriteString("msgid ", "      ", m->text, out);
+			WriteString("msgid ", "      ", m, out);
 
 			/* Empty translation */
 			fprintf(out, "msgstr \"\"\n\n");
@@ -230,26 +233,97 @@ static void LangRewrite(LangFile l)
 	else fprintf(stderr, "Cannot write '%s': %s\n", l->path, GetError());
 }
 
-static void WriteString(STRPTR prefix1, STRPTR prefix2, STRPTR str, FILE * out)
+static void WriteString(STRPTR prefix1, STRPTR prefix2, Msg msg, FILE * out)
 {
-	fprintf(out, "%s\"", prefix1);
-
-	while (*str)
+	STRPTR str, eof;
+	DATA8  split;
+	for (str = msg->text, split = msg->split; *str; )
 	{
-		switch (*str) {
-		case '\t': fprintf(out, "\\t"); break;
-		case '\n': fprintf(out, "\\n"); break;
-		case '\r': fprintf(out, "\\r"); break;
-		case '\v': fprintf(out, "\\v"); break;
-		case '\\': fprintf(out, "\\\\"); break;
-		case '\"': fprintf(out, "\\\""); break;
-		default:
-			if (* (unsigned char *) str < 32) fprintf(out, "\\x%02x", *str);
-			else fputc(*str, out);
+		if (split[0] > 0)
+		{
+			eof = str + split[0];
+			split ++;
 		}
-		str ++;
+		else eof = strchr(str, 0);
+
+		fprintf(out, "%s\"", prefix1);
+
+		while (str < eof)
+		{
+			switch (*str) {
+			case '\t': fprintf(out, "\\t");  break;
+			case '\n': fprintf(out, "\\n");  break;
+			case '\r': fprintf(out, "\\r");  break;
+			case '\v': fprintf(out, "\\v");  break;
+			case '\\': fprintf(out, "\\\\"); break;
+			case '\"': fprintf(out, "\\\""); break;
+			default:
+				if (* (unsigned char *) str < 32) fprintf(out, "\\x%02x", *str);
+				else fputc(*str, out);
+			}
+			str ++;
+		}
+		fprintf(out, "\"\n");
+		prefix1 = prefix2;
 	}
-	fprintf(out, "\"\n");
+}
+
+
+static Msg ExtractMultiline(FILE * in, STRPTR buffer, STRPTR start, STRPTR suffix, Bool unescape)
+{
+	/* check for multi-line string */
+	uint8_t chr = start[-1];
+	uint8_t last = 0;
+	uint8_t line = 0;
+	if (chr == '\"' || chr == '\'')
+	{
+		Msg msg = NULL;
+		int max = 0;
+		int len = 0;
+		for (;;)
+		{
+			STRPTR token = start;
+			/* assume c-string like syntax */
+			while (*token && *token != chr)
+			{
+				if (token[0] == '\\' && token[1]) token += 2;
+				else token ++;
+			}
+			if (*token)
+			{
+				if (unescape)
+				{
+					*token = 0;
+					UnescapeAntiSlash(start);
+					token = strchr(start, 0);
+				}
+				int add = token - start;
+				if (len + add + 1 > max)
+				{
+					max = (len + add + 128) & ~127;
+					msg = realloc(msg, max + sizeof *msg);
+					if (len == 0)
+						memset(msg, 0, sizeof *msg);
+				}
+				memcpy(msg->text + len, start, add);
+				len += add;
+				msg->text[len] = 0;
+				if (last) return msg;
+				if (fgets(buffer, 256, in))
+				{
+					msg->split[line++] = add;
+					start = strchr(buffer, chr);
+					if (start == NULL) break;
+					start ++;
+					STRPTR end = strstr(start, suffix);
+					if (end) *end = chr, end[1] = 0, last = 1;
+				}
+			}
+			else break;
+		}
+		if (msg) free(msg);
+	}
+	return NULL;
 }
 
 /* Scan file for string to be translated */
@@ -292,11 +366,21 @@ static void ExtractMessages(STRPTR folder, STRPTR prefix, STRPTR suffix, Bool un
 			{
 				token += strlen(prefix);
 				end = strstr(token, suffix);
-				if (end == NULL) break;
-				msg = malloc(sizeof *msg + end - token + 1);
-				CopyString(msg->text, token, end - token + 1);
-				if (unescape) UnescapeAntiSlash(msg->text);
-				end += strlen(suffix);
+				if (end == NULL)
+				{
+					/* suffix not found in current: try parsing a multi-line string then */
+					msg = ExtractMultiline(in, buffer, token, suffix, unescape);
+					if (msg == NULL) break;
+					end = "";
+				}
+				else
+				{
+					msg = malloc(sizeof *msg + end - token + 1);
+					memset(msg, 0, sizeof *msg);
+					CopyString(msg->text, token, end - token + 1);
+					end += strlen(suffix);
+					if (unescape) UnescapeAntiSlash(msg->text);
+				}
 
 				/* check if string has already been added */
 				for (m = HEAD(strings); m && LangCompare(m->text, msg->text); NEXT(m));
