@@ -1,0 +1,168 @@
+/*
+ * stylesheet for an old-school plastic button calculator
+ *
+ * Written by T.Pierron, feb 2022.
+ */
+html    { color: #dfdfdf; font-size: 1.2vw; background: linear-gradient(to bottom left, #444, #393931); padding: 0.5em }
+canvas  { background: url(checkboard.png); border: 2px solid black; box-shadow: 4px 4px rgba(black, 0.3) }
+.editor { background: white }
+.dim    { color: white; padding: 1em; text-shadow: 0.1em 0.1em #888; font-size: 1.2em }
+.alt    { color: #96acc4 }
+.danger { color: #e37655 }
+::link  { color: #55f }
+
+form.bg {
+	background-color: rgba(#444, 0.8);
+	border-radius:    0.5em;
+	border:           0.2em solid #e37655;
+	padding:          1em;
+}
+label {
+	font-weight:      bold;
+	color:            #b89086;
+	text-shadow:      0 0 10px #888, 0 0 10px #888;
+	text-align:       right
+}
+button {
+	padding:          0.3em 0.6em;
+	border:           0.1em solid #888;
+	border-color:     #888 #888 #222 #222;
+	background:       linear-gradient(to top right, #333, #555);
+	border-radius:    0.5em;
+	color:            #dfdfdf;
+	text-transform:   uppercase;
+	text-align:       center;
+	outline:          0.2em solid #111
+}
+button:active {
+	background:       selback;
+	border:           0.1em solid #113;
+	border-color:     #08091a #08091a #878798 #878798;
+	color:            selfore;
+	outline-width:    0.1em;
+	box-shadow:       0 0 5px black inset;
+	-outline-margin:  1
+}
+button:disabled {
+	background:       #444 repeating-linear-gradient(-45deg, transparent, transparent 1em, rgba(#ff9086,0.33) 1em, rgba(#ff9086,0.33) 2em);
+	color:            black;
+	text-shadow:      -0.1em 0.1em #888
+}
+/* edit box */
+editbox {
+	padding:          0.2em 0.5em;
+	background-color: #bdc2a4;
+	color:            black;
+	box-shadow:       0 0 3px #222 inset;
+	border:           0.1em solid #888;
+	border-color:     #111 #111 #888 #888
+}
+editbox spin.up {
+	background:       url(mask:arrowup.png) 60% 50% no-repeat, rgba(black, 0.1);
+	background-size:  70% 35%, 100% 100%;
+	color:            #222
+}
+editbox spin.down {
+	background:       url(mask:arrowdown.png) 60% 50% no-repeat, rgba(black, 0.1); 
+	background-size:  70% 35%, 100% 100%;
+	color:            #222
+}
+editbox spin.up:active {
+	background:       url(mask:arrowup.png) 60% 50% no-repeat, rgba(black, 0.7);
+	color:            #ccc
+}
+editbox spin.down:active {
+	background:       url(mask:arrowdown.png) 60% 50% no-repeat, rgba(black, 0.7);
+	color:            #ccc
+}
+/* list box */
+listbox, table {
+	background:       #bdc2a4;
+	color:            black;
+	box-shadow:       0 0 3px #444 inset;
+	border:           0.1em solid #888;
+	border-color:     #111 #111 #888 #888
+}
+table th {
+	border:           0.1em solid #888;
+	border-color:     #888 #888 #222 #222;
+	background:       linear-gradient(to top, #333, #555);
+	padding:          0.1em;
+	text-transform:   uppercase;
+	color:            #dfdfdf;
+	text-align:       center;
+	font-size:        0.9em
+}
+listbox td, table td {
+	padding: 0.2em
+}
+listbox td:checked, table td:checked {
+	background-color: rgba(selback, 0.5);
+	color:            selfore
+}
+/* radio, checkbox */
+radio box {
+	border-radius:    1em;
+	border:           0.1em solid #888;
+	border-color:     #222 #222 #888 #888;
+	padding:          0.4em;
+	background-color: #bdc2a4;
+	vertical-align:   middle
+}
+radio:checked box {
+	background:       white url(mask:circle.png) no-repeat 50% 50%;
+	background-size:  80% 80%;
+	color:            selback
+}
+checkbox box {
+	padding:          0.4em;
+	background:       #bdc2a4;
+	border:           2px solid #888;
+	border-color:     #222 #222 #888 #888;
+	vertical-align:   middle;
+	box-shadow:       0 0 3px #222 inset
+}
+checkbox:checked box {
+	background:       selback url(mask:checkmark.png) no-repeat 50% 50%;
+	background-size:  80% 80%;
+	color:            white
+}
+/* tooltip */
+tooltip {
+	background-color: #ffffe1;
+	color:            black;
+	padding:          0.3em;
+	white-space:      pre;
+	border:           1px solid black;
+	font-size:        0.9em
+}
+/* frame */
+fieldset {
+	border-top:       0.2em groove #111;
+	color:            #dfdfdf;
+	text-align:       center;
+	font-weight:      bold
+}
+/* scroll bar */
+hscroll, vscroll {
+	background-color: rgba(black, 0.1)
+}
+vscroll thumb, hscroll thumb {
+	background:       rgba(black, 0.3)
+}
+#bevel {
+	background:       linear-gradient(to bottom, #62635e, #595957 90%, #111)
+}
+progress {
+	border:           0.1em solid #888;
+	border-color:     #111 #111 #888 #888;
+	background:       black;
+	padding:          0.3em 0;
+	text-align:       center
+}
+progress bar {
+	box-shadow:       0 0 4px black inset;
+	background:       radial-gradient(ellipse, transparent, rgba(#000,0.2)),
+	                  linear-gradient(to bottom, #cdffcd, #9cedab 50%, #00d128 50%, #1ce233);
+	color:            white
+}

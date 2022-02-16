@@ -98,7 +98,7 @@ int main(int nb, char * argv[])
 /* First character case insensitive, remaining case sensitive */
 static int LangCompare(STRPTR msg1, STRPTR msg2)
 {
-	return toupper(msg1[0]) == toupper(msg2[0]) ? strcmp(msg1+1, msg2+1) : strcmp(msg1, msg2);
+	return strcmp(msg1, msg2);
 }
 
 static int LangComment(STRPTR * lang, int sz, int offset)
@@ -373,7 +373,7 @@ static void ExtractMessages(STRPTR folder, STRPTR prefix, STRPTR suffix, Bool un
 					if (msg == NULL) break;
 					end = "";
 				}
-				else
+				else if (end > token)
 				{
 					msg = malloc(sizeof *msg + end - token + 1);
 					memset(msg, 0, sizeof *msg);
@@ -381,6 +381,15 @@ static void ExtractMessages(STRPTR folder, STRPTR prefix, STRPTR suffix, Bool un
 					end += strlen(suffix);
 					if (unescape) UnescapeAntiSlash(msg->text);
 				}
+				else break;
+
+				/* remove unecessary punctuation at the end */
+				STRPTR eof = strchr(msg->text, 0) - 1;
+				int    length;
+				for (length = 0; eof > msg->text && (isspace(*eof) || *eof == ':' || *eof == '.'); eof --, length ++);
+				if (length < 8)
+					/* discard extra punctuations */
+					eof[1] = 0;
 
 				/* check if string has already been added */
 				for (m = HEAD(strings); m && LangCompare(m->text, msg->text); NEXT(m));

@@ -22,7 +22,7 @@ DLLIMP int SIT_ApplyCallback(SIT_Widget w, APTR cd, int type)
 	SIT_Callback cb, next;
 	int oldf = w->flags & SITF_IsLocked, ret = 1 << type;
 
-	if ((globalEvt & ret) && (sit.root->evtFlags & ret))
+	if ((globalEvt & ret) && (sit.root->evtFlags & ret) && (type != SITE_OnChange || w == sit.root))
 	{
 		/* global cb registered: trigger then before action is taken */
 		for (cb = HEAD(sit.root->callbacks); cb; NEXT(cb))
@@ -347,6 +347,8 @@ DLLIMP int SIT_ProcessChar(int cp, int modifier)
 {
 	sit.keyQual = modifier;
 	SIT_Widget focus = sit.focus;
+
+	if (cp == 27) return 0;
 
 	if (SIT_ProcessAccel(True, cp|modifier))
 		return 1;
@@ -755,13 +757,16 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 		/* regular mouse move event */
 		hover = SIT_EventBubble(sit.hover, SITE_OnMouseMove);
 
-		if (hover)
+		while (hover)
 		{
 			SIT_OnMouse msg = {.state = SITOM_Move};
 			msg.flags = sit.keyQual;
 			msg.x     = sit.mouseX - hover->offsetX - hover->layout.pos.left;
 			msg.y     = sit.mouseY - hover->offsetY - hover->layout.pos.top;
-			SIT_ApplyCallback(hover, &msg, SITE_OnMouseMove);
+			if (SIT_ApplyCallback(hover, &msg, SITE_OnMouseMove) == 0)
+				hover = SIT_EventBubble(hover->parent, SITE_OnMouseMove);
+			else
+				break;
 		}
 	}
 	/* callback registered on root node */

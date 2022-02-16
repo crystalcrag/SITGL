@@ -130,7 +130,6 @@
   <a class="sub3" href="#lexersamp">Example</a>
 
 <a class="sub1" href="#i18n"><span>Internationalization</span></a>
- <a class="sub2" href="#localeinfo">Locale information</a>
  <a class="sub2" href="#msgextract">Automating message extraction</a>
  <a class="sub2" href="#loadmsgs">Loading translation file</a>
  <a class="sub2" href="#advi18n">Advanced features</a>
@@ -1919,8 +1918,7 @@ where a given part of the interface is being created. Consider the login/passwor
 
 	SIT_Widget ctrl = SIT_CreateWidget(<val>"blurb"</val>, SIT_LABEL, diag,
 		SIT_Title,           <val>"&lt;b&gt;NSA&lt;/b&gt; supper &lt;u&gt;secret&lt;/u&gt; network login access."</val>,
-		SIT_LeftAttachment,  SITV_AttachForm,
-		SIT_RightAttachment, SITV_AttachForm,
+		SIT_Left,            SITV_AttachPosition, SITV_AttachPos(50), SITV_OffsetCenter,
 		<val>NULL</val>
 	);
 
@@ -1950,7 +1948,6 @@ where a given part of the interface is being created. Consider the login/passwor
 		SIT_Width,           SITV_Em(<val>15</val>),
 		SIT_Left,            SITV_AttachWidget, label2, SITV_Em(<val>1</val>),
 		SIT_Top,             SITV_AttachWidget, login,  SITV_Em(<val>1</val>),
-		SIT_RightAttachment, SITV_AttachForm,
 		<val>NULL</val>
 	);
 
@@ -1963,7 +1960,6 @@ where a given part of the interface is being created. Consider the login/passwor
 	SIT_Widget show = SIT_CreateWidget(<val>"show"</val>, SIT_BUTTON, diag,
 		SIT_Title,           <val>"</val><spe>\xE2\x96\xBC</spe><val>"</val>,
 		SIT_Top,             SITV_AttachWidget, passwd,  SITV_Em(<val>1</val>),
-		SIT_RightAttachment, SITV_AttachForm,
 		<val>NULL</val>
 	);
 
@@ -2234,13 +2230,13 @@ what properties they accept though):
 	SIT_CreateWidgets(diag,
 		<val>"&lt;label name=blurb title="</val>, <val>"&lt;b&gt;NSA&lt;/b&gt; supper &lt;u&gt;secret&lt;/u&gt; network login access."</val>, <val>"left=FORM right=FORM&gt;"</val>
 		<val>"&lt;label name=logintxt title=Login:&gt;"</val>
-		<val>"&lt;editbox name=login title='Haxxor' width=15em left=WIDGET,logintxt,1em top=WIDGET,blurb,1em right=FORM&gt;"</val>
+		<val>"&lt;editbox name=login title='Haxxor' width=15em left=WIDGET,logintxt,1em top=WIDGET,blurb,1em&gt;"</val>
 		<val>"&lt;label name=passwdtxt maxWidth=logintxt title=Password:&gt;"</val>
-		<val>"&lt;editbox name=passwd title='12345' width=15em left=WIDGET,logintxt,1em editType="</val>, SITV_Password, <val>"top=WIDGET,login,1em right=FORM&gt;"</val>
+		<val>"&lt;editbox name=passwd title='12345' width=15em left=WIDGET,logintxt,1em editType="</val>, SITV_Password, <val>"top=WIDGET,login,1em&gt;"</val>
 		<val>"&lt;label name=srvtxt maxWidth=passwdtxt title=Server:&gt;"</val>
 		<val>"&lt;button name=show title='&amp;#x25bc;' top=WIDGET,passwd,1em right=FORM&gt;"</val>
 		<val>"&lt;editbox name=server title='nsa.gov.cn.fbi' width=15em left=WIDGET,srvtxt,1em top=WIDGET,passwd,1em right=WIDGET,show,1em&gt;"</val>
-		<val>"&lt;listbox name=srvlist top=WIDGET,server,1em left=FORM right=FORM height=5em viewMode="</val>, SITV_ListViewReport, <val>"columnNames=Name/&gt;"</val>
+		<val>"&lt;listbox name=srvlist top=WIDGET,server,1em left=FORM right=FORM height=5em listBoxFlags="</val>, SITV_NoHeaders, <val>"columnNames=Name/&gt;"</val>
 		<val>"&lt;label name=listtitle title='Server list:' left=OPPOSITE,srvlist,2em top=OPPOSITE,srvlist&gt;"</val>
 		<val>"&lt;button name=ok.def title=Ok top=WIDGET,srvlist,1em&gt;"</val>
 		<val>"&lt;button name=cancel maxWidth=ok title=Cancel right=FORM top=OPPOSITE,ok&gt;"</val>
@@ -7394,45 +7390,6 @@ of the <tt>SITGL</tt>: the translation file you loaded prior to translate any me
 was not found, it will simply return the first argument you provided. So without further action, gettext
 act as a light-weight no-op.
 
-<h3 id="localeinfo"><span>Locale information</span></h3>
-
-<p>Before you can translate anything, you'll first need to know what is the current language of the
-operating system. You can always later provide a menu to let the user select its own language, but
-the first time the application is launched, it is advised to use the preferred language. Also take
-note that changing messages of an application after it has started is usually way too much work,
-not really worth the effort.
-
-<p>The locale information is actually stored in the <tt>SIT_App</tt> widget, into the property
-<tt>SIT_LocaleInfo</tt>. The content of this property is a pointer to a <tt>LocaleInfo</tt> structure.
-You can find its definition in the main header <tt>SIT.h</tt>:
-
-<pre><type>struct</type> LocaleInfo_t        <com>// Example:</com>
-{
-	STRPTR nlsLang;        <com>// Fran&ccedil;ais</com>
-	STRPTR nlsCountry;     <com>// France</com>
-	STRPTR engLang;        <com>// French</com>
-	STRPTR engCountry;     <com>// France</com>
-	STRPTR iso3166;        <com>// FR_fr</com>
-	STRPTR currency;       <com>// &euro;</com>
-	STRPTR currencyName;   <com>// Euro</com>
-	STRPTR currencyCode;   <com>// EUR</com>
-	STRPTR shortDate;      <com>// dd/MM/yyyy</com>
-	STRPTR longDate;       <com>// dddd d MMMM yyyy</com>
-	STRPTR decimalSep;     <com>// ,</com>
-	STRPTR months[<val>12</val>];     <com>// janvier, f&eacute;vrier, ...</com>
-	STRPTR abbrMonths[<val>12</val>]; <com>// janv., f&eacute;vr., ...</com>
-	STRPTR weekDays[<val>7</val>];    <com>// lundi, mardi, ...</com>
-	STRPTR abbrWeek[<val>7</val>];    <com>// lun., mar., mer., ...</com>
-	STRPTR langCode;       <com>// 040C</com>
-	STRPTR intlPrefix;     <com>// 33</com>
-};
-</pre>
-
-<p>This structure is particularly important to know how to uniquely get the name of the language, in
-order to name your language file accordingly. In this case, it is advised to use the ISO 3166 country
-code, since it is guaranteed to be unique and only use ASCII charset. The other fields might contain
-unicode characters.
-
 <h3 id="msgextract"><span>Automating message extraction</span></h3>
 
 <p>Maintaining multiple translation files is usually a tedious process, so it better has to be automated
@@ -7441,18 +7398,17 @@ program as described in <a href="http://www.gnu.org/software/gettext/manual/gett
 4.3: Preparing Translatable Strings</a>.
 
 <p>The only difference is that the function to extract a message from the catalog is named <tt>LangStr()</tt>
-instead of <tt>gettext()</tt>, and both are usually abridged <tt>_()</tt> to limit the overhead of
+instead of <tt>gettext()</tt>, and it is usually abridged <tt>LANG()</tt> to limit the overhead of
 translation.
 
 <p>For example, to translate the Hello world program given in <a href="#helloworld">chapter 4: Getting Started</a>,
 you only have to modify the label creation, with the following line:
 
-<pre>SIT_CreateWidgets(app, <val>"&lt;label name=hello title="</val> _(<val>"Hello, world!"</val>), <val>"&gt;"</val>);</pre>
+<pre>SIT_CreateWidgets(app, <val>"&lt;label name=hello title="</val> LANG(<val>"Hello, world!"</val>), <val>"&gt;"</val>);</pre>
 
-<p><span class="n">Note</span>: since you'll need locale information to load the correct language file,
-and since this information is only available at the <tt>SIT_APP</tt> level, that means any errors occurring
-before a successful <tt>SIT_Init()</tt> cannot be translated with this module. <span class="n">XXX</span>
-should be decoupled really.
+<p><span class="n">Note</span>: <tt>SIT_Init()</tt> <b>must be called before processing any language
+file</b>, that means any errors occurring before a successful <tt>SIT_Init()</tt> cannot be translated
+with this module.
 
 <p>You'll have to mark all of your message that way. Once it is done, you can use the <tt>msgextract</tt>
 utility to extract them in one shot, and update/create every translation file. You can find it in the
@@ -7462,19 +7418,23 @@ file. A typical configuration for extracting messages from C source files is:
 <pre><type>Lang</type>=lang
 <spe>[1]</spe>
 <type>Folder</type>=*.c
-<type>Prefix</type>=_("
+<type>Prefix</type>=LANG("
 <type>Suffix</type>=<val>"<spe>\"</spe>)"</val></pre>
 
-<p>The following keywords can be specified:
+<p>The <b>following keywords</b> can be specified:
 <ul>
-  <li><tt>Lang</tt>: must the first keyword of this file. Indicate where language files will be updated.
+  <li><tt>Lang</tt>: must the first keyword of this file. Indicate <b>where language files will be updated</b>.
   <li><tt>Folder</tt>: an optional path followed by a MS-DOS wildcard, use to filter files to be scanned
-  for messages to be extracted and merged with language files.
-  <li><tt>Prefix</tt>: the starting string that mark the beginning of a message to extract.
-  <li><tt>Suffix</tt>: the string that mark the end of the message.
+  for <b>messages to be extracted</b> and merged with language files.
+  <li><tt>Prefix</tt>: the starting string that mark the <b>beginning of a message</b> to extract.
+  <li><tt>Suffix</tt>: the string that mark the <b>end of the message</b>.
 </ul>
 
-<p>If your configuration was named "<tt>msgextract.ini</tt>", you can then simply initiate message extraction
+<p>You can have <b>multiple sections</b> in the highly case your application files is spread over multiple
+directories. Each directory can also its own prefix/suffix, which is useful when mixing different
+file format/programming language.
+
+<p>If your configuration was named "<tt>msgextract.ini</tt>", you can then simply <b>initiate message extraction</b>
 with the following commands (otherwise you'll have to provide the configuration file as the first argument):
 
 <pre><com>C:\Project\HelloWorld&gt;</com>mkdir lang
@@ -7490,9 +7450,9 @@ FR_fr.po updated: 1 added, 0 commented, 0 untouched.
 </pre>
 
 <p>The way <tt>msgextract</tt> works is to extract every strings from each folder directive of every
-section within the configuration file (in case your application is spread over multiple directories).
+section within the configuration file.
 It will then load each translation files from the <tt class="t">Lang</tt> folder, and add messages that
-are missing in catalog and comment those that are no more referenced. That's why we created an empty
+are missing and comment those that are no more referenced. That's why we created an empty
 language file before starting the extraction. The resulting file <tt>lang\FR_fr.po</tt> looks like:
 
 <pre><com># NEW MESSAGES</com>
@@ -7527,9 +7487,9 @@ load PO files directly, there is no need for MO files at all. This is done throu
 
 <pre>Lang LangParse(STRPTR path);</pre>
 
-<p>The path (UTF-8 encoded) will have to be built using the locale information from the <tt>SIT_APP</tt>
-widget and the convention you use earlier to create your translation file. Since we use the ISO 3166 code,
-the hello world application can now be updated that way to include full support for internationalization:
+<p>The path needs to be UTF-8 encoded. <b>This function must be called after <tt>SIT_Init()</tt></b>.
+To know which language file to load, it is recommended to ask the user in a preference/option dialog.
+There are no built-in ways to get the current language of the operating system with SITGL.
 
 <pre><com>/*
  * exampleSDL.c : small example showing how to integrate SITGL with SDL
@@ -7549,15 +7509,13 @@ the hello world application can now be updated that way to include full support 
 	<com>/* initialization is identical */
 	/* ... */
 
-	/* this is what is needed to activate translation */</com>
-	LocaleInfo info;
-	<type>char</type> path[<val>32</val>];
+	/*
+	 * this is what is needed to activate translation
+	 * you should retrieve the path from a configuration file though.
+	 */</com>
+	LangParse(<val>"lang/FR_fr.po"</val>);
 
-	SIT_GetValues(app, SIT_LocaleInfo, &amp;info, <val>NULL</val>);
-	sprinf(path, <val>"lang/<spe>%s</spe>.po"</val>, info->iso3166);
-	LangParse(path);
-
-	SIT_CreateWidgets(app, <val>"&lt;label name=hello title="</val>, _(<val>"Hello, world!"</val>), <val>"&gt;"</val>);
+	SIT_CreateWidgets(app, <val>"&lt;label name=hello title="</val>, LANG(<val>"Hello, world!"</val>), <val>"&gt;"</val>);
 
 	<com>/* remaining is identical */
 	/* ... */</com>
@@ -7566,11 +7524,12 @@ the hello world application can now be updated that way to include full support 
 
 <p>In that case, we don't care about the return code of <tt>LangParse</tt>, because if it succeeds,
 <tt>SITGL</tt> will keep a reference, and if it fails, all function call to <tt>LangStr()</tt> will
-return the  first argument. We used the abridged form of this function in the example above: the
-<tt>_</tt> function is defined like this:
+return the first argument.
 
-<pre>#define _(str)              LangStr(NULL, str)</pre>
-
+<p>Keep in mind that you can <b>only have one language file loaded at a time</b>. While permitted it is not
+a good idea to call this function more than once, because it is highly likely that some static tables
+will have reference on the old translation file. Loading another language file, will make those
+references point to freed memory.
 
 <h3 id="advi18n"><span>Advanced features</span></h3>
 
@@ -7578,7 +7537,7 @@ return the  first argument. We used the abridged form of this function in the ex
 
 <h4>Dummy strings</h4>
 
-<p>When writing an application, it often arrives that a few static tables are declared in the global
+<p>When writing an application, it is often the case that a few static tables are declared in the global
 scope, that contains some strings that you want to be translated:
 
 <pre><type>static STRPTR</type> errorMsgs[] = {
@@ -7589,23 +7548,23 @@ scope, that contains some strings that you want to be translated:
 };
 </pre>
 
-<p>The items of such tables cannot be enclosed by <tt>_()</tt>, in order to be automatically recognized
+<p>The items of such tables cannot be enclosed by <tt>LANG()</tt>, in order to be automatically recognized
 by the <tt>msgextract</tt> tool. To still allow this tool to extract all messages to be translated,
 there is a special macro that actually does nothing but permits the <tt>msgextract</tt> tool to do its
 work:
 
-<pre><spe>#define	D_(str)             str</spe></pre>
+<pre><spe>#define	DLANG(str)             str</spe></pre>
 
-<p>Since a typical configuration for <tt>msgextract</tt> is to extract everything between <tt>_("</tt>
+<p>Since a typical configuration for <tt>msgextract</tt> is to extract everything between <tt>LANG("</tt>
 and <tt>")</tt>, this simple macro does the job. However, your structure won't be translated: after
 reading your language file, you'll have to manually modify each field that got marked. You usually
 only have to do this at startup. For menu structure, like the one above, you can use the following code:
 
 <pre><kwd>for</kwd> (i = <val>0</val>; DIM(errorMsgs); i ++)
-	errorMsgs[i] = _(errorMsgs[i]);</pre>
+	errorMsgs[i] = LANG(errorMsgs[i]);</pre>
 
 <p>Remember that despite we used the abridged version of <tt>LangStr()</tt>, it won't be recognized by
-the <tt>msgextract</tt> utility, because it has been configured to extract everything between <tt>_("</tt>
+the <tt>msgextract</tt> utility, because it has been configured to extract everything between <tt>LANG("</tt>
 and <tt>")</tt>. You might also notice that since we are overwriting the global structure, this type
 of construct does not allow changing the language at runtime.
 
@@ -7615,7 +7574,7 @@ of construct does not allow changing the language at runtime.
 sentence for every possible values. Back in the days nobody gave a damn about plural form, you got
 something along the line: <tt>"%d file(s) processed"</tt> for every values of <tt>%d</tt>, and usually
 something even worse for other languages. If you want to display something more user-friendly, a little
-bit of work is needed.</p>
+bit of work is needed.
 
 <p>We used to distinguish 3 cases for handling plural form: no quantity, singular and plural. Each of
 these cases mean they will have a dedicated message. If the quantity to display is zero, it might be
@@ -7629,17 +7588,12 @@ is no results to display.
 
 <pre>fprintf(<val>stderr</val>, <val>"<spe>%d</spe> file<spe>%s</spe> processed.<spe>\n</spe>"</val>, n, n == <val>1</val> ? <val>""</val> : <val>"s"</val>);</pre>
 
-<p>This is impossible to translate properly, since most languages have a
-more complex plural form than that, where more than one word can be
-impacted.</p>
+<p>This is impossible to translate properly, since most languages have a more complex plural form than
+that, where more than one word can be impacted.
 
-<p>The function to deal with plural is declared like this:</p>
+<p>The function to deal with plural is declared like this:
 
-<pre><type>STRPTR</type> LangStrPlural(Lang lang, <type>int</type> nb, <type>STRPTR</type> sing, <type>STRPTR</type> plur);</pre>
-
-<p>And is usually abridged the following way:</p>
-
-<pre><spe>#define	_N(n, sing, plur)   LangStrPlural(<val>NULL</val>, n, sing, plur)</spe></pre>
+<pre><type>STRPTR</type> LangStrPlural(<type>int</type> nb, <type>STRPTR</type> sing, <type>STRPTR</type> plur);</pre>
 
 <p>If you used literal strings as arguments to this function, you will notice
 that they will not be recognized by <tt>msgextract</tt> utility. You'll have
@@ -7647,7 +7601,38 @@ to enclose them with a dummy declaration. Take also note that no quantity
 case is not handled by this function, you'll have to add special processing
 if you ever plan to handle that case.</p>
 
+<h4>Multi-lines strings</h4>
 
+<p>Sometimes you'll have to translate very long strings or strings that will be easier to read if they
+are <b>split across multiple lines</b>. Macros/functions can process multi-line strings without problems,
+the part you'll have to be a bit more careful is when you'll be processing those files with the <tt>msgextract</tt>
+utility.
+
+<p><tt>msgextract</tt> can work with multi-line strings, but there must not be any pre-processor tokens
+between lines and/or comments. For example:
+<pre>
+<com>/* <good>this is fine</good> */</com>
+<type>static char</type> license[] =
+	DLANG(<val>"Under terms of BSD 2-clause license.&lt;br&gt;"
+		  "No warranty, use at your own risk."</val>);
+
+<com>/* <err>this is not</err>: the preprossor directives won't be processed */</com>
+<type>static char</type> appName[] =
+	DLANG(<val>""</val> APPNAME <val>" v"</val> APPVERSION <val>" by crystalcrag"</val>);
+
+<com>/* <good>you'll have to translate it this way:</good> */</com>
+<type>static char</type> appName[] =
+	DLANG(<val>"%s v%s by crystalcrag"</val>);
+
+<type>char</type> buffer[<val>128</val>];
+snprintf(buffer, <kwd>sizeof</kwd> buffer, LANG(appName), APPNAME, APPVERSION);
+
+<com>/* <err>this is not good either</err>: no comments allowed between strings */</com>
+<type>static char</type> appName[] =
+	DLANG(<val>"Under terms of BSD 2-clause license.&lt;br&gt;" <com>/* might switch to GPL-v3 */</com>
+		  "No warranty, use at your own risk."</val>);
+
+</pre>
 
 
 <h2 class="annex" id="annexA"><span>UtilityLib API</span></h2>

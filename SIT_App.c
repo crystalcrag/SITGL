@@ -25,6 +25,7 @@
 		{ SIT_AccelTable,      NULL, _SG, SIT_PTR,  OFFSET(SIT_App, accel) },
 		{ SIT_StyleSheet,      NULL, _S_, SIT_PTR,  OFFSET(SIT_App, styles) },
 		{ SIT_ExitCode,        NULL, _SG, SIT_PTR,  OFFSET(SIT_App, exitCode) },
+		{ SIT_MonitorResol,    NULL, __G, SIT_PTR,  OFFSET(SIT_App, resolution) },
 		{ SIT_SetAppIcon,      NULL, _S_, SIT_INT,  0 },
 		{ SIT_CompositedAreas, NULL, __G, SIT_PTR,  0 },
 		{ SIT_FontScale,       NULL, _SG, SIT_INT,  0 },
@@ -233,7 +234,6 @@ static int SIT_AppSetValues(SIT_Widget w, APTR call_data, APTR user_data)
 	TagList *     tag = call_data;
 
 	switch (tag->tl_TagID) {
-	case SIT_LocaleInfo: return 0; /* read-only */
 	case SIT_TagPrivate+2:
 		/* second arg to SIT_AddFont */
 		if (val->pointer == NULL)
@@ -290,52 +290,6 @@ static int SIT_AppSetValues(SIT_Widget w, APTR call_data, APTR user_data)
 	}
 	return 0;
 }
-
-static LocaleInfo SIT_AllocLocale(void)
-{
-	static short locale[] = { /* stuff we'll extract from GetLocaleInfo() */
-		LOCALE_SNATIVELANGNAME,    LOCALE_SNATIVECTRYNAME,    LOCALE_SENGLANGUAGE,
-		LOCALE_SENGCOUNTRY,        LOCALE_SISO3166CTRYNAME,   LOCALE_SISO639LANGNAME,
-		LOCALE_SCURRENCY,          LOCALE_SENGCURRNAME,       LOCALE_SINTLSYMBOL,
-		LOCALE_SSHORTDATE,         LOCALE_SLONGDATE,          LOCALE_SDECIMAL,
-		LOCALE_SMONTHNAME1,        LOCALE_SMONTHNAME2,        LOCALE_SMONTHNAME3,
-		LOCALE_SMONTHNAME4,        LOCALE_SMONTHNAME5,        LOCALE_SMONTHNAME6,
-		LOCALE_SMONTHNAME7,        LOCALE_SMONTHNAME8,        LOCALE_SMONTHNAME9,
-		LOCALE_SMONTHNAME10,       LOCALE_SMONTHNAME11,       LOCALE_SMONTHNAME12,
-		LOCALE_SABBREVMONTHNAME1,  LOCALE_SABBREVMONTHNAME2,  LOCALE_SABBREVMONTHNAME3,
-		LOCALE_SABBREVMONTHNAME4,  LOCALE_SABBREVMONTHNAME5,  LOCALE_SABBREVMONTHNAME6,
-		LOCALE_SABBREVMONTHNAME7,  LOCALE_SABBREVMONTHNAME8,  LOCALE_SABBREVMONTHNAME9,
-		LOCALE_SABBREVMONTHNAME10, LOCALE_SABBREVMONTHNAME11, LOCALE_SABBREVMONTHNAME12,
-		LOCALE_SDAYNAME1,          LOCALE_SDAYNAME2,          LOCALE_SDAYNAME3,
-		LOCALE_SDAYNAME4,          LOCALE_SDAYNAME5,          LOCALE_SDAYNAME6,
-		LOCALE_SDAYNAME7,          LOCALE_SABBREVDAYNAME1,    LOCALE_SABBREVDAYNAME2,
-		LOCALE_SABBREVDAYNAME3,    LOCALE_SABBREVDAYNAME4,    LOCALE_SABBREVDAYNAME5,
-		LOCALE_SABBREVDAYNAME6,    LOCALE_SABBREVDAYNAME7,    LOCALE_ILANGUAGE,
-		LOCALE_ICOUNTRY,           LOCALE_STIMEFORMAT
-	};
-	LPWSTR buffer, p;
-	STRPTR d, * s;
-	int    i, j, len;
-
-	for (i = len = 0; i < DIM(locale); len += GetLocaleInfo(LOCALE_USER_DEFAULT,
-	     locale[i], NULL, 0), i ++);
-
-	buffer = alloca(len * sizeof *buffer);
-
-	for (p = buffer, i = j = len = 0; i < DIM(locale); i ++, p += j) {
-		j = GetLocaleInfo(LOCALE_USER_DEFAULT, locale[i], p, 0xffff);
-		len += WideCharToMultiByte(CP_UTF8, 0, p, -1, NULL, 0, NULL, NULL);
-		if (locale[i] == LOCALE_SISO639LANGNAME) p[-1] = '_';
-	}
-	LocaleInfo loc = malloc(sizeof *loc + len);
-
-	for (s = &loc->nlsLang, d = (STRPTR) (loc+1), p = buffer, i = 0; i < DIM(locale) - 1; i ++, s ++) {
-		d += WideCharToMultiByte(CP_UTF8, 0, p, -1, *s = d, len, NULL, NULL);
-		p = wcschr(p, 0) + 1;
-	}
-	return loc;
-}
-
 
 typedef struct Param_t *   Param;
 struct Param_t
@@ -436,9 +390,60 @@ static int SIT_AppFinalize(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_App app = (SIT_App) w;
 	SIT_AppDelDnD();
-	free(app->locale);
 	free(app->currentDir);
 	return 1;
+}
+
+
+struct FullScreen_t
+{
+	uint8_t enabled;
+	RECT    oldWndRect;
+};
+
+static struct FullScreen_t fullScreen;
+
+DLLIMP void SIT_ToggleFullScreen(int width, int height)
+{
+	if (fullScreen.enabled == 0)
+	{
+		/* switch to full screen */
+		DEVMODE devmode = {
+			.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT,
+			.dmBitsPerPel = 32,
+			.dmPelsWidth = width,
+			.dmPelsHeight = height,
+			.dmSize = sizeof devmode
+		};
+		int ret = ChangeDisplaySettings(&devmode, CDS_FULLSCREEN);
+		if (ret == DISP_CHANGE_SUCCESSFUL)
+		{
+			GetWindowRect(mainWnd, &fullScreen.oldWndRect);
+			int style = GetWindowLong(mainWnd, GWL_STYLE);
+			/* can't modify GWL_STYLE, will break surface :-/ */
+			RECT rect = {.bottom = height, .right = width};
+			AdjustWindowRect(&rect, style, False);
+			SetWindowPos(mainWnd, HWND_TOP, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, 0);
+		}
+		else return;
+	}
+	else
+	{
+		SIT_App app = (SIT_App) sit.root;
+		RECT rect;
+		DEVMODE devmode = {
+			.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT,
+			.dmBitsPerPel = 32,
+			.dmPelsWidth = app->screen.width,
+			.dmPelsHeight = app->screen.height,
+			.dmSize = sizeof devmode
+		};
+		ChangeDisplaySettings(&devmode, 0);
+		/* back to window mode */
+		rect = fullScreen.oldWndRect;
+		SetWindowPos(mainWnd, HWND_TOP, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, 0);
+	}
+	fullScreen.enabled = ! fullScreen.enabled;
 }
 
 Bool SIT_InitApp(SIT_Widget w, va_list args)
@@ -463,8 +468,8 @@ Bool SIT_InitApp(SIT_Widget w, va_list args)
 	GetCursorPos(&pt);
 	HMONITOR hmon = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
 	GetMonitorInfo(hmon, &info);
-	app->screen.width  = info.rcWork.right  - info.rcWork.left;
-	app->screen.height = info.rcWork.bottom - info.rcWork.top;
+	app->screen.width  = info.rcMonitor.right  - info.rcMonitor.left;
+	app->screen.height = info.rcMonitor.bottom - info.rcMonitor.top;
 
 	w->attrs = AppClass;
 	SIT_ParseTags(w, args, AppClass);
@@ -472,7 +477,33 @@ Bool SIT_InitApp(SIT_Widget w, va_list args)
 	w->box.bottom = w->fixed.height = w->maxBox.height = sit.scrHeight;
 	w->flags |= SITF_FixedHeight | SITF_FixedWidth | SITF_TopLevel;
 
-	app->locale = SIT_AllocLocale();
+	/* retrieve list of supported monitor resolutions */
+	DEVMODE dm = {.dmSize = sizeof dm};
+	DATA16  resol = w->userData;
+	int     mode, max = 126/2, i;
+
+	w->userData = NULL;
+	app->resolution = resol;
+	resol[0] = 0;
+	for(mode = 0; EnumDisplaySettings(NULL, mode, &dm) != 0; mode ++)
+	{
+		DATA16 list;
+		if (dm.dmBitsPerPel != 32) continue;
+		for (list = resol + 1, i = 0; i < resol[0] && ! (list[0] == dm.dmPelsWidth && list[1] == dm.dmPelsHeight); i ++, list += 2);
+		if (i == resol[0])
+		{
+			/* not yet in the list */
+			if (resol[0] == max)
+			{
+				/* not enough space: discard earlier entries (lower resolutions) */
+				memmove(resol + 2, resol + 4, (max - 1) * 2);
+				list -= 2;
+			}
+			resol[0] ++;
+			list[0] = dm.dmPelsWidth;
+			list[1] = dm.dmPelsHeight;
+		}
+	}
 
 	return True;
 }

@@ -21,3 +21,4 @@ FILETYPE 1
         VALUE "Translation", 0x0409, 1200
     }
 }
+1 MANIFEST "SITGL.exe.Manifest"

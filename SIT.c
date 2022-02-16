@@ -907,6 +907,8 @@ void * load(const char * func)
 
 int gladLoadGL(void)
 {
+	if (opengl)
+		FreeLibrary(opengl);
 	opengl = LoadLibraryA(sit.cssFile = "opengl32.dll");
 
 	if (opengl)

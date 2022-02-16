@@ -1230,6 +1230,7 @@ void layoutClearStyles(SIT_Widget w, int clear)
 
 	//fprintf(stderr, "font size for '%s' = %d\n", w->name, (int) w->style.font.size);
 
+	memset(&w->box, 0, sizeof w->box);
 	w->flags &= ~SITF_GeomNotified;
 	w->layout.pos.width = 0;
 	if (w->parent)

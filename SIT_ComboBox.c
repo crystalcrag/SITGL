@@ -56,8 +56,8 @@ static int SIT_ComboMeasure(SIT_Widget w, APTR cd, APTR unused)
 /* change content of combo box */
 static void SIT_ComboSetList(SIT_ComboBox cb)
 {
-	STRPTR p, buf, next;
-	int    i, max, idx = cb->selIndex;
+	STRPTR p, next;
+	int    idx = cb->selIndex;
 
 	SIT_ComboFinalize(&cb->super, NULL, (APTR) 1);
 
@@ -68,23 +68,11 @@ static void SIT_ComboSetList(SIT_ComboBox cb)
 	if (IsDef(p))
 	{
 		/* initValues is a user supplied pointer: consider it read-only */
-		for (max = 0, next = p; *p; p = next)
-		{
-			for (next = p; *next && *next != '\t'; next ++);
-			i = next - p + 1;
-			if (max < i) max = i;
-			if (*next) next ++;
-		}
-
-		buf = alloca(max);
-
-		/* add new */
 		for (p = cb->initValues; *p; p = next)
 		{
 			for (next = p; *next && *next != '\t'; next ++);
-			CopyString(buf, p, next - p + 1);
+			SIT_ComboInsertItem(&cb->super, -1, p, next - p, NULL);
 			if (*next) next ++;
-			SIT_ComboInsertItem(&cb->super, -1, buf, NULL);
 		}
 	}
 	if (idx < 0) idx = 0;
@@ -152,76 +140,6 @@ static int SIT_ComboSetValues(SIT_Widget w, APTR cd, APTR ud)
 	return 0;
 }
 
-#if 0
-int SIT_ComboBoxItemHeight(SIT_Widget w)
-{
-	int nb  = SendMessage(w->sw_Handle, CB_GETCOUNT, 0, 0);
-	int max = GetSystemMetrics(SM_CYSCREEN) - 40;
-
-	if (nb > 15) nb = 15;
-	if (nb <= 0) nb = 1;
-
-	nb = nb * ((SIT_ComboBox)w)->sc_ItemHeight + 6;
-
-	return MIN(nb, max);
-}
-
-static Bool DoAutoComplete(HWND combo, HWND edit, int type, TCHAR ch)
-{
-	ULONG  max    = GetWindowTextLength(combo)+2;
-	LPWSTR buffer = alloca(max * sizeof *buffer);
-	LPWSTR item   = alloca((max + 100) * sizeof *item);
-	LPWSTR temp   = NULL;
-	int    i, nb, nth;
-
-	GetWindowText(combo, buffer, max);
-
-	// Handle keyboard input
-	if (VK_RETURN == ch)
-	{
-		SendMessage(combo, CB_SHOWDROPDOWN, FALSE, 0);
-		SendMessage(edit, EM_SETSEL, 0, -1); // Selects the entire item
-		i = SendMessage(combo, CB_FINDSTRINGEXACT, -1, (LPARAM) buffer);
-		SendMessage(combo, CB_SETCURSEL, i, 0);
-		if (i == CB_ERR)
-			i = (1<<16)-1;
-		// Doesn't seem to send any notification code
-		SIT_SubClassHandler(GetParent(combo), WM_COMMAND, (CBN_SELCHANGE<<16)|i, (LPARAM) combo);
-		return False;
-	}
-	else if (iscntrl(ch)) return False;
-
-	if (type == 2 && ! SendMessage(combo, CB_GETDROPPEDSTATE, 0, 0))
-	{
-		SendMessage(combo, CB_SHOWDROPDOWN, TRUE, 0);
-		SetFocus(edit);
-	}
-
-	// Get the substring from 0 to start of selection
-	nb = SendMessage(combo, CB_GETCOUNT, 0, 0);
-	nth = LOWORD(SendMessage(combo, CB_GETEDITSEL, 0, 0));
-	buffer[nth] = 0;
-	item[0] = ch; item[1] = 0; wcscat(buffer, item); nth ++;
-
-	// ComboBoxEx doesn't have a substring match (regular ComboBox does) :-/
-	for (i = 0, max += 100; i < nb; i ++)
-	{
-		int    len = SendMessage(combo, CB_GETLBTEXTLEN, i, 0) + 1;
-		LPWSTR buf = len > max ? temp = realloc(temp, len) : item;
-		SendMessage(combo, CB_GETLBTEXT, i, (LPARAM) buf);
-		if (wcsnicmp(buf, buffer, nth) == 0) break;
-	}
-	if (temp) free(temp);
-	if (i < nb)
-	{
-		SendMessage(combo, CB_SETCURSEL, i, 0);
-		SendMessage(edit, EM_SETSEL, nth, -1);
-		return True;
-	}
-	return False;
-}
-#endif
-
 static int SIT_ComboFinalize(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_ComboBox cb = (SIT_ComboBox) w;
@@ -269,23 +187,25 @@ DLLIMP int SIT_ComboDeleteItem(SIT_Widget w, int index)
 	return index;
 }
 
-DLLIMP int SIT_ComboInsertItem(SIT_Widget w, int index, STRPTR item, APTR rowtag)
+DLLIMP int SIT_ComboInsertItem(SIT_Widget w, int index, STRPTR item, int length, APTR rowtag)
 {
 	SIT_ComboBox cb = (SIT_ComboBox) w;
 	SIT_CBRow    row;
 	if (w == NULL || w->type != SIT_COMBOBOX) return -1;
 	int max = (cb->count + 255) & ~255;
 	int tag = (cb->items + 31) & ~31;
-	int len = strlen(item) + 1;
+
+	if (length < 0)
+		length = strlen(item);
 
 	if (index < 0) index = cb->items;
 	if (index <= cb->selIndex)
 		cb->selIndex ++;
 
-	if (cb->count + len > max)
+	if (cb->count + length + 1 > max)
 	{
 		STRPTR val;
-		max = (cb->count + len + 255) & ~255;
+		max = (cb->count + length + 256) & ~255;
 		val = realloc(cb->values, max);
 		if (val == NULL) return -1;
 		if (cb->count == 0) val[0] = 0;
@@ -302,12 +222,13 @@ DLLIMP int SIT_ComboInsertItem(SIT_Widget w, int index, STRPTR item, APTR rowtag
 		memmove(cb->rowTags + index + 1, cb->rowTags, (cb->items - index) * sizeof *cb->rowTags);
 	row = cb->rowTags + index;
 	/* values don't have to be sorted as long as rowTags are */
-	row->entry = strcpy(cb->values + cb->count, item);
+	row->entry = memcpy(cb->values + cb->count, item, length);
 	row->tag   = rowtag;
+	row->entry[length] = 0;
 	cb->items ++;
-	cb->count += len;
+	cb->count += length + 1;
 
-	return cb->items - 1;
+	return index;
 }
 
 /* use text entered to search inside the list */
@@ -412,7 +333,7 @@ static void SIT_ComboInitPopupBox(SIT_ComboBox cb, RectF * box)
 	REAL y = cb->popupRect.top - cb->popupRect.hup;
 
 	if (y < 0)
-		cb->popupRect.hup -= y, cb->popupRect.hdown -= y;
+		cb->popupRect.hup += y, cb->popupRect.hdown -= y;
 
 	y = cb->popupRect.top + cb->popupRect.hdown + cb->popupRect.lineh - sit.scrHeight;
 	if (y > 0)

@@ -1575,14 +1575,14 @@ int SIT_ListGetItemCount(SIT_Widget w)
 }
 
 
-static void SIT_ListClearCell(Cell cell, int flags)
+static void SIT_ListClearCell(SIT_ListBox list, Cell cell, int flags)
 {
 	cell->flags &= ~CELL_HASSIZE;
 	memset(&cell->sizeObj, 0, sizeof cell->sizeObj + sizeof cell->sizeCell);
 	if (cell->flags & CELL_ISCONTROL)
 	{
-		SIT_Widget child = cell->obj;
-		SIT_ChangeChildrenStyle(child, flags);
+		SIT_ListRestoreChildren(list->td, cell);
+		SIT_ChangeChildrenStyle(list->td, flags);
 	}
 }
 
@@ -1596,8 +1596,8 @@ void SIT_ListClearStyles(SIT_Widget w, int flags)
 	list->lbFlags &= ~SITV_ListMeasured;
 	layoutClearStyles(list->td, flags);
 	layoutClearStyles(list->tdSel, flags);
-	for (i = list->columnCount, cell = list->columns;   i > 0; SIT_ListClearCell(cell, flags), i --, cell ++);
-	for (i = list->cells.count, cell = STARTCELL(list); i > 0; SIT_ListClearCell(cell, flags), i --, cell ++);
+	for (i = list->columnCount, cell = list->columns;   i > 0; SIT_ListClearCell(list, cell, flags), i --, cell ++);
+	for (i = list->cells.count, cell = STARTCELL(list); i > 0; SIT_ListClearCell(list, cell, flags), i --, cell ++);
 }
 
 

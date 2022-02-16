@@ -270,13 +270,12 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 		w->flags |= SITF_FixedY;
 		break;
 	case SIT_Width:
-		/* needed by Geometry reflow (label) 1 unittest */
-		if (w->type == SIT_DIALOG) w->box.right = w->box.left + w->fixed.width, w->flags |= SITF_KeepDiagSize; // used by KeepDialogSize
-		w->flags |= SITF_FixedWidth;
+		if (w->fixed.width < 0) w->flags &= ~SITF_FixedWidth;
+		else w->flags |= SITF_FixedWidth;
 		break;
 	case SIT_Height:
-		if (w->type == SIT_DIALOG) w->box.bottom = w->box.top + w->fixed.height, w->flags |= SITF_KeepDiagSize;
-		w->flags |= SITF_FixedHeight;
+		if (w->fixed.height < 0) w->flags &= ~SITF_FixedHeight;
+		else w->flags |= SITF_FixedHeight;
 		break;
 	case SIT_TagPrivate1:
 		if (w->buddyText)
@@ -358,7 +357,7 @@ int SIT_MeasureCanvas(SIT_Widget w, APTR cd, APTR userData)
 
 Bool SIT_InitCanvas(SIT_Widget w, va_list args)
 {
-	w->flags |= SITF_RenderChildren;
+	w->flags |= SITF_RenderChildren | SITF_Container;
 	w->optimalWidth = SIT_MeasureCanvas;
 
 	SIT_ParseTags(w, args, w->attrs = WidgetClass);
@@ -515,7 +514,8 @@ DLLIMP SIT_Widget SIT_CreateWidget(STRPTR name, SIT_TYPE type, SIT_Widget parent
 	int extra = type >> 16;
 	type &= 0xffff;
 
-	if (parent == NULL && type != SIT_APP) return NULL;
+	if (type == SIT_APP) extra = 128; else /* 128 = monitor resol buffer, need to be a pointer because of SIT_GetValues() */
+	if (parent == NULL) return NULL;
 
 	int        len = strlen(name)+1;
 	int        sz  = sizeof_widgets[type<<1];
@@ -1066,8 +1066,9 @@ static void SIT_GeomRemoveChildrenOf(SIT_Widget w)
 /* geometric changes done on widget: check neighbor if more changes are needed */
 void SIT_InitiateReflow(SIT_Widget w)
 {
-	if (w->optimalWidth == NULL)
-		return;
+	// setting height to dialog does nothing
+	//	if (w->optimalWidth == NULL)
+	//		return;
 	if (w->flags & SITF_GeomNotified)
 	{
 		SIT_Widget inlist;

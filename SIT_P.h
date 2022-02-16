@@ -287,7 +287,6 @@ struct SIT_App_t
 	SIT_Widget_t super;
 	SIT_Widget   focusRing;
 	SIT_Accel *  accel;                /* public */
-	LocaleInfo   locale;               /* public */
 	int          defSBArrows;          /* public */
 	REAL         defSBSize;            /* public */
 	int          refreshMode;          /* public */
@@ -300,6 +299,7 @@ struct SIT_App_t
 	struct {
 		int      width, height;
 	}            screen;
+	DATA16       resolution;           /* public */
 };
 
 struct SIT_Label_t
@@ -668,11 +668,10 @@ enum /* bitfield for flags */
 	SITF_BeingDestroyed  = 0x00000080,  /* user ask to delete that control */
 	SITF_CanResizeW      = 0x00000100,  /* at least one control has a right attach on the form */
 	SITF_CanResizeH      = 0x00000200,  /* a control has a bottom attach on the form */
-	SITF_KeepDiagSize    = 0x00000400,  /* width/height changed on dialog - keep it */
 	SITF_TopLevel        = 0x00000800,  /* top level window, not part of children layout */
 	SITF_GeomNotified    = 0x00001000,  /* geometry modification message has been posted */
 	SITF_AutoHeight      = 0x00002000,  /* need to set control's size before triggering OnResize */
-	SITF_RestoreSize     = 0x00004000,
+	SITF_Container       = 0x00004000,  /* fill optimalBox with exact children size */
 	SITF_ReflowW         = 0x00008000,
 	SITF_ReflowH         = 0x00010000,
 	SITF_PrivateChildren = 0x00020000,  /* children are managed by widget, not by geometry module */

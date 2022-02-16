@@ -90,8 +90,6 @@ static void SIT_TextEditMakeCursorVisible(SIT_EditBox);
 static int SIT_TextEditResize(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_EditBox state = (SIT_EditBox) w;
-	state->rowVisible = w->layout.pos.height / state->fh;
-	state->width = w->layout.pos.width;
 
 	if (w->style.lineHeight != AUTOVAL)
 	{
@@ -104,6 +102,9 @@ static int SIT_TextEditResize(SIT_Widget w, APTR cd, APTR ud)
 		}
 	}
 	else state->fh = w->style.font.size;
+
+	state->rowVisible = w->layout.pos.height / state->fh;
+	state->width = w->layout.pos.width;
 
 	if (state->editType != SITV_Multiline)
 	{
@@ -590,9 +591,6 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 			SIT_Top,      SITV_AttachPosition, SITV_AttachPos(50), 0,
 			NULL
 		);
-		/* XXX should be done in SIT_Geometry.c :-/ */
-		memset(&edit->spinnerUp->optimalBox, 0, sizeof (SizeF));
-		memset(&edit->spinnerDown->optimalBox, 0, sizeof (SizeF));
 		SIT_AddCallback(edit->spinnerUp,   SITE_OnClick, SIT_TextEditSpinnerClick, (APTR) 2);
 		SIT_AddCallback(edit->spinnerDown, SITE_OnClick, SIT_TextEditSpinnerClick, NULL);
 
@@ -887,15 +885,15 @@ static REAL SIT_TextEditRenderLine(SIT_EditBox state, DATA8 str, int length, REA
 			/* normal text */
 			if (sel || code > 0)
 			{
-				DATA8 cmap;
+				DATA8 cmap, bgcol;
 				if (sel || code == SEL_INDEX_CODE)
-					cmap = state->super.style.fgSel.rgba;
+					cmap = state->super.style.fgSel.rgba, bgcol = state->bgSel.rgba;
 				else
-					cmap = state->colorMap + code * 9, attr = cmap[8];
+					cmap = state->colorMap + code * 9, bgcol = cmap + 4, attr = cmap[8];
 				if (cmap[7] > 0) /* background color */
 				{
 					w = nvgTextBounds(vg, 0, 0, str, p, NULL);
-					nvgFillColorRGBA8(vg, cmap + 4);
+					nvgFillColorRGBA8(vg, bgcol);
 					nvgBeginPath(vg);
 					nvgRect(vg, x + off, y-1-state->extendT, w, state->fh+state->extendB);
 					nvgFill(vg);
@@ -2263,6 +2261,7 @@ static void SIT_TextEditAdjustScroll(SIT_EditBox state)
 		SIT_SetValues(state->super.vscroll, SIT_Visible, False, NULL);
 		state->rowTop = 0;
 		state->charTop = 0;
+		state->scrollPad = 0;
 		state->flags &= ~FLAG_HASSCROLL;
 		state->width = state->super.layout.pos.width;
 		SIT_TextEditResize(&state->super, NULL, NULL);
@@ -2277,7 +2276,16 @@ int SIT_TextEditInsertText(SIT_EditBox state, DATA8 utf8)
 		0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1
 	};
 	/* can't add newline in single-line mode */
-	if (((utf8[0] == '\n' || utf8[0] == '\r') && state->maxLines > 0 && state->rowCount == state->maxLines) || state->readOnly)
+	if ((utf8[0] == '\n' || utf8[0] == '\r') && state->maxLines > 0 && state->rowCount == state->maxLines)
+		return False;
+
+	if (utf8[0] < DIM(ctrlCodes) && ctrlCodes[utf8[0]])
+	{
+		/* these are command keys instead */
+		return SIT_TextEditKey(state, utf8[0]);
+	}
+
+	if (state->readOnly)
 		return False;
 
 	if (utf8[0] == '\t')
@@ -2291,12 +2299,6 @@ int SIT_TextEditInsertText(SIT_EditBox state, DATA8 utf8)
 			memset(utf8 = alloca(nb+1), ' ', nb);
 			utf8[nb] = 0;
 		}
-	}
-
-	if (utf8[0] < DIM(ctrlCodes) && ctrlCodes[utf8[0]])
-	{
-		/* these are command keys instead */
-		return SIT_TextEditKey(state, utf8[0]);
 	}
 
 	int len = strlen(utf8);

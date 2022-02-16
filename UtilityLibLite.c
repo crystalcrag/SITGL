@@ -1680,7 +1680,7 @@ DLLIMP Lang LangParse(STRPTR path)
 	struct Lang_t lang = {.count = DIM(lang.files)};
 
 	buffer = LangStackFile(&lang, path, NULL);
-	/* Usually missing file */
+	/* usually missing file */
 	if (buffer == NULL) return NULL;
 
 	eol = NULL;
@@ -1716,7 +1716,11 @@ DLLIMP Lang LangParse(STRPTR path)
 					msgid[-1] = diff & 0xff;
 					msgid[-2] = diff >> 8;
 					/* offset to next slot for chaining */
+					diff = strlen(msgstr);
 					msgstr[-1] = msgstr[-2] = 0;
+					/* store message len */
+					msgstr[-3] = diff & 0xff;
+					msgstr[-4] = diff >> 8;
 					if (count == 0 || count == MAXSTRS-1)
 					{
 						STRPTR * table = alloca(sizeof *table * MAXSTRS);
@@ -1791,6 +1795,7 @@ DLLIMP Lang LangParse(STRPTR path)
 			while (langStr->message);
 
 			/* chain message */
+			slot ++;
 			DATA8 link = (DATA8) prev->message; /* msgid from hash */
 			DATA8 tr   = (DATA8) str + ((DATA8)str)[-1] + (((DATA8)str)[-2] << 8); /* msgstr that need insertion */
 			link += link[-1] + (link[-2] << 8); /* msgstr from hash */
@@ -1807,6 +1812,9 @@ DLLIMP Lang LangParse(STRPTR path)
 			/* yep, that's a "char ***" type */
 			strings = *(STRPTR **)strings, lang.count = 0;
 	}
+
+	if (sit.curLang)
+		LangFree(sit.curLang);
 
 	return sit.curLang = ret;
 }
@@ -1854,73 +1862,68 @@ static STRPTR LangExtractStr(STRPTR old, STRPTR buffer)
 	return quote;
 }
 
-static STRPTR LangSearch(Lang lang, STRPTR msg)
+static DATA8 LangSearch(Lang lang, STRPTR msg, int length)
 {
-	uint32_t crc = crc32(0, (DATA8) msg, strlen(msg));
+	uint32_t crc = crc32(0, (DATA8) msg, length);
 	int      max = lang->stringsMax;
 	int      pos = crc % max;
 
 	LangString * langStr = lang->strings + pos;
 	if (langStr->message == NULL)
 		/* message not in translation file (or same message as original) */
-		return msg;
+		return NULL;
 
 	while (langStr->crc != crc)
 	{
 		DATA8 tr = (DATA8) langStr->message;
 		tr += tr[-1] | (tr[-2] << 8);
 		pos = tr[-1] | (tr[-2] << 8);
-		if (pos == 0) return msg;
-		langStr = lang->strings + pos;
+		if (pos == 0) return NULL;
+		langStr = lang->strings + pos - 1;
 	}
 
 	DATA8 str = (DATA8) langStr->message;
-	return (STRPTR) str + (str[-1] | (str[-2] << 8));
+	return str + (str[-1] | (str[-2] << 8));
 }
 
-DLLIMP STRPTR LangStr(Lang lang, STRPTR msg, int max)
+DLLIMP STRPTR LangStr(STRPTR msg)
 {
-	STRPTR trans = NULL;
+	if (sit.curLang == NULL || ! IsDef(msg))
+		return msg;
 
-	if (lang == NULL)
-		lang = sit.curLang;
+	int   length = strlen(msg);
+	DATA8 trans = LangSearch(sit.curLang, msg, length);
 
-	if (lang)
+	if (trans == NULL)
 	{
-		trans = LangSearch(lang, msg);
+		/* try some variation */
+		DATA8 eof = msg + length - 1;
 
-		/* Hmmm, hack -- but whatever ... */
-		if (trans == NULL && max > 0)
+		/* having period/colon at end: try to see if a translation without ending punctuation exists */
+		for (length = 0; eof > (DATA8) msg && (isspace(*eof) || *eof == '.' || *eof == ':'); eof --, length ++);
+		if (eof[1] && length < 8)
 		{
-			if (isupper(msg[0]))
+			eof ++;
+			trans = LangSearch(sit.curLang, msg, eof - (DATA8) msg);
+
+			if (trans)
 			{
-				msg[0] = tolower(msg[0]);
-				trans  = LangSearch(lang, msg);
-
-				if (trans) CopyString(msg, trans, max);
-
-				msg[0] = toupper(msg[0]);
+				/* yes, re-build the message with the correct punctuation */
+				strcpy(trans + (trans[-3] | (trans[-4] << 8)), eof);
+				return trans;
 			}
-			else if (islower(msg[0]))
-			{
-				msg[0] = toupper(msg[0]);
-				trans  = LangSearch(lang, msg);
-
-				if (trans) CopyString(msg, trans, max);
-
-				msg[0] = tolower(msg[0]);
-			}
-			return msg;
 		}
+		return msg;
 	}
-	return trans ? trans : msg;
+	else trans[trans[-3] | (trans[-4] << 8)] = 0;
+	return trans;
 }
 
 // XXX Hmm could be improved
-DLLIMP STRPTR LangStrPlural(Lang lang, int nb, STRPTR sing, STRPTR plur)
+DLLIMP STRPTR LangStrPlural(int nb, STRPTR sing, STRPTR plur)
 {
-	if (nb == 1) return LangStr(lang, sing, 0);
-	else         return LangStr(lang, plur, 0);
+	if (nb == 1) return LangStr(sing);
+	else         return LangStr(plur);
 }
 
 DLLIMP void LangFree(Lang lang)

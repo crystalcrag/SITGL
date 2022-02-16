@@ -13,6 +13,7 @@
 
 static int lastMods, lastMouseX, lastMouseY;
 static int curWidth, curHeight;
+static GLFWwindow * wnd;
 
 static void errorFromGLFW(int error, const char* description)
 {
@@ -50,7 +51,7 @@ static void rawkeyCallback(GLFWwindow* window, int key, int scancode, int action
 	int * glfw;
 	int   pressed = action == GLFW_REPEAT || action == GLFW_PRESS;
 	lastMods = GLFWMtoSIT(mods);
-	if (lastMods == SITK_FlagCtrl && GLFW_KEY_A <= key && key <= GLFW_KEY_Z)
+	if (pressed && lastMods == SITK_FlagCtrl && GLFW_KEY_A <= key && key <= GLFW_KEY_Z)
 	{
 		/* Ctrl+A~Z : process these as characters 1~26 instead */
 		SIT_ProcessChar(key - GLFW_KEY_A + 1, lastMods);
@@ -195,10 +196,8 @@ static void createUI(SIT_Widget parent)
 	/* create a Q'N'D text editor */
 	SIT_Widget dialog = SIT_CreateWidget("mainwnd", SIT_DIALOG + SIT_EXTRA(sizeof (struct TextEditor_t)), parent,
 		SIT_Width,        SITV_Em(40),
-		SIT_Title,        _("This is a movable window"),
+		SIT_Title,        "This is a movable window",
 		SIT_DialogStyles, SITV_Movable | SITV_Resizable,
-		SIT_Width,        curWidth  * 8 / 10,
-		SIT_Height,       curHeight * 8 / 10,
 		NULL
 	);
 
@@ -211,7 +210,7 @@ static void createUI(SIT_Widget parent)
 		"<button name=load title='Load file'>"
 		"<button name=save title='Save' enabled=0 left=WIDGET,load,0.5em>"
 		"<label name=stat left=WIDGET,save,1em right=FORM top=MIDDLE,save>"
-		"<editbox name=edit left=FORM right=FORM right=FORM bottom=FORM top=WIDGET,load,0.5em editType=", SITV_Multiline,
+		"<editbox minWidth=15em height=20em name=edit left=FORM right=FORM right=FORM bottom=FORM top=WIDGET,load,0.5em editType=", SITV_Multiline,
 		" lexer=", SYN_HighlightText, "colorMap=", colorMap, "extra=", LEXER_EXTRA, ">"
 	);
 	editor->edit = SIT_GetById(dialog, "edit");
@@ -226,11 +225,26 @@ static void createUI(SIT_Widget parent)
 	SIT_ManageWidget(dialog);
 }
 
+static int toggleFullScreen(SIT_Widget w, APTR cd, APTR ud)
+{
+	static int windowMode = 1;
+	static int oldRect[4];
+	if (windowMode)
+	{
+		glfwGetWindowPos(wnd, oldRect, oldRect + 1);
+		glfwGetWindowSize(wnd, oldRect + 2, oldRect + 3);
+		/* the dimension should be retrieved from a configuration screen */
+		glfwSetWindowMonitor(wnd, glfwGetPrimaryMonitor(), 0, 0, 1920, 1080, GLFW_DONT_CARE);
+		windowMode = 0;
+	}
+	else glfwSetWindowMonitor(wnd, NULL, oldRect[0], oldRect[1], oldRect[2], oldRect[3], GLFW_DONT_CARE), windowMode = 1;
+	return 1;
+}
+
 int main(void)
 {
-	GLFWwindow * window;
-	SIT_Widget   app;
-	int          exitProg;
+	SIT_Widget app;
+	int        exitProg;
 
 	glfwSetErrorCallback(errorFromGLFW);
 
@@ -242,20 +256,20 @@ int main(void)
 
 	curWidth  = 1024;
 	curHeight = 768;
-	window    = glfwCreateWindow(curWidth, curHeight, "Simple GLFW example", NULL, NULL);
-	if (! window)
+	wnd    = glfwCreateWindow(curWidth, curHeight, "Simple GLFW example", NULL, NULL);
+	if (! wnd)
 	{
 		glfwTerminate();
 		return 1;
 	}
 
-	glfwSetKeyCallback(window, rawkeyCallback);
-	glfwSetCharCallback(window, vanillaKeyCallback);
-	glfwSetCursorPosCallback(window, mouseMove);
-	glfwSetMouseButtonCallback(window, mouseClick);
-	glfwSetScrollCallback(window, mouseWheel);
+	glfwSetKeyCallback(wnd, rawkeyCallback);
+	glfwSetCharCallback(wnd, vanillaKeyCallback);
+	glfwSetCursorPosCallback(wnd, mouseMove);
+	glfwSetMouseButtonCallback(wnd, mouseClick);
+	glfwSetScrollCallback(wnd, mouseWheel);
 
-	glfwMakeContextCurrent(window);
+	glfwMakeContextCurrent(wnd);
 
 	app = SIT_Init(SIT_NVG_FLAGS, curWidth, curHeight, "examples/css/windows7.css", 1);
 
@@ -266,8 +280,9 @@ int main(void)
 	}
 
 	static SIT_Accel accels[] = {
-		{SITK_FlagCapture + SITK_FlagAlt + SITK_F4, SITE_OnClose, ""},
-		{SITK_FlagCapture + SITK_Escape,            SITE_OnClose, ""},
+		{SITK_FlagCapture + SITK_FlagAlt + SITK_F4, SITE_OnClose},
+		{SITK_FlagCapture + SITK_Escape,            SITE_OnClose},
+		{SITK_F11, SITE_OnActivate, 0, NULL, toggleFullScreen},
 		{0}
 	};
 
@@ -286,29 +301,28 @@ int main(void)
 	createUI(app);
 
 	FrameSetFPS(50);
-	while (! glfwWindowShouldClose(window) && ! exitProg)
+	while (! glfwWindowShouldClose(wnd) && ! exitProg)
 	{
 		int width, height;
-
-		glfwGetFramebufferSize(window, &width, &height);
+		/* glfwSetWindowSizeCallback() or glfwSetFramebufferSizeCallback() will send useless continuous updates :-/ */
+		glfwGetFramebufferSize(wnd, &width, &height);
 		if (width != curWidth || height != curHeight)
 		{
 			SIT_ProcessResize(width, height);
 			curWidth = width;
 			curHeight = height;
 		}
-
-		glViewport(0, 0, width, height);
+		glViewport(0, 0, curWidth, curHeight);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		if (SIT_RenderNodes(FrameGetTime()))
-			glfwSwapBuffers(window);
+			glfwSwapBuffers(wnd);
 
 		FrameWaitNext();
 		glfwPollEvents();
 	}
 
-	glfwDestroyWindow(window);
+	glfwDestroyWindow(wnd);
 
 	glfwTerminate();
 	return 0;

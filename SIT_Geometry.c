@@ -44,11 +44,32 @@ static REAL SIT_PercentMovable(SIT_Widget w, int side)
 			break;
 		case SITV_AttachOpposite:
 			sub = (APTR) a->sa_Arg; /* check same side */
-			break;
-		case SITV_AttachFixed:
-			return 0;
 		}
 		if (sub == NULL) return 0;
+	}
+}
+
+/* side [0-3]: left, top, right, bottom */
+static Bool SIT_CanReduceContainerSize(SIT_Widget w, int side)
+{
+	for (;;)
+	{
+		SIT_Attach * a = w->attachment + side;
+		switch (a->sa_Type) {
+		case SITV_AttachForm:
+		case SITV_AttachPosition:
+			if (w->parent == NULL) return False;
+			if ((w->flags & SITF_TopLevel) == 0)
+			{
+				w = w->parent;
+				break;
+			}
+			// else no break;
+		case SITV_AttachNone:
+			return (w->flags & (side & 1 ? SITF_FixedHeight : SITF_FixedWidth)) == 0;
+		default:
+			return False;
+		}
 	}
 }
 
@@ -83,7 +104,7 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 	SIT_Widget   s; /* sibling */
 	SIT_Attach * a;
 	REAL *       p; /* positions */
-	int          i, inc, hasPos;
+	int          i, j, inc, hasPos;
 	REAL         padTL, padBR, pad, sz, margin;
 	REAL         percent[2];
 	REAL         chldsz = (adjust == FitUsingOptimalBox ? &w->optimalBox.width : &w->currentBox.width)[side];
@@ -91,9 +112,19 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 	if (adjust == FitUsingInitialBox && (w->flags & (SITF_FixedWidth<<side)))
 		chldsz = (&w->fixed.width)[side];
 
+	inc = 2;
+	i = side;
 	/* AttachNone and AttachNoOverlap must be computed after any other kind */
-	inc = w->attachment[side].sa_Type == SITV_AttachNone ||
-	      w->attachment[side].sa_Type == SITV_AttachNoOverlap ? -2 : 2;
+	a = w->attachment + side;
+	if (a->sa_Type == SITV_AttachNone ||
+	    a->sa_Type == SITV_AttachNoOverlap)
+	{
+		if (a[2].sa_Type == SITV_AttachNone ||
+		    a[2].sa_Type == SITV_AttachNoOverlap)
+			;
+		else
+			inc = -2, i += 2;
+	}
 
 	/* margins */
 	padTL = root->padding[side];
@@ -104,7 +135,7 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 	percent[0] = SIT_PercentMovable(w, side);
 	percent[1] = SIT_PercentMovable(w, side+2);
 	/* handle horizontal and vertical constraints */
-	for (i = side + (inc < 0 ? 2 : 0), p = &w->box.left + i, s = NULL; 0 <= i && i < 4; i += inc, p += inc)
+	for (p = &w->box.left + i, s = NULL, j = 0; j < 2; j ++, i += inc, p += inc)
 	{
 		a = w->attachment + i;
 		margin = a->sa_Offset;
@@ -120,10 +151,6 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 		}
 
 		switch (a->sa_Type) {
-		case SITV_AttachFixed: /* let it where user set it */
-			*p = (&w->fixed.left)[i] + margin + padTL;
-			if (i > 1) *p += (&w->box.left)[side];
-			break;
 		case SITV_AttachForm: /* edge of container */
 			root->layout.flags |= sideAttach[i];
 			if (i > 1)
@@ -191,8 +218,9 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 			break;
 		case SITV_AttachNone: /* let it where it is */
 		case SITV_AttachNoOverlap: /* mix between None and Widget */
-			if (i > 1) *p = p[-2] + chldsz;
-			else       *p = p[ 2] - chldsz;
+			if (i > 1)  *p = p[-2] + chldsz;
+			else if (j) *p = p[ 2] - chldsz;
+			else        *p = padTL, p[2] += padTL;
 			if (a->sa_Type != SITV_AttachNoOverlap) break;
 
 			s = (SIT_Widget) a->sa_Arg;
@@ -210,9 +238,6 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 	}
 	/* do not set width/height below a minimum */
 	p = &w->box.left + side;
-
-//	p[0] = roundf(p[0]);
-//	p[2] = roundf(p[2]);
 
 	if (HAS_EVT(w, SITE_OnGeometrySet))
 	{
@@ -237,6 +262,9 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 			adjust = FitUsingOptimalBox;
 		}
 	}
+
+	if (root->flags & (SITF_FixedWidth << side))
+		return 1;
 
 	/* check if container box has to be enlarged */
 	REAL * cside = &root->box.right + side;
@@ -266,7 +294,8 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 		sz = (&sit.scrWidth)[side] * 2;
 
 	/* hasPos: if left/top is set to be relative pos, only check that size fits the control, not position */
-	if (hasPos == 0 && p[2] > margin)
+	Bool reduce = SIT_CanReduceContainerSize(root, side) && SIT_CanReduceContainerSize(root, side+2);
+	if (hasPos == 0 && p[2] > margin && reduce)
 		ret = 0, *cside += p[2] - margin;
 
 	if (p[2] - p[0] < chldsz /*(&w->optimalBox.width)[side]*/ && percent[1] > percent[0])
@@ -274,13 +303,15 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 		int newsz = *cside + (p[0] + chldsz - p[2]) / (percent[1] - percent[0]);
 		if (newsz > sz)
 			newsz = sz;
-		if (*cside != newsz)
+		if (*cside != newsz && reduce)
 		{
+			#if 0
 			ret = newsz - *cside;
-			/* check if we can adjust control size instead of container */
+			check if we can adjust control size instead of container
 			if (ret > 0 && adjust != FitUsingOptimalBox && chldsz - (&w->optimalBox.width)[side] >= ret)
 				;
 			else
+			#endif
 				*cside = newsz, ret = 0;
 		}
 	}
@@ -403,12 +434,7 @@ static int SIT_LayoutChildren(SIT_Widget root, ResizePolicy mode)
 			/* ooops, dependency loop */
 			if (count == 0 && total > 0) return 0;
 		}
-		/* root box gets enlarged only in SIT_LayoutWidget. if total == 0, it will never get here */
-//		if (total == 0 && (&root->box.right)[i] <= 0)
-//			(&root->box.right)[i] += root->sw_Margins[i] + root->sw_Margins[i + 2];
 	}
-//	root->box.right  += root->padding[0] + root->padding[2];
-//	root->box.bottom += root->padding[1] + root->padding[3];
 	#ifdef DEBUG_GEOM
 	fprintf(stderr, " box: %d, %d - %d, %d:\n", (int) root->box.left, (int) root->box.top, (int) root->box.right, (int) root->box.bottom);
 	for (list = HEAD(root->children); list; NEXT(list))
@@ -420,47 +446,19 @@ static int SIT_LayoutChildren(SIT_Widget root, ResizePolicy mode)
 	}
 	#endif
 
-	/* check if width/height can be reduced, otherwise it will only be enlarged */
-	if ((root->flags & SITF_CanResizeW) == 0)
-	{
-		/* note: left padding already added in SIT_LayoutWidget() */
-		min.width += root->padding[2];
-		if ((root->flags & SITF_FixedWidth) == 0 && min.width < root->box.right - root->box.left)
-			root->box.right = min.width + root->box.left;
-	}
-	if ((root->flags & SITF_CanResizeH) == 0)
-	{
-		min.height += root->padding[3];
-		/* SIT_TAB requirement XXX SITF_AutoHeight check */
-		if (root->minBox.height > 0 && min.height < root->minBox.height)
-			min.height = root->minBox.height;
-		if ((root->flags & SITF_FixedHeight) == 0 && min.height < root->box.bottom - root->box.top)
-			root->box.bottom = min.height + root->box.top;
-	}
-
 	root->childBox.width = root->box.right  - root->box.left;
 	root->childBox.height = root->box.bottom - root->box.top;
 
+	if (root->flags & SITF_Container)
+	{
+		/* XXX not good with negative margins */
+		root->optimalBox.width  = min.width  + root->padding[2];
+		root->optimalBox.height = min.height + root->padding[3];
+	}
 	return 1;
 }
 
-static SizeF SIT_GeomGetMaxBox(SIT_Widget w)
-{
-	SIT_Widget list;
-	SizeF      ret = {1e6, 1e6};
-	for (list = w; list; list = list->parent)
-	{
-		REAL max = list->maxBox.width;
-		if (max > list->minBox.width && max < ret.width) ret.width = max;
-		max = list->maxBox.height;
-		if (max > list->minBox.height && max < ret.height) ret.height = max;
-		if (list->flags & SITF_TopLevel) break;
-	}
-	if (ret.width  == 1e6f) ret.width  = -1;
-	if (ret.height == 1e6f) ret.height = -1;
-	return ret;
-}
-
+/* side [0-3]: left, top, right, bottom */
 static Bool SIT_CanChangeContainerSize(SIT_Widget w, SizeF * oldSz, SizeF * newSz, int side)
 {
 	SIT_Widget   c = w->parent;
@@ -469,14 +467,6 @@ static Bool SIT_CanChangeContainerSize(SIT_Widget w, SizeF * oldSz, SizeF * newS
 
 	if (w->flags & SITF_TopLevel) return False;
 
-	#if 0 /* only bottom/right corner should matter ? */
-	if (a->sa_Type == SITV_AttachNone)
-	{
-		REAL pad = c->padding[side];
-		/* top/left set to none: check if get to touch container bbox */
-		if (p[0] < pad || p[2] - (&oldSz->width)[side] == pad) return True;
-	}
-	#endif
 	a += 2;
 	p += 2;
 	if (a->sa_Type == SITV_AttachNone)
@@ -484,123 +474,10 @@ static Bool SIT_CanChangeContainerSize(SIT_Widget w, SizeF * oldSz, SizeF * newS
 		/* bottom/right set to none */
 		REAL * csize = &c->box.left + side;
 		REAL bottom = csize[2] - csize[0] - c->padding[side+2];
-		// XXX might not be set yet
-		// (&c->layout.pos.width)[side] + c->padding[side];
 		if (p[0] >= bottom || p[-2] + (&oldSz->width)[side] >= bottom) return True;
 		if (newSz && (&newSz->width)[side] >= bottom) return True;
 	}
 	return False;
-}
-
-/* compute optimal width and height for dialog : used to constraint resizing */
-static int SIT_LayoutOptimal(SIT_Widget root)
-{
-	SIT_Widget list;
-
-	/* resize capabilities: we need that information very early */
-	root->flags &= ~(SITF_CanResizeW | SITF_CanResizeH);
-	if (root->parent == NULL)
-	{
-		/* fixed size no matter what */
-		root->box.right  = root->fixed.width;
-		root->box.bottom = root->fixed.height;
-	}
-	else if (root->type == SIT_DIALOG)
-	{
-		for (list = HEAD(root->children); list; NEXT(list))
-		{
-			if ((list->flags & SITF_TopLevel) || !list->visible) continue;
-			SIT_Attach * a;
-			a = SIT_ReassignAttachment(list, 0); if (a->sa_Type == SITV_AttachPosition && a->sa_Arg > 0) root->flags |= SITF_CanResizeW;
-			a = SIT_ReassignAttachment(list, 1); if (a->sa_Type == SITV_AttachPosition && a->sa_Arg > 0) root->flags |= SITF_CanResizeH;
-			a = SIT_ReassignAttachment(list, 2); if (a->sa_Type == SITV_AttachForm || a->sa_Type == SITV_AttachPosition) root->flags |= SITF_CanResizeW;
-			a = SIT_ReassignAttachment(list, 3); if (a->sa_Type == SITV_AttachForm || a->sa_Type == SITV_AttachPosition) root->flags |= SITF_CanResizeH;
-		}
-		SIT_Widget client = ((SIT_Dialog)root)->clientArea;
-
-		if (client)
-		{
-			client->optimalBox.width = client->optimalBox.height = -1;
-			memset(&client->box, 0, sizeof client->box);
-		}
-		memset(&root->box, 0, sizeof root->box);
-	}
-	else /* Check if size of control is constrained */
-	{
-		if (SIT_PercentMovable(root, 0) < SIT_PercentMovable(root, 2)) root->flags |= SITF_CanResizeW;
-		if (SIT_PercentMovable(root, 1) < SIT_PercentMovable(root, 3)) root->flags |= SITF_CanResizeH;
-		root->maxBox = SIT_GeomGetMaxBox(root);
-		if (IsDef(root->title))
-			layoutMeasureWords(root, &root->optimalBox);
-		memset(&root->box, 0, sizeof root->box);
-	}
-
-	/*
-	if (root->flags & SITF_FixedWidth)  root->box.right  = root->fixed.width;
-	if (root->flags & SITF_FixedHeight) root->box.bottom = root->fixed.height;
-	*/
-
-	/* reset children box dimension */
-	for (list = HEAD(root->children); list; NEXT(list))
-	{
-		if ((list->flags & SITF_TopLevel) || ! list->visible) continue;
-
-		memset(&list->box, 0, sizeof list->box);
-
-		if (list->flags & SITF_FixedX) list->attachment[0].sa_Type = SITV_AttachFixed;
-		if (list->flags & SITF_FixedY) list->attachment[1].sa_Type = SITV_AttachFixed;
-
-		if (layoutSizeChanged(list))
-			layoutCalcBox(list);
-
-		if ((list->optimalBox.width < 0 || list->optimalBox.height < 0) && list->optimalWidth)
-		{
-			/* SIT_MinWidth or SIT_MinHeight set */
-			SizeF pref = list->minBox;
-			if ((list->flags & SITF_FixedWidth)  && pref.width  < 0) pref.width  = list->fixed.width;
-			if ((list->flags & SITF_FixedHeight) && pref.height < 0) pref.height = list->fixed.height;
-			list->optimalWidth(list, &pref, (APTR) FitUsingOptimalBox);
-			list->childBox.width  = roundf(pref.width);
-			list->childBox.height = roundf(pref.height);
-
-			if (pref.width  < list->minBox.width)  pref.width  = list->minBox.width;
-			if (pref.height < list->minBox.height) pref.height = list->minBox.height;
-			SizeF maxBox = SIT_GeomGetMaxBox(list);
-			if (maxBox.width  > list->minBox.width  && pref.width  > maxBox.width)  pref.width  = maxBox.width;
-			if (maxBox.height > list->minBox.height && pref.height > maxBox.height) pref.height = maxBox.height;
-			/* some controls need explicit geometric constraint to have a width/height */
-			if (pref.width  < 0) pref.width  = 0;
-			if (pref.height < 0) pref.height = 0;
-			list->optimalBox = pref;
-		}
-
-		/* if frame/dialog is not resizable, optimal box will be like initial box */
-		int sz = list->fixed.width;
-		if (SIT_PercentMovable(list, 0) >= SIT_PercentMovable(list, 2) && list->minBox.width < 0 &&
-			(list->flags & SITF_FixedWidth) && list->optimalBox.width < sz)
-			list->optimalBox.width = sz;
-		sz = list->fixed.height;
-		if (SIT_PercentMovable(list, 1) >= SIT_PercentMovable(list, 3) && list->minBox.height < 0 &&
-			(list->flags & SITF_FixedHeight) && list->optimalBox.height < sz)
-			list->optimalBox.height = sz;
-	}
-
-	/* now that size of controls is known: compute position and size of root */
-	SIT_LayoutChildren(root, FitUsingOptimalBox);
-
-	root->optimalBox.width  = root->box.right  - root->box.left;
-	root->optimalBox.height = root->box.bottom - root->box.top;
-
-	if (root->type == SIT_DIALOG && ((SIT_Dialog)root)->minSize.width == 0)
-	{
-		SIT_Dialog d = (APTR) root;
-		d->minSize = root->optimalBox;
-		d->maxSize.width = (root->flags & SITF_CanResizeW ? 65535 : d->minSize.width);
-		d->maxSize.height = (root->flags & SITF_CanResizeH ? 65535 : d->minSize.height);
-	}
-	root->flags &= ~ (SITF_GeometrySet | SITF_GeometryChanged | SITF_GeomNotified);
-
-	return 0;
 }
 
 static int BoxSizeDiffers(SIT_Widget w, SizeF * box)
@@ -621,248 +498,6 @@ static int BoxSizeDiffers(SIT_Widget w, SizeF * box)
 	else return w->currentBox.height < box->height;
 }
 
-/*
- * - FitUsingOptimalBox: compute minimal size that dialog can be resized.
- * - KeepDialogSize: used when dialog is being resized by user and/or programmatically.
- *                   Possible reflow due to label/tab constraint.
- * - FitUsingCurrentBox: changes were performed on some controls (geometry, ctrl hidden /
- *                       removed, title, ...) which change its bounding box. Recompute position
- *                       of surrounding controls and adjust dialog size if required.
- * - FitUsingInitialBox: like OptimalBox, but use SIT_Width and SIT_Height information.
- *
- * warning: this function is not trivial. Handle with care.
- */
-static int SIT_LayoutInitial(SIT_Widget root, ResizePolicy mode)
-{
-	SIT_Widget list;
-	int        count;
-
-	if (mode != KeepDialogSize)
-	{
-		if (root->flags & SITF_GeometryChanged)
-		{
-		#if 0
-			offsetx = root->box.left;
-			offsety = root->box.top;
-			root->box.right  -= offsetx + root->sw_NCMargins[0], root->box.left = 0,
-			root->box.bottom -= offsety + root->sw_NCMargins[1], root->box.top = 0;
-		#endif
-		}
-		else if (mode != FitUsingCurrentBox)
-		{
-			memset(&root->box, 0, sizeof root->box);
-		}
-
-		/* user already set the size of container box */
-		#if 0
-		/* XXX <html> container should not be enlarged more than max size */
-		if (root->flags & SITF_FixedWidth)
-			root->box.right  = root->box.left+MAX(root->fixed.width, root->optimalBox.width);
-		if (root->flags & SITF_FixedHeight)
-			root->box.bottom = root->box.top+MAX(root->fixed.height, root->optimalBox.height);
-		#else
-		if (root->flags & SITF_FixedWidth)  root->box.right  = root->box.left+root->fixed.width;
-		if (root->flags & SITF_FixedHeight) root->box.bottom = root->box.top+root->fixed.height;
-		#endif
-		if (root->type != SIT_DIALOG)
-		{
-			REAL min = root->minBox.width;
-			if (min <= 0)
-				min = root->optimalBox.width;
-			if (root->box.right - root->box.left < min)
-				root->box.right = root->box.left + min;
-
-			min = root->minBox.height;
-			if (min <= 0)
-				min = root->optimalBox.height;
-			if ((root->flags & SITF_AutoHeight) == 0 && root->box.bottom - root->box.top < min)
-				root->box.bottom = root->box.top + min;
-		}
-		else
-		{
-			/* check if edges are constrainted */
-			if (root->attachment[0].sa_Type != SITV_AttachNone &&
-			    root->attachment[2].sa_Type != SITV_AttachNone)
-			    SIT_LayoutWidget(root->parent, root, 0, mode);
-
-			if (root->attachment[1].sa_Type != SITV_AttachNone &&
-			    root->attachment[3].sa_Type != SITV_AttachNone)
-			    SIT_LayoutWidget(root->parent, root, 1, mode);
-		}
-	}
-
-	/* setup initial box if needed */
-	for (list = HEAD(root->children); list; NEXT(list))
-	{
-		if ((list->flags & SITF_TopLevel) || ! list->visible) continue;
-
-		memset(&list->box, 0, sizeof list->box);
-
-		switch (mode) {
-		case FitUsingOptimalBox: /* will use optimalBox */ break;
-		case FitUsingCurrentBox:
-			if (list->currentBox.width > 0 && list->currentBox.height > 0 &&
-			    ! (list->flags & SITF_GeomNotified)) break;
-			// no break;
-		case FitUsingInitialBox:
-			if (list->children.lh_Head && (list->flags & SITF_PrivateChildren) == 0)
-			{
-				if ((list->currentBox.width == 0 || list->currentBox.height == 0) || (list->flags & SITF_GeomNotified))
-				{
-					if (list->flags & SITF_FixedWidth)  list->box.right = list->fixed.width;
-					if (list->flags & SITF_FixedHeight) list->box.bottom = list->fixed.height;
-					SIT_LayoutInitial(list, mode);
-					list->currentBox = SIT_GetContentBox(list);
-					// XXX reflow ? this two lines are for toolbar with children
-					REAL min = list->minBox.width;
-					if (min <= 0) min = list->optimalBox.width;
-					if (min >= 0 && list->currentBox.width < min) list->currentBox.width = min;
-					min = list->minBox.height;
-					if (min <= 0 && (list->flags & SITF_AutoHeight) == 0) min = list->optimalBox.height;
-					if (min >= 0 && list->currentBox.height < min) list->currentBox.height = min;
-					if (list->children.lh_Head == NULL)
-					{
-						/* problem with label and reflow */
-						if (list->currentBox.width < list->optimalBox.width)
-							list->currentBox.width = list->optimalBox.width;
-						if (list->currentBox.height < list->optimalBox.height)
-							list->currentBox.height = list->optimalBox.height;
-					}
-				}
-				/* avoid doing the same stuff again */
-				list->childBox = list->currentBox;
-			}
-			else
-			{
-		case KeepDialogSize: /* yeah, I know, it looks weird, but this is valid C */
-				/* fixed height / width */
-				if (list->currentBox.width <= 0)
-					list->currentBox.width = list->flags & SITF_FixedWidth ? list->fixed.width : list->optimalBox.width;
-				if (list->currentBox.height <= 0)
-					list->currentBox.height = list->flags & SITF_FixedHeight ? list->fixed.height : list->optimalBox.height;
-			}
-			if (mode == FitUsingInitialBox)
-			{
-				SizeF pref = list->childBox;
-				if ((list->flags & SITF_FixedWidth) && list->fixed.width > list->currentBox.width)
-					list->currentBox.width = list->fixed.width;
-				if ((list->flags & SITF_FixedHeight) && list->fixed.height > list->currentBox.height)
-					list->currentBox.height = list->fixed.height;
-				if ((list->flags & SITF_AutoHeight) && BoxSizeDiffers(list, &pref))
-					list->optimalWidth(list, &list->currentBox, (APTR) FitUsingInitialBox);
-			}
-		}
-	}
-
-	for (count = 0; count < 10; count ++)
-	{
-		int reflow = 0;
-		SIT_LayoutChildren(root, mode);
-		root->flags &= ~ (SITF_ReflowH|SITF_ReflowW);
-
-		/* also check if children's children need reflow */
-		for (list = HEAD(root->children), count = 0; list; NEXT(list))
-		{
-			if (! list->visible || (list->flags & SITF_TopLevel)) continue;
-			list->currentBox = SIT_GetContentBox(list);
-
-			if (((list->flags & SITF_AutoHeight) || (list->children.lh_Head && !(list->flags & SITF_PrivateChildren))) &&
-			    BoxSizeDiffers(list, &list->childBox))
-			{
-				#ifdef DEBUG_GEOM
-				fprintf(stderr, "%s: current box: %dx%d, child box: %dx%d\n", list->name, (int) list->currentBox.width,
-					(int) list->currentBox.height, (int) list->childBox.width, (int) list->childBox.height);
-				#endif
-				SizeF old = list->currentBox;
-				/* InitialBox is using CurrentBox, because at this point we are past initial phase */
-				if (list->optimalWidth(list, &list->currentBox, (APTR) (mode == FitUsingInitialBox ? FitUsingCurrentBox : mode)) == 1)
-					list->childBox = list->currentBox;
-
-				/* check if we really need to reflow everything */
-				if (old.width != list->currentBox.width)
-				{
-					if (SIT_CanChangeContainerSize(list, &old, &list->currentBox, 0) || (list->flags & (LAYF_HasLeftAttach|LAYF_HasRightAttach)))
-						reflow |= 1;
-					else
-						list->box.right = list->box.left + list->currentBox.width;
-				}
-				if (old.height != list->currentBox.height)
-				{
-					if (SIT_CanChangeContainerSize(list, &old, &list->currentBox, 1) || (list->flags & (LAYF_HasTopAttach|LAYF_HasBottomAttach)))
-						reflow |= 2;
-					else
-						/* XXX wrapped label with middle attach on top need top pos recalc too */
-						SIT_LayoutWidget(root, list, 1, mode);
-						//list->box.bottom = list->box.top + list->currentBox.height;
-				}
-			}
-
-			if (list->children.lh_Head == NULL || (list->flags & SITF_PrivateChildren)) continue;
-
-			/*
-			 * optimization: some widget will already compute optimal box recursively. This
-			 * will avoid numerous steps redoing the same thing all over again. Used by KeepDialogSize policy.
-			 */
-			if (BoxSizeDiffers(list, &list->childBox))
-			{
-				// fprintf(stderr, "force recalc for '%S' %ld != %d\n", list->name, list->childBox.width, list->box.right - list->box.left);
-				list->flags |= SITF_GeometryChanged;
-				if (SIT_LayoutInitial(list, mode)) return 1;
-				if (list->childBox.width != list->currentBox.width)
-				{
-					/* widget size has changed, need to layout children again */
-					if (list->flags & SITF_CanResizeW) reflow |= 1;
-					/* unless widget size is constrained, keep constrained size instead */
-					else list->box.right = list->box.left + list->currentBox.width;
-				}
-				if (list->childBox.height != list->currentBox.height)
-				{
-					reflow |= 2;
-					if (list->flags & SITF_CanResizeH) reflow |= 2;
-					else list->box.bottom = list->box.top + list->currentBox.height;
-				}
-				list->currentBox = list->childBox = SIT_GetContentBox(list);
-			}
-		}
-		if (! reflow) break;
-		if (root->parent)
-		{
-			/* root widget cannot be resized */
-			if (reflow & 1) root->box.left = root->box.right  = 0, root->flags |= SITF_ReflowW;
-			if (reflow & 2) root->box.top  = root->box.bottom = 0, root->flags |= SITF_ReflowH;
-		}
-	}
-	root->flags &= ~ (SITF_GeometrySet | SITF_GeometryChanged | SITF_GeomNotified);
-	return 0;
-}
-
-static Bool SIT_HasNoOptimalValue(SIT_Widget root)
-{
-	SIT_Widget list;
-
-	if (root->type == SIT_DIALOG && ((SIT_Dialog)root)->minSize.width == 0)
-		return True;
-	if ((root->flags & SITF_TopLevel) && (root->optimalBox.width < 0 && root->optimalBox.height < 0))
-		return True;
-
-	for (list = HEAD(root->children); list; )
-	{
-		if ((list->flags & SITF_TopLevel) == 0 && list->visible && list->optimalWidth &&
-			 list->optimalBox.width < 0 && list->optimalBox.height < 0) return True;
-		if (list->children.lh_Head == NULL || (list->flags & SITF_PrivateChildren))
-		{
-			while (! list->node.ln_Next)
-			{
-				list = list->parent;
-				if (list == root) return False;
-			}
-			NEXT(list);
-		}
-		else list = HEAD(list->children);
-	}
-	return False;
-}
-
 /* sigh: SIT uses border-box as for dimension (in <box> field), CSS uses content-box in layout.pos */
 void SIT_LayoutCSSSize(SIT_Widget root)
 {
@@ -879,6 +514,7 @@ void SIT_LayoutCSSSize(SIT_Widget root)
 	root->layout.pos.top    = root->box.top  + root->padding[1];
 	root->layout.pos.width  = root->box.right  - root->padding[2] - root->layout.pos.left;
 	root->layout.pos.height = root->box.bottom - root->padding[3] - root->layout.pos.top;
+
 	c = root->parent;
 	if (c && root->type != SIT_DIALOG)
 	{
@@ -903,6 +539,8 @@ void SIT_LayoutCSSSize(SIT_Widget root)
 		{
 			size.width  = c->layout.pos.width;
 			size.height = c->layout.pos.height;
+			if (c->layout.format.width > 0)
+				layoutCalcPadding(c);
 			c->layout.pos.left   = c->box.left + c->padding[0];
 			c->layout.pos.top    = c->box.top  + c->padding[1];
 			c->layout.pos.width  = c->box.right  - c->padding[2] - c->layout.pos.left;
@@ -910,8 +548,6 @@ void SIT_LayoutCSSSize(SIT_Widget root)
 			c->offsetX = root->offsetX + root->box.left;
 			c->offsetY = root->offsetY + root->box.top;
 			c->style.flags &= ~CSSF_BORDERIMG;
-			if (c->layout.format.width > 0)
-				layoutCalcPadding(c);
 			layoutAdjustBorderRadius(c);
 			layoutAlignText(c);
 			if (HAS_EVT(c, SITE_OnResize) && ! (ALMOST0(size.width-c->layout.pos.width) && ALMOST0(size.height-c->layout.pos.height)))
@@ -921,61 +557,111 @@ void SIT_LayoutCSSSize(SIT_Widget root)
 	}
 }
 
-#if 0
-void SIT_DebugCoord(SIT_Widget root)
+int SIT_AdjustContainer(SIT_Widget list)
 {
-	SIT_Widget c;
-	int indent;
-	REAL box[4];
-	for (indent = 0, c = root->parent; c; indent += 2, c = c->parent);
-
-	memcpy(box, &root->box, sizeof box);
-	box[2] -= box[0];
-	box[3] -= box[1];
-	fprintf(stderr, "%*s%s: %g,%g - %gx%g\n", indent, "", root->name, box[0], box[1], box[2], box[3]);
-	for (c = HEAD(root->children); c; NEXT(c))
-		SIT_DebugCoord(c);
+	int reflow = 0;
+	/* check if we can reduce size of container */
+	if (list->box.right - list->box.left > list->optimalBox.width && (list->flags & SITF_FixedWidth) == 0 &&
+		list->optimalBox.width > list->minBox.width && (SIT_CanReduceContainerSize(list, 0) || SIT_CanReduceContainerSize(list, 2)))
+	{
+		list->box.right = list->box.left + list->optimalBox.width;
+		list->currentBox.width = list->childBox.width = list->optimalBox.width;
+		reflow = 1;
+	}
+	if (list->box.bottom - list->box.top > list->optimalBox.height && (list->flags & SITF_FixedHeight) == 0 &&
+		list->optimalBox.height > list->minBox.height && (SIT_CanReduceContainerSize(list, 1) || SIT_CanReduceContainerSize(list, 3)))
+	{
+		list->box.bottom = list->box.top + list->optimalBox.height;
+		list->currentBox.height = list->childBox.height = list->optimalBox.height;
+		reflow = 1;
+	}
+	return reflow;
 }
-#endif
 
 Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode)
 {
-	if (mode != FitUsingOptimalBox)
+	SIT_Widget list;
+	int        count;
+
+	if (root->flags & SITF_FixedWidth)  root->box.right  = root->box.left + root->fixed.width;
+	if (root->flags & SITF_FixedHeight) root->box.bottom = root->box.top  + root->fixed.height;
+	fprintf(stderr, "container %s min size: %d x %d\n", root->name, (int) (root->box.right - root->box.left),
+		(int) (root->box.bottom - root->box.top));
+
+	/* setup initial box if needed */
+	for (list = HEAD(root->children); list; NEXT(list))
 	{
-		REAL box[4];
-		memcpy(box, &root->box, sizeof box);
-		/* need to compute OptimalBox first */
-		if (SIT_HasNoOptimalValue(root))
+		if ((list->flags & SITF_TopLevel) || ! list->visible) continue;
+
+		if (list->optimalBox.width < 0)
 		{
-			SIT_LayoutOptimal(root);
-			if (mode == KeepDialogSize && box[2] > box[0] && box[3] > box[1])
-				memcpy(&root->box, box, sizeof box);
+			if (list->optimalWidth)
+				list->optimalWidth(list, &list->optimalBox, (APTR) FitUsingOptimalBox);
+			if (list->minBox.width > 0 && list->optimalBox.width < list->minBox.width)
+				list->optimalBox.width = list->minBox.width;
+			if (list->minBox.height > 0 && list->optimalBox.height < list->minBox.height)
+				list->optimalBox.height = list->minBox.height;
+			if (list->optimalBox.width  < 0) list->optimalBox.width  = 0;
+			if (list->optimalBox.height < 0) list->optimalBox.height = 0;
+			list->currentBox = list->optimalBox;
+			if ((list->flags & SITF_FixedWidth) && list->currentBox.width < list->fixed.width)
+				list->currentBox.width = list->fixed.width;
+			if ((list->flags & SITF_FixedHeight) && list->currentBox.height < list->fixed.height)
+				list->currentBox.height = list->fixed.height;
 		}
-		SIT_LayoutInitial(root, mode);
-		if (mode == FitUsingInitialBox && root->type == SIT_DIALOG)
-		{
-			root->box.left += box[0]; root->box.right  += box[0];
-			root->box.top  += box[1]; root->box.bottom += box[1];
-		}
-		#ifdef DEBUG_GEOM
-		fprintf(stderr, "layout initial %s: %dx%d", root->name, (int) (root->box.right-root->box.left), (int) (root->box.bottom-root->box.top));
-		if (root->type == SIT_DIALOG)
-			fprintf(stderr, " min: [%d, %d]\n", (int) ((SIT_Dialog)root)->minSize.width, (int) ((SIT_Dialog)root)->minSize.height);
-		else
-			fputc('\n', stderr);
-		#endif
-		#if 0
-		if (root->parent == NULL)
-			SIT_DebugCoord(root);
-		#endif
+		memset(&list->box, 0, sizeof list->box);
 	}
-	else SIT_LayoutOptimal(root);
 
-	root->flags &= ~SITF_StylesChanged;
+	for (count = 0; count < 10; count ++)
+	{
+		int reflow = 0;
+		SIT_LayoutChildren(root, FitUsingCurrentBox);
 
-	if (mode != FitUsingOptimalBox /*&& (root->flags & SITF_TopLevel)*/)
-		SIT_LayoutCSSSize(root);
+		/* also check if children's children need reflow */
+		for (list = HEAD(root->children), count = 0; list; NEXT(list))
+		{
+			if (! list->visible || (list->flags & SITF_TopLevel)) continue;
+			list->currentBox = SIT_GetContentBox(list);
 
+			if ((list->children.lh_Head && !(list->flags & SITF_PrivateChildren)) &&
+			    BoxSizeDiffers(list, &list->childBox))
+			{
+				#ifdef DEBUG_GEOM
+				fprintf(stderr, "%s: current box: %dx%d, child box: %dx%d\n", list->name, (int) list->currentBox.width,
+					(int) list->currentBox.height, (int) list->childBox.width, (int) list->childBox.height);
+				#endif
+				SizeF old = list->currentBox;
+				SIT_LayoutWidgets(list, FitUsingCurrentBox);
+				list->childBox = list->currentBox = SIT_GetContentBox(list);
+
+				if ((list->flags & SITF_Container))
+				{
+					/* cehck if we can reduce the size of container */
+					reflow |= SIT_AdjustContainer(list);
+				}
+				if (old.width != list->currentBox.width || old.height != list->currentBox.height)
+				{
+					reflow |= 1;
+				}
+			}
+		}
+		if (reflow)
+		{
+			float minWidth = root->minBox.width;
+			float minHeight = root->minBox.height;
+			if (root->flags & SITF_FixedWidth)  minWidth  = root->fixed.width;
+			if (root->flags & SITF_FixedHeight) minHeight = root->fixed.height;
+			if (minWidth  < 0) minWidth  = 0;
+			if (minHeight < 0) minHeight = 0;
+			root->box.right  = root->box.left + minWidth;
+			root->box.bottom = root->box.top  + minHeight;
+		}
+		else break;
+	}
+	if (root->flags & SITF_TopLevel)
+		SIT_AdjustContainer(root);
+	root->flags &= ~ (SITF_GeometrySet | SITF_GeometryChanged | SITF_GeomNotified | SITF_StylesChanged);
+	SIT_LayoutCSSSize(root);
 	return True;
 }
 
@@ -1033,6 +719,12 @@ void SIT_ReflowLayout(SIT_Widget list)
 			if (list->visible)
 			{
 				SizeF oldSz = list->currentBox;
+				if (list->optimalWidth == NULL)
+				{
+					parent = list;
+					i = 0;
+					goto reflow;
+				}
 				if (list->attachment[0].sa_Type == SITV_AttachNone || list->attachment[2].sa_Type == SITV_AttachNone)
 				{
 					done = 1;
@@ -1095,8 +787,8 @@ void SIT_ReflowLayout(SIT_Widget list)
 				reflow:
 				while ((parent->flags & SITF_TopLevel) == 0)
 				{
-					memset(&parent->currentBox, 0, sizeof parent->currentBox);
-//					memset(&parent->childBox, 0, sizeof parent->childBox);
+					//memset(&parent->currentBox, 0, sizeof parent->currentBox);
+					memset(&parent->childBox, 0, sizeof parent->childBox);
 					parent = parent->parent;
 				}
 				SIT_LayoutWidgets(parent, FitUsingInitialBox);

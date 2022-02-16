@@ -108,6 +108,9 @@ static int SIT_DialogMove(SIT_Widget w, APTR cd, APTR ud)
 			SizeF   min    = dialog->minSize;
 			REAL    offX   = dialog->moveOffX - msg->x;
 			REAL    offY   = dialog->moveOffY - msg->y;
+			int     flags  = w->flags;
+
+			// fprintf(stderr, "resizing dialog from %d x %d to ", (int) (w->box.right - w->box.left), (int) (w->box.bottom - w->box.top));
 			if (corner & 1)
 			{
 				w->box.left -= offX;
@@ -134,8 +137,13 @@ static int SIT_DialogMove(SIT_Widget w, APTR cd, APTR ud)
 					w->box.bottom = w->box.top + min.height;
 			}
 			sit.dirty = 1;
+			w->fixed.width = w->box.right - w->box.left;
+			w->fixed.height = w->box.bottom - w->box.top;
+			// fprintf(stderr, "%d x %d\n", (int) w->fixed.width, (int) w->fixed.height);
+			if (corner & 5)  w->flags |= SITF_FixedWidth;
+			if (corner & 10) w->flags |= SITF_FixedHeight;
 			SIT_LayoutWidgets(w, KeepDialogSize);
-			SIT_MoveWidgets(w);
+			w->flags = flags;
 		}
 		else if (dialog->customStyles & SITV_DoMove)
 		{
@@ -184,7 +192,7 @@ Bool SIT_InitDialog(SIT_Widget w, va_list args)
 	SIT_Widget parent = NULL;
 
 	/* GeomNotified flags is to prevent children from triggering a reflow (layout will be done when dialog is managed) */
-	w->flags |= SITF_TopLevel | SITF_GeomNotified;
+	w->flags |= SITF_TopLevel | SITF_GeomNotified | SITF_Container;
 	w->layout.flags |= LAYF_IgnoreWords;
 	memcpy(w->attachment, defAttach, sizeof defAttach);
 

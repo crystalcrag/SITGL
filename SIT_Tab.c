@@ -37,7 +37,7 @@ static int SIT_TabAutoManage(SIT_Widget w, APTR cd, APTR ud)
 		else /* some controls can be visible over multiple tabs */
 			c->visible = n == 0 || (n & (1<<nth)) > 0;
 	}
-	if (ud) return 0;
+//	if (ud) return 0;
 
 	SIT_TabItem item = tab->items + nth;
 
@@ -113,7 +113,6 @@ static int SIT_TabMeasure(SIT_Widget w, APTR cd, APTR ud)
 		if (tab->maxHeight < h)
 			tab->maxHeight = h;
 	}
-	//fprintf(stderr, "tab size = %dx%d\n", n, (int) tab->maxHeight);
 	sz.width  = tab->tabWidth = n+6-tab->tabSpace;
 	sz.height = 0;
 
@@ -121,41 +120,43 @@ static int SIT_TabMeasure(SIT_Widget w, APTR cd, APTR ud)
 	w->padding[1] = w->layout.padding.top + w->layout.border.top;
 
 	/* layout children */
-	if (mode == FitUsingInitialBox || mode == FitUsingOptimalBox)
+	for (i = 0; i < nb; i ++)
 	{
-		for (i = 0; i < nb; i ++)
+		SIT_Widget c;
+		Bool reflow;
+		for (c = HEAD(w->children), reflow = False; c; NEXT(c))
 		{
-			SIT_Widget c;
-			Bool reflow;
-			for (c = HEAD(w->children), reflow = False; c; NEXT(c))
-			{
-				int order = c->tabOrder;
+			int order = c->tabOrder;
 
-				if (order == -1) continue;
+			if (order == -1) continue;
 
-				if (! tab->visiBitField)
-					order = order <= 0 || order-1 == i;
-				else /* some controls can be visible over multiple tabs */
-					order = order == 0 || (order & (1<<i)) > 0;
+			if (! tab->visiBitField)
+				order = order <= 0 || order-1 == i;
+			else /* some controls can be visible over multiple tabs */
+				order = order == 0 || (order & (1<<i)) > 0;
 
-				if (order != c->visible)
-					c->visible ^= 1, reflow = True;
-			}
-
-			if ((reflow || i == 0) && SIT_LayoutWidgets(w, (ULONG) mode))
-			{
-				n = w->box.right  - w->box.left; if (sz.width  < n) sz.width  = n;
-				n = w->box.bottom - w->box.top;  if (sz.height < n) sz.height = n;
-			}
-			memset(&w->box, 0, sizeof w->box);
+			if (order != c->visible)
+				c->visible ^= 1, reflow = True;
 		}
+
+		if ((reflow || i == 0) && SIT_LayoutWidgets(w, (ULONG) mode))
+		{
+			n = w->box.right  - w->box.left; if (sz.width  < n) sz.width  = n;
+			n = w->box.bottom - w->box.top;  if (sz.height < n) sz.height = n;
+		}
+		memset(&w->box, 0, sizeof w->box);
 	}
 
 	/* restore Visible flags */
 	SIT_TabAutoManage(w, (APTR) tab->curTab, (APTR) True);
 
-	if (res->width  <= 0) res->width  = sz.width;
-	if (res->height <= 0) res->height = sz.height;
+	w->childBox = sz;
+	/* don't want "smaller" tab to resize container */
+	w->minBox = sz;
+	if (res->width  <= sz.width) res->width  = sz.width;
+	if (res->height <= sz.height) res->height = sz.height;
+
+	//fprintf(stderr, "tab size = %dx%d\n", (int) sz.width, (int) sz.height);
 
 	return 0;
 }
@@ -305,7 +306,7 @@ Bool SIT_InitTab(SIT_Widget w, va_list args)
 	w->optimalWidth = SIT_TabMeasure;
 	w->setValue     = SIT_TabSetValues;
 	w->finalize     = SIT_TabFinalize;
-	w->flags        = SITF_RenderChildren;
+	w->flags        = SITF_RenderChildren | SITF_Container;
 	w->layout.flags = LAYF_AdjustRect;
 
 	SIT_ParseTags(w, args, w->attrs = TabClass);
