@@ -585,8 +585,6 @@ Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode)
 
 	if (root->flags & SITF_FixedWidth)  root->box.right  = root->box.left + root->fixed.width;
 	if (root->flags & SITF_FixedHeight) root->box.bottom = root->box.top  + root->fixed.height;
-	fprintf(stderr, "container %s min size: %d x %d\n", root->name, (int) (root->box.right - root->box.left),
-		(int) (root->box.bottom - root->box.top));
 
 	/* setup initial box if needed */
 	for (list = HEAD(root->children); list; NEXT(list))

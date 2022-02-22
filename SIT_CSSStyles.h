@@ -57,15 +57,23 @@ typedef CStopBuf *  ColorStop;
 
 struct Gradient_t
 {
-	uint8_t  colorStop; /* number of stops (max 8) */
-	uint8_t  repeat;    /* repeating gradient */
-	uint8_t  corner;    /* predefined corner [1-16] or 0 to use <orient> field, 255 = radial gradient */
-	uint16_t orient;    /* angle [0- 65535] mapped to [0 - 360[deg */
-	ULONG    cx, cy;    /* radial center */
-	ULONG    rx, ry;    /* radial radius */
-	ULONG    wxh;       /* gradient was render for this dimension */
-	CStopBuf colors[8]; /* pre-alloc 8 color stops (pairs of color+pos) */
+	uint8_t  colorStop;     /* number of stops (max 8) */
+	uint8_t  flags;         /* predefined corner [1-16] or 0 to use <orient> field */
+	uint16_t orient;        /* angle [0- 65535] mapped to [0 - 360[deg */
+	union {
+		float rect[4];      /* linear-gradient parameters */
+		struct {
+			ULONG cx, cy;
+			ULONG rx, ry;
+		} radial;           /* radial-gradient param */
+	};
+	ULONG    wxh;           /* gradient was render for this dimension */
+	CStopBuf colors[8];     /* pre-alloc 8 color stops (pairs of color+pos) */
 };
+
+#define GRADIENT_CORNER     31
+#define GRADIENT_REPEAT     0x80
+#define GRADIENT_RADIAL     0x40
 
 struct RectF_t
 {

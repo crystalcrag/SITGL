@@ -120,7 +120,7 @@ Bool gradientDrawLinear(CSSImage img, Gradient * grad, REAL ratio)
 		}
 	}
 
-	if (! grad->repeat)
+	if ((grad->flags & GRADIENT_REPEAT) == 0)
 	{
 		if (colors->pos > 0)
 		{
@@ -194,7 +194,7 @@ Bool gradientDrawLinear(CSSImage img, Gradient * grad, REAL ratio)
 			}
 		}
 		i --; c ++;
-		if (i == 0 && grad->repeat)
+		if (i == 0 && (grad->flags & GRADIENT_REPEAT))
 		{
 			c = colors+1;
 			i = count-1;
@@ -214,15 +214,15 @@ void gradientGetCenter(Gradient * grad, int info[4], int width, int height, REAL
 {
 	#define xc   info[0]
 	#define yc   info[1]
-	xc = gradientToPx(width,  grad->cx, ratio);
-	yc = gradientToPx(height, grad->cy, ratio);
+	xc = gradientToPx(width,  grad->radial.cx, ratio);
+	yc = gradientToPx(height, grad->radial.cy, ratio);
 
 	int rx, ry;
 	/* normalize CSS input */
-	if (grad->ry == 0xff)
+	if (grad->radial.ry == 0xff)
 	{
-		int shape  = (grad->rx >> 2) & 3;
-		int corner = (grad->rx >> 4);
+		int shape  = (grad->radial.rx >> 2) & 3;
+		int corner = (grad->radial.rx >> 4);
 		int hw     = width  >> 1;
 		int hh     = height >> 1;
 
@@ -261,8 +261,8 @@ void gradientGetCenter(Gradient * grad, int info[4], int width, int height, REAL
 	}
 	else /* direct value */
 	{
-		rx = gradientToPx(width,  grad->rx, ratio);
-		ry = gradientToPx(height, grad->ry, ratio);
+		rx = gradientToPx(width,  grad->radial.rx, ratio);
+		ry = gradientToPx(height, grad->radial.ry, ratio);
 	}
 	info[2] = rx;
 	info[3] = ry;
@@ -515,16 +515,16 @@ void gradientGetParam(CSSImage img, Gradient * grad)
 {
 	int w = img->width;
 	int h = img->height;
-	int ang = grad->corner;
+	int ang = grad->flags & GRADIENT_CORNER;
 
 	img->angle = 0;
 	img->stretch = 0;
-	memset(img->rect, 0, sizeof img->rect);
-	if (ang == 255)
+	memset(grad->rect, 0, sizeof grad->rect);
+	if (grad->flags & GRADIENT_RADIAL)
 	{
-		/* radial gradient */
-		img->rect[2] = w;
-		img->rect[3] = h;
+		/* radial gradient (overwriting old radial param, but at this point, they are not needed anymore) */
+		grad->rect[2] = w;
+		grad->rect[3] = h;
 	}
 	else /* linear gradient */
 	{
@@ -535,8 +535,8 @@ void gradientGetParam(CSSImage img, Gradient * grad)
 			 * when drawing a corner gradient limit the drawing to a square and
 			 * stretch it to cover the area (ie: background-size: 100% 100%).
 			 */
-			if (w < h) img->rect[3] = h / (float) w, img->stretch = 2, h = w, img->height = h;
-			else       img->rect[3] = w / (float) h, img->stretch = 1, w = h, img->width  = w;
+			if (w < h) grad->rect[3] = h / (float) w, img->stretch = 2, h = w, img->height = h;
+			else       grad->rect[3] = w / (float) h, img->stretch = 1, w = h, img->width  = w;
 		}
 
 		REAL bbox[4];
@@ -549,50 +549,50 @@ void gradientGetParam(CSSImage img, Gradient * grad)
 			Right  = 4,
 			Bottom = 8
 		};
-		switch (grad->corner) {
+		switch (grad->flags & GRADIENT_CORNER) {
 		case Left:
 			img->angle = M_PI;
-			img->rect[2] = w;
-			img->rect[3] = h;
+			grad->rect[2] = w;
+			grad->rect[3] = h;
 			imgw = w;
 			break;
 		case Top:
 			img->angle = -M_PI_2;
-			img->rect[2] = h;
-			img->rect[3] = w;
+			grad->rect[2] = h;
+			grad->rect[3] = w;
 			imgh = h;
 			break;
 		case Top|Left:
 			img->angle = -(M_PI_4+M_PI_2);
-			img->rect[2] = w * M_SQRT2;
-			img->rect[0] = w;
-			img->rect[1] = h;
+			grad->rect[2] = w * M_SQRT2;
+			grad->rect[0] = w;
+			grad->rect[1] = h;
 			/* no break; */
 		case Right:
 			imgw = w;
 			break;
 		case Top|Right:
 			img->angle = -M_PI_4;
-			img->rect[2] = w * M_SQRT2;
-			img->rect[1] = h;
+			grad->rect[2] = w * M_SQRT2;
+			grad->rect[1] = h;
 			imgw = w;
 			break;
 		case Bottom:
 			img->angle = M_PI_2;
-			img->rect[2] = h;
-			img->rect[3] = w;
+			grad->rect[2] = h;
+			grad->rect[3] = w;
 			imgh = h;
 			break;
 		case Bottom|Left:
 			img->angle = M_PI_4+M_PI_2;
-			img->rect[2] = w * M_SQRT2;
-			img->rect[1] = h;
+			grad->rect[2] = w * M_SQRT2;
+			grad->rect[1] = h;
 			//img->rect[3] = w;
 			imgw = w;
 			break;
 		case Bottom|Right:
 			img->angle = M_PI_4;
-			img->rect[2] = w * M_SQRT2;
+			grad->rect[2] = w * M_SQRT2;
 			imgw = w;
 			break;
 		default: /* use angle */
@@ -601,14 +601,14 @@ void gradientGetParam(CSSImage img, Gradient * grad)
 
 			/* gradient orientation in CSS are shifted by -90 from trigo : 0 in CSS gradient is at -90 on trigo circle (assuming top down Y axis) */
 			img->angle = (grad->orient-16384) * 2*M_PI / 65536;
-			img->rect[0] = bbox[0] + (normal[0] - w/2);
-			img->rect[1] = bbox[1] + (normal[1] - h/2);
+			grad->rect[0] = bbox[0] + (normal[0] - w/2);
+			grad->rect[1] = bbox[1] + (normal[1] - h/2);
 			normal[3] -= normal[1];
 			normal[2] -= normal[0];
-			img->rect[3] = sqrt(normal[2] * normal[2] + normal[3] * normal[3]);
+			grad->rect[3] = sqrt(normal[2] * normal[2] + normal[3] * normal[3]);
 			normal[2]  = bbox[2] - bbox[0];
 			normal[3]  = bbox[3] - bbox[1];
-			img->rect[2] = sqrt(normal[2] * normal[2] + normal[3] * normal[3]);
+			grad->rect[2] = sqrt(normal[2] * normal[2] + normal[3] * normal[3]);
 
 			imgw = bbox[0] - bbox[2];
 			imgh = bbox[1] - bbox[3];

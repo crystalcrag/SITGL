@@ -264,8 +264,7 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 			hdr->box.top = w->layout.border.top;
 			hdr->box.right = x + cell->sizeCell.width;
 			hdr->box.bottom = hdr->box.top + cell->sizeCell.height;
-			hdr->offsetX = w->offsetX + w->box.left;
-			hdr->offsetY = w->offsetY + w->box.top;
+			hdr->parent = w;
 
 			SIT_LayoutCSSSize(hdr);
 			SIT_RenderNode(hdr);

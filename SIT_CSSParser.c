@@ -717,19 +717,20 @@ Bool cssParseURI(STRPTR fmt, STRPTR * pend, STRPTR * mem)
 /* parse linear-gradient and repeating-linear-gradient function. fmt will NOT be modified */
 Bool cssParseGradient(STRPTR fmt, STRPTR * pend, Gradient * bg)
 {
+	bg->flags = 0;
 	/* we only care about W3C spec here, not the countless proprietary variations */
 	if (strncasecmp(fmt, "repeating-", 10) == 0)
-		bg->repeat = True, fmt += 10;
+		bg->flags = GRADIENT_REPEAT, fmt += 10;
 	if (strncasecmp(fmt, "linear-gradient(", 16) == 0)
 		fmt += 16;
 	else if (strncasecmp(fmt, "radial-gradient(", 16) == 0)
-		fmt += 16, bg->rx = 1;
+		fmt += 16, bg->flags = GRADIENT_RADIAL;
 	else return False;
 
 	/* From MDN: linear-gradient([ <angle> | to <side-or-corner> ,]? <color-stop> [, <color-stop>]+) */
 	fmt = skipspace(fmt);
 
-	if (bg->rx)
+	if (bg->flags == GRADIENT_RADIAL)
 	{
 		/* from MDN:
 		 * radial-gradient(
@@ -771,17 +772,16 @@ Bool cssParseGradient(STRPTR fmt, STRPTR * pend, Gradient * bg)
 		if (dist < 0) dist = 3;  /* farthest-corner */
 		else fmt += init - desc, sep = 1;
 
-		bg->ry = 0xff;
-		bg->rx = 3 | (shape<<2) | (dist << 4);
+		bg->radial.ry = 0xff;
+		bg->radial.rx = 3 | (shape<<2) | (dist << 4);
 
 		if (strncasecmp(fmt, "at", 2) == 0)
 		{
 			fmt += 2; sep = 1;
-			if (! cssParsePos(&fmt, &bg->cx, True)) return False;
-			if (! cssParsePos(&fmt, &bg->cy, True)) bg->cy = bg->cx;
+			if (! cssParsePos(&fmt, &bg->radial.cx, True)) return False;
+			if (! cssParsePos(&fmt, &bg->radial.cy, True)) bg->radial.cy = bg->radial.cx;
 		}
-		else bg->cx = bg->cy = cssFromUnit(Percentage, 50);
-		bg->corner = 255;
+		else bg->radial.cx = bg->radial.cy = cssFromUnit(Percentage, 50);
 		if (! sep) goto skipcheck;
 	}
 	/* parse angle or direction */
@@ -799,20 +799,20 @@ Bool cssParseGradient(STRPTR fmt, STRPTR * pend, Gradient * bg)
 			fmt = skipspace(next);
 		}
 		if (valid_dir[flag] == 0) return False; /* imposible direction, like "to left right" */
-		bg->corner = flag;
+		bg->flags |= flag;
 	}
 	else if (cssParseAngle(skipspace(fmt), &fmt, &bg->orient))
 	{
 		/* special cases: use optimized endpoints */
 		switch (bg->orient) {
-		case     0: bg->corner = 2; break;
-		case 16384: bg->corner = 4; break; /* 90deg */
-		case 32768: bg->corner = 8; break; /* 180deg */
-		case 49152: bg->corner = 1;        /* 270deg */
+		case     0: bg->flags |= 2; break;
+		case 16384: bg->flags |= 4; break; /* 90deg */
+		case 32768: bg->flags |= 8; break; /* 180deg */
+		case 49152: bg->flags |= 1;        /* 270deg */
 		}
 	}
 	/* nothing specified: default to "to bottom" */
-	else { bg->corner = 8; goto skipcheck; }
+	else { bg->flags |= 8; goto skipcheck; }
 
 	ColorStop grad;
 	fmt = skipspace(fmt);

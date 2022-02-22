@@ -165,7 +165,7 @@ static void VTAdjustScroll(VirtualTerm vt)
 
 	if (height > vt->height)
 	{
-		//fprintf(stderr, "height = %d, total = %d\n", height, vt->totalLines);
+		fprintf(stderr, "height = %d, total = %d\n", height, vt->totalLines);
 		if (! vt->hasScroll)
 		{
 			SIT_SetValues(vt->scroll, SIT_Visible, 1, NULL);
@@ -878,7 +878,8 @@ static int VTPaint(SIT_Widget w, APTR cd, APTR ud)
 			case VT_SELBOTH:  s = vt->colStart; e = vt->colEnd; break;
 			case VT_SELWHOLE: s = 0; e = end - start + hasNL;
 			}
-			memset(bgAttr + s, 3, e - s);
+			if (e >= s)
+				memset(bgAttr + s, 3, e - s);
 		}
 
 		/* draw background first */
@@ -1461,7 +1462,18 @@ static int VTAdjustCoordPrevWord(VirtualTerm vt, VTCoord_t * coord)
 	for (min = iter.line; *min == 27; min += 3);
 	if (word > min)
 	{
-		for (word --; word > min && VTCharType(*word) == type; word --);
+		do {
+			/* back one character is trickier than forward: need to check if it is an escape sequence */
+			while (word - 3 > min && word[-3] == 27)
+				word -= 3;
+
+			/* escape sequences are not words though */
+			if (word > min)
+			{
+				/* check if end of utf-8 character */
+				for (word --; word > min && (*word & 0xc0) == 0x80; word --);
+			}
+		} while (word > min && VTCharType(*word) == type);
 		if (word > min) word = NEXTCHAR(word);
 	}
 	return word - iter.line;
@@ -1477,6 +1489,7 @@ static int VTAdjustCoordNextWord(VirtualTerm vt, VTCoord_t * coord)
 	VT_CHECKIFSPLIT(iter);
 	word = iter.line + coord->chr;
 	end  = iter.line + iter.size;
+	while (word < end && word[0] == 27) word += 3;
 	type = VTCharType(*word);
 	if (end[-1] == '\n') end --;
 
@@ -1678,7 +1691,7 @@ static int VTMouse(SIT_Widget w, APTR cd, APTR ud)
 	return 1;
 }
 
-/* SITE_OnChange on scrollbar */
+/* SITE_OnScroll on scrollbar */
 static int VTTrackPos(SIT_Widget w, APTR cd, APTR ud)
 {
 	VirtualTerm vt = ud;

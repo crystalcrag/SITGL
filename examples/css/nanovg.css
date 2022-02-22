@@ -1,5 +1,5 @@
 /* stylesheet that somewhat mimics the style of nanovg */
-html { color: white; font-size: 1.8vw; background: linear-gradient(to bottom right, #0874e3, #0e1670) }
+html { color: #dfdfdf; font-size: 1.2vw; background: linear-gradient(to bottom, #2f2f34, #25262b 50%, #25262b); padding: 0.5em }
 
 dialog, form { border-radius: 0.2em; box-shadow: 0 0 20px #444; border-bottom: 1px solid black;
 	     background: #303238; padding: 2em 0.5em 0.5em 0.5em }
@@ -42,8 +42,8 @@ checkbox box { padding: 0.4em; box-shadow: 0 0 4px black inset; background-color
 checkbox:checked box { background: url(mask:checkmark.png) no-repeat 50% 50%; background-size: 80% 80%; color: #aaa }
 radio:kbdfocus, checkbox:kbdfocus { outline: 2px solid rgba(#7edfff, 0.5) 0.2em }
 
-radio box { border-radius: 1em; border: 2px solid #87cb85; padding: 0.4em; background-color: black; vertical-align: middle }
-radio:checked box { background: black url(mask:circle.png) no-repeat 50% 50%; background-size: 80% 80%; color: #c4f4c3 }
+radio box { border-radius: 1em; border: 2px solid #202125; padding: 0.4em; background-color: black; vertical-align: middle }
+radio:checked box { background: selback url(mask:circle.png) no-repeat 50% 50%; background-size: 80% 80%; color: #aaa }
 
 button:kbdfocus { outline: 2px solid rgba(#7edfff, 0.5) }
 button:kbdfocus:active { outline-color: black }

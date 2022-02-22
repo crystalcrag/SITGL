@@ -445,7 +445,7 @@ static void renderBackground(SIT_Widget node, RectF * alt, int sides)
 		}
 
 		sides = (int) rect.width | ((int) rect.height << 16);
-		if (bg->gradient.colorStop == 2 && bg->gradient.corner == 255)
+		if (bg->gradient.colorStop == 2 && (bg->gradient.flags & GRADIENT_RADIAL))
 		{
 			/* radial-gradient with 2 color stops: use nanovg to render them directly; save quite a bit of memory */
 			int   info[4];
@@ -526,18 +526,20 @@ static void renderBackground(SIT_Widget node, RectF * alt, int sides)
 			}
 			if (img->stretch) /* gradient */
 			{
+				float * grad = bg->gradient.rect;
 				/* corner linear-gradient: need to do transformation on our own */
-				if (img->stretch == 1) nvgTranslate(vg, x+img->rect[0] * img->rect[3], y+img->rect[1]), nvgScale(vg, img->rect[3], 1);
-				else                   nvgTranslate(vg, x+img->rect[0], y+img->rect[1] * img->rect[3]), nvgScale(vg, 1, img->rect[3]);
+				if (img->stretch == 1) nvgTranslate(vg, x+grad[0] * grad[3], y+grad[1]), nvgScale(vg, grad[3], 1);
+				else                   nvgTranslate(vg, x+grad[0], y+grad[1] * grad[3]), nvgScale(vg, 1, grad[3]);
 				nvgRotate(vg, img->angle);
 				/* they are square, but need to be stretched to fill content */
-				nvgFillPaint(vg, nvgImagePattern(vg, 0, 0, img->rect[2], img->rect[2], 0, img->handle, 1));
+				nvgFillPaint(vg, nvgImagePattern(vg, 0, 0, grad[2], grad[2], 0, img->handle, 1));
 				nvgResetTransform(vg);
 			}
 			else if (img->angle != 0)
 			{
 				/* linear-gradient */
-				nvgFillPaint(vg, nvgImagePattern(vg, x+img->rect[0], y+img->rect[1], img->rect[2], img->rect[3], img->angle, img->handle, 1));
+				float * grad = bg->gradient.rect;
+				nvgFillPaint(vg, nvgImagePattern(vg, x+grad[0], y+grad[1], grad[2], grad[3], img->angle, img->handle, 1));
 			}
 			else /* regular bitmap/non-angled linear gradient */
 			{

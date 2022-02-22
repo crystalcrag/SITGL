@@ -1767,11 +1767,14 @@ CSSImage cssAddGradient(Gradient * grad, int w, int h, REAL fh)
 		ListAddHead(&sit.images, &img->node);
 		img->crc32 = crc;
 		/* will alloc the bitmap */
-		if (grad->corner == 255)
+		if (grad->flags & GRADIENT_RADIAL)
 			/* radial gradient */
 			gradientDrawRadial(img, grad, fh);
 		else
 			gradientDrawLinear(img, grad, fh);
+
+		//fprintf(stderr, "adding gradient %dx%d - %08x\n", img->width, img->height, crc);
+
 		SIT_LoadImg(img, NULL, 0, 0, False);
 		/* a copy will be made by opengl */
 		free(img->bitmap);

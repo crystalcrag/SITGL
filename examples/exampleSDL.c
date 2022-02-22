@@ -8,7 +8,6 @@
 #include <SDL/SDL.h>
 #include <GL/GL.h>
 #include "nanovg.h"
-#include <malloc.h>
 #include <math.h>
 #include <time.h>
 #include "SIT.h"
@@ -197,8 +196,8 @@ int main(int nb, char * argv[])
 	}
 
 	static SIT_Accel accels[] = {
-		{SITK_FlagCapture + SITK_FlagAlt + SITK_F4, SITE_OnClose, ""},
-		{SITK_FlagCapture + SITK_Escape,            SITE_OnClose, ""},
+		{SITK_FlagCapture + SITK_FlagAlt + SITK_F4, SITE_OnClose},
+		{SITK_FlagCapture + SITK_Escape,            SITE_OnClose},
 		{0}
 	};
 
@@ -291,12 +290,29 @@ int main(int nb, char * argv[])
 
 #ifdef	WIN32
 #include <windows.h>
+#include <malloc.h>
 int WINAPI WinMain(
     HINSTANCE hInstance,
     HINSTANCE hPrevInstance,
     LPSTR lpCmdLine,
     int nCmdShow)
 {
-	return main(0, NULL);
+	/* CmdLine parameter is not unicode aware even with UNICODE macro set */
+	int      nb, i;
+	LPWSTR * argv = CommandLineToArgvW(GetCommandLineW(), &nb);
+
+	/* convert strings to UTF8 */
+	for (i = 0; i < nb; )
+	{
+		int len = wcslen(argv[i]);
+		int sz  = UTF16ToUTF8(NULL, 0, (STRPTR) argv[i], len) + 1;
+
+		CmdLine = alloca(sz);
+
+		sz = UTF16ToUTF8(CmdLine, sz, (STRPTR) argv[i], len);
+
+		argv[i++] = (LPWSTR) CmdLine;
+	}
+	return main(nb, (STRPTR *) argv);
 }
 #endif

@@ -133,6 +133,10 @@
  <a class="sub2" href="#msgextract">Automating message extraction</a>
  <a class="sub2" href="#loadmsgs">Loading translation file</a>
  <a class="sub2" href="#advi18n">Advanced features</a>
+  <a class="sub3" href="#i18nbdummy">Dummy strings</a>
+  <a class="sub3" href="#i18nplural">Handling plural form</a>
+  <a class="sub3" href="#i18nmultiline">Multi-lines strings</a>
+  <a class="sub3" href="#i18npunct">Handling punctuation</a>
 
 <a class="annex sub1" href="#annexA"><span>UtilityLib API</span></a>
  <a class="annex sub2" href="#doublelink">Double-linked list</a>
@@ -7535,7 +7539,7 @@ references point to freed memory.
 
 <p>There are a few more features to be aware in order to be to able to handle real world applications.
 
-<h4>Dummy strings</h4>
+<h4 id="i18nbdummy">Dummy strings</h4>
 
 <p>When writing an application, it is often the case that a few static tables are declared in the global
 scope, that contains some strings that you want to be translated:
@@ -7568,7 +7572,7 @@ the <tt>msgextract</tt> utility, because it has been configured to extract every
 and <tt>")</tt>. You might also notice that since we are overwriting the global structure, this type
 of construct does not allow changing the language at runtime.
 
-<h4>Handling plural form</h4>
+<h4 id="i18nplural">Handling plural form</h4>
 
 <p>Plural usually involve displaying a quantified noun, while trying to have a grammatically correct
 sentence for every possible values. Back in the days nobody gave a damn about plural form, you got
@@ -7601,7 +7605,7 @@ to enclose them with a dummy declaration. Take also note that no quantity
 case is not handled by this function, you'll have to add special processing
 if you ever plan to handle that case.</p>
 
-<h4>Multi-lines strings</h4>
+<h4 id="i18nmultiline">Multi-lines strings</h4>
 
 <p>Sometimes you'll have to translate very long strings or strings that will be easier to read if they
 are <b>split across multiple lines</b>. Macros/functions can process multi-line strings without problems,
@@ -7631,9 +7635,26 @@ snprintf(buffer, <kwd>sizeof</kwd> buffer, LANG(appName), APPNAME, APPVERSION);
 <type>static char</type> appName[] =
 	DLANG(<val>"Under terms of BSD 2-clause license.&lt;br&gt;" <com>/* might switch to GPL-v3 */</com>
 		  "No warranty, use at your own risk."</val>);
-
 </pre>
 
+<h4 id="i18npunct">Handling punctuation</h4>
+
+<p>When translating messages, it will often be the case that <b>some messages will be the same</b>, saves
+some punctuations. It would be rather tedious to have to provide a specific translation for these, or
+worse have to programmatically add the punctuation to reduce the amount of duplication.
+
+<p>This module has some facilities to ease the pain: if a string is extracted, any <b>leading</b> spaces,
+colon or period, will be removed before being added to the <tt>.po</tt> file. That way, there will be
+only one version of the message to translate.
+
+<p>Then, when using the <tt>LangStr()</tt> function, it will first look for the string that was passed
+as is. If nothing is found, it will removed the same characters from the end and look for the resulting
+translation. If something is found, what was removed will be added back to the translation.
+
+<p><b>It has a small limitation though</b>: no new memory will be allocated for this though, the message will
+be modified in place. This works as long as you are not trying to get the same message with 2 different
+punctuations. In practice, this case is very rare. If it happens, you'll have to build one of the string
+manually. Still, better than doing it every single time.
 
 <h2 class="annex" id="annexA"><span>UtilityLib API</span></h2>
 
@@ -7966,7 +7987,7 @@ are straightforward, but here is the complete list:
 
 <p>These set of functions will allow you to create threads and the typical synchronization objects like
 mutexes and semaphores. Be extremely careful with these functions, multi-thread and OpenGL don't mix
-very well. OpenGL requires a context per thread, which none of these functions will allocate. Your
+very well. OpenGL requires a context per thread, which <b>none of these functions will allocate</b>. Your
 windowing framework might provide such facility (like SDL2 and GLFW), and in that case in might be
 better to use the functions provided by these instead of <tt>SITGL</tt>.
 
@@ -8115,7 +8136,7 @@ whole process should looks something like this:
 	ThreadCreate(myCostlyOperation, <val>NULL</val>);
 
 	<com>/* asynchronous callback that will monitor the thread progress */</com>
-	double curTime = FrameGetTime();
+	<type>double</type> curTime = FrameGetTime();
 	SIT_ActionAdd(w, curTime, curTime + <val>1e9</val>, myProgressCheck, <val>NULL</val>);
 }</pre>
 
@@ -8125,12 +8146,12 @@ as this approach is, you can already see that there is <b>quite a bit of work in
 you should only consider adding such a feature if it is really worth it.
 
 <p>Adding a <b>cancellable operation</b> will involve a bit more work. You might have noticed that there
-are no functions to immediately stop a thread. More often than, forcibly stopping a thread is a bad idea,
+are no functions to immediately stop a thread. More often than not, forcibly stopping a thread is a bad idea,
 because it will be extremely likely that the thread have allocated some resources, that will need to be
 freed before exiting.
 
 <p>To do this, first you have to add a global variable that has to be monitored by the thread to know
-if it has to exit immediately. You don't have to do this in the inner loop, but as long as it done every
+if it has to exit immediately. You don't have to do this in the inner loop, but as long as it is done every
 couple of milliseconds, it will be largely enough. <b>To know when the thread has exited</b>, you can use a
 mutex: create one before starting the thread. In the thread, lock that mutex immediately and release
 it only at the very end. If you want to cancel the operation, simply set that global variable to
@@ -8171,6 +8192,10 @@ API.
   <p>If you used <tt>FrameWaitNext()</tt> to time the delay between frames, you can use this function
   to get the <b>actual frames per second you manage to render</b>. This value is updated at most once per second,
   and you can expect some fluctuations of about +/-0.5 around the target FPS.
+  
+  <p>This value is updated only when <tt>FrameWaitNext()</tt> has been called the number of frame per
+  second, which in theory should be every second. If your engine lags severely, it might take much longer
+  though.
 
   <li><tt class="dt"><type>double</type> FrameGetTime(<type>void</type>);</tt>
   <p>This will give the <b>time in millisecond</b>, double precision format. The precision of this function

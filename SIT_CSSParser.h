@@ -118,10 +118,7 @@ struct CSSImage_t
 	DATA8    bitmap;      /* gradient: temporary bitmap to transfer to nanovg */
 	float    angle;       /* rotate before draw (rad) */
 	int      handle;      /* NVG handle of image */
-	union {
-		float rect[4];    /* linear-gradient parameters */
-		uint32_t lastMod; /* lat modification timestamp */
-	};
+	uint32_t lastMod;     /* last modification timestamp */
 };
 
 #define	AUTOVAL      3
