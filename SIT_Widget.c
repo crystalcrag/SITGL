@@ -153,18 +153,18 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 		case SIT_REAL: if (* (double *) p == val->real)    return 0;
 		/* no need to check SIT_CTRL, SIT_PTR, SIT_STR */
 		}
-		int flg = SITF_GeometryChanged;
+		int flag = SITF_GeometryChanged;
 		if (tag->tl_TagID == SIT_Title && w->resizePolicy == SITV_Fixed)
-			flg = 0;
+			flag = 0;
 		if (w->flags & SITF_TopLevel)
 		{
 			/* optimize in case only position of dialog is changed: don't recalc whole geom */
 			switch (tag->tl_TagID) {
-			case SIT_X: flg = SITF_Style1Changed; break;
-			case SIT_Y: flg = SITF_Style2Changed; break;
+			case SIT_X: flag = SITF_Style1Changed; break;
+			case SIT_Y: flag = SITF_Style2Changed; break;
 			}
 		}
-		w->flags |= flg;
+		w->flags |= flag;
 	}
 
 	if (tag->tl_Arg > 0)
@@ -1044,10 +1044,10 @@ void SIT_DestroyChildren(SIT_Widget w)
 	}
 }
 
-static void SIT_GeomRemoveChildrenOf(SIT_Widget w)
+void SIT_GeomRemoveChildrenOf(SIT_Widget * first, SIT_Widget w)
 {
 	SIT_Widget prev, list, parent;
-	for (prev = NULL, list = sit.geomList; list; )
+	for (prev = NULL, list = *first; list; )
 	{
 		for (parent = list->parent; parent && parent != w; parent = parent->parent);
 		if (parent)
@@ -1055,7 +1055,7 @@ static void SIT_GeomRemoveChildrenOf(SIT_Widget w)
 			/* children will be reflowed with parent */
 			parent = list->geomChanged;
 			if (prev) prev->geomChanged = parent;
-			else sit.geomList = parent;
+			else *first = parent;
 			list->geomChanged = NULL;
 			list = parent;
 		}
@@ -1086,7 +1086,7 @@ void SIT_InitiateReflow(SIT_Widget w)
 			if (flags & SITF_GeomNotified)
 			{
 				/* reflow this control and all of its children */
-				SIT_GeomRemoveChildrenOf(parent);
+				SIT_GeomRemoveChildrenOf(&sit.geomList, parent);
 				return;
 			}
 			if (flags & SITF_TopLevel)
@@ -1100,7 +1100,7 @@ void SIT_InitiateReflow(SIT_Widget w)
 		{
 			if (parent->flags & SITF_GeomNotified)
 			{
-				SIT_GeomRemoveChildrenOf(w);
+				SIT_GeomRemoveChildrenOf(&sit.geomList, w);
 				break;
 			}
 		}

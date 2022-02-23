@@ -7639,7 +7639,7 @@ snprintf(buffer, <kwd>sizeof</kwd> buffer, LANG(appName), APPNAME, APPVERSION);
 
 <h4 id="i18npunct">Handling punctuation</h4>
 
-<p>When translating messages, it will often be the case that <b>some messages will be the same</b>, saves
+<p>When translating messages, you'll find out that quite often <b>some messages will be the same</b>, saves
 some punctuations. It would be rather tedious to have to provide a specific translation for these, or
 worse have to programmatically add the punctuation to reduce the amount of duplication.
 
@@ -7651,10 +7651,10 @@ only one version of the message to translate.
 as is. If nothing is found, it will removed the same characters from the end and look for the resulting
 translation. If something is found, what was removed will be added back to the translation.
 
-<p><b>It has a small limitation though</b>: no new memory will be allocated for this though, the message will
+<p><b>It has a small limitation though</b>: no new memory will be allocated for this, the message will
 be modified in place. This works as long as you are not trying to get the same message with 2 different
-punctuations. In practice, this case is very rare. If it happens, you'll have to build one of the string
-manually. Still, better than doing it every single time.
+punctuations <b>in the same function call</b>. In practice, this case is very rare. If it happens, you'll
+have to build one of the string manually. Still, better than doing it every single time.
 
 <h2 class="annex" id="annexA"><span>UtilityLib API</span></h2>
 

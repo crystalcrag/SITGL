@@ -607,6 +607,7 @@ Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode)
 			if ((list->flags & SITF_FixedHeight) && list->currentBox.height < list->fixed.height)
 				list->currentBox.height = list->fixed.height;
 		}
+		list->flags &= ~SITF_GeomNotified;
 		memset(&list->box, 0, sizeof list->box);
 	}
 
@@ -634,7 +635,7 @@ Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode)
 
 				if ((list->flags & SITF_Container))
 				{
-					/* cehck if we can reduce the size of container */
+					/* check if we can reduce the size of container */
 					reflow |= SIT_AdjustContainer(list);
 				}
 				if (old.width != list->currentBox.width || old.height != list->currentBox.height)
@@ -700,13 +701,13 @@ void SIT_ReflowLayout(SIT_Widget list)
 				SIT_LayoutWidget(parent, list, 0, FitUsingCurrentBox);
 				pref.width = list->box.right - list->box.left;
 				list->optimalWidth(list, &pref, 0);
-				list->optimalBox = pref;
+				list->optimalBox = list->currentBox = pref;
 				SIT_LayoutWidget(parent, list, 1, FitUsingOptimalBox);
 			}
 			else /* not constrained */
 			{
 				list->optimalWidth(list, &pref, 0);
-				list->optimalBox = pref;
+				list->optimalBox = list->currentBox = pref;
 				SIT_LayoutWidget(parent, list, 0, FitUsingOptimalBox);
 				SIT_LayoutWidget(parent, list, 1, FitUsingOptimalBox);
 			}
@@ -790,6 +791,8 @@ void SIT_ReflowLayout(SIT_Widget list)
 					parent = parent->parent;
 				}
 				SIT_LayoutWidgets(parent, FitUsingInitialBox);
+				SIT_GeomRemoveChildrenOf(&list, parent);
+				if (list == NULL) return;
 				break;
 			}
 		}
