@@ -604,7 +604,7 @@ Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode)
 			list->currentBox = list->optimalBox;
 			if ((list->flags & SITF_FixedWidth) && list->currentBox.width < list->fixed.width)
 				list->currentBox.width = list->fixed.width;
-			if ((list->flags & SITF_FixedHeight) && list->currentBox.height < list->fixed.height)
+			if ((list->flags & SITF_FixedHeight) /*&& list->currentBox.height < list->fixed.height*/)
 				list->currentBox.height = list->fixed.height;
 		}
 		list->flags &= ~SITF_GeomNotified;

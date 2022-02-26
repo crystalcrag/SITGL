@@ -194,7 +194,7 @@ enum
 	SIT_Name             = 4,    /* __G_: String */
 	SIT_Classes          = 5,    /* CSGR: String */
 	SIT_UserData         = 6,    /* CSG_: Pointer */
-	SIT_ResizePolicy     = 7,    /* CSGR: Enum */
+	SIT_PtrEvents        = 7,    /* CSG_: Bool */
 	SIT_Enabled          = 8,    /* CSG_: Bool */
 	SIT_Visible          = 9,    /* CSGR: Bool */
 	SIT_NextCtrl         = 10,   /* CSG_: String */

@@ -3777,11 +3777,6 @@ other properties:
 	otherwise it will return (almost) immediately.
   </ul>
 
-  <li><tt class="dt">SIT_LocaleInfo</tt> (<tt>LocaleInfo *</tt>) <span class="ro">read-only</span>
-  <p>You can retrieve that property to get some <b>information on the current localization</b> (ie: language)
-  currently used by the operating system. Check the section <a href="#i18n">internationalization</a>
-  for more information about this property.
-
   <li><tt class="dt">SIT_CurrentDir</tt> (<tt class="t">STRPTR</tt>) <span class="ro">read-only</span>
   <p>Get the <b>fully qualified path</b> of where the application has been started.
 
@@ -3866,7 +3861,8 @@ SIT_SetValues(app,
   <pre><type>struct</type> SIT_Accel_t
 {
 	<type>int</type>          key;
-	<type>int</type>          event;
+	<type>uint16_t</type>     event;
+	<type>uint16_t</type>     tag;
 	<type>STRPTR</type>       target;
 	SIT_CallProc cb;
 };</pre>
@@ -3885,19 +3881,23 @@ SIT_SetValues(app,
 	event hasn't been processed by a widget).
 
 	<p>Therefore without <tt>SITK_FlagCapture</tt>, a global callback might not be triggered.
-	
+
 	<p>The typical use case for capture flag, is to register an exit shortcut, so that you don't have to
 	worry about it in your event loop.
 
 	<li><tt>event</tt>: what <b>kind of event</b> this shortcut will trigger. Must an event type,
 	ie: <tt>SITE_...</tt>, like <tt>SITE_OnClose</tt> or <tt>SITE_OnActivate</tt>.
 
+	<li><tt>event</tt>: an arbitrary value, that will be given to the callback registered for this
+	entry. If no callback were registered, this field is mostly useless.
+
 	<li><tt>target</tt>: the <b>name of a widget</b>, which will receive the event. You can also set this field
 	to <tt class="o">NULL</tt>, in which case the event will be sent to the <tt>SIT_APP</tt> widget.
 
 	<li><tt>cb</tt>: If the callback registered for the event did not process it or the <tt>target</tt>
 	field was set to <tt class="o">NULL</tt>, you can register a callback that will be called whenever
-	the shortcut is pressed.
+	the shortcut is pressed. The <tt>call_data</tt> for the callback will be the event type, and the
+	<tt>user_data</tt> parameter will be the value of the <tt>tag</tt> field.
   </ul>
   
   <p><span class="n">Note</span>: this property is <b>expecting a array of <tt>SIT_Accel_t</tt> structure</b>,
@@ -5569,6 +5569,12 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
   <li><tt class="dt">SIT_RowTag(row)</tt> (<tt class="t">APTR</tt>)
   <p>This tag allows you to set or get an arbitrary pointer to the given row. It works like the previous
   one: you have to specify the row you want to modify as argument to the tag name.
+
+  <li><tt class="dt">SIT_CellTag(row, col)</tt> (<tt class="t">APTR</tt>)
+  <p>In report view, you can actually store an arbitrary pointer per cell. The <tt>SIT_ListInsertItem()</tt>
+  function will let you store a pointer on the first column only. This tag will let you store on any column.
+  If the <tt>col</tt> parameter is outside range, setting the value will do nothing, and getting the
+  value will return NULL.
 
   <li><tt class="dt">SIT_RowMaxVisible</tt> (<tt class="t">int</tt>)
   <p>Only meaningful in report view. It will constraint the height of the listbox to be an exact multiple

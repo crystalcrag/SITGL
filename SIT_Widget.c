@@ -16,37 +16,37 @@
 
 	/* common properties for all widgets */
 	TagList WidgetClass[] = {
-		{ SIT_Title,        "title",        CSG, SIT_STR,  OFFSET(SIT_Widget, title) },
-		{ SIT_Style,        "style",        CSG, SIT_PTR,  0},
-		{ SIT_Name,         "name",         __G, SIT_STR,  OFFSET(SIT_Widget, name) },
-		{ SIT_Classes,      "classes",      CSG, SIT_STR,  OFFSET(SIT_Widget, classes) },
-		{ SIT_UserData,     "userData",     _SG, SIT_PTR,  OFFSET(SIT_Widget, userData) },
-		{ SIT_ResizePolicy, "resizePolicy", _SG, SIT_INT,  OFFSET(SIT_Widget, resizePolicy) },
-		{ SIT_Enabled,      "enabled",      _SG, SIT_BOOL, OFFSET(SIT_Widget, enabled) },
-		{ SIT_Visible,      "visible",      CSG, SIT_BOOL, OFFSET(SIT_Widget, visible) },
-		{ SIT_NextCtrl,     "nextCtrl",     _SG, SIT_STR,  0},
-		{ SIT_TabNum,       "tabNum",       _SG, SIT_INT,  OFFSET(SIT_Widget, tabOrder) },
-		{ SIT_Y,            "y",            CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.top) },
-		{ SIT_X,            "x",            CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.left) },
-		{ SIT_Rect,         "rect",         CSG, SIT_ABBR, ABBR(1, 1, 1, 1) },
-		{ SIT_Padding,      NULL,           __G, SIT_INT,  0},
-		{ SIT_AbsX,         "absX",         CSG, SIT_UNIT, 0},
-		{ SIT_AbsY,         "absY",         CSG, SIT_UNIT, 0},
-		{ SIT_Parent,       NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, parent) },
-		{ SIT_NextSibling,  NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, node.ln_Next) },
-		{ SIT_PrevSibling,  NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, node.ln_Prev) },
-		{ SIT_FirstChild,   NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, children.lh_Head) },
-		{ SIT_LastChild,    NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, children.lh_Tail) },
-		{ SIT_CtrlType,     NULL,           __G, SIT_INT,  OFFSET(SIT_Widget, type) },
-		{ SIT_TagPrivate1,  NULL,           C__, SIT_PTR,  0}, /* BuddyCtrl */
-		{ SIT_TagPrivate2,  NULL,           C__, SIT_PTR,  OFFSET(SIT_Widget, buddyText) },
-		{ SIT_BuddyLabel,   "buddyLabel",   C__, SIT_ABBR, ABBR(1, 1, 0, 0)},
-		{ SIT_Composited,   "composited",   _SG, SIT_BOOL, OFFSET(SIT_Widget, composited) },
-		{ SIT_NVGcontext,   NULL,           __G, SIT_PTR,  0},
-		{ SIT_ToolTip,      "toolTip",      C__, SIT_STR,  0},
-		{ SIT_ClientRect,   NULL,           __G, SIT_PTR,  0},
-		{ SIT_Height,       "height",       CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.height) },
-		{ SIT_Width,        "width",        CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.width) },
+		{ SIT_Title,       "title",        CSG, SIT_STR,  OFFSET(SIT_Widget, title) },
+		{ SIT_Style,       "style",        CSG, SIT_PTR,  0},
+		{ SIT_Name,        "name",         __G, SIT_STR,  OFFSET(SIT_Widget, name) },
+		{ SIT_Classes,     "classes",      CSG, SIT_STR,  OFFSET(SIT_Widget, classes) },
+		{ SIT_UserData,    "userData",     _SG, SIT_PTR,  OFFSET(SIT_Widget, userData) },
+		{ SIT_PtrEvents,   "ptrEvents",    _SG, SIT_BOOL, OFFSET(SIT_Widget, ptrEvents) },
+		{ SIT_Enabled,     "enabled",      _SG, SIT_BOOL, OFFSET(SIT_Widget, enabled) },
+		{ SIT_Visible,     "visible",      CSG, SIT_BOOL, OFFSET(SIT_Widget, visible) },
+		{ SIT_NextCtrl,    "nextCtrl",     _SG, SIT_STR,  0},
+		{ SIT_TabNum,      "tabNum",       _SG, SIT_INT,  OFFSET(SIT_Widget, tabOrder) },
+		{ SIT_Y,           "y",            CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.top) },
+		{ SIT_X,           "x",            CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.left) },
+		{ SIT_Rect,        "rect",         CSG, SIT_ABBR, ABBR(1, 1, 1, 1) },
+		{ SIT_Padding,     NULL,           __G, SIT_INT,  0},
+		{ SIT_AbsX,        "absX",         CSG, SIT_UNIT, 0},
+		{ SIT_AbsY,        "absY",         CSG, SIT_UNIT, 0},
+		{ SIT_Parent,      NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, parent) },
+		{ SIT_NextSibling, NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, node.ln_Next) },
+		{ SIT_PrevSibling, NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, node.ln_Prev) },
+		{ SIT_FirstChild,  NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, children.lh_Head) },
+		{ SIT_LastChild,   NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, children.lh_Tail) },
+		{ SIT_CtrlType,    NULL,           __G, SIT_INT,  OFFSET(SIT_Widget, type) },
+		{ SIT_TagPrivate1, NULL,           C__, SIT_PTR,  0}, /* BuddyCtrl */
+		{ SIT_TagPrivate2, NULL,           C__, SIT_PTR,  OFFSET(SIT_Widget, buddyText) },
+		{ SIT_BuddyLabel,  "buddyLabel",   C__, SIT_ABBR, ABBR(1, 1, 0, 0)},
+		{ SIT_Composited,  "composited",   _SG, SIT_BOOL, OFFSET(SIT_Widget, composited) },
+		{ SIT_NVGcontext,  NULL,           __G, SIT_PTR,  0},
+		{ SIT_ToolTip,     "toolTip",      C__, SIT_STR,  0},
+		{ SIT_ClientRect,  NULL,           __G, SIT_PTR,  0},
+		{ SIT_Height,      "height",       CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.height) },
+		{ SIT_Width,       "width",        CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.width) },
 
 		/* attachments */
 		#define	ATTACH(side, field)    OFFSET(SIT_Widget, attachment[side].field)
@@ -139,8 +139,7 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 	SIT_Variant * val = ud;
 
 	if ((w->visible || tag->tl_TagID == SIT_Visible || w->type == SIT_HTMLTAG) && tag->tl_Flags == CSG &&
-	    /* resize policy set to fixed means that control cannot change by setting the title */
-	    ! (tag->tl_TagID == SIT_Title && (w->resizePolicy == SITV_Fixed || w->type == SIT_DIALOG || w->type == SIT_EDITBOX)))
+	    ! (tag->tl_TagID == SIT_Title && w->type == SIT_EDITBOX))
 	{
 		/* setting this property will require a geometric reflow */
 		APTR p = (STRPTR)w + tag->tl_Arg;
@@ -154,8 +153,6 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 		/* no need to check SIT_CTRL, SIT_PTR, SIT_STR */
 		}
 		int flag = SITF_GeometryChanged;
-		if (tag->tl_TagID == SIT_Title && w->resizePolicy == SITV_Fixed)
-			flag = 0;
 		if (w->flags & SITF_TopLevel)
 		{
 			/* optimize in case only position of dialog is changed: don't recalc whole geom */
@@ -538,16 +535,17 @@ DLLIMP SIT_Widget SIT_CreateWidget(STRPTR name, SIT_TYPE type, SIT_Widget parent
 			parent = parent->parent;
 	}
 
-	w->name     = (STRPTR) w + sz + cbs + extra;   /* id for CSS */
-	w->tagName  = widgetNames[type];               /* tag name for CSS */
-	w->type     = type;
-	w->parent   = parent;
-	w->attrs    = WidgetClass;
-	w->setValue = SIT_SetWidgetValue;
-	w->enabled  = True;
-	w->visible  = type != SIT_DIALOG;
-	w->cbSlot   = cbs;
-	w->slots    = (APTR) w + sz;
+	w->name      = (STRPTR) w + sz + cbs + extra;   /* id for CSS */
+	w->tagName   = widgetNames[type];               /* tag name for CSS */
+	w->type      = type;
+	w->parent    = parent;
+	w->attrs     = WidgetClass;
+	w->setValue  = SIT_SetWidgetValue;
+	w->enabled   = True;
+	w->ptrEvents = True;
+	w->visible   = type != SIT_DIALOG;
+	w->cbSlot    = cbs;
+	w->slots     = (APTR) w + sz;
 
 	memset(w->layout.crc32, 0xff, sizeof w->layout.crc32);
 	strcpy(w->name, name);

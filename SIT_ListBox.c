@@ -180,7 +180,7 @@ static int SIT_ListMeasure(SIT_Widget w, APTR cd, APTR ud)
 			}
 		}
 		int maxRow = list->maxRowVisible;
-		if (maxRow <= 0) maxRow = 0;
+		if (maxRow <= 0) maxRow = -1;
 		/* compute row height */
 		for (cell = STARTCELL(list), i = list->rowCount; i > 0; i --)
 		{
@@ -1491,8 +1491,8 @@ static void SIT_ListSetColumns(SIT_ListBox list)
 static Cell SIT_ListGetNth(SIT_ListBox list, int nth)
 {
 	int col = nth >> 24; nth &= 0xffffff;
-	if (col >= list->columnCount)
-		col = list->columnCount-1;
+	if (col < 0 || col >= list->columnCount)
+		return NULL;
 	nth *= list->columnCount;
 	if (nth < 0) nth = 0;
 	if (nth >= list->cells.count) nth = list->cells.count - 1;

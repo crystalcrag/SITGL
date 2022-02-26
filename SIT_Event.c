@@ -650,7 +650,7 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 	for (c = TAIL(hover->children); c; )
 	{
 		RectF rect;
-		if (! c->visible) { PREV(c); continue; }
+		if (! c->visible || ! c->ptrEvents) { PREV(c); continue; }
 
 		memcpy(&rect, &c->box, sizeof rect);
 		rect.width  -= rect.left;

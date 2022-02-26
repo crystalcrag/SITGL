@@ -236,7 +236,7 @@ struct SIT_Widget_t
 	uint8_t      state;                /* bit field STATE_* */
 	uint8_t      oldState;             /* before changing state, transfer value here */
 	uint8_t      cbSlot;
-	uint8_t      resizePolicy;         /* public */
+	uint8_t      ptrEvents;            /* public */
 	uint8_t      composited;           /* public */
 	int          flags;                /* SITF_* bitfield */
 	int          tabOrder;             /* public: visibility flags for tab control */

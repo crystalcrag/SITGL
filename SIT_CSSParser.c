@@ -774,14 +774,19 @@ Bool cssParseGradient(STRPTR fmt, STRPTR * pend, Gradient * bg)
 
 		bg->radial.ry = 0xff;
 		bg->radial.rx = 3 | (shape<<2) | (dist << 4);
+		bg->radial.cy = bg->radial.cx = cssFromUnit(Percentage, 50);
 
 		if (strncasecmp(fmt, "at", 2) == 0)
 		{
-			fmt += 2; sep = 1;
-			if (! cssParsePos(&fmt, &bg->radial.cx, True)) return False;
-			if (! cssParsePos(&fmt, &bg->radial.cy, True)) bg->radial.cy = bg->radial.cx;
+			fmt = skipspace(fmt+2); sep = 1;
+			if (strncasecmp(fmt, "center", 6))
+			{
+				if (! cssParsePos(&fmt, &bg->radial.cx, True)) return False;
+				if (! cssParsePos(&fmt, &bg->radial.cy, True)) bg->radial.cy = bg->radial.cx;
+			}
+			else fmt += 6;
+			fmt = skipspace(fmt);
 		}
-		else bg->radial.cx = bg->radial.cy = cssFromUnit(Percentage, 50);
 		if (! sep) goto skipcheck;
 	}
 	/* parse angle or direction */

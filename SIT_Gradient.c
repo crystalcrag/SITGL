@@ -268,7 +268,7 @@ void gradientGetCenter(Gradient * grad, int info[4], int width, int height, REAL
 	info[3] = ry;
 }
 
-/* quick'n'dirty radial rasterization function: draw a bunch of circles using midpoint elliptical algorithm */
+/* quick'n'dirty radial rasterization function: draw a bunch of circles/ellipses using midpoint elliptical algorithm */
 Bool gradientDrawRadial(CSSImage img, Gradient * grad, REAL ratio)
 {
 	ColorStop colors, c;
@@ -332,15 +332,16 @@ Bool gradientDrawRadial(CSSImage img, Gradient * grad, REAL ratio)
 	/* this is the rasterization part: not the most optimized version, but at least it works... */
 	for (i = 1; i <= rx; i ++)
 	{
-		DATA8 d, d2;
-		int   ryi = i * ry / rx;
-		int   rxSq = i * i;
-		int   rySq = ryi * ryi;
-		int   x = 0, y = ryi;
-		int   px = 0, py = 2 * rxSq * y, p;
-		int   top = yc - y;
-		int   bottom = yc + y;
-		int   out = 0;
+		/* py will overflow 32bit signed int if i >= 1024 */
+		DATA8   d, d2;
+		int     ryi = i * ry / rx;
+		int64_t rxSq = i * i;
+		int64_t rySq = ryi * ryi;
+		int     x = 0, y = ryi;
+		int64_t px = 0, py = 2 * rxSq * y, p;
+		int     top = yc - y;
+		int     bottom = yc + y;
+		int     out = 0;
 
 		if (i == 1 || ISDDAEND(r))
 		{
@@ -368,7 +369,7 @@ Bool gradientDrawRadial(CSSImage img, Gradient * grad, REAL ratio)
 		d2 = &img->bitmap[stride * bottom] + xc * 4;
 		d  = s + xc * 4;
 		e  = s + stride;
-		p  = rySq - (rxSq * ryi) + (rxSq/4);
+		p  = rySq - ((int64_t)rxSq * ryi) + (rxSq/4);
 		out = 0;
 		if (top < 0 || top >= h) out = 1;
 		if (bottom < 0 || bottom >= h) out |= 2;
@@ -416,7 +417,7 @@ Bool gradientDrawRadial(CSSImage img, Gradient * grad, REAL ratio)
 			}
 		}
 		/* this line can overflow very quickly with 32bit integer... */
-		p = rySq*(x+0.5)*(x+0.5) + rxSq*(y-1.0)*(y-1) - (double) rxSq*rySq;
+		p = rySq*(x+0.5)*(x+0.5) + rxSq*(y-1.0)*(y-1) - (int64_t) rxSq*rySq;
 		/* draw ellipse from 45 to 0deg (trigo) */
 		while (y > 0)
 		{
@@ -479,6 +480,7 @@ Bool gradientDrawRadial(CSSImage img, Gradient * grad, REAL ratio)
 	}
 
 	if (ry > 1023) free(scany);
+
 	return True;
 
 	#undef cx
@@ -519,15 +521,10 @@ void gradientGetParam(CSSImage img, Gradient * grad)
 
 	img->angle = 0;
 	img->stretch = 0;
-	memset(grad->rect, 0, sizeof grad->rect);
-	if (grad->flags & GRADIENT_RADIAL)
+	if ((grad->flags & GRADIENT_RADIAL) == 0)
 	{
-		/* radial gradient (overwriting old radial param, but at this point, they are not needed anymore) */
-		grad->rect[2] = w;
-		grad->rect[3] = h;
-	}
-	else /* linear gradient */
-	{
+		memset(grad->rect, 0, sizeof grad->rect);
+
 		/* not mentioned anywhere, but that's what browser seems to do. seems more eye-appealing too... */
 		if ((ang & (~ang + 1)) != ang)
 		{
