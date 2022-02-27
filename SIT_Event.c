@@ -529,8 +529,9 @@ DLLIMP int SIT_ProcessClick(float x, float y, int button, int pressed)
 		{
 			SIT_OnMouse msg = {.button = button};
 			msg.state = pressed ? SITOM_ButtonPressed : SITOM_ButtonReleased;
-			msg.x     = x - target->offsetX - target->layout.pos.left;
-			msg.y     = y - target->offsetY - target->layout.pos.top;
+			/* mouse coord relative to padding box */
+			msg.x     = x - target->offsetX - target->box.left - target->layout.border.left;
+			msg.y     = y - target->offsetY - target->box.top  - target->layout.border.top;
 			msg.flags = sit.keyQual;
 			handled = SIT_ApplyCallback(target, &msg, SITE_OnClick);
 			if (handled > 1 && pressed)
@@ -617,8 +618,8 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 		{
 			SIT_OnMouse msg = {.state = SITOM_CaptureMove};
 			msg.flags = sit.keyQual;
-			msg.x     = x - evt->offsetX - evt->layout.pos.left;
-			msg.y     = y - evt->offsetY - evt->layout.pos.top;
+			msg.x     = x - evt->offsetX - evt->box.left - evt->layout.border.left;
+			msg.y     = y - evt->offsetY - evt->box.top  - evt->layout.border.top;
 			SIT_ApplyCallback(evt, &msg, SITE_OnMouseMove);
 		}
 	}
@@ -761,8 +762,8 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 		{
 			SIT_OnMouse msg = {.state = SITOM_Move};
 			msg.flags = sit.keyQual;
-			msg.x     = sit.mouseX - hover->offsetX - hover->layout.pos.left;
-			msg.y     = sit.mouseY - hover->offsetY - hover->layout.pos.top;
+			msg.x     = sit.mouseX - hover->offsetX - hover->box.left - hover->layout.border.left;
+			msg.y     = sit.mouseY - hover->offsetY - hover->box.top  - hover->layout.border.top;
 			if (SIT_ApplyCallback(hover, &msg, SITE_OnMouseMove) == 0)
 				hover = SIT_EventBubble(hover->parent, SITE_OnMouseMove);
 			else
@@ -775,8 +776,8 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 		hover = sit.root;
 		SIT_OnMouse msg = {.state = SITOM_Move};
 		msg.flags = sit.keyQual;
-		msg.x     = x - hover->offsetX - hover->layout.pos.left;
-		msg.y     = y - hover->offsetY - hover->layout.pos.top;
+		msg.x     = x - hover->offsetX - hover->box.left - hover->layout.border.left;
+		msg.y     = y - hover->offsetY - hover->box.top  - hover->layout.border.top;
 		SIT_ApplyCallback(hover, &msg, SITE_OnMouseMove);
 	}
 }

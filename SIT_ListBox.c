@@ -1011,8 +1011,8 @@ static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 	case SITOM_ButtonPressed:
 		if (msg->button != 0)
 			return 0;
-		x = msg->x;
-		y = msg->y;
+		x = msg->x - w->layout.padding.left;
+		y = msg->y - w->layout.padding.top;
 
 		if ((list->lbFlags & SITV_NoHeaders) == 0 && (list->lbFlags & SITV_DoSort) && list->viewMode == SITV_ListViewReport && y < list->hdrHeight)
 		{
@@ -1174,7 +1174,7 @@ static void SIT_ListFreeCells(SIT_ListBox list, Cell start, int count)
 		if (cb && cell->userData)
 			cb(&list->super, NULL, cell->userData);
 
-		if (cell->flags & CELL_ISCONTROL)
+		if ((cell->flags & CELL_ISCONTROL) && cell->obj)
 		{
 			SIT_Widget td = cell->obj;
 			do {

@@ -146,6 +146,7 @@ static int SIT_ComboFinalize(SIT_Widget w, APTR cd, APTR ud)
 
 	if (cb->rowTags) free(cb->rowTags);
 	if (cb->values)  free(cb->values);
+	if (cb->popup && ! ud) SIT_RemoveWidget(cb->popup); /* it is marked as SITF_TopLevel */
 	w->title = NULL;
 
 	return 0;

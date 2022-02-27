@@ -1721,6 +1721,7 @@ DLLIMP Lang LangParse(STRPTR path)
 					/* store message len */
 					msgstr[-3] = diff & 0xff;
 					msgstr[-4] = diff >> 8;
+					msgstr[-5] = 0;
 					if (count == 0 || count == MAXSTRS-1)
 					{
 						STRPTR * table = alloca(sizeof *table * MAXSTRS);
@@ -1862,6 +1863,22 @@ static STRPTR LangExtractStr(STRPTR old, STRPTR buffer)
 	return quote;
 }
 
+static void LangToggleCase(STRPTR trans, Bool lower)
+{
+	wchar_t buffer[5];
+	STRPTR next = NthChar(trans, 1);
+
+	int src = next - trans;
+	int len = MultiByteToWideChar(CP_UTF8, 0, trans, src, buffer, DIM(buffer));
+	if (lower) CharLowerBuffW(buffer, len);
+	else       CharUpperBuffW(buffer, len);
+
+	/* save content of old string before */
+	memcpy(trans - 5 - src, trans, src);
+	trans[-5] = src;
+	WideCharToMultiByte(CP_UTF8, 0, buffer, len, trans, src, NULL, NULL);
+}
+
 static DATA8 LangSearch(Lang lang, STRPTR msg, int length)
 {
 	uint32_t crc = crc32(0, (DATA8) msg, length);
@@ -1883,7 +1900,14 @@ static DATA8 LangSearch(Lang lang, STRPTR msg, int length)
 	}
 
 	DATA8 str = (DATA8) langStr->message;
-	return str + (str[-1] | (str[-2] << 8));
+	str += str[-1] | (str[-2] << 8);
+	if (str[-5])
+	{
+		/* case was toggled before: restore message */
+		memmove(str, str - 5 - str[-5], str[-5]);
+		str[-5] = 0;
+	}
+	return str;
 }
 
 DLLIMP STRPTR LangStr(STRPTR msg)
@@ -1899,19 +1923,40 @@ DLLIMP STRPTR LangStr(STRPTR msg)
 		/* try some variation */
 		DATA8 eof = msg + length - 1;
 
-		/* having period/colon at end: try to see if a translation without ending punctuation exists */
-		for (length = 0; eof > (DATA8) msg && (isspace(*eof) || *eof == '.' || *eof == ':'); eof --, length ++);
+		/* having period/colon at the end: try to see if a translation without ending punctuation exists */
+		for (length = 0; eof > (DATA8) msg && (isspace(*eof) || *eof == '.' || *eof == ':' || *eof == ' '); eof --, length ++);
 		if (eof[1] && length < 8)
 		{
 			eof ++;
 			trans = LangSearch(sit.curLang, msg, eof - (DATA8) msg);
+		}
+		else eof ++;
 
-			if (trans)
+		if (trans == NULL)
+		{
+			/* check if we can switch case of first letter (ASCII only though) */
+			uint8_t chr = msg[0];
+			if (('a' <= chr && chr <= 'z') ||
+				('A' <= chr && chr <= 'Z'))
 			{
-				/* yes, re-build the message with the correct punctuation */
-				strcpy(trans + (trans[-3] | (trans[-4] << 8)), eof);
-				return trans;
+				/* <msg> is likely a constant string, can't modify them */
+				int len = eof - (DATA8) msg;
+				STRPTR dup = memcpy(alloca(len), msg, len);
+				dup[0] ^= 32;
+				trans = LangSearch(sit.curLang, dup, len);
+				if (trans == NULL)
+					return msg;
+
+				/* change case of first letter */
+				LangToggleCase(trans, dup[0] < 0x60);
 			}
+		}
+
+		if (trans)
+		{
+			/* yes, re-build the message with the correct punctuation */
+			strcpy(trans + (trans[-3] | (trans[-4] << 8)), eof);
+			return trans;
 		}
 		return msg;
 	}
@@ -1919,7 +1964,7 @@ DLLIMP STRPTR LangStr(STRPTR msg)
 	return trans;
 }
 
-// XXX Hmm could be improved
+/* XXX Hmm could be improved */
 DLLIMP STRPTR LangStrPlural(int nb, STRPTR sing, STRPTR plur)
 {
 	if (nb == 1) return LangStr(sing);

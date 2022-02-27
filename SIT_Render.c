@@ -1750,7 +1750,7 @@ int SIT_FrameRender(SIT_Widget w, APTR cd, APTR ud)
 	box.top    = w->box.top;
 	box.width  = w->box.right  - w->padding[2] - box.left;
 	box.height = w->box.bottom - w->padding[3] - box.top;
-	box.left   = roundf(box.left + w->offsetX - w->layout.padding.left + w->padding[0] * 0.25f);
+	box.left   = roundf(box.left + w->offsetX - w->layout.padding.left);
 	box.top   += w->offsetY - w->layout.padding.top;
 
 	renderWords(w, &box, 0);
@@ -1764,7 +1764,7 @@ int SIT_FrameRender(SIT_Widget w, APTR cd, APTR ud)
 			if (w->layout.wordwrap.count > 0)
 			{
 				WordWrap word = vector_first(w->layout.wordwrap);
-				offX = fabsf(word->marginL);
+				offX = roundf(fabsf(word->marginL) - w->padding[0] * 0.25f);
 			}
 			else offX = w->layout.wordSpacing;
 		}
@@ -1777,20 +1777,27 @@ int SIT_FrameRender(SIT_Widget w, APTR cd, APTR ud)
 		box.top   += w->offsetY;
 
 		/* would be nice to have a way to invert scissor, but we need to intersect with current clipping rect anyway */
-		nvgSave(sit.nvgCtx);
-		nvgIntersectScissor(sit.nvgCtx, w->box.left + w->offsetX, w->box.top + w->offsetY, frame->padLeft + offX, w->box.bottom);
+		NVGCTX vg = sit.nvgCtx;
+		nvgSave(vg);
+		/* left part */
+		nvgIntersectScissor(vg, w->box.left + w->offsetX, w->box.top + w->offsetY, frame->padLeft + offX, w->box.bottom);
 		renderBorder(w, &box, 1+4+8);
-		nvgRestore(sit.nvgCtx);
+		nvgRestore(vg);
 
-		nvgSave(sit.nvgCtx);
-		nvgIntersectScissor(sit.nvgCtx, w->box.left + frame->padLeft + w->offsetX, box.top, frame->title.width, w->box.bottom);
-		renderBorder(w, &box, 4);
-		nvgRestore(sit.nvgCtx);
+		if (w->layout.border.bottom > 0)
+		{
+			/* bottom part */
+			nvgSave(vg);
+			nvgIntersectScissor(vg, w->box.left + w->offsetX + frame->padLeft + offX, box.top, frame->title.width, w->box.bottom);
+			renderBorder(w, &box, 4);
+			nvgRestore(vg);
+		}
 
-		nvgSave(sit.nvgCtx);
-		nvgIntersectScissor(sit.nvgCtx, w->box.left + frame->padLeft + frame->title.width + w->offsetX + offX, w->box.top + w->offsetY, box.width, w->box.bottom);
+		/* right part */
+		nvgSave(vg);
+		nvgIntersectScissor(vg, w->box.left + frame->padLeft + frame->title.width + w->offsetX + offX, w->box.top + w->offsetY, box.width, w->box.bottom);
 		renderBorder(w, &box, 1+2+4);
-		nvgRestore(sit.nvgCtx);
+		nvgRestore(vg);
 	}
 	return 1;
 }
@@ -1825,9 +1832,6 @@ static void renderNode(SIT_Widget node)
 		nvgFillColor(sit.nvgCtx, nvgRGBA(0, 0, 0, 128));
 		nvgFill(sit.nvgCtx);
 	}
-
-//	if (renderInitClip(render->type == DNT_TAG ? node->offset : node, &box))
-//		a->cliprect(box.left, box.top, box.width, box.height), off = node;
 
 	renderInitBox(node, &box, True, 15);
 	nvgGlobalAlpha(sit.nvgCtx, node->style.opacity);

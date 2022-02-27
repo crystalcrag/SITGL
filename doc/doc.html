@@ -102,6 +102,10 @@
   <a class="sub3" href="#listkbd">Keyboard shortcuts</a>
 
  <a class="sub2" href="#SIT_CANVAS">SIT_CANVAS</a>
+  <a class="sub3" href="#SITE_OnMouse">Handling mouse events</a>
+  <a class="sub3" href="#SITE_OnRawKey">Handling keyboard</a>
+  <a class="sub3" href="#SITE_OnPaint">Handling custom drawing</a>
+  <a class="sub3" href="#SIT_RenderNode">Rendering custom elements</a>
  <a class="sub2" href="#SIT_SCROLLBAR">SIT_SCROLLBAR</a>
  <a class="sub2" href="#SIT_SLIDER">SIT_SLIDER</a>
  <a class="sub2" href="#SIT_PROGRESS">SIT_PROGRESS</a>
@@ -3644,8 +3648,8 @@ when talking about <a href="#geometry">geometry management</a>. There are a few 
   give you room to populate them with controls, while controls are created visible.
 
   <li><tt class="dt">SIT_NextCtrl</tt> (<tt class="t">STRPTR</tt>) <span class="ro">write-only</span>
-  <p>This property specifies in which order, controls will be scanned using
-  the tab key. You can use the following values for this property (case insensitive):
+  <p>This property specifies in which order, controls will be scanned using the tab key. You can use
+  the following values for this property (case insensitive):
   <ul>
 	<li><tt>NONE</tt>: <b>this control</b> will never receive the focus using the tab key.
 	<li><tt>FIRST</tt>: <b>this control</b> be set as the first in the list.
@@ -3655,6 +3659,14 @@ when talking about <a href="#geometry">geometry management</a>. There are a few 
   </ul>
   <p>Obviously you shouldn't use these pre-defined names as your control's name if you want to reorder
   the focus ring.
+
+  <li><tt class="dt">SIT_PtrEvents</tt> (<tt class="t">Bool</tt>)
+  <p>This property is useful if you want to place a control on top of everything, just to add some costmetic
+  effects, like a shadow or a gradient. Since the control will be on top of everything, all the mouse
+  events will be grabbed by the control, leaving nothing for the elements behind. Setting this property
+  to <tt>False</tt> will make sure this <b>control is ignored when processing mouse event</b>. It is
+  somewhat similar to the CSS property <tt>pointer-events</tt>. The default value for this property
+  is <tt>True</tt> (and it cannot be set using CSS properties).
 
   <li><tt class="dt">SIT_Parent</tt> (<tt>SIT_Widget</tt>) <span class="ro">read-only</span>
   <p>This property is read-only. It can retrieve the <b>parent of the widget</b>. Will be NULL for a
@@ -3672,7 +3684,7 @@ when talking about <a href="#geometry">geometry management</a>. There are a few 
   <p>Set the <b>inline CSS styles</b> of the widget. This property is <b>write-only</b>. You can specify
   any number of css property you want, but syntax must remain valid. This property uses the same error
   recovery than when parsing a complete stylesheet.
-  
+
   <li><tt class="dt">SIT_BuddyLabel</tt> (<tt class="t">STRPTR</tt>, <tt>SIT_Widget *</tt>) <span class="ro">create-only</span>
   <p>This property will allow you to <b>create a label to the left of a given control</b>. It is extremely
   common to have a label next to an editbox or combobox, although this property can be applied to any
@@ -5784,7 +5796,7 @@ we will restart loading icons only for those that has their <tt>iconLoaded</tt> 
 repainting. Even though it sounds easy, you'll quickly find out that it involves a lot of work to
 handle all use cases.
 
-<h4>Handling mouse events</h4>
+<h4 id="SITE_OnMouse">Handling mouse events</h4>
 
 <p>Mouse events include mouse click/release (which include mouse wheel) and mouse movements. Mouse clicks
 are reported using <tt>SITE_OnClick</tt> notification, which include any button pressed or released,
@@ -5792,7 +5804,9 @@ mouse movement are notified by <tt>SITE_OnMouseMove</tt>. It not that unusual to
 for both events, especially since they use the same datatype for the <tt>call_data</tt> parameter: a
 pointer to a <tt>SIT_OnMouse_t</tt> structure. It is declared this way:
 
-<pre><type>struct</type> SIT_OnMouse_t     <com>/* note: sizeof (struct SIT_OnMouse_t) must be 8 */</com>
+<pre><type>typedef struct</type> SIT_OnMouse_t         SIT_OnMouse;
+
+<type>struct</type> SIT_OnMouse_t     <com>/* note: sizeof (struct SIT_OnMouse_t) must be 8 */</com>
 {
 	<type>enum</type>                 <com>/* to get debug symbols, while limiting the size of this field to 8bit */</com>
 	{
@@ -5810,12 +5824,16 @@ pointer to a <tt>SIT_OnMouse_t</tt> structure. It is declared this way:
 		SITOM_CaptureMove
 	}	state:<val>8</val>;
 	<type>unsigned</type> flags:<val>16</val>;  <com>/* SITK_Flag* : qualifier keys held before mouse event */</com>
-	<type>int16_t</type>  x, y;      <com>/* relative to top left corner of control */</com>
-};</pre>
+	<type>int16_t</type>  x, y;      <com>/* relative to top left corner of control (padding box) */</com>
+};
+</pre>
+
+<p><span class="n">Note</span>: the padding box is the box starting just at the edge of the border of
+the element (or at the edge of the element if it doesn't have a border).
 
 <p><tt>button</tt>, <tt>x</tt> and <tt>y</tt> are pretty straightforward, <tt>flags</tt> is a bitfield
-to know which qualifiers were held while generating the mouse event, and <tt>state</tt> can take the
-following values:
+to know which qualifiers were held while generating the mouse event (<tt>SITK_Flag*</tt>), and <tt>state</tt>
+can take the following values:
 
 <ul>
   <li><tt>SITOM_ButtonPressed</tt>: the button is being pressed.
@@ -5836,7 +5854,7 @@ you need to start a captured move, even if you don't care about mouse move event
 the user initiates a click, there will be no guarantee than the release notification will happen over
 your control.
 
-<h4>Handling keyboard</h4>
+<h4 id="SITE_OnRawKey">Handling keyboard</h4>
 
 <p>Keyboard events are reported through <tt>SITE_OnVanillaKey</tt> and <tt>SITE_OnRawKey</tt> notifications.
 <tt>call_data</tt> will point to a <tt>SIT_OnKey</tt> structure. Its definition is:
@@ -5864,7 +5882,61 @@ push buttons. Take note that this does not include menu accelerators that are pr
 before the event is being dispatched.
 
 
-<h4>Rendering custom elements</h4>
+<h4 id="SITE_OnPaint">Handling custom drawing</h4>
+
+<p>By registering a <tt>SITE_OnPaint</tt> event on a widget (it works on any widget actually, not just
+<tt>SIT_CANVAS</tt>), you'll be given a chance to issue your own draw instructions. By the time the
+callback will be triggered, you'll be at the end of the refresh cycle of the element: background, 
+border, outline, text, shadows, ... will be already rendered by this point.
+
+<p>The <tt>call_data</tt> for this type of callbacks will be the following structure:
+
+<pre><type>typedef struct</type> SIT_OnPaint_t       SIT_OnPaint;
+
+<type>struct</type> SIT_OnPaint_t
+{
+	<type>float</type>  x, y;         <com>/* recommended area to refresh (padding box) */</com>
+	<type>float</type>  w, h;
+	<type>float</type>  fontSize;
+	<type>int</type>    fontId;
+	<type>APTR</type>   nvg;          <com>/* nanovg context */</com>
+	<type>int</type>    shadowCount;
+	SITTSH shadow;
+};</pre>
+
+<p><tt>x</tt>, <tt>y</tt>, <tt>w</tt> and <tt>h</tt> will be the position and size of the <b>padding box</b>
+of the element (the area just inside the border). Keep in mind that the area of the element will not
+be clipped, but can be by some parent elements (like <tt>SIT_LISTBOX</tt>). It is recommended to use
+the function <tt>nvgIntersectScissor()</tt> instead of <tt>nvgScissor()</tt> if you want to add a clipping
+box (note: the graphics state <b>will be saved before</b> and restored after your callback).
+
+<p>The graphics state will also be <b>configured with the CSS properties</b> of <tt>text-color</tt>, <tt>font-size</tt>,
+<tt>font-family</tt> and <tt>letter-spacing</tt>. In case you need these later, remember you can still
+use the <tt>SIT_GetCSSValue()</tt> function.
+
+<p><tt>nvg</tt> is the <tt>nanovg</tt> <b>context you need to use</b> to issue drawing commands. No need to
+call <tt>nvgBeginFrame()</tt> and <tt>nvgEndFrame()</tt>, but it doesn't hurt either: they will be ignored
+actually.
+
+<p><tt>fontSize</tt> and <tt>fontId</tt> will contain the <b>font that is currently set</b> on the <tt>nanovg</tt>
+context (<tt>nanovg</tt> doesn't have a lot of facility to get information back from its context sadly).
+
+<p><tt>shadow</tt> and <tt>shadowCount</tt> are a direct dump of the <tt>text-shadow</tt> values that
+is used by <tt>SITGL</tt>. <tt>SITTSH</tt> is a structure defined this way:
+
+<pre><type>typedef struct</type> SIT_TextShadow_t *    SITTSH;
+
+<type>struct</type> SIT_TextShadow_t
+{
+	<type>float</type>   dx, dy, blur;
+	<type>uint8_t</type> color[<val>4</val>];
+};</pre>
+
+<p><tt>shadow</tt> is therefore an array of <tt>shadowCount</tt> elements. If you want to implement
+your own custom text rendering, you'll need this information at some point. Keep in mind that rendering
+text the proper way (layer per layer) can be a lot of work, especially if your text can have mixed styles.
+
+<h4 id="SIT_RenderNode">Rendering custom elements</h4>
 
 <p>If you want to leverage some of the rendering capabilities of SITGL, when it comes to CSS styling,
 you can create hidden elements (<tt>SIT_Visible</tt> set to <tt class="o">False</tt>), then set
@@ -7647,7 +7719,7 @@ snprintf(buffer, <kwd>sizeof</kwd> buffer, LANG(appName), APPNAME, APPVERSION);
 
 <p>When translating messages, you'll find out that quite often <b>some messages will be the same</b>, saves
 some punctuations. It would be rather tedious to have to provide a specific translation for these, or
-worse have to programmatically add the punctuation to reduce the amount of duplication.
+worse, have to add the punctuation programmatically to reduce the amount of duplication.
 
 <p>This module has some facilities to ease the pain: if a string is extracted, any <b>leading</b> spaces,
 colon or period, will be removed before being added to the <tt>.po</tt> file. That way, there will be
@@ -7657,10 +7729,35 @@ only one version of the message to translate.
 as is. If nothing is found, it will removed the same characters from the end and look for the resulting
 translation. If something is found, what was removed will be added back to the translation.
 
+<p>Another extremely common variation is the case of the first letter of the message. String comparison
+is done <b>case sensitively</b> when being checked if they already are in the translation file, except
+for the first letter.
+
 <p><b>It has a small limitation though</b>: no new memory will be allocated for this, the message will
 be modified in place. This works as long as you are not trying to get the same message with 2 different
 punctuations <b>in the same function call</b>. In practice, this case is very rare. If it happens, you'll
 have to build one of the string manually. Still, better than doing it every single time.
+
+<p>Here are some examples:. Let's suppose you have this translation file:
+<pre><kwd>msgid</kwd> <val>"edit"</val>
+<kwd>msgstr</kwd> <val>"éditer"</val>
+</pre>
+<p>Here the result you'll get by translating some variations of the original message:
+<pre>
+LangStr(<val>"edit"</val>);       <com>/* will return "éditer" */</com>
+LangStr(<val>"edit..."</val>);    <com>/* will return "éditer..." */</com>
+LangStr(<val>"Edit"</val>);       <com>/* will return "Éditer" */</com>
+LangStr(<val>"Edit :"</val>);     <com>/* will return "Éditer :" */</com>
+
+<com>/* <err> do not do this though </err> */</com>
+fprintf(stderr, <val>"msgs = <spe>%s</spe>, <spe%s\n</spe>"</val>, LangStr(<val>"edit..."</val>), LangStr(<val>"edit :"</val>));
+<com>/*
+ * the strings are kept in the same static buffer, trying to retrieve 2 different messages in the same
+ * sequence of instructions, will lead to undefined behavior (you will get twice the same message, but
+ * which one will be difficult to predict: <err> DO NOT RELY ON THIS </err>).
+ */</com>
+
+</pre>
 
 <h2 class="annex" id="annexA"><span>UtilityLib API</span></h2>
 

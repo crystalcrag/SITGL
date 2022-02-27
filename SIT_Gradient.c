@@ -86,7 +86,7 @@ Bool gradientDrawLinear(CSSImage img, Gradient * grad, REAL ratio)
 	hyp    = img->width;
 
 	#ifdef SINE_CURVES
-	static uint8_t sinLUT[255];
+	static uint8_t sinLUT[256];
 	if (sinLUT[255] == 0)
 	{
 		for (i = 0; i < 256; i ++)

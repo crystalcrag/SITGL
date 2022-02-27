@@ -63,16 +63,16 @@ struct FSStat_t
 static int FSProcessMenu(SIT_Widget w, APTR cd, APTR ud);
 static int FSSaveAs(SIT_Widget w, APTR cd, APTR ud);
 
-static SIT_Accel accels[] = {
+static SIT_Accel FSAccels[] = {
 	#ifdef FSVIEW_HASCOPY
-	{SITK_FlagCapture + SITK_FlagCtrl + 'C', SITE_OnActivate, NULL, FSProcessMenu},
-	{SITK_FlagCapture + SITK_FlagCtrl + 'X', SITE_OnActivate, NULL, FSProcessMenu},
-	{SITK_FlagCapture + SITK_FlagCtrl + 'V', SITE_OnActivate, NULL, FSProcessMenu},
+	{SITK_FlagCapture + SITK_FlagCtrl + 'C', SITE_OnActivate, 0, NULL, FSProcessMenu},
+	{SITK_FlagCapture + SITK_FlagCtrl + 'X', SITE_OnActivate, 0, NULL, FSProcessMenu},
+	{SITK_FlagCapture + SITK_FlagCtrl + 'V', SITE_OnActivate, 0, NULL, FSProcessMenu},
 	#endif
-	{SITK_FlagCapture + SITK_FlagCtrl + 'F', SITE_OnActivate, NULL, FSProcessMenu},
-	{SITK_F2,        SITE_OnActivate, "rename"},
-	{SITK_BackSpace, SITE_OnActivate, "parent"},
-	{SITK_Delete,    SITE_OnActivate, "ko"},
+	{SITK_FlagCapture + SITK_FlagCtrl + 'F', SITE_OnActivate, 0, NULL, FSProcessMenu},
+	{SITK_F2,        SITE_OnActivate, 0, "rename"},
+	{SITK_BackSpace, SITE_OnActivate, 0, "parent"},
+	{SITK_Delete,    SITE_OnActivate, 0, "ko"},
 	{SITK_FlagCapture + SITK_Escape, SITE_OnClose},
 	{0}
 };
@@ -245,7 +245,7 @@ static void FSYesNo(FSView view, STRPTR msg, SIT_CallProc cb, Bool yesNo)
 {
 	SIT_Widget ask = SIT_CreateWidget("ask.bg", SIT_DIALOG, view->list,
 		SIT_DialogStyles, SITV_Plain | SITV_Modal | SITV_Movable,
-		SIT_AccelTable,   EOT(accels) - 2,
+		SIT_AccelTable,   EOT(FSAccels) - 2,
 		SIT_Style,        "padding: 1em",
 		NULL
 	);
@@ -540,7 +540,7 @@ static void FSAsk(FSView view, FSStat stat, ...)
 
 	SIT_Widget diag = SIT_CreateWidget("ask.bg", SIT_DIALOG + SIT_EXTRA(sizeof *stat), view->list,
 		SIT_DialogStyles, SITV_Plain | SITV_Modal | SITV_Movable,
-		SIT_AccelTable,   EOT(accels) - 2,
+		SIT_AccelTable,   EOT(FSAccels) - 2,
 		SIT_Style,        "padding: 1em",
 		NULL
 	);
@@ -826,7 +826,7 @@ static int FSRenameItem(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_Widget ask = SIT_CreateWidget("ask.bg", SIT_DIALOG, w,
 		SIT_DialogStyles, SITV_Plain | SITV_Modal | SITV_Movable,
-		SIT_AccelTable,   EOT(accels) - 2,
+		SIT_AccelTable,   EOT(FSAccels) - 2,
 		NULL
 	);
 
@@ -1013,7 +1013,7 @@ static int FSDeleteItem(SIT_Widget w, APTR cd, APTR ud)
 			if (nbDir > 0) row = StrCat(warn, sizeof warn, row, " and ");
 			TEXT msg[32];
 			TEXT sizebuf[10];
-			FormatNumber((size + 1023) >> 10, sizebuf, sizeof sizebuf);
+			FormatNumber(sizebuf, sizeof sizebuf, "%d", (size + 1023) >> 10);
 			sprintf(msg, "%d %s (%s Kb)", nbFiles, nbFiles > 1 ? "files" : "file", sizebuf);
 			row = StrCat(warn, sizeof warn, row, msg);
 		}
@@ -1076,6 +1076,13 @@ static int FSFinalize(SIT_Widget w, APTR cd, APTR ud)
 	return 1;
 }
 
+static int resizeDialog(SIT_Widget w, APTR cd, APTR ud)
+{
+	float * size = cd;
+	fprintf(stderr, "size = %d, %d\n", (int) size[0], (int) size[1]);
+	return 1;
+}
+
 SIT_Widget FSInit(SIT_Widget app, STRPTR path, int options, SIT_CallProc cb)
 {
 	FSView view;
@@ -1101,7 +1108,7 @@ SIT_Widget FSInit(SIT_Widget app, STRPTR path, int options, SIT_CallProc cb)
 
 	SIT_Widget diag = SIT_CreateWidget("fsview.bg", SIT_DIALOG + SIT_EXTRA(sizeof (struct FSView_t)), app,
 		SIT_DialogStyles, SITV_Plain,
-		SIT_AccelTable,   accels,
+		SIT_AccelTable,   FSAccels,
 		SIT_Right,        SITV_AttachForm, NULL, SITV_Em(2),
 		SIT_Top,          SITV_AttachForm, NULL, SITV_Em(2),
 		SIT_Left,         SITV_AttachForm, NULL, SITV_Em(2),
@@ -1198,6 +1205,8 @@ SIT_Widget FSInit(SIT_Widget app, STRPTR path, int options, SIT_CallProc cb)
 	SIT_AddCallback(view->del,    SITE_OnActivate, FSDeleteItem,  view);
 	SIT_AddCallback(SIT_GetById(diag, "parent"), SITE_OnActivate, FSParentDir, view);
 	SIT_AddCallback(SIT_GetById(diag, "newdir"), SITE_OnActivate, FSRenameItem, view);
+
+	SIT_AddCallback(diag, SITE_OnResize, resizeDialog, NULL);
 
 	SIT_ManageWidget(diag);
 	SIT_SetFocus(view->list);

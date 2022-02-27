@@ -294,8 +294,8 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 		sz = (&sit.scrWidth)[side] * 2;
 
 	/* hasPos: if left/top is set to be relative pos, only check that size fits the control, not position */
-	Bool reduce = SIT_CanReduceContainerSize(root, side) && SIT_CanReduceContainerSize(root, side+2);
-	if (hasPos == 0 && p[2] > margin && reduce)
+//	Bool reduce = SIT_CanReduceContainerSize(root, side) && SIT_CanReduceContainerSize(root, side+2);
+	if (hasPos == 0 && p[2] > margin) // && reduce)
 		ret = 0, *cside += p[2] - margin;
 
 	if (p[2] - p[0] < chldsz /*(&w->optimalBox.width)[side]*/ && percent[1] > percent[0])
@@ -303,7 +303,7 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 		int newsz = *cside + (p[0] + chldsz - p[2]) / (percent[1] - percent[0]);
 		if (newsz > sz)
 			newsz = sz;
-		if (*cside != newsz && reduce)
+		if (*cside != newsz /*&& reduce*/)
 		{
 			#if 0
 			ret = newsz - *cside;

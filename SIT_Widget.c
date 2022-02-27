@@ -369,6 +369,7 @@ static int SIT_FrameMeasure(SIT_Widget w, APTR cd, APTR mode)
 	REAL      fh    = w->style.font.size;
 	SizeF *   pref  = cd;
 	SizeF     min   = *pref;
+	float     size;
 
 	layoutMeasureWords(w, &min);
 	frame->title.width  = roundf(min.width);
@@ -391,14 +392,15 @@ static int SIT_FrameMeasure(SIT_Widget w, APTR cd, APTR mode)
 	/* layout children */
 	if (w->children.lh_Head && SIT_LayoutWidgets(w, (ULONG) mode))
 	{
-		float width = w->box.right  - w->box.left;
-		if (min.width < width) min.width = width;
-		min.height = w->box.bottom - w->box.top;
+		size = w->box.right  - w->box.left;
+		if (min.width < size) min.width = size;
+		size = w->box.bottom - w->box.top;
+		if (min.height < size) min.height = size;
 	}
 
-	frame->title.width += roundf((w->padding[0] + w->padding[1]) * 0.25f);
+	frame->title.width += size = roundf((w->padding[0] + w->padding[1]) * 0.25f);
 
-//	min.width  += w->padding[0] + w->padding[2];
+	min.width  += w->padding[0] + w->padding[2] + size;
 //	min.height += w->padding[1] + w->padding[3];
 
 	if (pref->width  < min.width)  pref->width  = min.width;
@@ -419,9 +421,9 @@ static int SIT_FrameNoBorders(SIT_Widget w, APTR cd, APTR ud)
 	/* padLeft: max of: border-radius, padding, 1em */
 	max = MAX(w->layout.majorRadius.top, w->layout.majorRadius.bottom);
 	if (max < (val = w->padding[0])) max = val;
-	val = w->style.font.size;
+/*	val = w->style.font.size;
 	if (max < val) max = val;
-	frame->padLeft = max;
+*/	frame->padLeft = max;
 
 	return 1;
 }
@@ -1348,11 +1350,15 @@ void SIT_CenterDialog(SIT_Widget w)
 	float curY = w->layout.pos.top  - w->box.top;
 	w->currentBox.width  = w->box.right - w->box.left;
 	w->currentBox.height = w->box.bottom - w->box.top;
-//	fprintf(stderr, "center dialog from %gx%g\n", w->currentBox.width, w->currentBox.height);
 	SIT_LayoutWidget(sit.root, w, 0, FitUsingCurrentBox);
 	SIT_LayoutWidget(sit.root, w, 1, FitUsingCurrentBox);
 	w->layout.pos.left = curX + w->box.left;
 	w->layout.pos.top  = curY + w->box.top;
+	w->currentBox.width  = w->box.right  - w->box.left;
+	w->currentBox.height = w->box.bottom - w->box.top;
+
+	if (memcmp(&w->currentBox, &w->childBox, sizeof w->currentBox))
+		SIT_LayoutWidgets(w, FitUsingCurrentBox);
 }
 
 /* finishes dialog initialization */
