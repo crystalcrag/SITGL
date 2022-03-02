@@ -799,10 +799,16 @@ DLLIMP void FramePauseUnpause(Bool pause)
 	if (! pause)
 	{
 		/* ignore the time between pause */
-		sit.QPCstart += time.QuadPart - sit.QPCpause;
-		sit.QPCpause = 0;
+		if (sit.QPCpause > 0)
+		{
+			sit.QPCstart += time.QuadPart - sit.QPCpause;
+			sit.QPCpause = 0;
+		}
 	}
-	else sit.QPCpause = time.QuadPart;
+	else if (sit.QPCpause == 0)
+	{
+		sit.QPCpause = time.QuadPart;
+	}
 }
 
 DLLIMP void FrameSaveRestoreTime(Bool save)
@@ -820,8 +826,6 @@ DLLIMP void FrameSaveRestoreTime(Bool save)
  * dynamic load opengl functions, only the strict subset we need in this library
  */
 PFNGLBLENDFUNCSEPARATEPROC glad_glBlendFuncSeparate;
-PFNGLGETSHADERINFOLOGPROC glad_glGetShaderInfoLog;
-PFNGLGETPROGRAMINFOLOGPROC glad_glGetProgramInfoLog;
 PFNGLCREATEPROGRAMPROC glad_glCreateProgram;
 PFNGLCREATESHADERPROC glad_glCreateShader;
 PFNGLSHADERSOURCEPROC glad_glShaderSource;
@@ -891,6 +895,11 @@ PFNGLDELETEFRAMEBUFFERSPROC glad_glDeleteFramebuffers;
 PFNGLDELETERENDERBUFFERSPROC glad_glDeleteRenderbuffers;
 PFNGLGETTEXLEVELPARAMETERIVPROC glad_glGetTexLevelParameteriv;
 
+#ifdef DEBUG_SIT
+PFNGLGETSHADERINFOLOGPROC glad_glGetShaderInfoLog;
+PFNGLGETPROGRAMINFOLOGPROC glad_glGetProgramInfoLog;
+#endif
+
 typedef void* (APIENTRYP PFNGLXGETPROCADDRESSPROC_PRIVATE)(const char*);
 PFNGLXGETPROCADDRESSPROC_PRIVATE gladGetProcAddressPtr;
 
@@ -916,8 +925,10 @@ int gladLoadGL(void)
 		STRPTR name;
 		gladGetProcAddressPtr = (void *) GetProcAddress(opengl, "wglGetProcAddress");
 		if ((glad_glBlendFuncSeparate  = load(name = "glBlendFuncSeparate"))
+		 #ifdef DEBUG_SIT
 		 && (glad_glGetShaderInfoLog   = load(name = "glGetShaderInfoLog"))
 		 && (glad_glGetProgramInfoLog  = load(name = "glGetProgramInfoLog"))
+		 #endif
 		 && (glad_glCreateProgram      = load(name = "glCreateProgram"))
 		 && (glad_glCreateShader       = load(name = "glCreateShader"))
 		 && (glad_glShaderSource       = load(name = "glShaderSource"))

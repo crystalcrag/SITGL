@@ -15,62 +15,62 @@
 
 
 	/* common properties for all widgets */
-	TagList WidgetClass[] = {
-		{ SIT_Title,       "title",        CSG, SIT_STR,  OFFSET(SIT_Widget, title) },
-		{ SIT_Style,       "style",        CSG, SIT_PTR,  0},
-		{ SIT_Name,        "name",         __G, SIT_STR,  OFFSET(SIT_Widget, name) },
-		{ SIT_Classes,     "classes",      CSG, SIT_STR,  OFFSET(SIT_Widget, classes) },
-		{ SIT_UserData,    "userData",     _SG, SIT_PTR,  OFFSET(SIT_Widget, userData) },
-		{ SIT_PtrEvents,   "ptrEvents",    _SG, SIT_BOOL, OFFSET(SIT_Widget, ptrEvents) },
-		{ SIT_Enabled,     "enabled",      _SG, SIT_BOOL, OFFSET(SIT_Widget, enabled) },
-		{ SIT_Visible,     "visible",      CSG, SIT_BOOL, OFFSET(SIT_Widget, visible) },
-		{ SIT_NextCtrl,    "nextCtrl",     _SG, SIT_STR,  0},
-		{ SIT_TabNum,      "tabNum",       _SG, SIT_INT,  OFFSET(SIT_Widget, tabOrder) },
-		{ SIT_Y,           "y",            CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.top) },
-		{ SIT_X,           "x",            CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.left) },
-		{ SIT_Rect,        "rect",         CSG, SIT_ABBR, ABBR(1, 1, 1, 1) },
-		{ SIT_Padding,     NULL,           __G, SIT_INT,  0},
-		{ SIT_AbsX,        "absX",         CSG, SIT_UNIT, 0},
-		{ SIT_AbsY,        "absY",         CSG, SIT_UNIT, 0},
-		{ SIT_Parent,      NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, parent) },
-		{ SIT_NextSibling, NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, node.ln_Next) },
-		{ SIT_PrevSibling, NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, node.ln_Prev) },
-		{ SIT_FirstChild,  NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, children.lh_Head) },
-		{ SIT_LastChild,   NULL,           __G, SIT_PTR,  OFFSET(SIT_Widget, children.lh_Tail) },
-		{ SIT_CtrlType,    NULL,           __G, SIT_INT,  OFFSET(SIT_Widget, type) },
-		{ SIT_TagPrivate1, NULL,           C__, SIT_PTR,  0}, /* BuddyCtrl */
-		{ SIT_TagPrivate2, NULL,           C__, SIT_PTR,  OFFSET(SIT_Widget, buddyText) },
-		{ SIT_BuddyLabel,  "buddyLabel",   C__, SIT_ABBR, ABBR(1, 1, 0, 0)},
-		{ SIT_Composited,  "composited",   _SG, SIT_BOOL, OFFSET(SIT_Widget, composited) },
-		{ SIT_NVGcontext,  NULL,           __G, SIT_PTR,  0},
-		{ SIT_ToolTip,     "toolTip",      C__, SIT_STR,  0},
-		{ SIT_ClientRect,  NULL,           __G, SIT_PTR,  0},
-		{ SIT_Height,      "height",       CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.height) },
-		{ SIT_Width,       "width",        CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.width) },
+	struct TagList_t WidgetClass[] = {
+		{ "title",      SIT_Title,       CSG, SIT_STR,  OFFSET(SIT_Widget, title) },
+		{ "style",      SIT_Style,       CSG, SIT_PTR,  0},
+		{ "name",       SIT_Name,        __G, SIT_STR,  OFFSET(SIT_Widget, name) },
+		{ "classes",    SIT_Classes,     CSG, SIT_STR,  OFFSET(SIT_Widget, classes) },
+		{ "userData",   SIT_UserData,    _SG, SIT_PTR,  OFFSET(SIT_Widget, userData) },
+		{ "ptrEvents",  SIT_PtrEvents,   _SG, SIT_BOOL, OFFSET(SIT_Widget, ptrEvents) },
+		{ "enabled",    SIT_Enabled,     _SG, SIT_BOOL, OFFSET(SIT_Widget, enabled) },
+		{ "visible",    SIT_Visible,     CSG, SIT_BOOL, OFFSET(SIT_Widget, visible) },
+		{ "nextCtrl",   SIT_NextCtrl,    _SG, SIT_STR,  0},
+		{ "tabNum",     SIT_TabNum,      _SG, SIT_INT,  OFFSET(SIT_Widget, tabOrder) },
+		{ "y",          SIT_Y,           CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.top) },
+		{ "x",          SIT_X,           CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.left) },
+		{ "rect",       SIT_Rect,        CSG, SIT_ABBR, ABBR(1, 1, 1, 1) },
+		{ NULL,         SIT_Padding,     __G, SIT_INT,  0},
+		{ "absX",       SIT_AbsX,        CSG, SIT_UNIT, 0},
+		{ "absY",       SIT_AbsY,        CSG, SIT_UNIT, 0},
+		{ NULL,         SIT_Parent,      __G, SIT_PTR,  OFFSET(SIT_Widget, parent) },
+		{ NULL,         SIT_NextSibling, __G, SIT_PTR,  OFFSET(SIT_Widget, node.ln_Next) },
+		{ NULL,         SIT_PrevSibling, __G, SIT_PTR,  OFFSET(SIT_Widget, node.ln_Prev) },
+		{ NULL,         SIT_FirstChild,  __G, SIT_PTR,  OFFSET(SIT_Widget, children.lh_Head) },
+		{ NULL,         SIT_LastChild,   __G, SIT_PTR,  OFFSET(SIT_Widget, children.lh_Tail) },
+		{ NULL,         SIT_CtrlType,    __G, SIT_INT,  OFFSET(SIT_Widget, type) },
+		{ NULL,         SIT_TagPrivate1, C__, SIT_PTR,  0}, /* BuddyCtrl */
+		{ NULL,         SIT_TagPrivate2, C__, SIT_PTR,  OFFSET(SIT_Widget, buddyText) },
+		{ "buddyLabel", SIT_BuddyLabel,  C__, SIT_ABBR, ABBR(1, 1, 0, 0)},
+		{ "composited", SIT_Composited,  _SG, SIT_BOOL, OFFSET(SIT_Widget, composited) },
+		{ NULL,         SIT_NVGcontext,  __G, SIT_PTR,  0},
+		{ "toolTip",    SIT_ToolTip,     C__, SIT_STR,  0},
+		{ NULL,         SIT_ClientRect,  __G, SIT_PTR,  0},
+		{ "height",     SIT_Height,      CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.height) },
+		{ "width",      SIT_Width,       CSG, SIT_UNIT, OFFSET(SIT_Widget, fixed.width) },
 
 		/* attachments */
 		#define	ATTACH(side, field)    OFFSET(SIT_Widget, attachment[side].field)
-		{ SIT_LeftOffset,       "leftOffset",       CSG, SIT_UNIT, ATTACH(0, sa_Offset) },
-		{ SIT_TopOffset,        "topOffset",        CSG, SIT_UNIT, ATTACH(1, sa_Offset) },
-		{ SIT_RightOffset,      "rightOffset",      CSG, SIT_UNIT, ATTACH(2, sa_Offset) },
-		{ SIT_BottomOffset,     "bottomOffset",     CSG, SIT_UNIT, ATTACH(3, sa_Offset) },
-		{ SIT_LeftObject,       "leftObject",       CSG, SIT_CTRL, ATTACH(0, sa_Arg) },
-		{ SIT_TopObject,        "topObject",        CSG, SIT_CTRL, ATTACH(1, sa_Arg) },
-		{ SIT_RightObject,      "rightObject",      CSG, SIT_CTRL, ATTACH(2, sa_Arg) },
-		{ SIT_BottomObject,     "bottomObject",     CSG, SIT_CTRL, ATTACH(3, sa_Arg) },
-		{ SIT_LeftAttachment,   "leftAttachment",   CSG, SIT_INT,  ATTACH(0, sa_Type) },
-		{ SIT_TopAttachment,    "topAttachment",    CSG, SIT_INT,  ATTACH(1, sa_Type) },
-		{ SIT_RightAttachment,  "rightAttachment",  CSG, SIT_INT,  ATTACH(2, sa_Type) },
-		{ SIT_BottomAttachment, "bottomAttachment", CSG, SIT_INT,  ATTACH(3, sa_Type) },
-		{ SIT_Left,             "left",             CSG, SIT_ABBR, ABBR(4, 4, 4, 0) },
-		{ SIT_Top,              "top",              CSG, SIT_ABBR, ABBR(4, 4, 4, 0) },
-		{ SIT_Right,            "right",            CSG, SIT_ABBR, ABBR(4, 4, 4, 0) },
-		{ SIT_Bottom,           "bottom",           CSG, SIT_ABBR, ABBR(4, 4, 4, 0) },
-		{ SIT_MaxWidth,         "maxWidth",         CSG, SIT_CTRL, 0 },
-		{ SIT_MinWidth,         "minWidth",         CSG, SIT_UNIT, OFFSET(SIT_Widget, minBox.width) },
-		{ SIT_MinHeight,        "minHeight",        CSG, SIT_UNIT, OFFSET(SIT_Widget, minBox.height) },
-		{ SIT_MaxBoxWidth,      "maxBoxWidth",      CSG, SIT_UNIT, OFFSET(SIT_Widget, maxBox.width) },
-		{ SIT_MaxBoxHeight,     "maxBoxHeight",     CSG, SIT_UNIT, OFFSET(SIT_Widget, maxBox.height) },
+		{ "leftOffset",       SIT_LeftOffset,       CSG, SIT_UNIT, ATTACH(0, sa_Offset) },
+		{ "topOffset",        SIT_TopOffset,        CSG, SIT_UNIT, ATTACH(1, sa_Offset) },
+		{ "rightOffset",      SIT_RightOffset,      CSG, SIT_UNIT, ATTACH(2, sa_Offset) },
+		{ "bottomOffset",     SIT_BottomOffset,     CSG, SIT_UNIT, ATTACH(3, sa_Offset) },
+		{ "leftObject",       SIT_LeftObject,       CSG, SIT_CTRL, ATTACH(0, sa_Arg) },
+		{ "topObject",        SIT_TopObject,        CSG, SIT_CTRL, ATTACH(1, sa_Arg) },
+		{ "rightObject",      SIT_RightObject,      CSG, SIT_CTRL, ATTACH(2, sa_Arg) },
+		{ "bottomObject",     SIT_BottomObject,     CSG, SIT_CTRL, ATTACH(3, sa_Arg) },
+		{ "leftAttachment",   SIT_LeftAttachment,   CSG, SIT_INT,  ATTACH(0, sa_Type) },
+		{ "topAttachment",    SIT_TopAttachment,    CSG, SIT_INT,  ATTACH(1, sa_Type) },
+		{ "rightAttachment",  SIT_RightAttachment,  CSG, SIT_INT,  ATTACH(2, sa_Type) },
+		{ "bottomAttachment", SIT_BottomAttachment, CSG, SIT_INT,  ATTACH(3, sa_Type) },
+		{ "left",             SIT_Left,             CSG, SIT_ABBR, ABBR(4, 4, 4, 0) },
+		{ "top",              SIT_Top,              CSG, SIT_ABBR, ABBR(4, 4, 4, 0) },
+		{ "right",            SIT_Right,            CSG, SIT_ABBR, ABBR(4, 4, 4, 0) },
+		{ "bottom",           SIT_Bottom,           CSG, SIT_ABBR, ABBR(4, 4, 4, 0) },
+		{ "maxWidth",         SIT_MaxWidth,         CSG, SIT_CTRL, 0 },
+		{ "minWidth",         SIT_MinWidth,         CSG, SIT_UNIT, OFFSET(SIT_Widget, minBox.width) },
+		{ "minHeight",        SIT_MinHeight,        CSG, SIT_UNIT, OFFSET(SIT_Widget, minBox.height) },
+		{ "maxBoxWidth",      SIT_MaxBoxWidth,      CSG, SIT_UNIT, OFFSET(SIT_Widget, maxBox.width) },
+		{ "maxBoxHeight",     SIT_MaxBoxHeight,     CSG, SIT_UNIT, OFFSET(SIT_Widget, maxBox.height) },
 		#undef ATTACH
 
 		{ SIT_TagEnd }
@@ -135,8 +135,8 @@
 /* returns 0 if value is same, >0 otherwise */
 int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 {
-	TagList *     tag = cd;
-	SIT_Variant * val = ud;
+	SIT_Variant val = ud;
+	TagList     tag = cd;
 
 	if ((w->visible || tag->tl_TagID == SIT_Visible || w->type == SIT_HTMLTAG) && tag->tl_Flags == CSG &&
 	    ! (tag->tl_TagID == SIT_Title && w->type == SIT_EDITBOX))
@@ -146,7 +146,6 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 		/* check first if value differs */
 		switch (tag->tl_Type) {
 		default:       if (* (int  *)   p == val->integer) return 0; break; /* SIT_INT */
-		case SIT_U16:  if (* (DATA16)   p == val->word)    return 0; break;
 		case SIT_BOOL: if (* (DATA8)    p == val->boolean) return 0; break;
 		case SIT_UNIT: if (* (float *)  p == (float) val->real) return 0; break;
 		case SIT_REAL: if (* (double *) p == val->real)    return 0;
@@ -172,7 +171,7 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 
 		if (tag->tl_TagID == SIT_Enabled)
 			w->oldEna = w->enabled;
-		#ifdef SIT_DEBUG
+		#ifdef DEBUG_SIT
 		if (tag->tl_Flags == C__)
 		{
 			if (w->flags & SITF_InitDone)
@@ -188,7 +187,6 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 		case SIT_CTRL:
 		case SIT_PTR:  SET_VALUE(w, void *,   val->pointer); break;
 		case SIT_INT:  SET_VALUE(w, int,      val->integer); break;
-		case SIT_U16:  SET_VALUE(w, uint16_t, val->word);    break;
 		case SIT_REAL: SET_VALUE(w, double,   val->real);    break;
 		case SIT_BOOL: SET_VALUE(w, uint8_t,  !!val->boolean); /* we need 0 or 1 */ break;
 		case SIT_UNIT: SET_VALUE(w, REAL,     val->real);    break;
@@ -276,7 +274,7 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 		break;
 	case SIT_TagPrivate1:
 		if (w->buddyText)
-			SIT_CreateBuddyLabel(w, w->buddyText, ((SIT_Variant *)ud)->pointer);
+			SIT_CreateBuddyLabel(w, w->buddyText, ((SIT_Variant)ud)->pointer);
 		break;
 	case SIT_MaxWidth:
 		if (val->pointer)
@@ -656,7 +654,7 @@ DLLIMP float SIT_EmToReal(SIT_Widget w, uint32_t val)
 
 STRPTR RawDoFmt(STRPTR format, va_list *);
 
-void SIT_ParseTags(SIT_Widget w, va_list vargs, TagList * classArgs)
+void SIT_ParseTags(SIT_Widget w, va_list vargs, TagList classArgs)
 {
 	KeyVal list = NULL;
 	int    tag;
@@ -664,11 +662,10 @@ void SIT_ParseTags(SIT_Widget w, va_list vargs, TagList * classArgs)
 	next: for (;;)
 	{
 		/* Look in classArgs for definition of that tag */
-		TagList *   stack[5];
-		TagList *   args;
-		SIT_Variant value;
-		ULONG       usage = 0;
-		int         format;
+		TagList stack[5];
+		TagList args;
+		ULONG   usage = 0;
+		int     format;
 
 		if (list) tag = list->tag;
 		else      tag = va_arg(vargs, int);
@@ -697,11 +694,13 @@ void SIT_ParseTags(SIT_Widget w, va_list vargs, TagList * classArgs)
 
 		for (args = classArgs; args->tl_TagID != SIT_TagEnd; )
 		{
+			union SIT_Variant_t value = {0};
+
 			/* super class */
 			if (args->tl_TagID == SIT_SuperClass)
 			{
 				stack[usage ++] = args + 1;
-				args = (TagList *) args->tl_Arg;
+				args = (TagList) args->tl_Arg;
 				continue;
 			}
 			if (args->tl_TagID != tag)
@@ -725,7 +724,7 @@ void SIT_ParseTags(SIT_Widget w, va_list vargs, TagList * classArgs)
 					case SIT_ABBR: break;
 					case SIT_REAL: value.real = list->key.real; break;
 					case SIT_CTRL: case SIT_PTR: value.pointer = list->key.ptr; break;
-					case SIT_BOOL: case SIT_U16: case SIT_INT: value.integer = list->key.val; break;
+					case SIT_BOOL: case SIT_INT: value.integer = list->key.val; break;
 					case SIT_STR:  value.string = list->key.ptr; list ++; goto assign_str;
 					case SIT_UNIT: value.integer = list->key.val; list ++; goto assign_unit;
 					}
@@ -739,7 +738,6 @@ void SIT_ParseTags(SIT_Widget w, va_list vargs, TagList * classArgs)
 				case SIT_PTR:  value.pointer = va_arg(vargs, void *); break;
 				case SIT_BOOL:
 				case SIT_INT:  value.integer = va_arg(vargs, int);    break;
-				case SIT_U16:  value.word    = va_arg(vargs, int);    break;
 				case SIT_REAL: value.real    = va_arg(vargs, double); break;
 				case SIT_UNIT:
 					value.integer = va_arg(vargs, int);
@@ -977,7 +975,7 @@ void SIT_DestroyWidget(SIT_Widget w)
 	{
 		if (w->attrs && w->attrs != WidgetClass)
 		{
-			TagList * tags;
+			TagList tags;
 			/* if no finalize cb, free all SIT_STR fields */
 			for (tags = w->attrs; tags->tl_TagID != SIT_TagEnd; tags ++)
 			{
@@ -1165,8 +1163,8 @@ DLLIMP void SIT_GetValues(SIT_Widget w, ...)
 	while ((tag = va_arg(vargs, int)))
 	{
 		/* look in classArgs for definition of that tag */
-		TagList * stack[5];
-		TagList * args;
+		TagList stack[5];
+		TagList args;
 
 		if (tag >= SIT_TagUser)
 		{
@@ -1189,7 +1187,7 @@ DLLIMP void SIT_GetValues(SIT_Widget w, ...)
 			if (args->tl_TagID == SIT_SuperClass)
 			{
 				stack[usage ++] = args + 1;
-				args = (TagList *) args->tl_Arg;
+				args = (TagList) args->tl_Arg;
 				continue;
 			}
 			if (args->tl_TagID != tag)
@@ -1319,7 +1317,6 @@ DLLIMP void SIT_GetValues(SIT_Widget w, ...)
 				case SIT_PTR:  va_arg(vargs, APTR *)[0]   = * (APTR *)   field; break;
 				case SIT_UNIT: va_arg(vargs, REAL *)[0]   = * (REAL *)   field; break;
 				case SIT_INT:  va_arg(vargs, int *)[0]    = * (int *)    field; break;
-				case SIT_U16:  va_arg(vargs, int *)[0]    = * (DATA16)   field; break;
 				case SIT_REAL: va_arg(vargs, double *)[0] = * (double *) field; break;
 				case SIT_BOOL: va_arg(vargs, Bool *)[0]   = * (DATA8)    field; break;
 				case SIT_STR:  va_arg(vargs, STRPTR *)[0] = * (STRPTR *) field;

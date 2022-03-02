@@ -583,8 +583,11 @@ Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode)
 	SIT_Widget list;
 	int        count;
 
-	if (root->flags & SITF_FixedWidth)  root->box.right  = root->box.left + root->fixed.width;
-	if (root->flags & SITF_FixedHeight) root->box.bottom = root->box.top  + root->fixed.height;
+	if (mode != KeepDialogSize)
+	{
+		if (root->flags & SITF_FixedWidth)  root->box.right  = root->box.left + root->fixed.width;
+		if (root->flags & SITF_FixedHeight) root->box.bottom = root->box.top  + root->fixed.height;
+	}
 
 	/* setup initial box if needed */
 	for (list = HEAD(root->children); list; NEXT(list))
@@ -630,7 +633,7 @@ Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode)
 					(int) list->currentBox.height, (int) list->childBox.width, (int) list->childBox.height);
 				#endif
 				SizeF old = list->currentBox;
-				SIT_LayoutWidgets(list, FitUsingCurrentBox);
+				SIT_LayoutWidgets(list, KeepDialogSize);
 				list->childBox = list->currentBox = SIT_GetContentBox(list);
 
 				if ((list->flags & SITF_Container))

@@ -21,7 +21,7 @@
 #pragma GCC diagnostic ignored "-Wpointer-sign"    /* UTF8 string and libc prototypes... */
 #endif
 
-typedef struct TagList_t          TagList;
+typedef struct TagList_t *        TagList;
 typedef struct SIT_Widget_t *     SIT_Widget;
 typedef struct SIT_Dialog_t *     SIT_Dialog;
 typedef struct SIT_App_t *        SIT_App;
@@ -41,7 +41,7 @@ typedef struct SIT_FileDialog_t * SIT_FileDialog;
 typedef struct SIT_FolderSel_t *  SIT_FolderSel;
 typedef struct SIT_Attach_t       SIT_Attach;
 typedef struct SIT_Callback_t *   SIT_Callback;
-typedef union  SIT_Variant_t      SIT_Variant;
+typedef union  SIT_Variant_t *    SIT_Variant;
 typedef struct SIT_Widget_t       SIT_Widget_t;
 typedef struct SIT_CBRow_t *      SIT_CBRow;
 typedef struct CSSImage_t *       CSSImage;
@@ -81,7 +81,7 @@ APTR SIT_FindControl(SIT_Widget, STRPTR utf8, int len, Bool recursive);
 int  SIT_LayoutWidget(SIT_Widget, SIT_Widget w, int side /* 0: horiz, 1:vert */, ResizePolicy adjust);
 Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode);
 void SIT_ReflowLayout(SIT_Widget list);
-void SIT_ParseTags(SIT_Widget, va_list vargs, TagList * classArgs);
+void SIT_ParseTags(SIT_Widget, va_list vargs, TagList classArgs);
 void SIT_AddTitle(SIT_Widget, STRPTR text, int pos);
 int  SIT_SetWidgetValue(SIT_Widget, APTR cd, APTR ud);
 void SIT_LayoutCSSSize(SIT_Widget);
@@ -229,7 +229,7 @@ struct SIT_Widget_t
 	}	box;
 	REAL         padding[4];           /* quoted from layout (padding+border): L, T, R, B */
 	REAL         offsetX, offsetY;     /* box.left and box.top are relative to parent, these are not: offset + box = pos on screen */
-	TagList *    attrs;
+	TagList      attrs;
 	uint8_t      visible;              /* public */
 	uint8_t      oldEna;
 	uint8_t      enabled;              /* public */
@@ -451,15 +451,15 @@ struct SIT_ScrollBar_t
 	SIT_Widget   arrowUp, arrowDown, thumb;
 	SIT_Action   autoScroll;
 	uint8_t      isHoriz;              /* public */
+	uint8_t      dragNotify;           /* public */
 	uint8_t      checkPos;
-	uint16_t     isDragged;
+	uint8_t      isDragged;
 	int          arrowType;            /* public */
 	int          min, max;             /* public */
 	int          pageSize;             /* public */
 	int          lineHeight;           /* public */
 	int          scrollPos;            /* public */
 	int          wheelMult;            /* public */
-	REAL         oldRange;
 };
 
 struct SIT_Progress_t
@@ -488,16 +488,16 @@ struct SIT_Slider_t
 	REAL         thumbThick;           /* public */
 	REAL         thumbHeight;          /* public */
 	REAL         gaugePadding;         /* public */
-	uint8_t      isDragged;
 	uint8_t      isHoriz;              /* public */
+	uint8_t      dragNotify;           /* public */
+	uint8_t      isDragged;
 	SIT_Widget   buddy;
 };
 
 struct SIT_CBRow_t
 {
-	STRPTR       entry;
-	APTR         tag;
-//	uint8_t      flags;
+	STRPTR entry;
+	APTR   tag;
 };
 
 struct SIT_ComboBox_t
@@ -609,10 +609,9 @@ union SIT_Variant_t
 /* Private tags */
 #define SIT_SuperClass      0x1000
 
-enum SIT_Type_t /* types for ParseTags */
+enum /* types for ParseTags */
 {
 	SIT_INT,
-	SIT_U16,
 	SIT_BOOL,
 	SIT_STR,
 	SIT_REAL,
@@ -622,18 +621,16 @@ enum SIT_Type_t /* types for ParseTags */
 	SIT_ABBR
 };
 
-typedef enum SIT_Type_t       SIT_Type;
-
 struct TagList_t
 {
-	int      tl_TagID;
 	STRPTR   tl_TagName;
-	int      tl_Flags;
-	SIT_Type tl_Type;
-	ULONG    tl_Arg;
+	uint16_t tl_TagID;
+	uint8_t  tl_Flags;
+	uint8_t  tl_Type;
+	uint32_t tl_Arg;
 };
 
-extern TagList WidgetClass[];
+extern struct TagList_t WidgetClass[];
 
 enum /* bitfield for tl_Flags */
 {

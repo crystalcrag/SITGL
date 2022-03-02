@@ -10,12 +10,12 @@
 #include "SIT_CSSLayout.h"
 #include "nanovg.h"
 
-	TagList ProgressClass[] = {
-		{ SIT_MinValue,     "minValue",     _SG, SIT_INT,  OFFSET(SIT_Progress, min) },
-		{ SIT_MaxValue,     "maxValue",     _SG, SIT_INT,  OFFSET(SIT_Progress, max) },
-		{ SIT_ProgressPos,  "progressPos",  _SG, SIT_INT,  OFFSET(SIT_Progress, progressPos) },
-		{ SIT_HorizScroll,  "horizScroll",  C__, SIT_BOOL, OFFSET(SIT_Progress, isHoriz) },
-		{ SIT_TagEnd }
+	struct TagList_t ProgressClass[] = {
+		{ "minValue",    SIT_MinValue,    _SG, SIT_INT,  OFFSET(SIT_Progress, min) },
+		{ "maxValue",    SIT_MaxValue,    _SG, SIT_INT,  OFFSET(SIT_Progress, max) },
+		{ "progressPos", SIT_ProgressPos, _SG, SIT_INT,  OFFSET(SIT_Progress, progressPos) },
+		{ "horizScroll", SIT_HorizScroll, C__, SIT_BOOL, OFFSET(SIT_Progress, isHoriz) },
+		{ NULL,          SIT_TagEnd }
 	};
 
 /* set minimal width/height */
@@ -97,7 +97,7 @@ static int SIT_ProgressPostProcess(SIT_Widget w, APTR cd, APTR ud)
 static int SIT_ProgressSetValues(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_Progress pb = (SIT_Progress) w;
-	switch (((TagList *)cd)->tl_TagID) {
+	switch (((TagList)cd)->tl_TagID) {
 	case SIT_Title:
 		if (pb->origTitle)
 			w->title = pb->origTitle;
@@ -110,10 +110,10 @@ static int SIT_ProgressSetValues(SIT_Widget w, APTR cd, APTR ud)
 	case SIT_MinValue:
 	case SIT_MaxValue:
 	case SIT_ProgressPos:
-		if (pb->progressPos == ((SIT_Variant *)ud)->integer)
+		if (pb->progressPos == ((SIT_Variant)ud)->integer)
 			return 0;
 		w->postProcess = SIT_ProgressPostProcess;
-		pb->progressPos = ((SIT_Variant *)ud)->integer;
+		pb->progressPos = ((SIT_Variant)ud)->integer;
 		break;
 	default:
 		SIT_SetWidgetValue(w, cd, ud);

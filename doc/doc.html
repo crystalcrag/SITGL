@@ -3903,8 +3903,10 @@ SIT_SetValues(app,
 	<li><tt>event</tt>: an arbitrary value, that will be given to the callback registered for this
 	entry. If no callback were registered, this field is mostly useless.
 
-	<li><tt>target</tt>: the <b>name of a widget</b>, which will receive the event. You can also set this field
-	to <tt class="o">NULL</tt>, in which case the event will be sent to the <tt>SIT_APP</tt> widget.
+	<li><tt>target</tt>: the <b>name of a widget</b>, which will receive the event. You can also set
+	this field to <tt class="o">NULL</tt>, in which case the event will be sent to the <tt>SIT_APP</tt>
+	widget. This field is mostly useful for buttons: it will spare you from writing a callback that
+	just set the state (<tt>SIT_CheckState</tt>) of the button.
 
 	<li><tt>cb</tt>: If the callback registered for the event did not process it or the <tt>target</tt>
 	field was set to <tt class="o">NULL</tt>, you can register a callback that will be called whenever
@@ -6043,10 +6045,15 @@ jump to other parts of the document.
   <p>How many lines (<tt>SIT_LineHeight</tt>) the scroll position will change when using the mouse wheel.
   Default value is 3, meaning 3 times the value given for <tt>SIT_LineHeight</tt>.
 
+  <li><tt class="dt">SIT_DragNotify</tt> (<tt class="t">Bool</tt>)
+  <p>If the modifications implied by the scroll bar are too costly/slow to be done every frame, you can
+  disable the notification when the thumb is dragged, and only be notified once the mouse button has
+  been released. <b>Default value for this property is</b> <tt class="o">True</tt>.
+
 </ul>
 
 <p>The event <tt>SITE_OnChange</tt> will be fired whenever the position of the thumb has changed. The
-<tt>call_data</tt> can be cast to an <tt class="t">long</tt> integer to get thumb's position.
+<tt>call_data</tt> can be cast to an <tt class="t">int</tt> integer to get thumb's position.
 
 
 
@@ -6114,6 +6121,11 @@ particular integer.
   <li><tt class="dt">SIT_CurValue</tt> (<tt class="t">int *</tt>)
   <p>Will store the integer being displayed by the sliding at the provided location. Upon creation,
   the value stored in the integer will be used to set the <tt>SIT_SliderPos</tt> property.
+
+  <li><tt class="dt">SIT_DragNotify</tt> (<tt class="t">Bool</tt>)
+  <p>This property has the same purpose than the SIT_SCROLLBAR: when the thumb is moved using the mouse
+  you will only get a notification when the mouse is released. This is to prevent receiving too many
+  updates for what might be a costly operation to process. <b>Default value is</b> <tt class="o">True</tt>.
 </ul>
 
 <p>Sliders, like scrollbars, report any change in its value through the <tt>SITE_OnChange</tt> event.
@@ -6124,7 +6136,7 @@ you'll have to register a <tt>SITE_OnChange</tt> event. There is one caveat howe
 be triggered at creation time (because events must be registered after the widget is created). If you
 also set the <tt>SIT_CurValue</tt> property, the label/edit will likely not be synchronized when the
 interface is first displayed. A quick workaround, is when registering your callback, you should call
-them directly, using something like this:
+it directly, using something like this:
 
 <pre>
 <type>static int</type> sensitivity = <val>100</val>;
@@ -7735,14 +7747,14 @@ for the first letter.
 
 <p><b>It has a small limitation though</b>: no new memory will be allocated for this, the message will
 be modified in place. This works as long as you are not trying to get the same message with 2 different
-punctuations <b>in the same function call</b>. In practice, this case is very rare. If it happens, you'll
-have to build one of the string manually. Still, better than doing it every single time.
+punctuations <b>in the same function call</b>. In practice, it should happen rarily. If it happens
+nonetheless, you'll have to build one of the string manually. Still, better than doing it every single time.
 
-<p>Here are some examples:. Let's suppose you have this translation file:
+<p>Here are some examples. Let's suppose you have this translation file:
 <pre><kwd>msgid</kwd> <val>"edit"</val>
 <kwd>msgstr</kwd> <val>"éditer"</val>
 </pre>
-<p>Here the result you'll get by translating some variations of the original message:
+<p>Here are the results you'll get by translating some variations of the original message:
 <pre>
 LangStr(<val>"edit"</val>);       <com>/* will return "éditer" */</com>
 LangStr(<val>"edit..."</val>);    <com>/* will return "éditer..." */</com>
@@ -7750,13 +7762,12 @@ LangStr(<val>"Edit"</val>);       <com>/* will return "Éditer" */</com>
 LangStr(<val>"Edit :"</val>);     <com>/* will return "Éditer :" */</com>
 
 <com>/* <err> do not do this though </err> */</com>
-fprintf(stderr, <val>"msgs = <spe>%s</spe>, <spe%s\n</spe>"</val>, LangStr(<val>"edit..."</val>), LangStr(<val>"edit :"</val>));
+fprintf(stderr, <val>"msgs = <spe>%s</spe>, <spe>%s\n</spe>"</val>, LangStr(<val>"edit..."</val>), LangStr(<val>"edit :"</val>));
 <com>/*
- * the strings are kept in the same static buffer, trying to retrieve 2 different messages in the same
- * sequence of instructions, will lead to undefined behavior (you will get twice the same message, but
- * which one will be difficult to predict: <err> DO NOT RELY ON THIS </err>).
+ * the strings are kept in the same static buffer, trying to retrieve 2 different messages from the same
+ * source, in the same sequence of instructions, will lead to undefined behavior (you will get twice the
+ * same message, but which one will be difficult to predict: <err> DO NOT RELY ON THIS </err>).
  */</com>
-
 </pre>
 
 <h2 class="annex" id="annexA"><span>UtilityLib API</span></h2>
@@ -7864,25 +7875,25 @@ a double-linked list might not be the right solution.
 
 <p>For reference, here is a quick summary of all the functions related to double-linked list manipulation:
 <ul>
-  <li><tt class="dt">void ListAddHead(ListHead *, ListNode *);</tt>,<br><tt class="dt">void ListAddTail(ListHead *, ListNode *);</tt>
+  <li><tt class="dt"><type>void</type> ListAddHead(ListHead *, ListNode *);</tt>,<br><tt class="dt"><type>void</type> ListAddTail(ListHead *, ListNode *);</tt>
   <p>Add an item at the beginning/end of the list.
-  <li><tt class="dt">void ListInsert(ListHead *, ListNode * item, ListNode * insert_after);</tt>
+  <li><tt class="dt"><type>void</type> ListInsert(ListHead *, ListNode * item, ListNode * insert_after);</tt>
   <p>Insert item at an arbitrary position. <tt>insert_after</tt> must be part of the list, otherwise
   bad thing will happen (you can expect a segmentation fault at some point). If <tt>insert_after</tt>
   is <tt class="o">NULL</tt>, insert will happen at the beginning. To insert at the end, use the <tt>lh_Tail</tt>
   field in the <tt>ListHead</tt>. To do an insert before, assuming <tt>insert_after</tt> is not <tt class="o">NULL</tt>,
   simply deference the <tt>ln_Prev</tt> field of the node.
 
-  <li><tt class="dt">void ListInsertSort(ListHead *, ListNode *, ListSortFunc);</tt>
+  <li><tt class="dt"><type>void</type> ListInsertSort(ListHead *, ListNode *, ListSortFunc);</tt>
   <p>Insert an item based on an order function.
 
-  <li><tt class="dt">void ListSort(ListHead *, ListSortFunc);</tt>
+  <li><tt class="dt"><type>void</type> ListSort(ListHead *, ListSortFunc);</tt>
   <p>Rearrange the list so that all items are sorted using the given callback. The algorithm used in
   this function is the insert sort, which is a O(n&#xb2;) complexity in the worst case (and probably
   on average too). So not the best, but for small lists, this is largely enough. If performance matters,
   you should use an array and apply the libc standard function <tt>qsort()</tt>.
 
-  <li><tt class="dt">void ListRemove(ListHead *, ListNode *);</tt>
+  <li><tt class="dt"><type>void</type> ListRemove(ListHead *, ListNode *);</tt>
   <p>Remove an item from the list. The item has to be in the list, otherwise segfault pending.
 
   <li><tt class="dt">ListNode * ListRemHead(ListHead *);</tt>,<br><tt class="dt">ListNode * ListRemTail(ListHead *);</tt>
@@ -7896,9 +7907,9 @@ a double-linked list might not be the right solution.
 encoding, without having to deal with the operating system native API calls. Most of these functions
 are straightforward, but here is the complete list:
 <ul>
-  <li><tt class="dt">int ScanDirInit(ScanDirData * ret, STRPTR path);</tt>,<br>
-  <tt class="dt">int ScanDirNext(ScanDirData * ret);</tt>,<br>
-  <tt class="dt">void ScanDirCancel(ScanDirData * ret);</tt>
+  <li><tt class="dt"><type>int</type> ScanDirInit(ScanDirData * ret, <type>STRPTR</type> path);</tt>,<br>
+  <tt class="dt"><type>int</type> ScanDirNext(ScanDirData * ret);</tt>,<br>
+  <tt class="dt"><type>void</type> ScanDirCancel(ScanDirData * ret);</tt>
 
   <p>Scan (almost) all entries of a directory. By "mostly" all entries, it will automatically <b>remove
   <tt>.</tt> and <tt>..</tt></b>. You can assume they always exist.
@@ -7958,21 +7969,21 @@ are straightforward, but here is the complete list:
   non-zero value) and will be freed by either <tt>ScanDirCancel()</tt> or <tt>ScanDirNext()</tt> (when
   it returns 0). <b>Do not use the content of the struct after that</b>.
 
-  <li><tt class="dt">Bool AddPart(STRPTR dir, STRPTR file, int max);</tt>
+  <li><tt class="dt"><type>Bool</type> AddPart(<type>STRPTR</type> dir, <type>STRPTR</type> file, <type>int</type> max);</tt>
   <p><b>Concatenate partial path</b> <tt>file</tt> into <tt>dir</tt>. The <tt>dir</tt> buffer must be
   large enough to contain <tt>max</tt> bytes. If the resulting is bigger than this, the path will be
   truncated and the function will return <tt class="o">False</tt>. Obviously, the <tt>dir</tt> string
   must contained a valid, NULL-terminated string in the first place.
 
-  <li><tt class="dt">Bool ParentDir(STRPTR path);</tt>
+  <li><tt class="dt"><type>Bool</type> ParentDir(<type>STRPTR</type> path);</tt>
   <p><b>Remove the last component of a path</b>, or returns <tt class="o">False</tt> if there are
   nothing to remove.
 
-  <li><tt class="dt">Bool IsDir(STRPTR path);</tt>
+  <li><tt class="dt"><type>Bool</type> IsDir(<type>STRPTR</type> path);</tt>
   <p>Returns <tt class="o">True</tt> if the path point to a directory. Root file system like <tt>C:\</tt>
   are considered directories.
 
-  <li><tt class="dt">STRPTR CreatePath(STRPTR path, Bool not_last);</tt>
+  <li><tt class="dt"><type>STRPTR</type> CreatePath(<type>STRPTR</type> path, <type>Bool</type> not_last);</tt>
   <p>Will <b>create all the missing directories</b> from <tt>path</tt>. If <tt>not_last</tt> is <tt class="o">True</tt>,
   the last component of the path will not be created as a directory. The typical use case for this
   function is to call it just before attempting to open a file for writing (if you know that some
@@ -7981,10 +7992,10 @@ are straightforward, but here is the complete list:
   <p>In case of an error, it will return a pointer within <tt>path</tt> that failed to be created.
   If all went well, <tt class="o">NULL</tt> will be returned.
 
-  <li><tt class="dt">STRPTR BaseName(STRPTR path);</tt>
+  <li><tt class="dt"><type>STRPTR</type> BaseName(<type>STRPTR</type> path);</tt>
   <p>Return the <b>last component</b> of a path, which is typically the file name.
 
-  <li><tt class="dt">ULONG TimeStamp(STRPTR path, int type);</tt>
+  <li><tt class="dt"><type>ULONG</type> TimeStamp(<type>STRPTR</type> path, <type>int</type> type);</tt>
   <p>Return <b>various date</b> from the given path as a timestamp, depending on what value was given to <tt>type</tt>:
   <ul>
 	<li><tt>0</tt>: creation time.
@@ -7993,7 +8004,7 @@ are straightforward, but here is the complete list:
   </ul>
   <p>Return value will be number of seconds since the unix epoch (Jan 1, 1970).
 
-  <li><tt class="dt">int Execute(STRPTR cmd, int timeout);</tt>
+  <li><tt class="dt"><type>int</type> Execute(<type>STRPTR</type> cmd, <type>int</type> timeout);</tt>
   <p>Will <b>execute the given command with its arguments</b>. If the path of the command contains spaces,
   it is advised to enclose the string with double quotes, same with arguments, otherwise they will be
   split into different parts inside the <tt>argv[]</tt> table of the command. <span class="n">Note:</span>
@@ -8016,46 +8027,46 @@ are straightforward, but here is the complete list:
   
   <p><span class="n">Note</span>: on Windows, it uses the Win32 <tt>CreateProcessW()</tt> API call.
 
-  <li><tt class="dt">int OpenDocument(STRPTR filename);</tt>
+  <li><tt class="dt"><type>int</type> OpenDocument(<type>STRPTR</type> filename);</tt>
   <p>Try to <b>open the file</b> given as argument with the <b>default application</b> associated with it. The
   typical use case is to open an HTTP link using the default web browser, but it works with any type
   of file (including directories). On Windows, this function will be like double-clicking on a file
   in the explorer: if no applications has been registered for a given file type, a popup asking the
   user what to do with the file will be showed instead.
 
-  <li><tt class="dt">ULLONG FileSize(STRPTR path);</tt>
+  <li><tt class="dt"><type>uint64_t</type> FileSize(<type>STRPTR</type> path);</tt>
   <p>Return the <b>size of the file</b> as a 64bit unsigned integer (<tt class="t">uint64_t</tt>).
   If there was an error, 0 will be returned.
 
-  <li><tt class="dt">Bool DeleteDOS(STRPTR path);</tt>
+  <li><tt class="dt"><type>Bool</type> DeleteDOS(<type>STRPTR</type> path);</tt>
   <p>Attempt to <b>delete the file/directory</b>. For a directory, it needs to be empty before hand, otherwise
   an error will be returned.
 
-  <li><tt class="dt">Bool FileExists(STRPTR file);</tt>
+  <li><tt class="dt"><type>Bool</type> FileExists(<type>STRPTR</type> file);</tt>
   <p>Check if the given file exist.
   
-  <li><tt class="dt">Bool FileRename(STRPTR from, STRPTR to, Bool overwrite);</tt>
+  <li><tt class="dt"><type>Bool</type> FileRename(<type>STRPTR</type> from, <type>STRPTR</type> to, <type>Bool</type> overwrite);</tt>
   <p><b>Rename a file and/or move it</b> somewhere else. If the <tt>from</tt> parameter contains a directory
   structure, the same structure must be present in the <tt>to</tt> parameter for the file to not be
   moved. In case the destination is located on a different drive, the file will first be copied, then
   the original will be deleted.
 
-  <li><tt class="dt">Bool FileCopy(STRPTR from, STRPTR to, Bool overwrite);</tt>
+  <li><tt class="dt"><type>Bool</type> FileCopy(<type>STRPTR</type> from, <type>STRPTR</type> to, <type>Bool</type> overwrite);</tt>
   <p><b>Copy the file and everything associated with it</b> (including NTFS alternate data stream for example).
 
-  <li><tt class="dt">Bool IsSameFile(STRPTR file1, STRPTR file2);</tt>
+  <li><tt class="dt"><type>Bool</type> IsSameFile(<type>STRPTR</type> file1, <type>STRPTR</type> file2);</tt>
   <p>Check if two semmingly different path point in fact to the same file. Useful if you have a relative
   and absolute path, and want to know if they are the same.
 
-  <li><tt class="dt">Bool IsRelativePath(STRPTR file);</tt>
+  <li><tt class="dt"><type>Bool</type> IsRelativePath(<type>STRPTR</type> file);</tt>
   <p>Check if the path is relative, ie: will depend on current working directory.
 
-  <li><tt class="dt">Bool TruncateFile(STRPTR file, uint64_t offset);</tt>
+  <li><tt class="dt"><type>Bool</type> TruncateFile(<type>STRPTR</type> file, <type>uint64_t</type> offset);</tt>
   <p>Standard libc (stdio) does not have a function to truncate a file: it is advised to close any
   file handle before using this function.
 
-  <li><tt class="dt">STRPTR ExpandEnvVar(STRPTR str);</tt>,<br>
-	  <tt class="dt">void ExpandEnvVarBuf(STRPTR str, STRPTR utf8, int max);</tt>
+  <li><tt class="dt"><type>STRPTR</type> ExpandEnvVar(<type>STRPTR</type> str);</tt>,<br>
+	  <tt class="dt"><type>void</type> ExpandEnvVarBuf(<type>STRPTR</type> str, <type>STRPTR</type> utf8, <type>int</type> max);</tt>
   <p><b>Expand environment variables</b> within <tt>str</tt> to their actual value. The syntax for variable
   names must be <tt>%<em>varname</em>%</tt>. Names are not case sensitive, on Windows at least.
 
@@ -8067,18 +8078,18 @@ are straightforward, but here is the complete list:
   string yourself. If your application is linked against the standard <tt>msvcrt.dll</tt>, you can
   use the normal <tt>free()</tt> function, otherwise use <tt>SIT_Free()</tt>.
 
-  <li><tt class="dt">void * fopen_enc(const char * file, const char * mode);</tt>
+  <li><tt class="dt"><type>void</type> * fopen_enc(<type>const char</type> * file, <type>const char</type> * mode);</tt>
   <p>This function is a <b>replacement for the stdio <tt>fopen</tt> function</b>: it will allow you to use
   UTF-8 path as argument. To prevent unexpected side-effect, it will be your duty to redirect the
   call to <tt>fopen()</tt>, using a define like this in your application's code:
-  <pre>#define fopen     fopen_enc</pre>
+  <pre><def>#define fopen     fopen_enc</def></pre>
 
   <p>Return code is actually a <tt>FILE *</tt>. The reason it was declared as a void pointer, was to
   prevent including stdio header from <tt>UtilityLibLite.h</tt>.
 
-  <li><tt class="dt">void GetErrorMsg(int code, STRPTR buffer, int max);</tt>,<br>
-	  <tt class="dt">int GetErrorCode(void);</tt>,<br>
-	  <tt class="dt">STRPTR GetError(void);</tt>
+  <li><tt class="dt"><type>void</type> GetErrorMsg(<type>int</type> code, <type>STRPTR</type> buffer, <type>int</type> max);</tt>,<br>
+	  <tt class="dt"><type>int</type> GetErrorCode(<type>void</type>);</tt>,<br>
+	  <tt class="dt"><type>STRPTR</type> GetError(<type>void</type>);</tt>
   <p>If an error occur with any of the DOS function, you can get a <b>more detailed reason</b> using one of
   these functions. <tt>GetErrorMsg()</tt> will require you to allocate the memory to hold the message,
   while <tt>GetError()</tt> will use a small (128 bytes) static buffer. The message will be UTF-8
@@ -8105,10 +8116,10 @@ with this topic in much more depth, than what is explained in here.
 
 
 <ul>
-  <li><tt class="dt">Thread ThreadCreate(ThreadCb func, APTR arg);</tt>
+  <li><tt class="dt">Thread ThreadCreate(ThreadCb func, <type>APTR</type> arg);</tt>
   <p><b>Starts a new thread</b> with the given function to execute. This function needs to have the
   following prototype:
-  <pre>void func(void * arg);</pre>
+  <pre><type>void</type> func(<type>void</type> * arg);</pre>
   <p><tt>arg</tt> will be the same value than the one given to the <tt>ThreadCreate()</tt> function.
   <p>If successful, a non-zero number will be returned. At this point, the thread will be already
   running and address space will be shared with main thread. The thread won't be a software hack:
@@ -8119,19 +8130,20 @@ with this topic in much more depth, than what is explained in here.
   In this library, there are no function to forcibly kill a thread. You'll need to setup some synchronization
   points with a shared state that indicate when the thread has to exit, and wait for it.
 
-  <li><tt class="dt">void ThreadPause(int delay);</tt>
+  <li><tt class="dt"><type>void</type> ThreadPause(<type>int</type> delay);</tt>
   <p><b>Pause the calling thread</b> for the specified amount of milliseconds. The timer used for this delay
   is a low precision timer, tied to the context switch delay. On Windows, with a default configuration,
-  the precision will be around 10 to 15ms.
+  the precision will be around 10 to 15ms. Check below, for timers that have a much greater precision
+  (but requires a small bit of work to be used).
 
-  <li><tt class="dt">Mutex MutexCreate(void);</tt>
+  <li><tt class="dt">Mutex MutexCreate(<type>void</type>);</tt>
   <p>A mutex is used to create a <b>critical section</b> where only one thread is allowed to enter at a time.
   The typical use case is to protect a global variable, <b>if it is modified by a thread</b>. If the
   variable is only read, no need to protect the access.
   
-  <li><tt class="dt">void MutexEnter(Mutex);</tt>,<br>
-	  <tt class="dt">void MutexLeave(Mutex);</tt>,<br>
-	  <tt class="dt">Bool MutexTryEnter(Mutex);</tt>
+  <li><tt class="dt"><type>void</type> MutexEnter(Mutex);</tt>,<br>
+	  <tt class="dt"><type>void</type> MutexLeave(Mutex);</tt>,<br>
+	  <tt class="dt"><type>Bool</type> MutexTryEnter(Mutex);</tt>
   <p>Enter/leave a critical section. Be careful that every call to <tt>MutexEnter()</tt> or
   <tt>MutexTryEnter()</tt> is followed by a <tt>MutexLeave()</tt>, otherwise every subsequent thread
   that will attempt to enter the section will block indefinitely. If a mutex is currently locked,
@@ -8142,13 +8154,13 @@ with this topic in much more depth, than what is explained in here.
   <p><tt>MutexTryEnter()</tt> will get ownership of the lock is it returns <tt class="o">True</tt>.
   If it cannot, <tt class="o">False</tt> will be returned and the lock will remain unchanged.
 
-  <li><tt class="dt">void MutexDestroy(Mutex);</tt>
+  <li><tt class="dt"><type>void</type> MutexDestroy(Mutex);</tt>
   <p>If the lock is no longer needed, you can free its resource with this function. Keep in mind,
   you'll have to make sure that all the other threads do not have a pending lock on it before freeing
   it, otherwise a segmentation fault is pending.
 
 
-  <li><tt class="dt">Semaphore SemInit(int count);</tt>
+  <li><tt class="dt">Semaphore SemInit(<type>int</type> count);</tt>
   <p>Create a semaphore object. The purpose of a semaphore is to handle a producer/consumer model.
   The integer in the semaphore represent the amount of resources available. When attempting to grab
   a resource when the count is zero, it will block until it is increased by the producer (using
@@ -8157,18 +8169,18 @@ with this topic in much more depth, than what is explained in here.
   <p>Technically a semaphore can be implemented using two mutexes and one integer. But since they
   quite common, a standard interface will spare you the hassle of writing that logic.
 
-  <li><tt class="dt">Bool SemWait(Semaphore);</tt>,<br>
-	  <tt class="dt">Bool SemWaitTimeout(Semaphore, ULONG ms);</tt>
+  <li><tt class="dt"><type>Bool</type> SemWait(Semaphore);</tt>,<br>
+	  <tt class="dt"><type>Bool</type> SemWaitTimeout(Semaphore, <type>ULONG</type> ms);</tt>
   <p>Attempt to grab one resource from the semaphore. Will decrease the internal count by 1. If the
   count is zero, it will wait indefinitely. To prevent this, you can use the <tt>SemWaitTimeout()</tt>
   to periodically check if the thread need to exit prematurely.
 
-  <li><tt class="dt">void SemAdd(Semaphore, int count);</tt>
+  <li><tt class="dt"><type>void</type> SemAdd(Semaphore, <type>int</type> count);</tt>
   <p>Add the specified amount to the semaphore. <tt>count</tt> cannot be negative though. Any thread
   currently waiting will be awaken, the order is unspecified and just like mutexes, can lead to thread
   starvation.
 
-  <li><tt class="dt">void SemClose(Semaphore);</tt>
+  <li><tt class="dt"><type>void</type> SemClose(Semaphore);</tt>
   <p>Free the resource associated to the semaphore. Like with mutexes, you'll have to be sure no
   other threads are currently waiting on it, otherwise a segmentation fault is probably pending.
 </ul>
@@ -8334,7 +8346,7 @@ API.
 <p>A few more general functions/macros are available. Here is the complete list:
 
 <ul>
-  <li><tt class="dt">void GetSelectionColor(DATA8 fg, DATA8 bg);</tt>
+  <li><tt class="dt"><type>void</type> GetSelectionColor(DATA8 fg, DATA8 bg);</tt>
   <p>Will retrieve the default foreground and background selection color. The <tt>-selection</tt> CSS
   attribute will have its initial value set to these. Usually custom widgets will need those
   values at some point or another. <span class="n">Note</span>: the arguments must actually point to
@@ -8342,7 +8354,7 @@ API.
   specified color (ie: can be then passed to the functions like <tt>nvgFillColorRGBA8()</tt> or
   <tt>nvgStrokeColorRGBA8()</tt>).
 
-  <li><tt class="dt">void CopyString(STRPTR destination, STRPTR source, int max);</tt>
+  <li><tt class="dt"><type>void</type> CopyString(<type>STRPTR</type> destination, <type>STRPTR</type> source, <type>int</type> max);</tt>
   <p>A <tt>strncpy()</tt>-like function without nasty surprises: it will attempt to copy <tt>source</tt>
   into <tt>destination</tt>, while writing at most <tt>max</tt> bytes. The destination string will always be
   <tt>NULL</tt>-terminated. Also, UTF-8 sequence will be cut correctly if it the sequence does not fit
@@ -8351,7 +8363,7 @@ API.
   <p>This function is not really designed for performance: it only copies one character at a time,
   but for short strings, this is usually more than enough.
 
-  <li><tt class="dt">int StrCat(STRPTR dest, int max, int pos, STRPTR cat);</tt>
+  <li><tt class="dt"><type>int</type> StrCat(<type>STRPTR</type> dest, <type>int</type> max, <type>int</type> pos, <type>STRPTR</type> cat);</tt>
   <p>The purpose of this function is to build a more complex string in pieces, concatenating each one,
   using a fixed size buffer, while ensuring there will be no buffer overflow. The arguments work as follows:
   <ul>
@@ -8371,7 +8383,7 @@ API.
   byte within <tt>&lt;dest&gt;</tt>, this buffer must have its first byte set to <tt class="o">0</tt>
   before the first call of this function.
 
-  <li><tt class="dt">int FindInList(STRPTR list, STRPTR word, int len);</tt>
+  <li><tt class="dt"><type>int</type> FindInList(<type>STRPTR</type> list, <type>STRPTR</type> word, <type>int</type> len);</tt>
   <p>This is a quick and not so efficient function to <b>convert a keyword into an integer</b>. <tt>list</tt>
   must be a comma-separated list of words, <tt>word</tt> is the text that will be matched case
   insensitively for each word of the list, <tt>len</tt> is an optional length you want to limit the
@@ -8388,12 +8400,12 @@ API.
 	first 3 characters from the word will be matched against the word list.
   </ul>
 
-  <li><tt class="dt">STRPTR StripCRLF(STRPTR in);</tt>
+  <li><tt class="dt"><type>STRPTR</type> StripCRLF(<type>STRPTR</type> in);</tt>
   <p>Remove newlines from end of string. Will attempt to remove the string <tt class="o">"\n"</tt>,
   <tt class="o">"\r\n"</tt> or <tt class="o">"\r"</tt> from the end. The typical use case is
   to call this function after having retrieved something from <tt>fgets()</tt>.
 
-  <li><tt class="dt">STRPTR NextLine(STRPTR start, Bool cut);</tt>
+  <li><tt class="dt"><type>STRPTR</type> NextLine(<type>STRPTR</type> start, <type>Bool</type> cut);</tt>
   <p>Return a pointer to the next line, optionally replacing the newline character(s) by <val>0</val>,
   if <tt>cut</tt> is <val>True</val>. If no end of line has been found, <val>NULL</val>
   will be returned. If you have a text file entirely loaded into memory, you can read it line by line,
@@ -8406,7 +8418,7 @@ API.
 	<com>/* &lt;line&gt; points to a single line of text, and is NULL-terminated */</com>
 }</pre>
 
-  <li><tt class="dt">int Split(STRPTR * table, STRPTR str, int max, int chr);</tt>
+  <li><tt class="dt"><type>int</type> Split(<type>STRPTR</type> * table, <type>STRPTR</type> str, <type>int</type> max, <type>int</type> chr);</tt>
   <p>Will split <tt>str</tt> at each character <tt>chr</tt> encountered and store the start of each
   string into <tt>table</tt>, which can hold at most <tt>max</tt> items.
 
@@ -8416,7 +8428,7 @@ API.
   <p>Returns the number of items written in <tt>table</tt>. If less than <tt>max</tt>, remaining
   items will be set to <val>NULL</val> (but won't be included in final count).
 
-  <li><tt class="dt">int StrCount(STRPTR list, int chr);</tt>
+  <li><tt class="dt"><type>int</type> StrCount(<type>STRPTR</type> list, <type>int</type> chr);</tt>
   <p>Counts the occurences of <tt>chr</tt> within <tt>list</tt> (only works with ASCII range).
 
   <li><tt class="dt">STRDUPA(str)</tt>
@@ -8458,20 +8470,20 @@ identical:
 <p>Here are the functions you can use to manipulate INI files:
 
 <ul>
-  <li><tt class="dt">INIFile ParseINI(STRPTR file);</tt>,<br>
-	  <tt class="dt">INIFile ParseINIStr(STRPTR buf);</tt>
+  <li><tt class="dt">INIFile ParseINI(<type>STRPTR</type> file);</tt>,<br>
+	  <tt class="dt">INIFile ParseINIStr(<type>STRPTR</type> buf);</tt>
   <p>Parse an INI file using a UTF-8 encoded path or a memory buffer already having the entire content
   of the file. That buffer must be <val>0</val>-terminated, modifiable and have a lifespan
   that equals at least the INI object.
 
-  <li><tt class="dt">STRPTR GetINIValue(INIFile, STRPTR section);</tt>,<br>
-	  <tt class="dt">STRPTR GetINIValueStr(INIFile ini, STRPTR key, STRPTR def);</tt>,<br>
-	  <tt class="dt">int    GetINIValueInt(INIFile ini, STRPTR key, int def);</tt>
+  <li><tt class="dt">STRPTR GetINIValue(INIFile, <type>STRPTR</type> section);</tt>,<br>
+	  <tt class="dt">STRPTR GetINIValueStr(INIFile ini, <type>STRPTR</type> key, <type>STRPTR</type> def);</tt>,<br>
+	  <tt class="dt">int    GetINIValueInt(INIFile ini, <type>STRPTR</type> key, <type>int</type> def);</tt>
   <p>Get value value associated to key in the given ini file. Key can preceded by section name,
   separated by /, for example: <tt class="o">"Section1/Key1"</tt>.
 
-  <li><tt class="dt">Bool SetINIValue(STRPTR path, STRPTR key, STRPTR val);</tt>,<br>
-	  <tt class="dt">Bool SetINIValueInt(STRPTR path, STRPTR key, int val);</tt>
+  <li><tt class="dt">Bool SetINIValue(<type>STRPTR</type> path, <type>STRPTR</type> key, <type>STRPTR</type> val);</tt>,<br>
+	  <tt class="dt">Bool SetINIValueInt(<type>STRPTR</type> path, <type>STRPTR</type> key, <type>int</type> val);</tt>
   <p>These functions will modify value of given key, or add it if it does not exist. "key" can have
   the same syntax than <tt>GetINIValue()</tt>. If the section is also missing, it will be added as well
   (at the end).
@@ -8483,7 +8495,7 @@ identical:
   <p>Notice that this function does not work with INIFile object, but will deal directly with the INI
   file itself.
 
-  <li><tt class="dt">void FreeINI(INIFile);</tt>
+  <li><tt class="dt"><type>void</type> FreeINI(INIFile);</tt>
   <p>Free memory allocated for parsing the INI file. Keep in mind that if you had kept pointers
   returned by <tt>GetINIValue()</tt>, those pointers are now invalid if you used <tt>ParseINI()</tt>
   to parse the file (otherwise, those pointers will point within the buffer you provided).

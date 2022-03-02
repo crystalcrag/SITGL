@@ -9,10 +9,10 @@
 #include "SIT_P.h"
 #include "SIT_CSSLayout.h"
 
-	TagList DialogClass[] = {
-		{ SIT_DialogStyles, "styles",       C__, SIT_INT,  OFFSET(SIT_Dialog, customStyles) },
-		{ SIT_AccelTable,   "accelTable",  _SG,  SIT_PTR,  OFFSET(SIT_Dialog, accel) },
-		{ SIT_TagEnd }
+	struct TagList_t DialogClass[] = {
+		{ "styles",     SIT_DialogStyles,  C__, SIT_INT,  OFFSET(SIT_Dialog, customStyles) },
+		{ "accelTable", SIT_AccelTable,   _SG,  SIT_PTR,  OFFSET(SIT_Dialog, accel) },
+		{ NULL,         SIT_TagEnd }
 	};
 
 
@@ -92,7 +92,7 @@ static int SIT_DialogMove(SIT_Widget w, APTR cd, APTR ud)
 		}
 		if (dialog->customStyles & SITV_Movable)
 		{
-			if ((dialog->customStyles & SITV_Plain) == 0 && msg->y >= 0)
+			if ((dialog->customStyles & SITV_Plain) == 0 && msg->y > w->layout.padding.top)
 				/* outside title bar */
 				return 0;
 			dialog->moveOffX = msg->x;

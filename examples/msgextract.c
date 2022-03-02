@@ -98,7 +98,7 @@ int main(int nb, char * argv[])
 /* First character case insensitive, remaining case sensitive */
 static int LangCompare(STRPTR msg1, STRPTR msg2)
 {
-	return strcmp(msg1, msg2);
+	return tolower(msg1[0]) == tolower(msg2[0]) ? strcmp(msg1+1, msg2+1) : strcmp(msg1, msg2);
 }
 
 static int LangComment(STRPTR * lang, int sz, int offset)

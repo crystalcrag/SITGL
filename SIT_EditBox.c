@@ -19,28 +19,28 @@
 #include "SIT_CSSLayout.h"
 #include "nanovg.h"
 
-	TagList EditBoxClass[] = {
-		{ SIT_EditType,    "editType",    C__, SIT_INT,  OFFSET(SIT_EditBox, editType) },
-		{ SIT_ReadOnly,    "readOnly",    _SG, SIT_BOOL, OFFSET(SIT_EditBox, readOnly) },
-		{ SIT_StartSel,    "startSel",    _SG, SIT_INT,  OFFSET(SIT_EditBox, selStart) },
-		{ SIT_EndSel,      "endSel",      _SG, SIT_INT,  OFFSET(SIT_EditBox, selEnd) },
-		{ SIT_MinValue,    "minValue",    _SG, SIT_REAL, OFFSET(SIT_EditBox, minValue) },
-		{ SIT_MaxValue,    "maxValue",    _SG, SIT_REAL, OFFSET(SIT_EditBox, maxValue) },
-		{ SIT_StepValue,   "stepValue",   _SG, SIT_REAL, OFFSET(SIT_EditBox, stepValue) },
-		{ SIT_CurValue,    "curValue",    _SG, SIT_PTR,  OFFSET(SIT_EditBox, curValue) },
-		{ SIT_PlaceHolder, "placeHolder", _SG, SIT_STR,  OFFSET(SIT_EditBox, cueBanner) },
-		{ SIT_EditBuffer,  "editBuffer",  C__, SIT_PTR,  OFFSET(SIT_EditBox, fixedBuffer) },
-		{ SIT_EditLength,  "editLength",  C__, SIT_INT,  OFFSET(SIT_EditBox, fixedSize) },
-		{ SIT_MaxUndo,     "maxUndo",     C__, SIT_INT,  OFFSET(SIT_EditBox, undoSize) },
-		{ SIT_MaxLines,    "maxLines",    C__, SIT_INT,  OFFSET(SIT_EditBox, maxLines) },
-		{ SIT_WordWrap,    "wordWrap",    C__, SIT_INT,  OFFSET(SIT_EditBox, wordWrap) },
-		{ SIT_TabStyle,    "tabStyle",    _SG, SIT_INT,  OFFSET(SIT_EditBox, tabStyle) },
-		{ SIT_RoundTo,     "roundTo",     _SG, SIT_INT,  OFFSET(SIT_EditBox, roundTo) },
-		{ SIT_ColorMap,    "colorMap",    _SG, SIT_PTR,  OFFSET(SIT_EditBox, colorMap) },
-		{ SIT_Lexer,       "lexer",       _SG, SIT_PTR,  OFFSET(SIT_EditBox, lexer) },
-		{ SIT_LexerData,   "lexerData",   _SG, SIT_PTR,  OFFSET(SIT_EditBox, lexerData) },
-		{ SIT_EditAddText, "editAddText", _S_, SIT_PTR,  0 },
-		{ SIT_TagEnd }
+	struct TagList_t EditBoxClass[] = {
+		{ "editType",    SIT_EditType,    C__, SIT_INT,  OFFSET(SIT_EditBox, editType) },
+		{ "readOnly",    SIT_ReadOnly,    _SG, SIT_BOOL, OFFSET(SIT_EditBox, readOnly) },
+		{ "startSel",    SIT_StartSel,    _SG, SIT_INT,  OFFSET(SIT_EditBox, selStart) },
+		{ "endSel",      SIT_EndSel,      _SG, SIT_INT,  OFFSET(SIT_EditBox, selEnd) },
+		{ "minValue",    SIT_MinValue,    _SG, SIT_REAL, OFFSET(SIT_EditBox, minValue) },
+		{ "maxValue",    SIT_MaxValue,    _SG, SIT_REAL, OFFSET(SIT_EditBox, maxValue) },
+		{ "stepValue",   SIT_StepValue,   _SG, SIT_REAL, OFFSET(SIT_EditBox, stepValue) },
+		{ "curValue",    SIT_CurValue,    _SG, SIT_PTR,  OFFSET(SIT_EditBox, curValue) },
+		{ "placeHolder", SIT_PlaceHolder, _SG, SIT_STR,  OFFSET(SIT_EditBox, cueBanner) },
+		{ "editBuffer",  SIT_EditBuffer,  C__, SIT_PTR,  OFFSET(SIT_EditBox, fixedBuffer) },
+		{ "editLength",  SIT_EditLength,  C__, SIT_INT,  OFFSET(SIT_EditBox, fixedSize) },
+		{ "maxUndo",     SIT_MaxUndo,     C__, SIT_INT,  OFFSET(SIT_EditBox, undoSize) },
+		{ "maxLines",    SIT_MaxLines,    C__, SIT_INT,  OFFSET(SIT_EditBox, maxLines) },
+		{ "wordWrap",    SIT_WordWrap,    C__, SIT_INT,  OFFSET(SIT_EditBox, wordWrap) },
+		{ "tabStyle",    SIT_TabStyle,    _SG, SIT_INT,  OFFSET(SIT_EditBox, tabStyle) },
+		{ "roundTo",     SIT_RoundTo,     _SG, SIT_INT,  OFFSET(SIT_EditBox, roundTo) },
+		{ "colorMap",    SIT_ColorMap,    _SG, SIT_PTR,  OFFSET(SIT_EditBox, colorMap) },
+		{ "lexer",       SIT_Lexer,       _SG, SIT_PTR,  OFFSET(SIT_EditBox, lexer) },
+		{ "lexerData",   SIT_LexerData,   _SG, SIT_PTR,  OFFSET(SIT_EditBox, lexerData) },
+		{ "editAddText", SIT_EditAddText, _S_, SIT_PTR,  0 },
+		{ NULL,          SIT_TagEnd }
 	};
 
 	enum
@@ -194,11 +194,11 @@ static int SIT_TextEditSetCursor(SIT_Widget w, APTR cd, APTR ud)
 
 static int SIT_TextEditSetValue(SIT_Widget w, APTR call_data, APTR user_data)
 {
-	SIT_Variant * val  = user_data;
-	SIT_EditBox   edit = (SIT_EditBox) w;
-	TagList *     tag  = call_data;
-	int *         cur  = &edit->selStart;
-	int           pos;
+	SIT_Variant val  = user_data;
+	SIT_EditBox edit = (SIT_EditBox) w;
+	TagList     tag  = call_data;
+	int *       cur  = &edit->selStart;
+	int         pos;
 
 	switch (tag->tl_TagID) {
 	case SIT_EndSel: cur ++;

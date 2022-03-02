@@ -17,21 +17,22 @@ vector_t cssStyles;
 
 struct CSSAttr_t /* keep it private */
 {
-	STRPTR attr;
-	STRPTR defval;
-	STRPTR format;
-	char   inherit;         /* look in parent if unset */
-	char   sz;              /* in bytes, 0 for sizeof (ULONG) */
-	char   objtype;         /* 0: style, 1: background, 2: shadow */
-	char   reflow;          /* reflow node if property changed */
-	ULONG  get;             /* offset of field to get its real value (if > 0) */
-	ULONG  arg1;            /* offset of properties within style struct (in bytes) */
-	ULONG  arg2;
-	ULONG  arg3;
-	ULONG  arg4;
-	ULONG  arg5;
-	ULONG  sentinel;        /* Must be 0 */
+	STRPTR   attr;
+	STRPTR   defval;
+	STRPTR   format;
+	char     inherit;         /* look in parent if unset */
+	char     sz;              /* in bytes, 0 for sizeof (ULONG) */
+	char     objtype;         /* 0: style, 1: background, 2: shadow */
+	char     reflow;          /* reflow node if property changed */
+	uint16_t get;             /* offset of field to get its real value (if > 0) */
+	uint16_t arg1;            /* offset of properties within style struct (in bytes) */
+	uint16_t arg2;
+	uint16_t arg3;
+	uint16_t arg4;
+	uint16_t arg5;
 };
+
+#define MAX_ARG      5
 
 typedef struct CSSAttr_t *    CSSAttr;
 
@@ -107,13 +108,14 @@ CSSAttr cssAttrSearch(STRPTR str);
 
 int CSS_Init(STRPTR theme, int isPath)
 {
-	int i, j;
+	int i, j, k;
 
 	/* supported CSS attributes */
 	for (i = j = 0; i < DIM(cssattrs); i ++)
 	{
 		CSSAttr css = cssattrs + i;
 		uint8_t inherit = css->inherit;
+		if (css->attr) k += strlen(css->attr)+1;
 //		if (css->attr)
 //			fprintf(stderr, "%s, %d\n", css->attr, i);
 		if (css->sz == 0)
@@ -126,10 +128,9 @@ int CSS_Init(STRPTR theme, int isPath)
 //		if (css->attr && ! cssAttrSearch(css->attr))
 //			fprintf(stderr, "attr not found: %s\n", css->attr);
 	}
-
 	for (i = 0; i < 256; i++)
 	{
-		int c = i, k;
+		int c = i;
 		for (k = 0; k < 8; k++)
 			c = c & 1 ? 0xedb88320 ^ (c >> 1) : c >> 1;
 		crctable[i] = c;
@@ -528,11 +529,11 @@ static void cssMultAssign(CSSAttr attr, APTR mem)
 {
 	static uint8_t unassigned[] = {0xff,0xff,0xff,0xff};
 
-	APTR    dest[4];
-	ULONG * args;
-	int     set, count, sz = attr->sz;
+	APTR   dest[4];
+	DATA16 args;
+	int    set, count, sz = attr->sz;
 
-	for (args = &attr->arg1, set = count = 0; *args; count ++, args ++)
+	for (args = &attr->arg1, set = count = 0; count < MAX_ARG && *args; count ++, args ++)
 		if (memcmp(dest[count] = mem + *args, unassigned, sz))
 			set ++;
 
@@ -576,7 +577,7 @@ static Bool cssApplyMultipleParam(SIT_Widget node, CSSAttr a, STRPTR value)
 	STRPTR     p, fmt;
 	STRPTR     lineHeight;
 	int        i, depth, count, linePos, chrEnd;
-	ULONG *    attr;
+	DATA16     attr;
 
 	#define pop(fmt, attr, ref)         ref = stack[--depth], attr = stack[--depth], fmt = stack[--depth]
 	#define push(next, attr, ref, fmt)  stack[depth++] = next, stack[depth++] = attr, stack[depth++] = ref, \
@@ -908,7 +909,7 @@ static Bool cssApplyMultipleParam(SIT_Widget node, CSSAttr a, STRPTR value)
 					if (src->gradient.colors[0].rgba[3] > 0)
 						memcpy((STRPTR) bg + a->arg1, list->payload + a->arg1, a->sz);
 				}
-				else for (attr = &a->arg1; *attr; attr ++)
+				else for (attr = &a->arg1, depth = 0; depth < MAX_ARG && *attr; attr ++, depth ++)
 				{
 					memcpy((STRPTR) bg + *attr, list->payload + *attr, a->sz);
 				}
@@ -1087,7 +1088,7 @@ static void cssApplyAttribute(SIT_Widget node, STRPTR attr, STRPTR value)
 	{
 		SIT_Widget parent = node->parent;
 		CSSAttr    ref;
-		ULONG *    args;
+		DATA16     args;
 		APTR       stack[6];
 
 		if (parent == NULL) return; /* has to be set */
@@ -1367,7 +1368,7 @@ static int cssCheckChange(SIT_Widget node, Style * old, CSSAttr a)
 	STRPTR  fmt;
 	APTR    stack[6];
 	int     depth;
-	ULONG * attr;
+	DATA16  attr;
 	int     ret;
 
 	if (! a || a->objtype > 0) return 0;

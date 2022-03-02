@@ -12,24 +12,24 @@
 #include "SIT_CSSLayout.h"
 #include "nanovg.h"
 
-	TagList AppClass[] = {
-		{ SIT_DefSBArrows,     NULL, _SG, SIT_INT,  OFFSET(SIT_App, defSBArrows) },
-		{ SIT_DefSBSize,       NULL, _SG, SIT_UNIT, OFFSET(SIT_App, defSBSize) },
-		{ SIT_RefreshMode,     NULL, _SG, SIT_INT,  OFFSET(SIT_App, refreshMode) },
-		{ SIT_CurrentDir,      NULL, _SG, SIT_PTR,  OFFSET(SIT_App, currentDir) },
-		{ SIT_ScreenWidth,     NULL, __G, SIT_INT,  OFFSET(SIT_App, screen.width) },
-		{ SIT_ScreenHeight,    NULL, __G, SIT_INT,  OFFSET(SIT_App, screen.height) },
-		{ SIT_TagPrivate+2,    NULL, _S_, SIT_PTR,  0 }, /* font-file */
-		{ SIT_TagPrivate+1,    NULL, _S_, SIT_PTR,  OFFSET(SIT_App, fontName) },
-		{ SIT_AddFont,         NULL, _S_, SIT_ABBR, ABBR(1, 1, 0, 0) },
-		{ SIT_AccelTable,      NULL, _SG, SIT_PTR,  OFFSET(SIT_App, accel) },
-		{ SIT_StyleSheet,      NULL, _S_, SIT_PTR,  OFFSET(SIT_App, styles) },
-		{ SIT_ExitCode,        NULL, _SG, SIT_PTR,  OFFSET(SIT_App, exitCode) },
-		{ SIT_MonitorResol,    NULL, __G, SIT_PTR,  OFFSET(SIT_App, resolution) },
-		{ SIT_SetAppIcon,      NULL, _S_, SIT_INT,  0 },
-		{ SIT_CompositedAreas, NULL, __G, SIT_PTR,  0 },
-		{ SIT_FontScale,       NULL, _SG, SIT_INT,  0 },
-		{ SIT_TagEnd }
+	struct TagList_t AppClass[] = {
+		{ NULL, SIT_DefSBArrows,     _SG, SIT_INT,  OFFSET(SIT_App, defSBArrows) },
+		{ NULL, SIT_DefSBSize,       _SG, SIT_UNIT, OFFSET(SIT_App, defSBSize) },
+		{ NULL, SIT_RefreshMode,     _SG, SIT_INT,  OFFSET(SIT_App, refreshMode) },
+		{ NULL, SIT_CurrentDir,      _SG, SIT_PTR,  OFFSET(SIT_App, currentDir) },
+		{ NULL, SIT_ScreenWidth,     __G, SIT_INT,  OFFSET(SIT_App, screen.width) },
+		{ NULL, SIT_ScreenHeight,    __G, SIT_INT,  OFFSET(SIT_App, screen.height) },
+		{ NULL, SIT_TagPrivate+2,    _S_, SIT_PTR,  0 }, /* font-file */
+		{ NULL, SIT_TagPrivate+1,    _S_, SIT_PTR,  OFFSET(SIT_App, fontName) },
+		{ NULL, SIT_AddFont,         _S_, SIT_ABBR, ABBR(1, 1, 0, 0) },
+		{ NULL, SIT_AccelTable,      _SG, SIT_PTR,  OFFSET(SIT_App, accel) },
+		{ NULL, SIT_StyleSheet,      _S_, SIT_PTR,  OFFSET(SIT_App, styles) },
+		{ NULL, SIT_ExitCode,        _SG, SIT_PTR,  OFFSET(SIT_App, exitCode) },
+		{ NULL, SIT_MonitorResol,    __G, SIT_PTR,  OFFSET(SIT_App, resolution) },
+		{ NULL, SIT_SetAppIcon,      _S_, SIT_INT,  0 },
+		{ NULL, SIT_CompositedAreas, __G, SIT_PTR,  0 },
+		{ NULL, SIT_FontScale,       _SG, SIT_INT,  0 },
+		{ NULL, SIT_TagEnd }
 	};
 	static WNDPROC mainWndProc;
 	HANDLE mainWnd;
@@ -229,9 +229,9 @@ void SIT_ChangeStyleSheet(STRPTR path, int mode)
 
 static int SIT_AppSetValues(SIT_Widget w, APTR call_data, APTR user_data)
 {
-	SIT_Variant * val = user_data;
-	SIT_App       app = (SIT_App) w;
-	TagList *     tag = call_data;
+	SIT_Variant val = user_data;
+	SIT_App     app = (SIT_App) w;
+	TagList     tag = call_data;
 
 	switch (tag->tl_TagID) {
 	case SIT_TagPrivate+2:

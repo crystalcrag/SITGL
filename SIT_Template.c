@@ -20,15 +20,15 @@ typedef struct
 	int  closing;
 }	PLArgs;
 
-extern TagList LabelClass[],    ButtonClass[],   EditBoxClass[], WidgetClass[];
-extern TagList ListBoxClass[],  ComboClass[],    SBClass[],      SliderClass[];
-extern TagList ProgressClass[], TabClass[],      TooltipClass[];
+extern struct TagList_t LabelClass[],    ButtonClass[],   EditBoxClass[], WidgetClass[];
+extern struct TagList_t ListBoxClass[],  ComboClass[],    SBClass[],      SliderClass[];
+extern struct TagList_t ProgressClass[], TabClass[],      TooltipClass[];
 
 /*
  * some attributes can only be set at creation time, therefore we need the complete tag
  * list before calling SIT_CreateWidget()
  */
-static TagList * classes[] = {
+static TagList classes[] = {
 	NULL, NULL,  LabelClass,    ButtonClass,  EditBoxClass,  WidgetClass, ListBoxClass,
 	WidgetClass, SBClass,       SliderClass,  ProgressClass, ComboClass,  TabClass,
 	TooltipClass
@@ -71,22 +71,24 @@ static void UnescapeEntities(STRPTR io)
 	}
 }
 
+typedef struct TagList_t    TagList_t;
+
 /* parse one tag declaration */
-static STRPTR SIT_ParseLine(STRPTR line, va_list * list, TagList * classArgs, PLArgs * cd)
+static STRPTR SIT_ParseLine(STRPTR line, va_list * list, TagList classArgs, PLArgs * cd)
 {
-	KeyVal_t table[8];
-	TagList  name  = {.tl_TagID = SIT_TagUser,   .tl_Type = SIT_PTR};
-	TagList  extra = {.tl_TagID = SIT_TagUser+1, .tl_Type = SIT_INT};
-	KeyVal   cur   = table;
-	KeyVal   start = table;
-	STRPTR   buf   = NULL;
+	KeyVal_t  table[8];
+	TagList_t name  = {.tl_TagID = SIT_TagUser,   .tl_Type = SIT_PTR};
+	TagList_t extra = {.tl_TagID = SIT_TagUser+1, .tl_Type = SIT_INT};
+	KeyVal    cur   = table;
+	KeyVal    start = table;
+	STRPTR    buf   = NULL;
 
 	while (*line && *line != '>')
 	{
-		TagList * stack[5];
-		TagList * args;
-		int       usage = 1, tag;
-		STRPTR    p;
+		TagList stack[5];
+		TagList args;
+		int     usage = 1, tag;
+		STRPTR  p;
 
 		for (p = line; isalnum(*p); p ++); tag = p - line;
 		/* get args */
@@ -106,7 +108,7 @@ static STRPTR SIT_ParseLine(STRPTR line, va_list * list, TagList * classArgs, PL
 				if (args->tl_TagID == SIT_SuperClass)
 				{
 					stack[usage ++] = args + 1;
-					args = (TagList *) args->tl_Arg;
+					args = (TagList) args->tl_Arg;
 					continue;
 				}
 				if (args->tl_TagName && strncasecmp(line, args->tl_TagName, tag) == 0 &&
@@ -169,7 +171,6 @@ static STRPTR SIT_ParseLine(STRPTR line, va_list * list, TagList * classArgs, PL
 						break;
 					}
 					/* no break; */
-				case SIT_U16:
 				case SIT_BOOL: cur->key.val = e < p ? strtol(e, &e, 0) : 0; break;
 				case SIT_CTRL:
 					if (p - e == 5 && strncmp(e, "#LAST", 5) == 0)
@@ -226,8 +227,7 @@ static STRPTR SIT_ParseLine(STRPTR line, va_list * list, TagList * classArgs, PL
 				case SIT_CTRL: case SIT_STR:
 				case SIT_PTR:  cur->key.ptr = va_arg(*list, APTR); break;
 				case SIT_UNIT:
-				case SIT_INT:
-				case SIT_U16:  cur->key.val = va_arg(*list, int); break;
+				case SIT_INT:  cur->key.val = va_arg(*list, int); break;
 				case SIT_BOOL: cur->key.val = va_arg(*list, Bool); break;
 				}
 				if (cur->tag > 0)

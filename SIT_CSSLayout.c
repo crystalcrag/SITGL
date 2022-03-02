@@ -1278,7 +1278,7 @@ void layoutRecalcWords(SIT_Widget w)
 	}
 
 	/* while we are here, recalc rel unit fields */
-	TagList * args;
+	TagList args;
 	for (i = LAYF_RelUnit, args = WidgetClass + SIT_Height - 2; i <= LAYF_RelUnitLast; i <<= 1, args ++)
 	{
 		if (w->layout.flags & i)

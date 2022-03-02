@@ -10,11 +10,11 @@
 #include "SIT_P.h"
 #include "SIT_CSSLayout.h"
 
-	TagList TooltipClass[] = {
-		{ SIT_DisplayTime,   "displayTime",   _SG, SIT_INT, OFFSET(SIT_Tooltip, displayTime) },
-		{ SIT_DelayTime,     "delayTime",     _SG, SIT_INT, OFFSET(SIT_Tooltip, delayTime) },
-		{ SIT_ToolTipAnchor, "toolTipAnchor", _SG, SIT_INT, OFFSET(SIT_Tooltip, anchor) },
-		{ SIT_TagEnd }
+	struct TagList_t TooltipClass[] = {
+		{ "displayTime",   SIT_DisplayTime,   _SG, SIT_INT, OFFSET(SIT_Tooltip, displayTime) },
+		{ "delayTime",     SIT_DelayTime,     _SG, SIT_INT, OFFSET(SIT_Tooltip, delayTime) },
+		{ "toolTipAnchor", SIT_ToolTipAnchor, _SG, SIT_INT, OFFSET(SIT_Tooltip, anchor) },
+		{ NULL,            SIT_TagEnd }
 	};
 
 
@@ -96,9 +96,9 @@ static int SIT_TooltipResize(SIT_Widget w, APTR cd, APTR ud)
 
 static int SIT_TooltipSetValue(SIT_Widget w, APTR cd, APTR ud)
 {
-	SIT_Variant * val = ud;
-	SIT_Tooltip   tip = (SIT_Tooltip) w;
-	TagList *     tag = cd;
+	SIT_Variant val = ud;
+	SIT_Tooltip tip = (SIT_Tooltip) w;
+	TagList     tag = cd;
 
 	if (tag->tl_TagID == SIT_DisplayTime && val->integer == SITV_ResetTime)
 	{

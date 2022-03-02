@@ -13,13 +13,13 @@
 #include "SIT_CSSLayout.h"
 #include "nanovg.h"
 
-	TagList ComboClass[] = {
-		{ SIT_InitialValues, "initialValues", CSG, SIT_PTR,  OFFSET(SIT_ComboBox, initValues) },
-		{ SIT_SelectedIndex, "selectedIndex", _SG, SIT_INT,  OFFSET(SIT_ComboBox, selIndex) },
-		{ SIT_ReadOnly,      "readOnly",      _SG, SIT_BOOL, OFFSET(SIT_ComboBox, readOnly) },
-		{ SIT_AutoComplete,  "autoComplete",  C__, SIT_INT,  OFFSET(SIT_ComboBox, autoComplete) },
-		{ SIT_ItemCount,     NULL,            __G, SIT_INT,  OFFSET(SIT_ComboBox, items) },
-		{ SIT_TagEnd }
+	struct TagList_t ComboClass[] = {
+		{ "initialValues", SIT_InitialValues, CSG, SIT_PTR,  OFFSET(SIT_ComboBox, initValues) },
+		{ "selectedIndex", SIT_SelectedIndex, _SG, SIT_INT,  OFFSET(SIT_ComboBox, selIndex) },
+		{ "readOnly",      SIT_ReadOnly,      _SG, SIT_BOOL, OFFSET(SIT_ComboBox, readOnly) },
+		{ "autoComplete",  SIT_AutoComplete,  C__, SIT_INT,  OFFSET(SIT_ComboBox, autoComplete) },
+		{ NULL,            SIT_ItemCount,     __G, SIT_INT,  OFFSET(SIT_ComboBox, items) },
+		{ NULL,            SIT_TagEnd }
 	};
 
 static int SIT_ComboFinalize(SIT_Widget, APTR cd, APTR ud);
@@ -116,9 +116,9 @@ static int SIT_ComboSetStyles(SIT_Widget w, APTR cd, APTR ud)
 /* setValue callback */
 static int SIT_ComboSetValues(SIT_Widget w, APTR cd, APTR ud)
 {
-	SIT_ComboBox  cb    = (SIT_ComboBox) w;
-	SIT_Variant * value = ud;
-	TagList *     tag   = cd;
+	SIT_ComboBox cb    = (SIT_ComboBox) w;
+	SIT_Variant  value = ud;
+	TagList      tag   = cd;
 
 	switch (tag->tl_TagID) {
 	case SIT_InitialValues:

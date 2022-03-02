@@ -11,13 +11,13 @@
 #include "SIT_P.h"
 #include "SIT_CSSLayout.h"
 
-	TagList TabClass[] = {
-		{ SIT_TabStyle,  "tabStyle",  C__, SIT_INT,  OFFSET(SIT_Tab, tabStyle) },
-		{ SIT_TabCount,  NULL,        __G, SIT_INT,  OFFSET(SIT_Tab, nbTab) },
-		{ SIT_TabStr,    "tabStr",    _SG, SIT_PTR,  OFFSET(SIT_Tab, tabStr) },
-		{ SIT_TabSpace,  "tabSpace",  _SG, SIT_UNIT, OFFSET(SIT_Tab, tabSpace) },
-		{ SIT_TabActive, "tabActive", _SG, SIT_INT,  OFFSET(SIT_Tab, curTab) },
-		{ SIT_TagEnd }
+	struct TagList_t TabClass[] = {
+		{ "tabStyle",  SIT_TabStyle,  C__, SIT_INT,  OFFSET(SIT_Tab, tabStyle) },
+		{ NULL,        SIT_TabCount,  __G, SIT_INT,  OFFSET(SIT_Tab, nbTab) },
+		{ "tabStr",    SIT_TabStr,    _SG, SIT_PTR,  OFFSET(SIT_Tab, tabStr) },
+		{ "tabSpace",  SIT_TabSpace,  _SG, SIT_UNIT, OFFSET(SIT_Tab, tabSpace) },
+		{ "tabActive", SIT_TabActive, _SG, SIT_INT,  OFFSET(SIT_Tab, curTab) },
+		{ NULL,        SIT_TagEnd }
 	};
 
 
@@ -276,9 +276,9 @@ static void SIT_TabSet(SIT_Widget w, STRPTR tabs)
 
 static int SIT_TabSetValues(SIT_Widget w, APTR cd, APTR ud)
 {
-	TagList *     tag   = cd;
-	SIT_Variant * value = ud;
-	SIT_Tab       tab   = (SIT_Tab) w;
+	SIT_Variant value = ud;
+	SIT_Tab     tab   = (SIT_Tab) w;
+	TagList     tag   = cd;
 
 	switch (tag->tl_TagID) {
 	case SIT_TabActive:

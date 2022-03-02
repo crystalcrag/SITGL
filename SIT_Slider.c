@@ -10,18 +10,19 @@
 #include "SIT_P.h"
 #include "SIT_CSSLayout.h"
 
-	TagList SliderClass[] = {
-		{ SIT_MinValue,     "minValue",     _SG, SIT_INT,  OFFSET(SIT_Slider, minValue) },
-		{ SIT_MaxValue,     "maxValue",     _SG, SIT_INT,  OFFSET(SIT_Slider, maxValue) },
-		{ SIT_PageSize,     "pageSize",     _SG, SIT_INT,  OFFSET(SIT_Slider, pageSize) },
-		{ SIT_SliderPos,    "sliderPos",    _SG, SIT_INT,  OFFSET(SIT_Slider, sliderPos) },
-		{ SIT_HorizScroll,  "horizScroll",  C__, SIT_BOOL, OFFSET(SIT_Slider, isHoriz) },
-		{ SIT_ThumbThick,   "thumbThick",   _SG, SIT_UNIT, OFFSET(SIT_Slider, thumbThick) },
-		{ SIT_ThumbHeight,  "thumbHeight",  _SG, SIT_UNIT, OFFSET(SIT_Slider, thumbHeight) },
-		{ SIT_GaugePadding, "gaugePadding", _SG, SIT_UNIT, OFFSET(SIT_Slider, gaugePadding) },
-		{ SIT_BuddyEdit,    "buddyEdit",    _SG, SIT_CTRL, OFFSET(SIT_Slider, buddy) },
-		{ SIT_CurValue,     "curValue",     _SG, SIT_PTR,  OFFSET(SIT_Slider, curValue) },
-		{ SIT_TagEnd }
+	struct TagList_t SliderClass[] = {
+		{ "minValue",     SIT_MinValue,     _SG, SIT_INT,  OFFSET(SIT_Slider, minValue) },
+		{ "maxValue",     SIT_MaxValue,     _SG, SIT_INT,  OFFSET(SIT_Slider, maxValue) },
+		{ "pageSize",     SIT_PageSize,     _SG, SIT_INT,  OFFSET(SIT_Slider, pageSize) },
+		{ "sliderPos",    SIT_SliderPos,    _SG, SIT_INT,  OFFSET(SIT_Slider, sliderPos) },
+		{ "horizScroll",  SIT_HorizScroll,  C__, SIT_BOOL, OFFSET(SIT_Slider, isHoriz) },
+		{ "thumbThick",   SIT_ThumbThick,   _SG, SIT_UNIT, OFFSET(SIT_Slider, thumbThick) },
+		{ "thumbHeight",  SIT_ThumbHeight,  _SG, SIT_UNIT, OFFSET(SIT_Slider, thumbHeight) },
+		{ "gaugePadding", SIT_GaugePadding, _SG, SIT_UNIT, OFFSET(SIT_Slider, gaugePadding) },
+		{ "buddyEdit",    SIT_BuddyEdit,    _SG, SIT_CTRL, OFFSET(SIT_Slider, buddy) },
+		{ "curValue",     SIT_CurValue,     _SG, SIT_PTR,  OFFSET(SIT_Slider, curValue) },
+		{ "dragNotify",   SIT_DragNotify,   _SG, SIT_BOOL, OFFSET(SIT_Slider, dragNotify) },
+		{ NULL,           SIT_TagEnd }
 	};
 
 /* set minimal width/height */
@@ -85,7 +86,8 @@ static int SIT_SliderResize(SIT_Widget w, APTR cd, APTR ud)
 			sprintf(value, "%d", s->sliderPos);
 			SIT_SetValues(s->buddy, SIT_Title, value, NULL);
 		}
-		SIT_ApplyCallback(w, (APTR) s->sliderPos, SITE_OnChange);
+		if (s->dragNotify || s->isDragged == 0)
+			SIT_ApplyCallback(w, (APTR) s->sliderPos, SITE_OnChange);
 	}
 
 	return 1;
@@ -108,9 +110,9 @@ static int SIT_SliderSync(SIT_Widget w, APTR cd, APTR ud)
 
 static int SIT_SliderSetValues(SIT_Widget w, APTR call_data, APTR user_data)
 {
-	SIT_Variant * value = user_data;
-	TagList *     tag   = call_data;
-	SIT_Slider    s     = (SIT_Slider) w;
+	SIT_Variant value = user_data;
+	TagList     tag   = call_data;
+	SIT_Slider  s     = (SIT_Slider) w;
 
 	switch (tag->tl_TagID) {
 	case SIT_SliderPos:
@@ -196,6 +198,8 @@ static int SIT_SliderClick(SIT_Widget w, APTR cd, APTR ud)
 	case SITOM_ButtonLeft:
 		if (msg->state != SITOM_ButtonPressed)
 		{
+			if (s->dragNotify == 0 && s->isDragged)
+				SIT_ApplyCallback(w, (APTR) s->sliderPos, SITE_OnChange);
 			s->isDragged = 0;
 			return 0;
 		}
@@ -278,6 +282,7 @@ Bool SIT_InitSlider(SIT_Widget w, va_list args)
 
 	/* default values */
 	s->isHoriz  = True;
+	s->dragNotify = True;
 	s->maxValue = 100;
 	s->pageSize = 10;
 	s->thumbHeight = 1e6;

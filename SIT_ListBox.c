@@ -15,25 +15,25 @@
 #include "SIT_CSSLayout.h"
 #include "nanovg.h"
 
-	TagList ListBoxClass[] = {
-		{ SIT_ListBoxFlags,  "listBoxFlags",  _SG, SIT_INT,  OFFSET(SIT_ListBox, lbFlags) },
-		{ SIT_CellPaint,     "cellPaint",     _SG, SIT_PTR,  OFFSET(SIT_ListBox, cellPaint) },
-		{ SIT_FinalizeItem,  "finalizeItem",  _SG, SIT_PTR,  OFFSET(SIT_ListBox, finalizeItem) },
-		{ SIT_AutoComplete,  NULL,            _S_, SIT_PTR,  0 },
-		{ SIT_ViewMode,      "viewMode",      _SG, SIT_INT,  OFFSET(SIT_ListBox, viewMode) },
-		{ SIT_ColumnCount,   NULL,            __G, SIT_INT,  OFFSET(SIT_ListBox, softColumn) },
-		{ SIT_ColumnWidths,  "columnWidths",  _SG, SIT_PTR,  OFFSET(SIT_ListBox, columnWidths) },
-		{ SIT_ColumnNames,   "columnNames",   _SG, SIT_PTR,  OFFSET(SIT_ListBox, columnNames) },
-		{ SIT_ColumnAlign,   "columnAlign",   _SG, SIT_PTR,  OFFSET(SIT_ListBox, columnAlign) },
-		{ SIT_SelectedIndex, "selectedIndex", _SG, SIT_INT,  OFFSET(SIT_ListBox, selIndex) },
-		{ SIT_ItemCount,     NULL,            __G, SIT_INT,  0 },
-		{ SIT_MakeVisible,   "makeVisible",   _S_, SIT_INT,  0 },
-		{ SIT_TargetRow,     NULL,            _SG, SIT_INT,  OFFSET(SIT_ListBox, curRow) },
-		{ SIT_RowSelArg,     NULL,            _SG, SIT_BOOL, 0 },
-		{ SIT_RowTagArg,     NULL,            _SG, SIT_PTR,  0 },
-		{ SIT_SortColumn,    "sortColumn",    _SG, SIT_INT,  OFFSET(SIT_ListBox, sortColumn) },
-		{ SIT_RowMaxVisible, "rowMaxVisible", _SG, SIT_INT,  OFFSET(SIT_ListBox, maxRowVisible) },
-		{ SIT_TagEnd }
+	struct TagList_t ListBoxClass[] = {
+		{ "listBoxFlags",  SIT_ListBoxFlags,  _SG, SIT_INT,  OFFSET(SIT_ListBox, lbFlags) },
+		{ "cellPaint",     SIT_CellPaint,     _SG, SIT_PTR,  OFFSET(SIT_ListBox, cellPaint) },
+		{ "finalizeItem",  SIT_FinalizeItem,  _SG, SIT_PTR,  OFFSET(SIT_ListBox, finalizeItem) },
+		{ NULL,            SIT_AutoComplete,  _S_, SIT_PTR,  0 },
+		{ "viewMode",      SIT_ViewMode,      _SG, SIT_INT,  OFFSET(SIT_ListBox, viewMode) },
+		{ NULL,            SIT_ColumnCount,   __G, SIT_INT,  OFFSET(SIT_ListBox, softColumn) },
+		{ "columnWidths",  SIT_ColumnWidths,  _SG, SIT_PTR,  OFFSET(SIT_ListBox, columnWidths) },
+		{ "columnNames",   SIT_ColumnNames,   _SG, SIT_PTR,  OFFSET(SIT_ListBox, columnNames) },
+		{ "columnAlign",   SIT_ColumnAlign,   _SG, SIT_PTR,  OFFSET(SIT_ListBox, columnAlign) },
+		{ "selectedIndex", SIT_SelectedIndex, _SG, SIT_INT,  OFFSET(SIT_ListBox, selIndex) },
+		{ NULL,            SIT_ItemCount,     __G, SIT_INT,  0 },
+		{ "makeVisible",   SIT_MakeVisible,   _S_, SIT_INT,  0 },
+		{ NULL,            SIT_TargetRow,     _SG, SIT_INT,  OFFSET(SIT_ListBox, curRow) },
+		{ NULL,            SIT_RowSelArg,     _SG, SIT_BOOL, 0 },
+		{ NULL,            SIT_RowTagArg,     _SG, SIT_PTR,  0 },
+		{ "sortColumn",    SIT_SortColumn,    _SG, SIT_INT,  OFFSET(SIT_ListBox, sortColumn) },
+		{ "rowMaxVisible", SIT_RowMaxVisible, _SG, SIT_INT,  OFFSET(SIT_ListBox, maxRowVisible) },
+		{ NULL,            SIT_TagEnd }
 	};
 
 	/* look ahead buffer: we only need one for the entire application */
@@ -1502,10 +1502,10 @@ static Cell SIT_ListGetNth(SIT_ListBox list, int nth)
 
 static int SIT_SetListBoxValues(SIT_Widget w, APTR cd, APTR ud)
 {
-	SIT_Variant * val = ud;
-	TagList *     tag = cd;
-	SIT_ListBox   list = (SIT_ListBox) w;
-	Cell          cell;
+	SIT_Variant val = ud;
+	TagList     tag = cd;
+	SIT_ListBox list = (SIT_ListBox) w;
+	Cell        cell;
 
 	if (cd == NULL)
 	{

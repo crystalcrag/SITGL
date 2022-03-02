@@ -383,6 +383,7 @@ static int glnvg__deleteTexture(GLNVGcontext* gl, int id)
 	return 0;
 }
 
+#ifdef DEBUG_SIT
 static void glnvg__dumpShaderError(GLuint shader, const char* name, const char* type)
 {
 	GLchar str[512+1];
@@ -413,6 +414,11 @@ static void glnvg__checkError(GLNVGcontext* gl, const char* str)
 		return;
 	}
 }
+#else
+#define glnvg__dumpShaderError(x, y, z)
+#define glnvg__dumpProgramError(x, y)
+#define glnvg__checkError(x, y)
+#endif
 
 static int glnvg__createShader(GLNVGshader* shader, const char* name, const char* header, const char* opts, const char* vshader, const char* fshader)
 {
@@ -500,36 +506,31 @@ static int glnvg__renderCreate(void* uptr)
 		"#define NANOVG_GL2 1\n"
 #elif defined NANOVG_GL3
 		"#version 150 core\n"
-		"#define NANOVG_GL3 1\n"
 #elif defined NANOVG_GLES2
 		"#version 100\n"
-		"#define NANOVG_GL2 1\n"
 #elif defined NANOVG_GLES3
 		"#version 300 es\n"
-		"#define NANOVG_GL3 1\n"
 #endif
 
-#if NANOVG_GL_USE_UNIFORMBUFFER
-	"#define USE_UNIFORMBUFFER 1\n"
-#else
+#ifndef NANOVG_GL_USE_UNIFORMBUFFER
 	"#define UNIFORMARRAY_SIZE 11\n"
 #endif
 	"\n";
 
 	static const char* fillVertShader =
-		"#ifdef NANOVG_GL3\n"
+		#ifdef NANOVG_GL3
 		"	uniform vec2 viewSize;\n"
 		"	in vec2 vertex;\n"
 		"	in vec2 tcoord;\n"
 		"	out vec2 ftcoord;\n"
 		"	out vec2 fpos;\n"
-		"#else\n"
+		#else
 		"	uniform vec2 viewSize;\n"
 		"	attribute vec2 vertex;\n"
 		"	attribute vec2 tcoord;\n"
 		"	varying vec2 ftcoord;\n"
 		"	varying vec2 fpos;\n"
-		"#endif\n"
+		#endif
 		"void main(void) {\n"
 		"	ftcoord = tcoord;\n"
 		"	fpos = vertex;\n"
@@ -537,15 +538,15 @@ static int glnvg__renderCreate(void* uptr)
 		"}\n";
 
 	static const char* fillFragShader =
-		"#ifdef GL_ES\n"
-		"#if defined(GL_FRAGMENT_PRECISION_HIGH) || defined(NANOVG_GL3)\n"
+		#ifdef GL_ES
+			#if defined(GL_FRAGMENT_PRECISION_HIGH) || defined(NANOVG_GL3)
 		" precision highp float;\n"
-		"#else\n"
+			#else
 		" precision mediump float;\n"
-		"#endif\n"
-		"#endif\n"
-		"#ifdef NANOVG_GL3\n"
-		"#ifdef USE_UNIFORMBUFFER\n"
+			#endif
+		#endif
+		#ifdef NANOVG_GL3
+			#ifdef NANOVG_GL_USE_UNIFORMBUFFER
 		"	layout(std140) uniform frag {\n"
 		"		mat3 scissorMat;\n"
 		"		mat3 paintMat;\n"
@@ -561,20 +562,20 @@ static int glnvg__renderCreate(void* uptr)
 		"		int texType;\n"
 		"		int type;\n"
 		"	};\n"
-		"#else\n" // NANOVG_GL3 && !USE_UNIFORMBUFFER
+			#else // NANOVG_GL3 && !NANOVG_GL_USE_UNIFORMBUFFER
 		"	uniform vec4 frag[UNIFORMARRAY_SIZE];\n"
-		"#endif\n"
+			#endif
 		"	uniform sampler2D tex;\n"
 		"	in vec2 ftcoord;\n"
 		"	in vec2 fpos;\n"
 		"	out vec4 outColor;\n"
-		"#else\n" // !NANOVG_GL3
+		#else // !NANOVG_GL3
 		"	uniform vec4 frag[UNIFORMARRAY_SIZE];\n"
 		"	uniform sampler2D tex;\n"
 		"	varying vec2 ftcoord;\n"
 		"	varying vec2 fpos;\n"
-		"#endif\n"
-		"#ifndef USE_UNIFORMBUFFER\n"
+		#endif
+		#ifndef NANOVG_GL_USE_UNIFORMBUFFER
 		"	#define scissorMat mat3(frag[0].xyz, frag[1].xyz, frag[2].xyz)\n"
 		"	#define paintMat mat3(frag[3].xyz, frag[4].xyz, frag[5].xyz)\n"
 		"	#define innerCol frag[6]\n"
@@ -588,7 +589,7 @@ static int glnvg__renderCreate(void* uptr)
 		"	#define strokeThr frag[10].y\n"
 		"	#define texType int(frag[10].z)\n"
 		"	#define type int(frag[10].w)\n"
-		"#endif\n"
+		#endif
 		"\n"
 		"float sdroundrect(vec2 pt, vec2 ext, float rad) {\n"
 		"	vec2 ext2 = ext - vec2(rad,rad);\n"
@@ -596,14 +597,14 @@ static int glnvg__renderCreate(void* uptr)
 		"	return min(max(d.x,d.y),0.0) + length(max(d,0.0)) - rad;\n"
 		"}\n"
 		"\n"
-		"// Scissoring\n"
+		// Scissoring
 		"float scissorMask(vec2 p) {\n"
 		"	vec2 sc = (abs((scissorMat * vec3(p,1.0)).xy) - scissorExt);\n"
 		"	sc = vec2(0.5,0.5) - sc * scissorScale;\n"
 		"	return clamp(sc.x,0.0,1.0) * clamp(sc.y,0.0,1.0);\n"
 		"}\n"
 		"#ifdef EDGE_AA\n"
-		"// Stroke - from [0..1] to clipped pyramid, where the slope is 1px.\n"
+		// Stroke - from [0..1] to clipped pyramid, where the slope is 1px.
 		"float strokeMask() {\n"
 		"	return min(1.0, (1.0-abs(ftcoord.x*2.0-1.0))*strokeMult) * min(1.0, ftcoord.y);\n"
 		"}\n"
@@ -618,8 +619,8 @@ static int glnvg__renderCreate(void* uptr)
 		"#else\n"
 		"	float strokeAlpha = 1.0;\n"
 		"#endif\n"
-		"	if (type == 0) {			// Gradient\n"
-		"		// Calculate gradient color using box gradient\n"
+		"	if (type == 0) {\n" // Gradient
+				// Calculate gradient color using box gradient
 		"		vec2 pt = (paintMat * vec3(fpos,1.0)).xy;\n"
 		#if 1
 		"		float d = sin(clamp((sdroundrect(pt, extent, radius) + feather*0.5) / feather, 0.0, 1.0) * (3.1415926535/2));\n"
@@ -628,42 +629,42 @@ static int glnvg__renderCreate(void* uptr)
 		"		float d = clamp((sdroundrect(pt, extent, radius) + feather*0.5) / feather, 0.0, 1.0);\n"
 		"		vec4 color = mix(innerCol, outerCol, d);\n"
 		#endif
-		"		// Combine alpha\n"
+				// Combine alpha
 		"		color *= strokeAlpha * scissor;\n"
 		"		result = color;\n"
-		"	} else if (type == 1) {		// Image\n"
-		"		// Calculate color fron texture\n"
+		"	} else if (type == 1) {\n" // Image
+				// Calculate color fron texture
 		"		vec2 pt = (paintMat * vec3(fpos,1.0)).xy / extent;\n"
-		"#ifdef NANOVG_GL3\n"
+		#ifdef NANOVG_GL3
 		"		vec4 color = texture(tex, pt);\n"
-		"#else\n"
+		#else
 		"		vec4 color = texture2D(tex, pt);\n"
-		"#endif\n"
+		#endif
 		"		if (texType == 1) color = vec4(color.xyz*color.w,color.w);"
 		"		if (texType == 2) color = vec4(color.x);"
-		"		// Apply color tint and alpha.\n"
+				// Apply color tint and alpha.
 		"		color *= innerCol;\n"
-		"		// Combine alpha\n"
+				// Combine alpha
 		"		color *= strokeAlpha * scissor;\n"
 		"		result = color;\n"
-		"	} else if (type == 2) {		// Stencil fill\n"
+		"	} else if (type == 2) {\n"		// Stencil fill
 		"		result = vec4(1,1,1,1);\n"
-		"	} else if (type == 3) {		// Textured tris\n"
-		"#ifdef NANOVG_GL3\n"
+		"	} else if (type == 3) {\n"		// Textured tris
+		#ifdef NANOVG_GL3
 		"		vec4 color = texture(tex, ftcoord);\n"
-		"#else\n"
+		#else
 		"		vec4 color = texture2D(tex, ftcoord);\n"
-		"#endif\n"
+		#endif
 		"		if (texType == 1) color = vec4(color.xyz*color.w,color.w);"
 		"		if (texType == 2) color = vec4(color.x);"
 		"		color *= scissor;\n"
 		"		result = color * innerCol;\n"
 		"	}\n"
-		"#ifdef NANOVG_GL3\n"
+		#ifdef NANOVG_GL3
 		"	outColor = result;\n"
-		"#else\n"
+		#else
 		"	gl_FragColor = result;\n"
-		"#endif\n"
+		#endif
 		"}\n";
 
 	glnvg__checkError(gl, "init");

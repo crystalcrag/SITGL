@@ -11,19 +11,19 @@
 #include <stdio.h>
 #include "SIT_P.h"
 
-	TagList FileDialogClass[] = {
-		{ SIT_Filters,    "filters",    C__, SIT_STR, OFFSET(SIT_FileDialog, filters) },
-		{ SIT_SelFilter,  "selFilter",  _SG, SIT_INT, OFFSET(SIT_FileDialog, selFilter) },
-		{ SIT_InitPath,   "initPath",   _SG, SIT_STR, OFFSET(SIT_FileDialog, initPath) },
-		{ SIT_DlgFlags,   "dlgFlags",   _SG, SIT_INT, OFFSET(SIT_FileDialog, flags) },
-		{ SIT_SelPath,    NULL,         __G, SIT_PTR, OFFSET(SIT_FileDialog, filePtr) },
-		{ SIT_NbSelect,   NULL,         __G, SIT_INT, OFFSET(SIT_FileDialog, nbSelect) },
-		{ SIT_TagEnd }
+	struct TagList_t FileDialogClass[] = {
+		{ "filters",   SIT_Filters,   C__, SIT_STR, OFFSET(SIT_FileDialog, filters) },
+		{ "selFilter", SIT_SelFilter, _SG, SIT_INT, OFFSET(SIT_FileDialog, selFilter) },
+		{ "initPath",  SIT_InitPath,  _SG, SIT_STR, OFFSET(SIT_FileDialog, initPath) },
+		{ "dlgFlags",  SIT_DlgFlags,  _SG, SIT_INT, OFFSET(SIT_FileDialog, flags) },
+		{ NULL,        SIT_SelPath,   __G, SIT_PTR, OFFSET(SIT_FileDialog, filePtr) },
+		{ NULL,        SIT_NbSelect,  __G, SIT_INT, OFFSET(SIT_FileDialog, nbSelect) },
+		{ NULL,        SIT_TagEnd }
 	};
 
-	TagList FolderDialogClass[] = {
-		{ SIT_InitPath,   "initPath",   _SG, SIT_STR, OFFSET(SIT_FolderSel, initPath) },
-		{ SIT_TagEnd }
+	struct TagList_t FolderDialogClass[] = {
+		{ "initPath", SIT_InitPath, _SG, SIT_STR, OFFSET(SIT_FolderSel, initPath) },
+		{ NULL,       SIT_TagEnd }
 	};
 
 	static int SIT_ManageFileDialog(SIT_Widget, APTR, APTR);
@@ -43,10 +43,10 @@
  */
 static int SIT_SetFileValues(SIT_Widget w, APTR cd, APTR ud)
 {
-	SIT_Variant *  value = ud;
+	SIT_Variant    value = ud;
 	SIT_FileDialog dlg   = (APTR) w;
 
-	if (((TagList *)cd)->tl_TagID == SIT_InitPath)
+	if (((TagList)cd)->tl_TagID == SIT_InitPath)
 	{
 		STRPTR p, base;
 		if (dlg->initPath)

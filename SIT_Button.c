@@ -10,13 +10,13 @@
 #include "SIT_P.h"
 #include "SIT_CSSLayout.h"
 
-	TagList ButtonClass[] = {
-		{ SIT_ButtonType, "buttonType", C__, SIT_INT, OFFSET(SIT_Button, type) },
-		{ SIT_CheckState, "checkState", _SG, SIT_INT, OFFSET(SIT_Button, state) },
-		{ SIT_RadioGroup, "radioGroup", _SG, SIT_INT, OFFSET(SIT_Button, group) },
-		{ SIT_CurValue,   "curValue",   _SG, SIT_PTR, OFFSET(SIT_Button, curValue) },
-		{ SIT_RadioID,    "radioID",    _SG, SIT_INT, OFFSET(SIT_Button, radioID) },
-		{ SIT_TagEnd }
+	struct TagList_t ButtonClass[] = {
+		{ "buttonType", SIT_ButtonType, C__, SIT_INT, OFFSET(SIT_Button, type) },
+		{ "checkState", SIT_CheckState, _SG, SIT_INT, OFFSET(SIT_Button, state) },
+		{ "radioGroup", SIT_RadioGroup, _SG, SIT_INT, OFFSET(SIT_Button, group) },
+		{ "curValue",   SIT_CurValue,   _SG, SIT_PTR, OFFSET(SIT_Button, curValue) },
+		{ "radioID",    SIT_RadioID,    _SG, SIT_INT, OFFSET(SIT_Button, radioID) },
+		{ NULL,         SIT_TagEnd }
 	};
 
 static int SIT_ButtonMeasure(SIT_Widget w, APTR cd, APTR unused)
@@ -52,9 +52,9 @@ static void SIT_ButtonDeselectRadio(SIT_Widget w)
 
 static int SIT_ButtonSetValues(SIT_Widget w, APTR cd, APTR ud)
 {
-	SIT_Button    button = (SIT_Button) w;
-	TagList *     tag = cd;
-	SIT_Variant * val = ud;
+	SIT_Button  button = (SIT_Button) w;
+	TagList     tag = cd;
+	SIT_Variant val = ud;
 
 	switch (tag->tl_TagID) {
 	case SIT_Title:
@@ -136,9 +136,9 @@ static int SIT_ButtonToggle(SIT_Widget w, APTR cd, APTR ud)
 		/* deslect other in group */
 		SIT_ButtonDeselectRadio(w);
 	}
-	w->oldState = w->state;
 	if (button->type != SITV_ToggleButton)
 	{
+		w->oldState = w->state;
 		w->state ^= STATE_CHECKED;
 		w->layout.flags &= ~LAYF_NoChanges;
 		button->state = (w->state & STATE_CHECKED) > 0;

@@ -13,12 +13,12 @@
 #include "SIT_P.h"
 #include "SIT_CSSLayout.h"
 
-	TagList LabelClass[] = {
-		{ SIT_ImagePath,  "imagePath",  CSG, SIT_PTR, OFFSET(SIT_Label, image) },
-		{ SIT_CurrentDir, "currentDir", CSG, SIT_INT, OFFSET(SIT_Label, currentDir) },
-		{ SIT_LabelSize,  "labelSize",  CSG, SIT_INT, OFFSET(SIT_Label, labelSize) },
-		{ SIT_Overflow,   "overflow",   CSG, SIT_INT, OFFSET(SIT_Label, overflow) },
-		{ SIT_TagEnd }
+	struct TagList_t LabelClass[] = {
+		{ "imagePath",  SIT_ImagePath,  CSG, SIT_PTR, OFFSET(SIT_Label, image) },
+		{ "currentDir", SIT_CurrentDir, CSG, SIT_INT, OFFSET(SIT_Label, currentDir) },
+		{ "labelSize",  SIT_LabelSize,  CSG, SIT_INT, OFFSET(SIT_Label, labelSize) },
+		{ "overflow",   SIT_Overflow,   CSG, SIT_INT, OFFSET(SIT_Label, overflow) },
+		{ NULL,         SIT_TagEnd }
 	};
 
 /*
@@ -103,10 +103,10 @@ static int SIT_ImageProp(SIT_Widget w, APTR cd, APTR ud)
 
 static int SIT_SetLabelValues(SIT_Widget w, APTR cd, APTR ud)
 {
-	SIT_Label     label = (SIT_Label) w;
-	TagList *     tag = cd;
-	SIT_Variant * val = ud;
-	CSSImage      img;
+	SIT_Label   label = (SIT_Label) w;
+	TagList     tag = cd;
+	SIT_Variant val = ud;
+	CSSImage    img;
 
 	switch (tag->tl_TagID) {
 	case SIT_CurrentDir:
@@ -193,7 +193,7 @@ Bool SIT_InitLabel(SIT_Widget w, va_list args)
 
 	if (w->title)
 	{
-		SIT_Variant value = {.string = w->title};
+		union SIT_Variant_t value = {.string = w->title};
 		w->title = NULL;
 		SIT_SetLabelValues(w, WidgetClass, &value);
 	}

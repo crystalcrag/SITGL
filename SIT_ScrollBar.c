@@ -10,17 +10,17 @@
 #include "SIT_P.h"
 #include "SIT_CSSLayout.h"
 
-	TagList SBClass[] = {
-		{ SIT_MinValue,     "minValue",     _SG, SIT_INT,  OFFSET(SIT_ScrollBar, min) },
-		{ SIT_MaxValue,     "maxValue",     _SG, SIT_INT,  OFFSET(SIT_ScrollBar, max) },
-		{ SIT_PageSize,     "pageSize",     _SG, SIT_INT,  OFFSET(SIT_ScrollBar, pageSize) },
-		{ SIT_LineHeight,   "lineHeight",   _SG, SIT_INT,  OFFSET(SIT_ScrollBar, lineHeight) },
-		{ SIT_ScrollPos,    "scrollPos",    _SG, SIT_INT,  OFFSET(SIT_ScrollBar, scrollPos) },
-		{ SIT_HorizScroll,  "horizScroll",  C__, SIT_BOOL, OFFSET(SIT_ScrollBar, isHoriz) },
-		{ SIT_WheelMult,    "wheelMult",    _SG, SIT_INT,  OFFSET(SIT_ScrollBar, wheelMult) },
-		{ SIT_IsDragged,    NULL,           __G, SIT_U16,  OFFSET(SIT_ScrollBar, isDragged) },
-		{ SIT_ArrowType,    "arrowType",    C__, SIT_INT,  OFFSET(SIT_ScrollBar, arrowType) },
-		{ SIT_TagEnd }
+	struct TagList_t SBClass[] = {
+		{ "minValue",    SIT_MinValue,    _SG, SIT_INT,  OFFSET(SIT_ScrollBar, min) },
+		{ "maxValue",    SIT_MaxValue,    _SG, SIT_INT,  OFFSET(SIT_ScrollBar, max) },
+		{ "pageSize",    SIT_PageSize,    _SG, SIT_INT,  OFFSET(SIT_ScrollBar, pageSize) },
+		{ "lineHeight",  SIT_LineHeight,  _SG, SIT_INT,  OFFSET(SIT_ScrollBar, lineHeight) },
+		{ "scrollPos",   SIT_ScrollPos,   _SG, SIT_INT,  OFFSET(SIT_ScrollBar, scrollPos) },
+		{ "horizScroll", SIT_HorizScroll, C__, SIT_BOOL, OFFSET(SIT_ScrollBar, isHoriz) },
+		{ "wheelMult",   SIT_WheelMult,   _SG, SIT_INT,  OFFSET(SIT_ScrollBar, wheelMult) },
+		{ "dragNotify",  SIT_DragNotify,  _SG, SIT_BOOL, OFFSET(SIT_ScrollBar, dragNotify) },
+		{ "arrowType",   SIT_ArrowType,   C__, SIT_INT,  OFFSET(SIT_ScrollBar, arrowType) },
+		{ NULL,          SIT_TagEnd }
 	};
 
 /* set minimal width/height */
@@ -76,7 +76,6 @@ static int SIT_ScrollBarResize(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_ScrollBar sb = (SIT_ScrollBar) w;
 	SIT_Widget thumb = sb->thumb;
-	REAL range = sb->oldRange;
 
 	if (sb->checkPos)
 	{
@@ -93,9 +92,8 @@ static int SIT_ScrollBarResize(SIT_Widget w, APTR cd, APTR ud)
 		}
 	}
 
-	if (range == 0)
 	{
-		range = sb->max - sb->min;
+		REAL range = sb->max - sb->min;
 		REAL x = (sb->scrollPos - sb->min) / range;
 		REAL sz;
 		if (sb->isHoriz)
@@ -116,10 +114,6 @@ static int SIT_ScrollBarResize(SIT_Widget w, APTR cd, APTR ud)
 		}
 		sit.dirty = 1;
 	}
-	else /* use position on screen as reference */
-	{
-		//
-	}
 	SIT_LayoutCSSSize(thumb);
 	return 1;
 }
@@ -132,11 +126,15 @@ static int SIT_ScrollBarClick(SIT_Widget w, APTR cd, APTR ud)
 	SIT_OnMouse * msg = cd;
 	REAL          pos, old, max, step, range;
 
-	sb->isDragged = 0;
 	switch (msg->button) {
 	case SITOM_ButtonLeft:
 		if (msg->state != SITOM_ButtonPressed)
+		{
+			if (sb->isDragged && sb->dragNotify == 0)
+				SIT_ApplyCallback(w, (APTR) sb->scrollPos, SITE_OnChange);
+			sb->isDragged = 0;
 			return 0;
+		}
 		step = ud ? sb->lineHeight : sb->pageSize;
 		break;
 	case SITOM_ButtonWheelUp: /* mouse wheel */
@@ -153,7 +151,7 @@ static int SIT_ScrollBarClick(SIT_Widget w, APTR cd, APTR ud)
 			sb->scrollPos = pos;
 			SIT_ScrollBarResize(w, NULL, NULL);
 			sb->isDragged = 1;
-			SIT_ApplyCallback(w, (APTR) lround(pos), SITE_OnChange);
+			SIT_ApplyCallback(w, (APTR) sb->scrollPos, SITE_OnChange);
 			sb->isDragged = 0;
 		}
 		return 1;
@@ -213,14 +211,14 @@ static int SIT_ScrollBarClick(SIT_Widget w, APTR cd, APTR ud)
 		SIT_LayoutCSSSize(thumb);
 	}
 	if (range > 0)
-		pos = pos / range * (sb->max - sb->min - sb->pageSize) + sb->min;
+		pos = lround(pos / range * (sb->max - sb->min - sb->pageSize) + sb->min);
 	else
 		pos = sb->min;
 
 	if (pos != sb->scrollPos)
 	{
 		sb->scrollPos = pos;
-		SIT_ApplyCallback(w, (APTR) lround(sb->scrollPos), SITE_OnChange);
+		SIT_ApplyCallback(w, (APTR) sb->scrollPos, SITE_OnChange);
 	}
 	return sb->isDragged ? 2 : 1;
 }
@@ -265,14 +263,15 @@ static int SIT_ScrollBarMove(SIT_Widget w, APTR cd, APTR ud)
 			SIT_LayoutCSSSize(thumb);
 		}
 		if (max > 0)
-			pos = pos / max * (sb->max - sb->min - sb->pageSize) + sb->min;
+			pos = lround(pos / max * (sb->max - sb->min - sb->pageSize) + sb->min);
 		else
 			pos = sb->min;
 
 		if (pos != sb->scrollPos)
 		{
 			sb->scrollPos = pos;
-			SIT_ApplyCallback(w, (APTR) lround(sb->scrollPos), SITE_OnChange);
+			if (sb->dragNotify)
+				SIT_ApplyCallback(w, (APTR) sb->scrollPos, SITE_OnChange);
 		}
 	}
 	return 1;
@@ -314,9 +313,9 @@ static int SIT_ScrollBarArrowClick(SIT_Widget w, APTR cd, APTR ud)
 static int SIT_ScrollBarSetValue(SIT_Widget w, APTR cd, APTR ud)
 {
 	#define sb     ((SIT_ScrollBar)w)
-	switch (((TagList *)cd)->tl_TagID) {
+	switch (((TagList)cd)->tl_TagID) {
 	case SIT_ScrollPos:
-		if (sb->scrollPos == ((SIT_Variant *)ud)->integer)
+		if (sb->scrollPos == ((SIT_Variant)ud)->integer)
 			return 0;
 	case SIT_MinValue:
 	case SIT_MaxValue:
@@ -343,6 +342,7 @@ Bool SIT_InitScrollBar(SIT_Widget w, va_list args)
 	w->flags |= SITF_PrivateChildren | SITF_RenderChildren;
 
 	/* default values */
+	sb->dragNotify = 1;
 	sb->wheelMult  = 3;
 	sb->lineHeight = 1;
 	sb->max        = 100;
