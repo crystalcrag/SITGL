@@ -583,6 +583,7 @@ Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode)
 	SIT_Widget list;
 	int        count;
 
+	root->flags &= ~(SITF_GeomNotified | SITF_GeometryChanged);
 	if (mode != KeepDialogSize)
 	{
 		if (root->flags & SITF_FixedWidth)  root->box.right  = root->box.left + root->fixed.width;
@@ -662,7 +663,7 @@ Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode)
 	}
 	if (root->flags & SITF_TopLevel)
 		SIT_AdjustContainer(root);
-	root->flags &= ~ (SITF_GeometrySet | SITF_GeometryChanged | SITF_GeomNotified | SITF_StylesChanged);
+	root->flags &= ~ (SITF_GeometrySet | SITF_StylesChanged);
 	SIT_LayoutCSSSize(root);
 	return True;
 }

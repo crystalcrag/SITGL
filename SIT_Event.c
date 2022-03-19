@@ -188,7 +188,10 @@ static Bool SIT_ProcessAccel(int capture, int key)
 						if (((SIT_Button)w)->type >= SITV_ToggleButton)
 						{
 							w->oldState = w->state;
-							w->state |= STATE_ACTIVATED;
+							if (((SIT_Button)w)->group > 0)
+								w->state |= STATE_ACTIVATED;
+							else
+								w->state ^= STATE_ACTIVATED;
 						}
 						SIT_ApplyCallback(w, NULL, SITE_OnActivate);
 						break;

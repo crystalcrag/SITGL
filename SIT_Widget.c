@@ -1093,7 +1093,7 @@ void SIT_InitiateReflow(SIT_Widget w)
 				break;
 			}
 		}
-		/* if <w> already has a children being reflow, reflow the whole control */
+		/* if <w> already has a children being reflowed, reflow the whole control */
 		for (parent = HEAD(w->children); parent; NEXT(parent))
 		{
 			if (parent->flags & SITF_GeomNotified)

@@ -622,6 +622,8 @@ static int SIT_ListResize(SIT_Widget w, APTR cd, APTR ud)
 			for (j = list->rowCount, row = cell, top = list->hdrHeight; j > 0; j --, row += count)
 			{
 				if (row->flags & CELL_HIDDEN) continue;
+				if ((row->flags & CELL_HASSIZE) == 0)
+					SIT_ListCalcSize(list->td, row, FitUsingInitialBox);
 				row->sizeCell.width = hdr->sizeCell.width;
 				row->sizeCell.left = x;
 				row->sizeCell.top = top;

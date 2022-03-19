@@ -183,7 +183,13 @@ Bool SIT_InitButton(SIT_Widget w, va_list args)
 	switch (button->type) {
 	case SITV_ToggleButton:
 		w->flags |= SITF_ToggleButon;
-		if (button->group > 0) w->flags |= SITF_ImmediateActive;
+		if (button->group > 0)
+		{
+			w->flags |= SITF_ImmediateActive;
+			goto case_radio;
+		}
+		if (button->curValue)
+			button->state = *button->curValue > 0;
 		break;
 	case SITV_DefaultButton:
 	case SITV_CancelButton:
@@ -228,6 +234,7 @@ Bool SIT_InitButton(SIT_Widget w, va_list args)
 				if (num) button->radioID = strtoul(num+1, NULL, 10), *num = 0;
 			}
 		}
+	case_radio:
 		/* already select radio in the group */
 		if (button->curValue && *button->curValue == button->radioID && ! button->state)
 			SIT_SetValues(w, SIT_CheckState, True, NULL);
