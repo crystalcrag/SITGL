@@ -43,7 +43,6 @@ static void SIT_ButtonDeselectRadio(SIT_Widget w)
 		if (list == w || list->type != SIT_BUTTON || pb->type != type || pb->group != group || ! pb->state) continue;
 		list->oldState = list->state;
 		list->state &= type == SITV_ToggleButton ? ~STATE_ACTIVATED : ~STATE_CHECKED;
-		list->layout.flags &= ~LAYF_NoChanges;
 		pb->state = 0;
 		layoutUpdateStyles(list);
 		#undef pb
@@ -105,7 +104,6 @@ static int SIT_ButtonSetValues(SIT_Widget w, APTR cd, APTR ud)
 		}
 		if (w->flags & SITF_InitDone)
 		{
-			w->layout.flags &= ~LAYF_NoChanges;
 			layoutUpdateStyles(w);
 			if (button->curValue)
 				*button->curValue = button->type == SITV_RadioButton || (button->type == SITV_ToggleButton && button->group > 0) ? button->radioID : button->state;
@@ -140,7 +138,6 @@ static int SIT_ButtonToggle(SIT_Widget w, APTR cd, APTR ud)
 	{
 		w->oldState = w->state;
 		w->state ^= STATE_CHECKED;
-		w->layout.flags &= ~LAYF_NoChanges;
 		button->state = (w->state & STATE_CHECKED) > 0;
 	}
 	else button->state = (w->state & STATE_ACTIVATED) == STATE_ACTIVATED;

@@ -441,6 +441,8 @@ DLLIMP int SIT_ProcessClick(float x, float y, int button, int pressed)
 		if (hover && hover->enabled)
 		{
 			SIT_Widget w;
+			for (w = hover->parent; w && (w->flags & SITF_TopLevel) == 0; w = w->parent)
+				if (w->enabled == 0) return 0;
 			/* HTML tag within button: redirect click at the button level instead */
 			for (w = hover; w->type == SIT_HTMLTAG; w = w->parent);
 			if (w->type == SIT_BUTTON)

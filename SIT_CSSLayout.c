@@ -1006,7 +1006,7 @@ int layoutUpdateStyles(SIT_Widget node)
 {
 	int changes = cssCRCChanged(node) ? cssApply(node) : 0;
 
-	if ((node->layout.flags & LAYF_NoChanges) == 0 && (node->flags & SITF_PrivateChildren))
+	if (node->flags & SITF_PrivateChildren)
 	{
 		SIT_Widget c;
 		int ret = 0;
@@ -1016,7 +1016,6 @@ int layoutUpdateStyles(SIT_Widget node)
 			ret |= layoutUpdateStyles(c);
 			c->flags &= ~SITF_RecalcStyles;
 		}
-		if (ret == 0) node->layout.flags |= LAYF_NoChanges;
 		changes |= ret & 3;
 	}
 

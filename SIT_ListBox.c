@@ -477,6 +477,26 @@ static void SIT_ListDebug(SIT_ListBox list)
 #define SIT_ListDebug(x)
 #endif
 
+static void SIT_ListAdjustMaxHeight(SIT_ListBox list)
+{
+	float height = list->super.padding[1] + list->super.padding[3];
+	float width  = list->super.padding[0] + list->super.padding[2];;
+	Cell  cell;
+	int   i, j;
+	if ((list->lbFlags & SITV_NoHeaders) == 0)
+		height = list->columns[0].sizeCell.height;
+	for (cell = STARTCELL(list), i = list->cells.count, j = list->maxRowVisible; i > 0; j --, i --, cell += list->columnCount)
+	{
+		if (width < cell->sizeObj.width)
+			width = cell->sizeObj.width;
+		if (j > 0)
+			height += cell->sizeObj.height;
+	}
+	if (height == 0) height = 1;
+	fprintf(stderr, "setting size to %dx%d\n", (int) width, (int) height);
+	SIT_SetValues(&list->super, SIT_Height, (int) height, SIT_Width, (int) width, NULL);
+}
+
 /* handle SITE_OnResize event on list box */
 static int SIT_ListResize(SIT_Widget w, APTR cd, APTR ud)
 {
@@ -631,6 +651,9 @@ static int SIT_ListResize(SIT_Widget w, APTR cd, APTR ud)
 			}
 			x += hdr->sizeCell.width;
 		}
+		if (list->maxRowVisible > 0)
+			SIT_ListAdjustMaxHeight(list);
+
 		list->scrollHeight = top - list->hdrHeight;
 		SIT_ListAdjustScroll(list);
 	}
@@ -1431,7 +1454,10 @@ static void SIT_ListSetColumns(SIT_ListBox list)
 		int      i;
 
 		list->softColumn = list->columnCount;
-		Split(columns, STRDUPA(list->columnNames), count, '\t');
+		if (list->columnNames)
+			Split(columns, STRDUPA(list->columnNames), count, '\t');
+		else
+			columns[0] = "";
 
 		for (i = 0; i < count; i ++)
 		{
@@ -1669,25 +1695,6 @@ Bool SIT_InitListBox(SIT_Widget w, va_list args)
 	return True;
 }
 
-static void SIT_ListAdjustMaxHeight(SIT_ListBox list)
-{
-	float height = 0;
-	float width  = 0;
-	Cell  cell;
-	int   i, j;
-	if ((list->lbFlags & SITV_NoHeaders) == 0)
-		height = list->columns[0].sizeCell.height;
-	for (cell = STARTCELL(list), i = list->cells.count, j = list->maxRowVisible; i > 0; j --, i --, cell += list->columnCount)
-	{
-		if (width < cell->sizeObj.width)
-			width = cell->sizeObj.width;
-		if (j > 0)
-			height += cell->sizeObj.height;
-	}
-	if (height == 0) height = 1;
-	SIT_SetValues(&list->super, SIT_Height, (int) height, SIT_Width, (int) width, NULL);
-}
-
 /* item added at runtime: recompute layout and/or node position (icon view only) */
 static int SIT_ListRecalcItemPos(SIT_Widget w, APTR cd, APTR ud)
 {
@@ -1837,7 +1844,7 @@ DLLIMP int SIT_ListInsertItem(SIT_Widget w, int row, APTR rowTag, ...)
 		}
 	}
 
-	/* get text size and do some housekeeping */
+	/* get text size */
 	for (i = len = 0, va_start(args, rowTag), cell = cells; i < cols && (utf8 = va_arg(args, STRPTR)); i ++, cell ++)
 	{
 		if (rowTag == SITV_CategoryRow)

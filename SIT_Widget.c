@@ -267,10 +267,12 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 	case SIT_Width:
 		if (w->fixed.width < 0) w->flags &= ~SITF_FixedWidth;
 		else w->flags |= SITF_FixedWidth;
+		w->optimalBox.width = -1;
 		break;
 	case SIT_Height:
 		if (w->fixed.height < 0) w->flags &= ~SITF_FixedHeight;
 		else w->flags |= SITF_FixedHeight;
+		w->optimalBox.width = -1;
 		break;
 	case SIT_TagPrivate1:
 		if (w->buddyText)

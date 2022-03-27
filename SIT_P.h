@@ -706,7 +706,6 @@ enum /* bitfield for 'layout.flags' */
 	LAYF_HasBottomAttach = 0x00000800,
 	LAYF_HasAttach       = 0x00000f00,
 	LAYF_NoTextShadow    = 0x00001000,
-	LAYF_NoChanges       = 0x00002000,  /* private children have no changes when hovering */
 	LAYF_HasImg          = 0x00004000,
 	LAYF_CompactText     = 0x00008000,  /* will ignore descending part of font metric */
 	LAYF_BImgLoaded      = 0x00010000,

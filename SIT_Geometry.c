@@ -153,6 +153,7 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 		switch (a->sa_Type) {
 		case SITV_AttachForm: /* edge of container */
 			root->layout.flags |= sideAttach[i];
+			w->layout.flags |= sideAttach[i];
 			if (i > 1)
 			{
 				root->flags |= SITF_Style1Changed << side;
@@ -177,6 +178,7 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 			hasPos = 1;
 			root->flags |= SITF_Style1Changed << side;
 			root->layout.flags |= sideBoth[i&1];
+			w->layout.flags |= sideBoth[i&1];
 			if (margin == SITV_OffsetCenter)
 			{
 				margin = roundf(- chldsz / 2 + padTL);
@@ -203,16 +205,20 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 			break;
 		case SITV_AttachWidget: /* relative to another widget */
 			s->layout.flags |= sideOpp[i];
+			/* check if sibling has a pending geometry reflow */
+			if (s->flags & SITF_GeomNotified) return 0;
 			if (i > 1) *p = (&s->box.left)[i - 2] - margin;
 			else       *p = (&s->box.left)[i + 2] + margin;
 			break;
 		case SITV_AttachOpposite: /* relative to opposite border it used to */
 			s = (SIT_Widget) a->sa_Arg;
+			if (s->flags & SITF_GeomNotified) return 0;
 			s->layout.flags |= sideAttach[i];
 			*p = margin + (&s->box.left)[i];
 			break;
 		case SITV_AttachMiddle: /* relative to middle of another widget */
 			s = (SIT_Widget) a->sa_Arg;
+			if (s->flags & SITF_GeomNotified) return 0;
 			s->layout.flags |= sideBoth[i&1];
 			*p = roundf(((&s->box.left)[i&1] + (&s->box.left)[(i&1) + 2] - chldsz) / 2);
 			break;
@@ -224,6 +230,7 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 			if (a->sa_Type != SITV_AttachNoOverlap) break;
 
 			s = (SIT_Widget) a->sa_Arg;
+			if (s->flags & SITF_GeomNotified) return 0;
 			s->layout.flags |= sideOpp[i];
 			if (i > 1)
 			{
@@ -294,26 +301,16 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 		sz = (&sit.scrWidth)[side] * 2;
 
 	/* hasPos: if left/top is set to be relative pos, only check that size fits the control, not position */
-//	Bool reduce = SIT_CanReduceContainerSize(root, side) && SIT_CanReduceContainerSize(root, side+2);
 	if (hasPos == 0 && p[2] > margin) // && reduce)
 		ret = 0, *cside += p[2] - margin;
 
-	if (p[2] - p[0] < chldsz /*(&w->optimalBox.width)[side]*/ && percent[1] > percent[0])
+	if (p[2] - p[0] < chldsz && percent[1] > percent[0])
 	{
 		int newsz = *cside + (p[0] + chldsz - p[2]) / (percent[1] - percent[0]);
 		if (newsz > sz)
 			newsz = sz;
-		if (*cside != newsz /*&& reduce*/)
-		{
-			#if 0
-			ret = newsz - *cside;
-			check if we can adjust control size instead of container
-			if (ret > 0 && adjust != FitUsingOptimalBox && chldsz - (&w->optimalBox.width)[side] >= ret)
-				;
-			else
-			#endif
-				*cside = newsz, ret = 0;
-		}
+		if (*cside != newsz)
+			*cside = newsz, ret = 0;
 	}
 	return ret;
 }
@@ -458,8 +455,8 @@ static int SIT_LayoutChildren(SIT_Widget root, ResizePolicy mode)
 	return 1;
 }
 
-/* side [0-3]: left, top, right, bottom */
-static Bool SIT_CanChangeContainerSize(SIT_Widget w, SizeF * oldSz, SizeF * newSz, int side)
+/* check if changing size of widget <w> will reflow other controls (side: [0-1]) */
+static Bool SIT_CanReflow(SIT_Widget w, float oldSz, int side)
 {
 	SIT_Widget   c = w->parent;
 	SIT_Attach * a = w->attachment + side;
@@ -467,15 +464,30 @@ static Bool SIT_CanChangeContainerSize(SIT_Widget w, SizeF * oldSz, SizeF * newS
 
 	if (w->flags & SITF_TopLevel) return False;
 
+	if (a->sa_Type == SITV_AttachNone && a[2].sa_Type != SITV_AttachNone && (&w->box.left)[side] <= c->padding[side])
+		return True;
+
+	if (a->sa_Type == SITV_AttachForm && a[2].sa_Type == SITV_AttachForm)
+		return True;
+
+	if (a->sa_Type == SITV_AttachPosition || a[2].sa_Type == SITV_AttachPosition)
+	{
+		REAL * pad = w->padding + side;
+		if (oldSz >= p[2] - p[0] - pad[0] - pad[2])
+			return True;
+	}
+
 	a += 2;
 	p += 2;
+	if (w->layout.flags & (LAYF_HasRightAttach << side))
+		return True;
+
 	if (a->sa_Type == SITV_AttachNone)
 	{
 		/* bottom/right set to none */
 		REAL * csize = &c->box.left + side;
 		REAL bottom = csize[2] - csize[0] - c->padding[side+2];
-		if (p[0] >= bottom || p[-2] + (&oldSz->width)[side] >= bottom) return True;
-		if (newSz && (&newSz->width)[side] >= bottom) return True;
+		if (p[0] >= bottom || p[-2] + oldSz >= bottom) return True;
 	}
 	return False;
 }
@@ -642,7 +654,8 @@ Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode)
 					/* check if we can reduce the size of container */
 					reflow |= SIT_AdjustContainer(list);
 				}
-				if (old.width != list->currentBox.width || old.height != list->currentBox.height)
+				if ((old.width  != list->currentBox.width  && (root->flags & SITF_FixedWidth) == 0) ||
+				    (old.height != list->currentBox.height && (root->flags & SITF_FixedHeight) == 0))
 				{
 					reflow |= 1;
 				}
@@ -735,37 +748,29 @@ void SIT_ReflowLayout(SIT_Widget list)
 					list->optimalBox = pref;
 					SIT_LayoutWidget(parent, list, 0, FitUsingOptimalBox);
 				}
-				else
+				else if (! SIT_CanReflow(list, oldSz.width, 0))
 				{
 					if (list->flags & SITF_FixedWidth) list->currentBox.width = list->fixed.width;
 					SIT_LayoutWidget(parent, list, 0, FitUsingCurrentBox);
 				}
+				else goto reflow;
 
 				if (list->attachment[1].sa_Type == SITV_AttachNone || list->attachment[3].sa_Type == SITV_AttachNone)
 				{
 					if (! done) list->optimalWidth(list, &pref, 0), list->optimalBox = pref;
 					SIT_LayoutWidget(parent, list, 1, FitUsingOptimalBox);
 				}
-				else
+				else if (! SIT_CanReflow(list, oldSz.height, 1))
 				{
 					if (list->flags & SITF_FixedHeight) list->currentBox.width = list->fixed.height;
 					SIT_LayoutWidget(parent, list, 1, FitUsingCurrentBox);
 				}
+				else goto reflow;
+
 				list->currentBox.width  = list->box.right  - list->box.left;
 				list->currentBox.height = list->box.bottom - list->box.top;
 				if (BoxSizeDiffers(list, &oldSz))
 					SIT_LayoutCSSSize(list);
-
-				#define pwidth 	parent->layout.pos.width
-				#define pheight parent->layout.pos.height
-
-				/* size exceeds container or used to be what's defined the container size: need reflow */
-				if (SIT_CanChangeContainerSize(list, &oldSz, NULL, 0) ||
-				    SIT_CanChangeContainerSize(list, &oldSz, NULL, 1))
-				{
-					memcpy(&parent->box, pbox, sizeof pbox);
-					i = 0; goto reflow;
-				}
 			}
 			else memset(&list->box, 0, sizeof list->box), list->flags &= ~SITF_GeomNotified;
 
@@ -788,6 +793,7 @@ void SIT_ReflowLayout(SIT_Widget list)
 			{
 				/* need reflow */
 				reflow:
+				i = 0;
 				while ((parent->flags & SITF_TopLevel) == 0)
 				{
 					//memset(&parent->currentBox, 0, sizeof parent->currentBox);
