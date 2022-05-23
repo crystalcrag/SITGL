@@ -468,7 +468,7 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 	edit->tabStyle  = -1;
 	edit->undoSize  = -1;
 	edit->stepValue =  1;
-	edit->roundTo   =  16;
+	edit->roundTo   =  ((SIT_App)sit.root)->defRoundTo;
 	edit->maxValue  =  1/0.; /* + INF */
 	edit->minValue  = -1/0.; /* - INF */
 	edit->wordWrap  = SITV_WWWord;
@@ -657,6 +657,7 @@ void SIT_TextEditSetText(SIT_Widget w, STRPTR title)
 		}
 		if (edit->editType >= SITV_Integer)
 			edit->value.step = INVALID_STEP;
+		SIT_ForceRefresh();
 	}
 	else w->title = title; /* not yet initialized */
 }

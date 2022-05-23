@@ -497,6 +497,41 @@ static void SIT_ListAdjustMaxHeight(SIT_ListBox list)
 	SIT_SetValues(&list->super, SIT_Height, (int) height, SIT_Width, (int) width, NULL);
 }
 
+
+/* keep the last selected item in visual range */
+static void SIT_ListMakeVisible(SIT_ListBox list, Cell cell)
+{
+	if (cell == NULL) return;
+	if ((cell->flags & CELL_HASSIZE) == 0)
+	{
+		/* need to be performed later */
+		list->makeVisible = cell - STARTCELL(list) + 1;
+		return;
+	}
+	REAL y    = cell->sizeCell.top - list->scrollTop;
+	REAL padT = list->super.layout.padding.top;
+	REAL padB = list->super.layout.padding.bottom;
+	REAL maxy = list->super.layout.pos.height;
+	REAL padH = list->hdrHeight;
+
+	list->makeVisible = 0;
+	if (y < -(padT - padH))
+	{
+		y = cell->sizeCell.top - padT - padH;
+	}
+	else if (y + cell->sizeCell.height > maxy+padB)
+	{
+		y = cell->sizeCell.top + cell->sizeCell.height - maxy;
+	}
+	else return;
+	if (y < 0) y = 0;
+	if (y != list->scrollTop)
+	{
+		SIT_ListScroll(list->super.vscroll, (APTR) (int) y, NULL);
+		SIT_ListAdjustScroll(list);
+	}
+}
+
 /* handle SITE_OnResize event on list box */
 static int SIT_ListResize(SIT_Widget w, APTR cd, APTR ud)
 {
@@ -657,6 +692,13 @@ static int SIT_ListResize(SIT_Widget w, APTR cd, APTR ud)
 		list->scrollHeight = top - list->hdrHeight;
 		SIT_ListAdjustScroll(list);
 	}
+	if (list->makeVisible > 0)
+	{
+		if (list->makeVisible <= list->cells.count)
+			SIT_ListMakeVisible(list, vector_nth(&list->cells, list->makeVisible-1));
+		else
+			list->makeVisible = 0;
+	}
 	return 1;
 }
 
@@ -665,33 +707,6 @@ static void SIT_ListUpdateCSS(SIT_ListBox list, Cell cell)
 	SIT_Widget node = cell->flags & CELL_SELECT ? list->tdSel : list->td;
 	SIT_ListRestoreChildren(node, cell);
 	layoutUpdateStyles(node);
-}
-
-/* keep the last selected item in visual range */
-static void SIT_ListMakeVisible(SIT_ListBox list, Cell cell)
-{
-	if (cell == NULL) return;
-	REAL y    = cell->sizeCell.top - list->scrollTop;
-	REAL padT = list->super.layout.padding.top;
-	REAL padB = list->super.layout.padding.bottom;
-	REAL maxy = list->super.layout.pos.height;
-	REAL padH = list->hdrHeight;
-
-	if (y < -(padT - padH))
-	{
-		y = cell->sizeCell.top - padT - padH;
-	}
-	else if (y + cell->sizeCell.height > maxy+padB)
-	{
-		y = cell->sizeCell.top + cell->sizeCell.height - maxy;
-	}
-	else return;
-	if (y < 0) y = 0;
-	if (y != list->scrollTop)
-	{
-		SIT_ListScroll(list->super.vscroll, (APTR) (int) y, NULL);
-		SIT_ListAdjustScroll(list);
-	}
 }
 
 /* selection state on one item */
@@ -2375,24 +2390,28 @@ DLLIMP int SIT_ListFindByTag(SIT_Widget w, APTR tag)
 }
 
 /* get row/column of item being hovered at pos <mouseX>, <mouseY */
-DLLIMP int SIT_ListGetItemOver(SIT_Widget w, float rect[4], float mouseX, float mouseY, SIT_Widget mouseIsRelTo)
+DLLIMP int SIT_ListGetItemOver(SIT_Widget w, float rect[4], float mouseX, float mouseY, SIT_Widget * mouseIsRelTo)
 {
 	if (w == NULL || rect == NULL || w->type != SIT_LISTBOX) return -1;
 	SIT_ListBox list = (SIT_ListBox) w;
+	SIT_Widget parent = *mouseIsRelTo;
 
-	if (mouseIsRelTo != w)
+	if (parent != w)
 	{
 		/* need to be relative to <w> */
-		SIT_Widget parent = mouseIsRelTo ? mouseIsRelTo : sit.root;
-
+		if (parent == NULL)
+			parent = sit.root;
 		mouseX -= (w->offsetX - w->box.left) - (parent->offsetX + parent->box.left);
 		mouseY -= (w->offsetY - w->box.top)  - (parent->offsetY + parent->box.top);
 	}
 
+	for (parent = w; (parent->flags & SITF_TopLevel) == 0; parent = parent->parent);
+	*mouseIsRelTo = parent;
+
 	Cell cell;
 	REAL height = w->layout.pos.height + w->layout.padding.bottom + w->layout.padding.top;
-	REAL offX   = w->offsetX + w->layout.pos.left;
-	REAL offY   = w->offsetY + w->layout.pos.top;
+	REAL offX   = w->offsetX + w->layout.pos.left - (parent->offsetX + parent->layout.pos.left - parent->padding[0]);
+	REAL offY   = w->offsetY + w->layout.pos.top  - (parent->offsetY + parent->layout.pos.top  - parent->padding[1]);
 	int  row, col, i, j;
 	for (cell = list->rowTop, row = cell - STARTCELL(list), col = list->columnCount, i = list->cells.count - row, row /= col; i > 0; i -= col, row ++)
 	{
@@ -2417,3 +2436,27 @@ DLLIMP int SIT_ListGetItemOver(SIT_Widget w, float rect[4], float mouseX, float 
 	}
 	return -1;
 }
+
+DLLIMP SIT_Widget SIT_ListGetItemRect(SIT_Widget w, float rect[4], int row, int col)
+{
+	if (w == NULL || rect == NULL || w->type != SIT_LISTBOX) return NULL;
+
+	SIT_ListBox list = (SIT_ListBox) w;
+	Cell        cell = SIT_ListGetNth(list, row | (col << 24));
+
+	if (cell)
+	{
+		SIT_Widget root;
+		/* make it relative to dialog */
+		for (root = w; (root->flags & SITF_TopLevel) == 0; root = root->parent);
+
+		rect[0] = cell->sizeCell.left + w->padding[0] + w->offsetX + w->layout.pos.left - (root->offsetX + root->layout.pos.left - root->padding[0]);
+		rect[1] = cell->sizeCell.top  + w->padding[1] + w->offsetY + w->layout.pos.top  - (root->offsetY + root->layout.pos.top  - root->padding[1]) - list->scrollTop;
+		rect[2] = rect[0] + cell->sizeCell.width;
+		rect[3] = rect[1] + cell->sizeCell.height;
+
+		return root;
+	}
+	return NULL;
+}
+

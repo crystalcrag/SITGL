@@ -137,7 +137,7 @@
 		<Unit filename="UtilityLibLite.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="exampleSDL-lib.c">
+		<Unit filename="exampleSDL-inv.c">
 			<Option compilerVar="CC" />
 			<Option target="Debug" />
 		</Unit>

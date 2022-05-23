@@ -423,7 +423,7 @@ static Bool cssMatchSelector(SIT_Widget * stack, int level, CSSRule rule)
 				break;
 			}
 			/* match failed: check if we can get another item on the stack */
-			else if (curtrans == CSST_ANY)
+			else if (track > 0)
 			{
 				if (is == 0)
 				{
@@ -1501,7 +1501,7 @@ int cssApply(SIT_Widget node)
 	#if 0
 	if (strcmp(node->name, "arrow") == 0)
 	{
-		fprintf(stderr, "*** styles for state %d [%d] = %x\n", node->state, state, i);
+		fprintf(stderr, "\n*** styles for state %d [%d] = %x\n", node->state, state, i);
 		for (i = 0, style = vector_first(cssStyles); i < cssStyles.count; i ++, style ++)
 			fprintf(stderr, "    %s: %s\n", style->attr, style->value);
 	}
@@ -1784,3 +1784,72 @@ CSSImage cssAddGradient(Gradient * grad, int w, int h, REAL fh)
 	if (img) img->usage ++;
 	return img;
 }
+
+#ifdef DEBUG_SIT
+void printNodeName(SIT_Widget w)
+{
+	fputs(w->tagName, stderr);
+	if (IsDef(w->classes))
+		fprintf(stderr, ".%s", w->classes);
+	if (strcmp(w->name, w->tagName))
+		fprintf(stderr, "#%s", w->name);
+}
+void dumpRule(CSSRule rule)
+{
+	CSSSel s;
+	int    i;
+
+	/* dump selector with specificity */
+	fprintf(stderr, "%d. ", rule->specif);
+
+	for (i = 0, s = (CSSSel) (rule+1); ; )
+	{
+		TEXT   c = '[';
+		STRPTR a = NULL;
+
+		switch (s->type) {
+		case CSSR_NONE:     continue;
+		case CSSR_TAG:      c = 0;    break;
+		case CSSR_PSEUDO:   c = ':';  break;
+		case CSSR_CLASS:    c = '.';  break;
+		case CSSR_ID:       c = '#';  break;
+		case CSSR_ATTR:     break;
+		case CSSR_ATTREQV:  a = "=";  break;
+		case CSSR_ATTRLIST: a = "~="; break;
+		case CSSR_ATTRDASH: a = "|="; break;
+		}
+		if (c) fputc(c, stderr);
+		fputs(s->item, stderr);
+
+		if (a)
+		{
+			fprintf(stderr, "%s%s]", a, strchr(s->item, 0) + 1);
+		}
+		s ++, i ++; if (i >= rule->nbsel) break;
+
+		switch (s->trans) {
+		case CSST_CURRENT:
+		case CSST_END:      break;
+		case CSST_ANY:      fputc(' ', stderr); break;
+		case CSST_CHILD:    fputc('>', stderr); break;
+		case CSST_SIBLING:  fputc('+', stderr); break;
+		}
+	}
+	#if 0
+	/* list attributes matched */
+	if (rule->styles)
+	{
+		fprintf(stderr, " {\n");
+
+		STRPTR * styles;
+		for (styles = rule->styles; *styles; styles += 2)
+			fprintf(stderr, "  %s: %s;\n", styles[0], styles[1]);
+
+		fprintf(stderr, "}\n");
+	}
+	else fputc('\n', stderr);
+	#else
+	fputc('\n', stderr);
+	#endif
+}
+#endif

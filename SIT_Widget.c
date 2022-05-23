@@ -688,7 +688,7 @@ void SIT_ParseTags(SIT_Widget w, va_list vargs, TagList classArgs)
 		}
 
 		/* optimization: since enum and WidgetClass are sorted: we can perform a O(1) lookup on WidgetClass */
-		if (tag < SIT_EndCommonTags /* end of widget class tags */)
+		if (tag <= SIT_EndCommonTags /* end of widget class tags */)
 		{
 			args = WidgetClass + tag - 2;
 			goto found;
@@ -1176,7 +1176,7 @@ DLLIMP void SIT_GetValues(SIT_Widget w, ...)
 			continue;
 		}
 
-		if (tag < SIT_EndCommonTags)
+		if (tag <= SIT_EndCommonTags)
 		{
 			/* direct lookup on widget class */
 			args = WidgetClass + tag - 2;
@@ -1380,8 +1380,11 @@ DLLIMP int SIT_ManageWidget(SIT_Widget w)
 		}
 		if (sit.activeDlg->type == SIT_DIALOG)
 		{
-			/* keep last widget focus */
-			((SIT_Dialog)sit.activeDlg)->lastFocus = sit.focus;
+			if (((SIT_Dialog)sit.activeDlg)->customStyles & SITV_Transcient)
+				SIT_CloseDialog(sit.activeDlg);
+			else
+				/* keep last widget focus */
+				((SIT_Dialog)sit.activeDlg)->lastFocus = sit.focus;
 		}
 		w->flags &= ~SITF_GeometrySet;
 		sit.active = sit.hover = NULL;
@@ -1391,8 +1394,8 @@ DLLIMP int SIT_ManageWidget(SIT_Widget w)
 			focus = focus->parent;
 		if (focus == NULL)
 		{
-			/* current focus is not a descandent of current dialog: remove it */
-			SIT_SetFocus(NULL);
+			/* current focus is not a descendent of current dialog: remove it */
+			SIT_SetFocus(w);
 		}
 		return 1;
 	}

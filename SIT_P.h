@@ -122,7 +122,6 @@ void renderBorder(SIT_Widget, RectF * box, int flag);
 void renderTextShadow(SIT_Widget, RectF * box);
 void renderInitBox(SIT_Widget, RectF * out, Bool init, int flag);
 
-
 #define SITV_AssignAction        ((APTR) 1)
 
 struct SIT_Action_t
@@ -290,6 +289,7 @@ struct SIT_App_t
 	SIT_Accel *  accel;                /* public */
 	int          defSBArrows;          /* public */
 	REAL         defSBSize;            /* public */
+	int          defRoundTo;           /* public */
 	int          refreshMode;          /* public */
 	int *        exitCode;             /* public */
 	STRPTR       styles;               /* public */
@@ -327,6 +327,7 @@ struct SIT_ListBox_t
 	int          curRow;               /* public: G */
 	int          softColumn;
 	int          recalcCell;
+	int          makeVisible;          /* public: S (only if cell has no size) */
 	int          maxRowVisible;        /* public: SG */
 	STRPTR       columnNames;          /* public: S */
 	STRPTR       columnWidths;         /* public: S */

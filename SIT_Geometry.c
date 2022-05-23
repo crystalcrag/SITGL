@@ -285,7 +285,15 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 			if (p[2] > *cside) *cside = p[2] + padBR;
 			*cside += padTL - p[0];
 		}
-		else p[2] += padTL - p[0], p[0] = padTL;
+		else if (w->attachment[side+2].sa_Type == SITV_AttachNone)
+		{
+			p[2] += padTL - p[0], p[0] = padTL;
+		}
+		else
+		{
+			*cside += padTL - p[0];
+			return 0;
+		}
 	}
 	if (adjust == KeepDialogSize && ! (root->flags & (side?SITF_ReflowH:SITF_ReflowW)))
 		return 1;
@@ -306,6 +314,10 @@ int SIT_LayoutWidget(SIT_Widget root, SIT_Widget w, int side /* 0: horiz, 1:vert
 
 	if (p[2] - p[0] < chldsz && percent[1] > percent[0])
 	{
+		/* try to keep dialog size if we can */
+		if (adjust != FitUsingOptimalBox && p[2] - p[0] >= (&w->optimalBox.width)[side])
+			return 1;
+
 		int newsz = *cside + (p[0] + chldsz - p[2]) / (percent[1] - percent[0]);
 		if (newsz > sz)
 			newsz = sz;
@@ -323,6 +335,7 @@ static int SIT_LayoutChildren(SIT_Widget root, ResizePolicy mode)
 	SizeF      min = {0, 0};
 
 	/* apply maxWidth constraints */
+	root->layout.flags &= ~LAYF_HasAttach;
 	for (list = HEAD(root->children), total = count = 0; list; NEXT(list))
 	{
 		if ((list->flags & SITF_TopLevel) || ! list->visible) continue;
@@ -746,24 +759,28 @@ void SIT_ReflowLayout(SIT_Widget list)
 					done = 1;
 					list->optimalWidth(list, &pref, 0);
 					list->optimalBox = pref;
-					SIT_LayoutWidget(parent, list, 0, FitUsingOptimalBox);
+					if (! SIT_LayoutWidget(parent, list, 0, FitUsingOptimalBox))
+						goto reflow;
 				}
 				else if (! SIT_CanReflow(list, oldSz.width, 0))
 				{
 					if (list->flags & SITF_FixedWidth) list->currentBox.width = list->fixed.width;
-					SIT_LayoutWidget(parent, list, 0, FitUsingCurrentBox);
+					if (! SIT_LayoutWidget(parent, list, 0, FitUsingCurrentBox))
+						goto reflow;
 				}
 				else goto reflow;
 
 				if (list->attachment[1].sa_Type == SITV_AttachNone || list->attachment[3].sa_Type == SITV_AttachNone)
 				{
 					if (! done) list->optimalWidth(list, &pref, 0), list->optimalBox = pref;
-					SIT_LayoutWidget(parent, list, 1, FitUsingOptimalBox);
+					if (! SIT_LayoutWidget(parent, list, 1, FitUsingOptimalBox))
+						goto reflow;
 				}
 				else if (! SIT_CanReflow(list, oldSz.height, 1))
 				{
 					if (list->flags & SITF_FixedHeight) list->currentBox.width = list->fixed.height;
-					SIT_LayoutWidget(parent, list, 1, FitUsingCurrentBox);
+					if (! SIT_LayoutWidget(parent, list, 1, FitUsingCurrentBox))
+						goto reflow;
 				}
 				else goto reflow;
 
@@ -793,6 +810,7 @@ void SIT_ReflowLayout(SIT_Widget list)
 			{
 				/* need reflow */
 				reflow:
+				list->currentBox = list->optimalBox;
 				i = 0;
 				while ((parent->flags & SITF_TopLevel) == 0)
 				{
@@ -800,7 +818,7 @@ void SIT_ReflowLayout(SIT_Widget list)
 					memset(&parent->childBox, 0, sizeof parent->childBox);
 					parent = parent->parent;
 				}
-				SIT_LayoutWidgets(parent, FitUsingInitialBox);
+				SIT_LayoutWidgets(parent, KeepDialogSize);
 				SIT_GeomRemoveChildrenOf(&list, parent);
 				if (list == NULL) return;
 				break;

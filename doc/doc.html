@@ -3774,6 +3774,18 @@ other properties:
   <p>Then the second property (<tt>SIT_DefSBSize</tt>) will let you set the default width (height if
   horizontal) of the scrollbar. By default this value is set to 1em.
 
+
+  <li><tt class="dt">SIT_DefRoundTo</tt> (<tt class="t">int</tt>)
+  <p>The <b>default number of decimals to round numbers</b> from numeric edit fields (<tt>SITV_Float</tt> or
+  <tt>SITV_Double</tt>). Default behavior is to display as many decimals as possible, which is usually
+  way too many, as rounding errors tend to accumulate quickly (for example, setting a step value of 0.1
+  will quickly generate lots of them). Usually 4 or 5 are more than enough.
+
+  <p>This property will spare you the hassle of setting this <a href="#SIT_RoundTo">property</a> for
+  every numeric edit fields you'll create. <span class="n">Note</span>: setting this property will only
+  affect newly created edit fields though.
+
+
   <li id="SIT_SetAppIcon"><tt class="dt">SIT_SetAppIcon</tt> (<tt class="t">int</tt>)
   <p>Some windowing framework on Windows <b>do not set the application title</b> bar to the icon defined in
   the resource file (most notably: SDL1). You can do it with this property: the argument must be the
@@ -4807,7 +4819,7 @@ allocation at the start).
   with the <tt class="s">"%f"</tt> format specifier. That means: no localization support and numbers
   will be written with all digits (no exponent).
 
-  <li><tt class="dt">SIT_RoundTo</tt> (<tt class="t">int</tt>)
+  <li><tt class="dt" id="SIT_RoundTo">SIT_RoundTo</tt> (<tt class="t">int</tt>)
   <p>Only useful for numeric types and especially <tt>SITV_Float</tt> or <tt>SITV_Double</tt>. Due to
   limited precision of <tt class="t">float</tt> and <tt class="t">double</tt> types, you very rarely
   want to display all the fractional digits encoded in those types, because it will be mostly rounding

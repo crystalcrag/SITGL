@@ -35,7 +35,6 @@ void   cssClear(SIT_Widget);
 Bool   cssCRCChanged(SIT_Widget);
 void   cssSetDefault(SIT_Widget);
 int    cssTokenizer(STRPTR start, STRPTR * end);
-void   cssDumpRules();
 DATA8  cssIdent(DATA8);
 int    cssIsSpace(int chr);
 
@@ -120,6 +119,11 @@ struct CSSImage_t
 	int      handle;      /* NVG handle of image */
 	uint32_t lastMod;     /* last modification timestamp */
 };
+
+#ifdef DEBUG_SIT
+void printNodeName(SIT_Widget);
+void dumpRule(CSSRule rule);
+#endif
 
 #define	AUTOVAL      3
 

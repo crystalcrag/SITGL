@@ -26,6 +26,7 @@
 		{ NULL, SIT_StyleSheet,      _S_, SIT_PTR,  OFFSET(SIT_App, styles) },
 		{ NULL, SIT_ExitCode,        _SG, SIT_PTR,  OFFSET(SIT_App, exitCode) },
 		{ NULL, SIT_MonitorResol,    __G, SIT_PTR,  OFFSET(SIT_App, resolution) },
+		{ NULL, SIT_DefRoundTo,      _SG, SIT_INT,  OFFSET(SIT_App, defRoundTo) },
 		{ NULL, SIT_SetAppIcon,      _S_, SIT_INT,  0 },
 		{ NULL, SIT_CompositedAreas, __G, SIT_PTR,  0 },
 		{ NULL, SIT_FontScale,       _SG, SIT_INT,  0 },
@@ -470,6 +471,7 @@ Bool SIT_InitApp(SIT_Widget w, va_list args)
 	GetMonitorInfo(hmon, &info);
 	app->screen.width  = info.rcMonitor.right  - info.rcMonitor.left;
 	app->screen.height = info.rcMonitor.bottom - info.rcMonitor.top;
+	app->defRoundTo = 16;
 
 	w->attrs = AppClass;
 	SIT_ParseTags(w, args, AppClass);
