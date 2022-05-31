@@ -478,7 +478,12 @@ DLLIMP int SIT_ProcessClick(float x, float y, int button, int pressed)
 			}
 			else /* don't move focus on this control, but still mark it as active */
 			{
-				hover->state |= STATE_ACTIVE;
+				if (hover->flags & SITF_ImmediateActive)
+				{
+					hover->state |= STATE_ACTIVATED;
+					sendEvt = SIT_EventBubble(hover, SITE_OnActivate);
+				}
+				else hover->state |= STATE_ACTIVE;
 				sit.active = hover;
 			}
 			layoutUpdateStyles(sit.active);

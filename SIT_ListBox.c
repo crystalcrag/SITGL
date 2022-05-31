@@ -66,6 +66,7 @@ enum /* bitfield for Cell->flags */
 	CELL_ALIGNC     = 0x0008,
 	CELL_VALIGNB    = 0x0010,    /* default: top aligned */
 	CELL_VALIGNC    = 0x0020,
+	CELL_ALIGNFLAGS = 0x003c,
 	CELL_SELECT     = 0x0040,
 	CELL_CATEGORY   = 0x0080,    /* thead */
 	CELL_CATVISIBLE = 0x0100,    /* initially hidden if no item in cat */
@@ -318,9 +319,12 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 			REAL maxw = cell->sizeCell.width;
 			if (icon == 0)
 			{
-				Cell hdr = list->columns + j;
-				align = hdr->flags & CELL_ALIGNR ? TextAlignRight :
-				        hdr->flags & CELL_ALIGNC ? TextAlignCenter : 0;
+				int cflags = flags & CELL_ALIGNFLAGS;
+				if (cflags == 0)
+					cflags = list->columns[j].flags;
+
+				align = cflags & CELL_ALIGNR ? TextAlignRight :
+				        cflags & CELL_ALIGNC ? TextAlignCenter : 0;
 				if (j == col-1)
 					maxw -= list->scrollPad;
 			}
@@ -371,7 +375,15 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 			else SIT_ListRestoreChildren(node, cell);
 
 			SIT_LayoutCSSSize(node);
-			SIT_RenderNode(node);
+			if (node == sel)
+			{
+				/* background is already rendered */
+				uint8_t bgCount = node->style.bgCount;
+				node->style.bgCount = 0;
+				SIT_RenderNode(node);
+				node->style.bgCount = bgCount;
+			}
+			else SIT_RenderNode(node);
 		}
 	}
 	break_all:
@@ -1331,11 +1343,26 @@ static int SIT_ListKeyboard(SIT_Widget w, APTR cd, APTR ud)
 		Cell cell, end;
 		if ((list->selIndex == -1 && (msg->keycode == SITK_Up || msg->keycode == SITK_Down)) || msg->keycode == SITK_Home)
 		{
-			for (cell = STARTCELL(list), end = vector_nth(&list->cells, list->cells.count-1); cell <= end && (cell->flags & CELL_CATEGORY); cell ++);
-			if (cell <= end)
+			end = vector_nth(&list->cells, list->cells.count-1);
+			if (msg->keycode == SITK_Up)
 			{
-				SIT_ListSetSelection(list, cell, True, False);
-				return 1;
+				/* select last item */
+				for (cell = end, end = STARTCELL(list); cell >= end && ((cell->flags & CELL_COLSTART) == 0 || (cell->flags & CELL_HIDDEN)); cell --);
+				if (cell >= end)
+				{
+					SIT_ListSetSelection(list, cell, True, False);
+					return 1;
+				}
+			}
+			else
+			{
+				/* select first item */
+				for (cell = STARTCELL(list); cell <= end && (cell->flags & (CELL_CATEGORY|CELL_HIDDEN)); cell ++);
+				if (cell <= end)
+				{
+					SIT_ListSetSelection(list, cell, True, False);
+					return 1;
+				}
 			}
 			return 0;
 		}

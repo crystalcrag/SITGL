@@ -416,8 +416,7 @@ APTR SIT_FindControl(SIT_Widget parent, STRPTR utf8, int len, Bool recursive)
 
 	for (;;)
 	{
-		for (c = HEAD(parent->children); c && strcmp(c->name, utf8);
-			NEXT(c));
+		for (c = HEAD(parent->children); c && strcmp(c->name, utf8); NEXT(c));
 
 		if (c == NULL)
 		{

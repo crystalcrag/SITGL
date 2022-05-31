@@ -636,8 +636,16 @@ Bool SIT_LayoutWidgets(SIT_Widget root, ResizePolicy mode)
 			if ((list->flags & SITF_FixedHeight) /*&& list->currentBox.height < list->fixed.height*/)
 				list->currentBox.height = list->fixed.height;
 		}
-		list->flags &= ~SITF_GeomNotified;
 		memset(&list->box, 0, sizeof list->box);
+		if (list->flags & SITF_GeomNotified)
+		{
+			/* in sit.geomList, need to be removed */
+			SIT_Widget * prev;
+			SIT_Widget   scan;
+			for (prev = &sit.geomList, scan = *prev; scan && scan != list; prev = &scan->geomChanged, scan = *prev);
+			if (scan) *prev = scan->geomChanged;
+			list->flags &= ~SITF_GeomNotified;
+		}
 	}
 
 	for (count = 0; count < 10; count ++)

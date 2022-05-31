@@ -224,12 +224,6 @@ Bool SIT_InitButton(SIT_Widget w, va_list args)
 				#undef pb
 			}
 			button->radioID = id;
-			if (w->title) /* do not use this trick when name is used as a shortcut for title */
-			{
-				/* quick'n dirty hack: useful in serialized form, reduce declaration */
-				STRPTR num = strchr(w->name, ':');
-				if (num) button->radioID = strtoul(num+1, NULL, 10), *num = 0;
-			}
 		}
 	case_radio:
 		/* already select radio in the group */

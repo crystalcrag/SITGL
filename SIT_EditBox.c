@@ -635,6 +635,8 @@ void SIT_TextEditSetText(SIT_Widget w, STRPTR title)
 		edit->ypos = 0;
 		/* text */
 		edit->length = 0;
+		if (edit->text)
+			edit->text[0] = 0;
 		if (title == NULL && edit->curValue && edit->editType >= SITV_Integer)
 		{
 			/* value changed from outside: refresh text */

@@ -1033,7 +1033,7 @@ void SIT_DestroyChildren(SIT_Widget w)
 {
 	SIT_Widget child;
 
-	while ((child = (APTR) ListRemHead(&w->children)))
+	while ((child = HEAD(w->children)))
 	{
 		/* locked children will detach from 'child' that way */
 		child->flags |= SITF_BeingDestroyed;
@@ -1105,6 +1105,7 @@ void SIT_InitiateReflow(SIT_Widget w)
 			}
 		}
 	}
+	fprintf(stderr, "added to geom notify: %s (%p)\n", w->name, w);
 	w->flags |= SITF_GeomNotified;
 	w->geomChanged = sit.geomList;
 	sit.geomList = w;
