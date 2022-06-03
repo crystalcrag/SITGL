@@ -23,7 +23,6 @@
 	#define	MAX_TOKEN_PENS   10
 
 
-
 static int IsSep(CFA cfa, STRPTR str, int dir)
 {
 	wchar_t   chr[2];
@@ -260,17 +259,17 @@ int SYN_HighlightText(SIT_Widget w, APTR cd, APTR ud)
 	else memcpy(&lex, cmap + 9 * 27, sizeof lex);
 
 	/* need to keep line starting state into a cache */
-	if (line >= lex->startState.max)
+	if (line+1 >= lex->startState.max)
 	{
 		int old = lex->startState.max;
-		vector_nth(&lex->startState, msg->totalRow+1);
+		vector_nth(&lex->startState, line+1);
 		memset(&STARTSTATE(lex, old), 0xff, (lex->startState.max - old) * SZST);
 		if (old == 0) STARTSTATE(lex, 0) = 0;
 	}
 
 	if (lex->lastLine < line)
 	{
-		/* skip some lines: parse them now */
+		/* skipped some lines: parse them now */
 		DATA8 text;
 		int   length, i, byte;
 		SIT_GetValues(w, SIT_Title, &text, NULL);
@@ -367,7 +366,6 @@ int SYN_Parse(STRPTR path, STRPTR buffer, CFA * ret)
 {
 	STRPTR line, p, n, sep;
 	DFABuf dfa;
-	CFA    cfa;
 	NFA    nfa;
 	int    error = 0;
 	int    linenum = 1;
@@ -383,8 +381,8 @@ int SYN_Parse(STRPTR path, STRPTR buffer, CFA * ret)
 
 	DFA_Init(&dfa);
 	nfa  = NFA_Create();
-	cfa  = NULL;
 	sep  = NULL;
+	*ret = NULL;
 	line = io ? alloca(SZ_LINE) : NULL;
 
 	while (! error)
@@ -484,8 +482,6 @@ int SYN_Parse(STRPTR path, STRPTR buffer, CFA * ret)
 					while (*n && isspace(*n)) n ++;
 			}
 		}
-		if (error > 0)
-			puts("here");
 	}
 
 	if (io) fclose(io);
@@ -497,7 +493,7 @@ int SYN_Parse(STRPTR path, STRPTR buffer, CFA * ret)
 	{
 		if (NFA_Determinize(nfa, &dfa))
 		{
-			*ret = cfa = DFA_Compress(&dfa, sep);
+			*ret = DFA_Compress(&dfa, sep);
 		}
 	}
 	else error |= (linenum-1) << 8;
@@ -594,7 +590,7 @@ static Bool NFA_PushFinalState(NFA nfa, int prev, int hlType)
 {
 	NFAStack top = vector_nth(&nfa->group, nfa->group.count);
 
-	/* add a transition to break the epsilon-closing mecanism */
+	/* add a transition to break the epsilon-closure mecanism */
 	if (top && NFA_AddRel(nfa, prev, SUBDFA_TRANSITION, nfa->lastState+1))
 	{
 		nfa->lastState ++;
@@ -712,7 +708,7 @@ void NFA_Free(NFA nfa)
 		vector_free(nfa->classes);
 		vector_free(nfa->trans);
 		vector_free(nfa->epsbuf);
-		if (nfa->epsclosing) free(nfa->epsclosing);
+		if (nfa->epsclosure) free(nfa->epsclosure);
 		free(nfa);
 	}
 }
@@ -1023,7 +1019,7 @@ STRPTR NFA_ParseRegExp(NFA nfa, STRPTR regexp, int hlType, int stackMethod, int 
 		/* no break; */
 	default:
 		last = prev;
-		/* need to break epsilon closing */
+		/* need to break epsilon closure */
 		if (NFA_AddRel(nfa, prev, SUBDFA_TRANSITION, nfa->lastState+1))
 			nfa->lastState ++;
 
@@ -1059,7 +1055,7 @@ static int sortstate(const void * item1, const void * item2)
 #define RELOCATE(dst, src, old)    (APTR) ((DATA8) src + ((DATA8) dst - (DATA8)old))
 
 /* compute list of joinable states with epsilon-transition */
-static int NFA_EpsilonClosing(NFA nfa, NFAState stindex)
+static int NFA_EpsilonClosure(NFA nfa, NFAState stindex)
 {
 	NFAVector ret;
 	NFATrans  trans;
@@ -1135,17 +1131,17 @@ static void NFA_MergeStateId(int * offset, vector buf, NFAVector merge)
 			STRPTR    old = buf->buffer;
 			if (buf->count > (end - (NFAVector) old))
 				goto relocate_vec;
-			vector_nth(buf, buf->count + vec[0] - state[0] - 1);
+			vector_nth(buf, buf->count + vec[0] - state[0]);
 			state = RELOCATE(state, buf->buffer, old);
 		}
-		else return;
+		else return; /* same vector (cannot be smaller) */
 	}
 	else /* copy 'merge' at end of 'buf' */
 	{
 		vec = merge;
 		relocate_vec:
-		state = vector_nth(buf, buf->count + vec[0]);
-		state -= vec[0];
+		state = vector_nth(buf, buf->count + vec[0] + 1);
+		state -= vec[0] + 1;
 		*offset = (STRPTR) state - buf->buffer + 1;
 	}
 	memcpy(state, vec, (vec[0]+1) * sizeof *vec);
@@ -1226,6 +1222,7 @@ static int DFA_AllocState(DFA dfa, NFA nfa, NFAVector id)
 			memcpy(dest, id, (id[0] + 1) * SZST);
 			id = dest;
 		}
+		else return -1;
 
 		/* cannot use pointer, because vector can be reallocated */
 		ds->stateID = (STRPTR) id - dfa->stateidbuf.buffer;
@@ -1262,7 +1259,7 @@ static int DFA_AllocState(DFA dfa, NFA nfa, NFAVector id)
 		 */
 		if (trash > 0)
 		{
-			id = EPSILON_CLOSING(nfa, trash);
+			id = EPSILON_CLOSURE(nfa, trash);
 			int ret = NFA_StateExists(dfa, id);
 			if (ret == TRASH_STATE) ret = NFA_FuzzyMatch(dfa, id);
 			if (ret != TRASH_STATE) ds->trash = ret;
@@ -1281,7 +1278,7 @@ void DFA_Init(DFA dfa)
 	dfa->trans.itemsize = sizeof (struct DFATrans_t);
 }
 
-/* Determinize a non-deterministic automaton */
+/* determinize a non-deterministic automaton */
 int NFA_Determinize(NFA nfa, DFA dfa)
 {
 	DFAState state;
@@ -1294,29 +1291,29 @@ int NFA_Determinize(NFA nfa, DFA dfa)
 	print_ndfa_states(nfa);
 
 	#ifdef DEBUG_DFA
-	printf("NFA epsilon closing:\n");
+	printf("NFA epsilon closure:\n");
 	#endif
 
-	/* Compute epsilon closing for each state of NDFA */
-	nfa->epsclosing = malloc(sizeof *nfa->epsclosing * nfa->states.count);
-	if (nfa->epsclosing)
+	/* compute epsilon closure for each state of NDFA */
+	nfa->epsclosure = malloc(sizeof *nfa->epsclosure * nfa->states.count);
+	if (nfa->epsclosure)
 	{
 		for (i = 0, j = nfa->states.count; j > 0; j --, i ++)
 		{
-			nfa->epsclosing[i] = NFA_EpsilonClosing(nfa, i);
-			NFA_PrintState(EPSILON_CLOSING(nfa, i), i);
+			nfa->epsclosure[i] = NFA_EpsilonClosure(nfa, i);
+			NFA_PrintState(EPSILON_CLOSURE(nfa, i), i);
 		}
 	}
 	else return False;
 
 	#ifdef DEBUG_DFA
-	printf("DFA epsilon closing:\n");
+	printf("DFA epsilon closure:\n");
 	#endif
 
-	/* Initial state of DFA is the epsilon closing of NDFA's init state */
-	DFA_AllocState(dfa, nfa, EPSILON_CLOSING(nfa, 0));
+	/* initial state of DFA is the epsilon closure of NDFA's init state */
+	DFA_AllocState(dfa, nfa, EPSILON_CLOSURE(nfa, 0));
 
-	/* Process next state */
+	/* process next state */
 	for (state = HEAD(dfa->states); state; state = state->next)
 	{
 		int Sigma[256], min, max;
@@ -1327,10 +1324,10 @@ int NFA_Determinize(NFA nfa, DFA dfa)
 		max = 0;
 
 		/*
-		 * This is the heart of deterministic process. For each state of
-		 * the DFA, computes which states can be reach by epsilon closing
+		 * This is the core of the determinization process: for each state of
+		 * the DFA, computes which states can be reach by epsilon closure
 		 * in the *NDFA*. Then create states that don't exist yet, or link
-		 * to the existing states. Process until no more states are added.
+		 * to existing states. Process until no more states are added.
 		 * Sadly, this is an exponential algorithm.
 		 */
 		for (i = state->stateID, j = STATEID(dfa, i), i += SZST; j > 0; j --, i += SZST)
@@ -1345,7 +1342,7 @@ int NFA_Determinize(NFA nfa, DFA dfa)
 				int chr = t->chrtrans;
 				if (chr == SUBDFA_TRANSITION)
 				{
-					NFAVector vec = EPSILON_CLOSING(nfa, t->state);
+					NFAVector vec = EPSILON_CLOSURE(nfa, t->state);
 					state->flag |= FLG_SUBDFA;
 					NFAState idx = NFA_StateExists(dfa, vec);
 					if (idx == TRASH_STATE)
@@ -1354,8 +1351,8 @@ int NFA_Determinize(NFA nfa, DFA dfa)
 				}
 				else if (chr < EPSILON_TRANSITION)
 				{
-					NFA_MergeStateId(Sigma + chr, &sigmavec, EPSILON_CLOSING(nfa, t->state));
-					/* Limit range of characters to scan */
+					NFA_MergeStateId(Sigma + chr, &sigmavec, EPSILON_CLOSURE(nfa, t->state));
+					/* limit range of characters to scan */
 					if (min > chr) min = chr;
 					if (max < chr) max = chr;
 				}
@@ -1389,7 +1386,7 @@ int NFA_Determinize(NFA nfa, DFA dfa)
 		}
 	}
 
-	/* Transfert custom classes from NFA to DFA */
+	/* transfert custom classes from NFA to DFA */
 	dfa->classes = nfa->classes;
 	memset(&nfa->classes, 0, sizeof nfa->classes);
 	vector_free(sigmavec);
@@ -1399,7 +1396,7 @@ int NFA_Determinize(NFA nfa, DFA dfa)
 	return True;
 }
 
-/* Free ressources allocated for a DFA */
+/* free ressources allocated for a DFA */
 void DFA_Free(DFA dfa)
 {
 	DFAState state, next;
@@ -1457,14 +1454,14 @@ CFA DFA_Compress(DFA dfa, STRPTR sep)
 
 	memset(window, 0, sizeof window);
 
-	/* Compute base offset to compress tables */
+	/* compute base offset to compress tables */
 	for (base = n = 0, state = HEAD(dfa->states); state; NEXT(state), n++)
 	{
 		DFATrans tr;
 		uint8_t  curset[256/8];
 		int      offset, i;
 
-		/* Convert transition table into array bitflag */
+		/* convert transition table into array bitflag */
 		if (state->count == 0) continue;
 		memset(curset, 0, sizeof curset);
 		for (tr = DFA_TRANS(dfa, state), diff = state->count; diff; ) {
@@ -1479,7 +1476,7 @@ CFA DFA_Compress(DFA dfa, STRPTR sep)
 				for (i = 0; i < sizeof window && (curset[i] & window[i]) == 0; i ++);
 				if (i < sizeof window)
 				{
-					/* Shift one bit to the left */
+					/* shift one bit to the left */
 					DATA8 p;
 					for (p = window; p < EOT(window)-1; p[0] <<= 1, p[0] |= p[1]>>7, p++);
 					p[0] <<= 1;
@@ -1487,18 +1484,14 @@ CFA DFA_Compress(DFA dfa, STRPTR sep)
 				else break;
 			}
 
-			/*
-			 * Okay, that is a nasty limitation of that algo. Cross the fingers for
-			 * instance, but if it is too annoying in future, we either have to
-			 * improve recognition capabilities (preferred) or enlarge datatypes.
-			 */
+			/* potentially serious limitation: number of states is limited to 65535 */
 			base += offset;
 			if (base > 65535)
 			{
 				fprintf(stderr, "exceeding 65535 states: ignoring remaining\n");
 				return False;
 			}
-			/* Merge <curset> with window */
+			/* merge <curset> with window */
 			for (i = 0; i < sizeof window; window[i] |= curset[i], i ++);
 		}
 		else memcpy(window, curset, sizeof window);
@@ -1515,7 +1508,7 @@ CFA DFA_Compress(DFA dfa, STRPTR sep)
 
 	memset(cfa->valid, 0xff, sizeof(NFAState) * base);
 
-	/* Fill the transition tables */
+	/* fill the transition tables */
 	for (n = 0, state = HEAD(dfa->states); state; NEXT(state), n++)
 	{
 		static struct DFATrans_t dummy = {0};
@@ -1544,7 +1537,7 @@ CFA DFA_Compress(DFA dfa, STRPTR sep)
 	for (n = 1, k = dfa->finals; n <= k; n ++)
 		cfa->hlType[cfa->autoTrans[n]] = cfa->hlType[n];
 
-	/* Transfer custom classes */
+	/* transfer custom classes */
 	cfa->classes = dfa->classes;
 	memset(&dfa->classes, 0, sizeof dfa->classes);
 

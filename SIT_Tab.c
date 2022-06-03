@@ -100,19 +100,25 @@ static int SIT_TabMeasure(SIT_Widget w, APTR cd, APTR ud)
 	}
 
 	/* measure size of tabs (labels on top) */
-	for (i = n = 0, nb = tab->nbTab, tab->maxHeight = 0; i < nb; i ++)
+	nb = tab->nbTab;
+	tab->maxHeight = 0;
+	if (tab->tabStyle != SITV_TabInvisible)
 	{
-		SIT_Widget label = tab->items[i].label;
+		for (i = n = 0; i < nb; i ++)
+		{
+			SIT_Widget label = tab->items[i].label;
 
-		if (label->layout.pos.width == 0)
-			SIT_MeasureWidget(label);
+			if (label->layout.pos.width == 0)
+				SIT_MeasureWidget(label);
 
-		n += label->box.right - label->box.left + tab->tabSpace;
-		REAL h = label->flags & SITF_FixedHeight ? label->fixed.height : label->box.bottom - label->box.top;
-		//fprintf(stderr, "tab %d h = %g\n", i, h);
-		if (tab->maxHeight < h)
-			tab->maxHeight = h;
+			n += label->box.right - label->box.left + tab->tabSpace;
+			REAL h = label->flags & SITF_FixedHeight ? label->fixed.height : label->box.bottom - label->box.top;
+			//fprintf(stderr, "tab %d h = %g\n", i, h);
+			if (tab->maxHeight < h)
+				tab->maxHeight = h;
+		}
 	}
+	else n = 0;
 	sz.width  = tab->tabWidth = n+6-tab->tabSpace;
 	sz.height = 0;
 
@@ -186,9 +192,8 @@ static int SIT_TabExtendSel(SIT_Widget w, APTR cd, APTR resizePolicy)
 	}
 }
 
-
 /* onclick on tab pane */
-static int SIT_TabSetCurrent(SIT_Widget w, APTR cd, APTR ud)
+static int SIT_TabClickPane(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_Tab       tab = (SIT_Tab) w->parent;
 	SIT_TabItem   items;
@@ -202,7 +207,6 @@ static int SIT_TabSetCurrent(SIT_Widget w, APTR cd, APTR ud)
 
 	if (cur != tab->curTab)
 	{
-		/* new current tab */
 		SIT_Widget  label;
 		SIT_TabItem old = tab->items + tab->curTab;
 		label = old->label;
@@ -247,29 +251,32 @@ static void SIT_TabSet(SIT_Widget w, STRPTR tabs)
 	if (nb > old)
 		memset(items + old, 0, (nb - old) * sizeof *items);
 
-	int i;
-	for (i = tab->curTab; tabs; i --)
+	if (tab->tabStyle != SITV_TabInvisible)
 	{
-		SIT_Widget label = items->label;
-		STRPTR next = strchr(tabs, '\t');
-		if (next) *next ++ = 0;
-		if (label == NULL)
+		int i;
+		for (i = tab->curTab; tabs; i --)
 		{
-			items->label = label = SIT_CreateWidget(i == 0 ? "#pane:active" : "#pane", SIT_LABEL, w, SIT_Title, tabs, SIT_TabNum, -1, NULL);
-			label->optimalWidth = SIT_TabExtendSel;
-			label->flags |= SITF_ToggleButon;
-			label->layout.flags |= LAYF_AdjustRect | LAYF_AdjustHitRect;
-			SIT_AddCallback(label, SITE_OnClick + EVT_PRIORITY(100), SIT_TabSetCurrent, NULL);
+			SIT_Widget label = items->label;
+			STRPTR next = strchr(tabs, '\t');
+			if (next) *next ++ = 0;
+			if (label == NULL)
+			{
+				items->label = label = SIT_CreateWidget(i == 0 ? "#pane:active" : "#pane", SIT_LABEL, w, SIT_Title, tabs, SIT_TabNum, -1, NULL);
+				label->optimalWidth = SIT_TabExtendSel;
+				label->flags |= SITF_ToggleButon;
+				label->layout.flags |= LAYF_AdjustRect | LAYF_AdjustHitRect;
+				SIT_AddCallback(label, SITE_OnClick + EVT_PRIORITY(100), SIT_TabClickPane, NULL);
+			}
+			else SIT_SetValues(label, SIT_Title, tabs, NULL);
+
+			if (prev)
+				SIT_SetValues(label, SIT_Left, SITV_AttachWidget, prev, (int) tab->tabSpace, NULL);
+			else
+				SIT_SetValues(label, SIT_LeftAttachment, SITV_AttachForm, NULL);
+
+			prev = label;
+			tabs = next; items ++;
 		}
-		else SIT_SetValues(label, SIT_Title, tabs, NULL);
-
-		if (prev)
-			SIT_SetValues(label, SIT_Left, SITV_AttachWidget, prev, (int) tab->tabSpace, NULL);
-		else
-			SIT_SetValues(label, SIT_LeftAttachment, SITV_AttachForm, NULL);
-
-		prev = label;
-		tabs = next; items ++;
 	}
 	tab->nbTab = nb;
 }
@@ -284,6 +291,8 @@ static int SIT_TabSetValues(SIT_Widget w, APTR cd, APTR ud)
 	case SIT_TabActive:
 		if (value->integer < 0) value->integer = tab->nbTab-1;
 		tab->curTab = value->integer;
+		if (w->flags & SITF_InitDone)
+			SIT_ApplyCallback(w, (APTR) tab->curTab, SITE_OnChange);
 		break;
 	default:
 		return SIT_SetWidgetValue(w, cd, ud);

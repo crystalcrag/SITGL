@@ -287,10 +287,10 @@ struct SIT_App_t
 	SIT_Widget_t super;
 	SIT_Widget   focusRing;
 	SIT_Accel *  accel;                /* public */
-	int          defSBArrows;          /* public */
 	REAL         defSBSize;            /* public */
-	int          defRoundTo;           /* public */
-	int          refreshMode;          /* public */
+	uint8_t      defSBArrows;          /* public */
+	uint8_t      defRoundTo;           /* public */
+	uint8_t      refreshMode;          /* public */
 	int *        exitCode;             /* public */
 	STRPTR       styles;               /* public */
 	STRPTR       currentDir;           /* public */
@@ -374,18 +374,14 @@ struct SIT_EditBox_t
 	SIT_Widget_t super;
 	SIT_Widget   spinnerUp;
 	SIT_Widget   spinnerDown;
-	int          editType;             /* public */
 	double       minValue;             /* public */
 	double       maxValue;             /* public */
 	double       stepValue;            /* public */
-	int          hotKey;               /* public */
 	APTR         curValue;             /* public */
 	STRPTR       cueBanner;            /* public: placeholder text if empty */
 	STRPTR       fixedBuffer;          /* public */
 	int          fixedSize;            /* public */
 	int          maxLines;             /* public */
-	int          tabStyle;             /* public */
-	int          roundTo;              /* public */
 	DATA8        colorMap;             /* public */
 	SIT_CallProc lexer;                /* public */
 	APTR         lexerData;            /* public */
@@ -393,6 +389,7 @@ struct SIT_EditBox_t
 	CSSColor     caret;
 	CSSColor     bgSel;
 	int16_t      msgX, msgY;           /* last clicked pos */
+	uint32_t     lastLog;
 
 	int          cursor;               /* public: character position of the text cursor within the string */
 	int          selStart;             /* public: selection start/end point */
@@ -425,11 +422,14 @@ struct SIT_EditBox_t
 			int  count;
 		} space;
 	};
-	uint8_t      readOnly;             /* public */
-	uint8_t      init;
-	uint8_t      selectWord;           /* select text by word if >0 */
-	uint8_t      wordWrap;             /* public: 0: none, 1: break at character, 2: break at word */
+	uint8_t      editType;             /* public */
 	uint8_t      flags;                /* FLAG_* bitfield */
+	uint8_t      tabStyle;             /* public */
+	uint8_t      readOnly;             /* public */
+	uint8_t      caretMode;            /* public */
+	uint8_t      roundTo;              /* public */
+	uint8_t      wordWrap;             /* public: 0: none, 1: break at character, 2: break at word */
+	uint8_t      selectWord;           /* select text by word if >0 */
 	uint8_t      hasPreferredX;
 	uint8_t      caretVisible;
 	int8_t       autoScrollDir;
@@ -614,6 +614,7 @@ enum /* types for ParseTags */
 {
 	SIT_INT,
 	SIT_BOOL,
+	SIT_U8,
 	SIT_STR,
 	SIT_REAL,
 	SIT_PTR,

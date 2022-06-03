@@ -146,6 +146,7 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 		/* check first if value differs */
 		switch (tag->tl_Type) {
 		default:       if (* (int  *)   p == val->integer) return 0; break; /* SIT_INT */
+		case SIT_U8:
 		case SIT_BOOL: if (* (DATA8)    p == val->boolean) return 0; break;
 		case SIT_UNIT: if (* (float *)  p == (float) val->real) return 0; break;
 		case SIT_REAL: if (* (double *) p == val->real)    return 0;
@@ -188,6 +189,7 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 		case SIT_PTR:  SET_VALUE(w, void *,   val->pointer); break;
 		case SIT_INT:  SET_VALUE(w, int,      val->integer); break;
 		case SIT_REAL: SET_VALUE(w, double,   val->real);    break;
+		case SIT_U8:   SET_VALUE(w, uint8_t,  val->integer); break;
 		case SIT_BOOL: SET_VALUE(w, uint8_t,  !!val->boolean); /* we need 0 or 1 */ break;
 		case SIT_UNIT: SET_VALUE(w, REAL,     val->real);    break;
 		case SIT_STR:
@@ -726,7 +728,7 @@ void SIT_ParseTags(SIT_Widget w, va_list vargs, TagList classArgs)
 					case SIT_ABBR: break;
 					case SIT_REAL: value.real = list->key.real; break;
 					case SIT_CTRL: case SIT_PTR: value.pointer = list->key.ptr; break;
-					case SIT_BOOL: case SIT_INT: value.integer = list->key.val; break;
+					case SIT_BOOL: case SIT_INT: case SIT_U8: value.integer = list->key.val; break;
 					case SIT_STR:  value.string = list->key.ptr; list ++; goto assign_str;
 					case SIT_UNIT: value.integer = list->key.val; list ++; goto assign_unit;
 					}
@@ -739,6 +741,7 @@ void SIT_ParseTags(SIT_Widget w, va_list vargs, TagList classArgs)
 				case SIT_CTRL:
 				case SIT_PTR:  value.pointer = va_arg(vargs, void *); break;
 				case SIT_BOOL:
+				case SIT_U8:
 				case SIT_INT:  value.integer = va_arg(vargs, int);    break;
 				case SIT_REAL: value.real    = va_arg(vargs, double); break;
 				case SIT_UNIT:
@@ -1105,7 +1108,6 @@ void SIT_InitiateReflow(SIT_Widget w)
 			}
 		}
 	}
-	fprintf(stderr, "added to geom notify: %s (%p)\n", w->name, w);
 	w->flags |= SITF_GeomNotified;
 	w->geomChanged = sit.geomList;
 	sit.geomList = w;
@@ -1321,6 +1323,7 @@ DLLIMP void SIT_GetValues(SIT_Widget w, ...)
 				case SIT_UNIT: va_arg(vargs, REAL *)[0]   = * (REAL *)   field; break;
 				case SIT_INT:  va_arg(vargs, int *)[0]    = * (int *)    field; break;
 				case SIT_REAL: va_arg(vargs, double *)[0] = * (double *) field; break;
+				case SIT_U8:   va_arg(vargs, int *)[0]    = * (DATA8)    field; break;
 				case SIT_BOOL: va_arg(vargs, Bool *)[0]   = * (DATA8)    field; break;
 				case SIT_STR:  va_arg(vargs, STRPTR *)[0] = * (STRPTR *) field;
 				}

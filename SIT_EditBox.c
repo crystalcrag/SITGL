@@ -20,7 +20,7 @@
 #include "nanovg.h"
 
 	struct TagList_t EditBoxClass[] = {
-		{ "editType",    SIT_EditType,    C__, SIT_INT,  OFFSET(SIT_EditBox, editType) },
+		{ "editType",    SIT_EditType,    C__, SIT_U8,   OFFSET(SIT_EditBox, editType) },
 		{ "readOnly",    SIT_ReadOnly,    _SG, SIT_BOOL, OFFSET(SIT_EditBox, readOnly) },
 		{ "startSel",    SIT_StartSel,    _SG, SIT_INT,  OFFSET(SIT_EditBox, selStart) },
 		{ "endSel",      SIT_EndSel,      _SG, SIT_INT,  OFFSET(SIT_EditBox, selEnd) },
@@ -33,12 +33,13 @@
 		{ "editLength",  SIT_EditLength,  C__, SIT_INT,  OFFSET(SIT_EditBox, fixedSize) },
 		{ "maxUndo",     SIT_MaxUndo,     C__, SIT_INT,  OFFSET(SIT_EditBox, undoSize) },
 		{ "maxLines",    SIT_MaxLines,    C__, SIT_INT,  OFFSET(SIT_EditBox, maxLines) },
-		{ "wordWrap",    SIT_WordWrap,    C__, SIT_INT,  OFFSET(SIT_EditBox, wordWrap) },
-		{ "tabStyle",    SIT_TabStyle,    _SG, SIT_INT,  OFFSET(SIT_EditBox, tabStyle) },
-		{ "roundTo",     SIT_RoundTo,     _SG, SIT_INT,  OFFSET(SIT_EditBox, roundTo) },
+		{ "wordWrap",    SIT_WordWrap,    C__, SIT_U8,   OFFSET(SIT_EditBox, wordWrap) },
+		{ "tabStyle",    SIT_TabStyle,    _SG, SIT_U8,   OFFSET(SIT_EditBox, tabStyle) },
+		{ "roundTo",     SIT_RoundTo,     _SG, SIT_U8,   OFFSET(SIT_EditBox, roundTo) },
 		{ "colorMap",    SIT_ColorMap,    _SG, SIT_PTR,  OFFSET(SIT_EditBox, colorMap) },
 		{ "lexer",       SIT_Lexer,       _SG, SIT_PTR,  OFFSET(SIT_EditBox, lexer) },
 		{ "lexerData",   SIT_LexerData,   _SG, SIT_PTR,  OFFSET(SIT_EditBox, lexerData) },
+		{ "caretStyle",  SIT_CaretStyle,  _SG, SIT_U8,   OFFSET(SIT_EditBox, caretMode) },
 		{ "editAddText", SIT_EditAddText, _S_, SIT_PTR,  0 },
 		{ NULL,          SIT_TagEnd }
 	};
@@ -335,6 +336,19 @@ static int SIT_TextEditSyncValue(SIT_Widget w, APTR cd, APTR ud)
 	return 0;
 }
 
+/* trigger user callback when something has changed */
+static void SIT_TextEditNotify(SIT_Widget w)
+{
+	SIT_EditBox edit = (SIT_EditBox) w;
+	if (edit->caretMode & SITV_CaretNotify)
+	{
+		int stat[8];
+		SIT_TextEditGetStat(w, stat);
+		SIT_ApplyCallback(w, stat, SITE_OnChange);
+	}
+	else SIT_ApplyCallback(w, edit->text, SITE_OnChange);
+}
+
 /* click on number inc/dec button */
 static int SIT_TextEditSpinnerClick(SIT_Widget w, APTR cd, APTR ud)
 {
@@ -383,7 +397,7 @@ static int SIT_TextEditSpinnerClick(SIT_Widget w, APTR cd, APTR ud)
 				}
 			}
 			edit->flags |= FLAG_IGNOREEVT;
-			SIT_ApplyCallback(&edit->super, edit->text, SITE_OnChange);
+			SIT_TextEditNotify(&edit->super);
 			return 50;
 		}
 		else if (changes)
@@ -391,7 +405,7 @@ static int SIT_TextEditSpinnerClick(SIT_Widget w, APTR cd, APTR ud)
 			/* garbage from input removed usually */
 			SIT_TextEditSetText(&edit->super, edit->text);
 			edit->flags |= FLAG_IGNOREEVT;
-			SIT_ApplyCallback(&edit->super, edit->text, SITE_OnChange);
+			SIT_TextEditNotify(&edit->super);
 		}
 	}
 	else if (msg->state == SITOM_ButtonReleased)
@@ -441,7 +455,7 @@ static int SIT_TextEditDirty(SIT_Widget w, APTR cd, APTR ud)
 		edit->caretVisible = 1;
 		if (act)
 			SIT_TextEditRefreshCaret(edit);
-		else
+		else if (edit->caretMode & SITV_CaretBlink)
 			edit->caretBlink = SIT_ActionAdd(w, sit.curTime + sit.caretBlinkMS, sit.curTime + 1e6, SIT_TextEditBlinkCaret, NULL);
 	}
 	else if (act)
@@ -472,6 +486,7 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 	edit->maxValue  =  1/0.; /* + INF */
 	edit->minValue  = -1/0.; /* - INF */
 	edit->wordWrap  = SITV_WWWord;
+	edit->caretMode = SITV_CaretIBeam | SITV_CaretBlink;
 
 	SIT_ParseTags(w, args, w->attrs = EditBoxClass);
 	SIT_AddCallback(w, SITE_OnResize,    SIT_TextEditResize, NULL);
@@ -693,6 +708,29 @@ DLLIMP int SIT_TextGetWithSoftline(SIT_Widget w, STRPTR buffer, int max)
 	if (max > 0) *d = 0; else
 	if (d > (DATA8) buffer) d[-1] = 0;
 	return length;
+}
+
+/* stat: 0,1 = absolute cursor pos, 2,3 = pos with soft lines, 4,5 = total lines/with soft breaks, 6 = pos in bytes, 7 = buffer bytes */
+DLLIMP void SIT_TextEditGetStat(SIT_Widget w, int stat[8])
+{
+	if (w && w->type == SIT_EDITBOX)
+	{
+		SIT_EditBox edit = (SIT_EditBox) w;
+
+		DOMRow row;
+		int line, chr, max = edit->rowCount - 1;
+		for (line = edit->rowTop, chr = edit->charTop, row = edit->rows + line;
+		     line < max && chr + row->bytes <= edit->cursor;
+		     chr += row->bytes, row ++, line ++);
+
+		stat[0] = stat[2] = edit->cursor - chr;
+		stat[1] = stat[3] = line;
+		stat[4] =
+		stat[5] = edit->rowCount;
+		stat[6] = edit->cursor;
+		stat[7] = edit->length;
+	}
+	else memset(stat, 0, 8 * sizeof (int));
 }
 
 DLLIMP int SIT_TextEditLineLength(SIT_Widget w, int line)
@@ -1031,6 +1069,51 @@ static REAL SIT_TextEditRenderLine(SIT_EditBox state, DATA8 str, int length, REA
 	return x;
 }
 
+static void SIT_TextEditDrawCaret(NVGcontext * vg, SIT_EditBox state, DATA8 col, float x, float y, float cw, DATA8 chr)
+{
+	nvgBeginPath(vg);
+	if ((state->caretMode&3) == SITV_CaretBlock && ! HASFLAG(FLAG_REPLACE))
+	{
+		nvgFillColorRGBA8(vg, col);
+		nvgRect(vg, x, y, cw, state->fh);
+		nvgFill(vg);
+		if (chr)
+		{
+			uint8_t chr0 = chr[0];
+			uint8_t len  = 1;
+			uint8_t bg[4] = {0, 0, 0, 0};
+
+			if (chr0 >= 128 || ASCIIclass[chr0] != SPC)
+			{
+				if (chr0 > 32)
+					len = (DATA8) NthChar(chr, 1) - chr;
+				else
+					chr = chrCodes + (chr0 << 1), len = 2;
+
+				if (state->super.style.background)
+					memcpy(bg, &state->super.style.background->color, sizeof bg);
+				if (bg[3] == 0)
+				{
+					bg[0] = col[0] ^ 255;
+					bg[1] = col[1] ^ 255;
+					bg[2] = col[2] ^ 255;
+					bg[3] = 255;
+				}
+				nvgFillColorRGBA8(vg, bg);
+				nvgText(vg, x, y, chr, chr + len);
+			}
+		}
+	}
+	else /* SITV_CaretUnderline */
+	{
+		y += state->fh - 2;
+		nvgStrokeColorRGBA8(vg, col);
+		nvgMoveTo(vg, x, y);
+		nvgLineTo(vg, x+cw, y);
+		nvgStroke(vg);
+	}
+}
+
 /* rendering of editor: render the whole area */
 static int SIT_TextEditRender(SIT_Widget w, APTR unused1, APTR unused2)
 {
@@ -1120,9 +1203,9 @@ static int SIT_TextEditRender(SIT_Widget w, APTR unused1, APTR unused2)
 					/* ignore ending spaces */
 					DATA8 e;
 					for (e = p; e > s && e[-1] < 128 && ASCIIclass[e[-1]] == SPC; e --);
-					SIT_TextEditBreakAt(state, s, e-s, 1e6, &px, 0, NULL);
+					SIT_TextEditBreakAt(state, s, e-s, 1e6, &px, False, NULL);
 				}
-				else SIT_TextEditBreakAt(state, s, p-s, 1e6, &px, 0, NULL);
+				else SIT_TextEditBreakAt(state, s, p-s, 1e6, &px, False, NULL);
 				row->px = px;
 			}
 
@@ -1217,7 +1300,7 @@ static int SIT_TextEditRender(SIT_Widget w, APTR unused1, APTR unused2)
 		if (s <= c && c <= p)
 		{
 			/* we want cursor at beginning of line (second pass) */
-			SIT_TextEditBreakAt(state, s, c-s, 1e6, &state->xpos, 0, row);
+			SIT_TextEditBreakAt(state, s, c-s, 1e6, &state->xpos, False, row);
 			state->ypos = sel1;
 			state->xpos += state->offsetAlign - offX;
 			ycursor = y;
@@ -1242,35 +1325,26 @@ static int SIT_TextEditRender(SIT_Widget w, APTR unused1, APTR unused2)
 		nvgStrokeColorRGBA8(vg, col);
 		x = state->xpos + offX;
 		/* else not visible (due to scrolling) */
-		if (HASFLAG(FLAG_REPLACE) && state->cursor < state->length)
+		if ((HASFLAG(FLAG_REPLACE) && state->cursor < state->length) || (state->caretMode & 3) > SITV_CaretIBeam)
 		{
 			/* horizontal caret */
 			REAL cw;
-			if (*c == '\n') cw = state->fh * 0.5f;
-			else if (ta == TextAlignJustify && *c == ' ') cw = spcLen;
-			else SIT_TextEditBreakAt(state, c, utf8Next[*c>>4], width, &cw, 0, NULL);
-			if (*c == '\t') cw -= fmodf(x, state->tabSize);
-			y = ycursor + state->fh - 2;
+			if (state->cursor < state->length)
+			{
+				if (*c == '\n') cw = state->fh * 0.5f;
+				else if (ta == TextAlignJustify && *c == ' ') cw = spcLen;
+				else SIT_TextEditBreakAt(state, c, utf8Next[*c>>4], width, &cw, False, NULL);
+				if (*c == '\t') cw -= fmodf(x - offX, state->tabSize);
+			}
+			else cw = nvgTextBounds(vg, 0, 0, " ", NULL, NULL), c = NULL;
 			if (state->super.style.shadowCount > 0)
 			{
 				TextShadow shadow  = state->super.style.shadow;
 				int count = state->super.style.shadowCount;
 				for (; count > 0; count --, shadow ++)
-				{
-					nvgStrokeColorRGBA8(vg, shadow->color.rgba);
-					nvgBeginPath(vg);
-					REAL x2 = x + shadow->pos.XYfloat[0];
-					REAL y2 = y + shadow->pos.XYfloat[1];
-					nvgMoveTo(vg, x2, y2);
-					nvgLineTo(vg, x2+cw, y2);
-					nvgStroke(vg);
-				}
-				nvgStrokeColorRGBA8(vg, col);
+					SIT_TextEditDrawCaret(vg, state, shadow->color.rgba, x + shadow->pos.XYfloat[0], ycursor + shadow->pos.XYfloat[1], cw, c);
 			}
-			nvgBeginPath(vg);
-			nvgMoveTo(vg, x, y);
-			nvgLineTo(vg, x+cw, y);
-			nvgStroke(vg);
+			SIT_TextEditDrawCaret(vg, state, col, x, ycursor, cw, c);
 		}
 		else /* vertical caret */
 		{
@@ -1314,7 +1388,7 @@ static int SIT_TextEditFitIn(SIT_EditBox state, DOMRow row, int pos, REAL x, REA
 	case TextAlignCenter: off = (state->width - row->px) * 0.5f; break;
 	}
 	off -= state->scrollX;
-	fit = x < off ? 0 : SIT_TextEditBreakAt(state, text, max, x - off, &sz, True, row);
+	fit = x < off ? 0 : SIT_TextEditBreakAt(state, text, max, x - off, &sz, (state->caretMode&3) == SITV_CaretIBeam, row);
 	*xpos = sz + off;
 	return pos + fit;
 }
@@ -1333,7 +1407,7 @@ static int SIT_TextEditFitText(SIT_EditBox state, DATA8 text, int max, int wordO
 		for (fit = 0; fit < max && text[fit] != '\n'; fit ++);
 		return fit < max ? fit+1 : fit;
 	}
-	fit = SIT_TextEditBreakAt(state, text, max-(max > 0 && text[max-1] == '\n'), state->width, NULL, 0, NULL);
+	fit = SIT_TextEditBreakAt(state, text, max-(max > 0 && text[max-1] == '\n'), state->width, NULL, False, NULL);
 	if (fit < max)
 	{
 		int len;
@@ -1761,7 +1835,7 @@ static void SIT_TextEditMakeCursorVisible(SIT_EditBox state)
 		nvgFontSize(sit.nvgCtx, state->super.style.font.size);
 		nvgTextLetterSpacing(sit.nvgCtx, 0);
 		for (s = state->text, p = s + state->cursor; p > s && p[-1] != '\n'; p --);
-		SIT_TextEditBreakAt(state, p, (s+state->cursor)-p, 1e6, &xpos, 0, NULL);
+		SIT_TextEditBreakAt(state, p, (s+state->cursor)-p, 1e6, &xpos, False, NULL);
 
 		if (xpos < state->scrollX)
 			state->scrollX = xpos;
@@ -1769,6 +1843,13 @@ static void SIT_TextEditMakeCursorVisible(SIT_EditBox state)
 			state->scrollX = xpos - state->width + 2 /* caret thickness */;
 	}
 	SIT_TextEditRefreshCaret(state);
+
+	if (state->caretMode & SITV_CaretNotify)
+	{
+		int stat[8];
+		SIT_TextEditGetStat(&state->super, stat);
+		SIT_ApplyCallback(&state->super, stat, SITE_OnChange);
+	}
 }
 
 /* traverse the layout to locate the nearest character to a display position */
@@ -1843,7 +1924,7 @@ static int SIT_TextEditClick(SIT_Widget w, APTR cd, APTR ud)
 				msg->y = 0;
 
 			state->hasPreferredX = 0;
-			int cursor = SIT_TextEditLocateCoord(state, msg->x, msg->y);
+			int cursor = SIT_TextEditLocateCoord(state, msg->x - w->padding[0], msg->y);
 			if (state->selectWord == 2 || cursor != state->cursor || TimeMS() - lastClick > sit.dblClickMS)
 			{
 				state->selectWord = 0;
@@ -2147,7 +2228,7 @@ static int SIT_TextEditPaste(SIT_EditBox state, DATA8 text, int len)
 		SIT_TextEditMakeCursorVisible(state);
 		if (editLen > 4096) free(text);
 		if (HAS_EVT(&state->super, SITE_OnChange))
-			SIT_ApplyCallback(&state->super, state->text, SITE_OnChange);
+			SIT_TextEditNotify(&state->super);
 		return 1;
 	}
 	if (editLen > 4096) free(text);
@@ -2175,13 +2256,13 @@ static void SIT_TextEditMoveCursorUpOrDown(SIT_EditBox state, int dir, int sel)
 	}
 	else xpos = state->preferredX;
 	row += dir;
-	state->ypos += dir;
 	if (row >= 0)
 	{
 		DOMRow rows;
 		int    i, j;
 		if (row >= state->rowCount)
 			row = state->rowCount - 1, xpos = 1e6;
+		state->ypos = row;
 		/* XXX use relative loop from rowTop */
 		for (j = i = 0, rows = state->rows; j < row; i += rows->bytes, j ++, rows ++);
 		state->cursor = SIT_TextEditFitIn(state, rows, i, xpos, &xpos);
@@ -2341,7 +2422,7 @@ int SIT_TextEditInsertText(SIT_EditBox state, DATA8 utf8)
 	if (top != state->rowTop || num != state->rowCount)
 		SIT_TextEditAdjustScroll(state);
 	if (HAS_EVT(&state->super, SITE_OnChange))
-		SIT_ApplyCallback(&state->super, state->text, SITE_OnChange);
+		SIT_TextEditNotify(&state->super);
 	sit.dirty = True;
 	return True;
 }
@@ -2398,7 +2479,7 @@ int SIT_TextEditKey(SIT_EditBox state, int key)
 			{
 				SIT_TextEditDeleteSelect(state), sit.dirty = True;
 				if (HAS_EVT(&state->super, SITE_OnChange))
-					SIT_ApplyCallback(&state->super, state->text, SITE_OnChange);
+					SIT_TextEditNotify(&state->super);
 			}
 		}
 		break;
@@ -2594,7 +2675,7 @@ int SIT_TextEditKey(SIT_EditBox state, int key)
 		else SIT_TextEditDeleteSelect(state), sit.dirty = True;
 
 		if (sit.dirty && HAS_EVT(&state->super, SITE_OnChange))
-			SIT_ApplyCallback(&state->super, state->text, SITE_OnChange);
+			SIT_TextEditNotify(&state->super);
 		pos = state->cursor;
 		break;
 
@@ -2623,7 +2704,7 @@ int SIT_TextEditKey(SIT_EditBox state, int key)
 		else SIT_TextEditDeleteSelect(state), sit.dirty = True;
 
 		if (sit.dirty && HAS_EVT(&state->super, SITE_OnChange))
-			SIT_ApplyCallback(&state->super, state->text, SITE_OnChange);
+			SIT_TextEditNotify(&state->super);
 		pos = state->cursor;
 		break;
 
@@ -2854,7 +2935,7 @@ static void SIT_TextEditRegUndo(SIT_EditBox state, int pos, int length, int type
 		loc = BE24(undo+1);
 		len = BE24(undo+4);
 		/* try to merge with previous op */
-		if (undo[0] == type)
+		if (undo[0] == type && TimeMS() - state->lastLog < 750)
 		{
 			int optype = 0;
 			switch (type) {
@@ -2894,6 +2975,7 @@ static void SIT_TextEditRegUndo(SIT_EditBox state, int pos, int length, int type
 	/* create a new operation */
 	if (SIT_TextEditUndoMakeRoom(state, type == UNDO_INSERT ? 8 : 8 + length, 0, &undo))
 	{
+		state->lastLog = TimeMS();
 		undo[0] = type;
 		loc = pos;
 		len = length;
@@ -2992,5 +3074,5 @@ static void SIT_TextEditUndoRedo(SIT_EditBox state, int redo)
 	}
 	SIT_TextEditMakeCursorVisible(state);
 	if (HAS_EVT(&state->super, SITE_OnChange))
-		SIT_ApplyCallback(&state->super, state->text, SITE_OnChange);
+		SIT_TextEditNotify(&state->super);
 }

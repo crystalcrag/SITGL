@@ -13,9 +13,9 @@
 #include "nanovg.h"
 
 	struct TagList_t AppClass[] = {
-		{ NULL, SIT_DefSBArrows,     _SG, SIT_INT,  OFFSET(SIT_App, defSBArrows) },
+		{ NULL, SIT_DefSBArrows,     _SG, SIT_U8,   OFFSET(SIT_App, defSBArrows) },
 		{ NULL, SIT_DefSBSize,       _SG, SIT_UNIT, OFFSET(SIT_App, defSBSize) },
-		{ NULL, SIT_RefreshMode,     _SG, SIT_INT,  OFFSET(SIT_App, refreshMode) },
+		{ NULL, SIT_RefreshMode,     _SG, SIT_U8,   OFFSET(SIT_App, refreshMode) },
 		{ NULL, SIT_CurrentDir,      _SG, SIT_PTR,  OFFSET(SIT_App, currentDir) },
 		{ NULL, SIT_ScreenWidth,     __G, SIT_INT,  OFFSET(SIT_App, screen.width) },
 		{ NULL, SIT_ScreenHeight,    __G, SIT_INT,  OFFSET(SIT_App, screen.height) },
@@ -26,7 +26,7 @@
 		{ NULL, SIT_StyleSheet,      _S_, SIT_PTR,  OFFSET(SIT_App, styles) },
 		{ NULL, SIT_ExitCode,        _SG, SIT_PTR,  OFFSET(SIT_App, exitCode) },
 		{ NULL, SIT_MonitorResol,    __G, SIT_PTR,  OFFSET(SIT_App, resolution) },
-		{ NULL, SIT_DefRoundTo,      _SG, SIT_INT,  OFFSET(SIT_App, defRoundTo) },
+		{ NULL, SIT_DefRoundTo,      _SG, SIT_U8,   OFFSET(SIT_App, defRoundTo) },
 		{ NULL, SIT_SetAppIcon,      _S_, SIT_INT,  0 },
 		{ NULL, SIT_CompositedAreas, __G, SIT_PTR,  0 },
 		{ NULL, SIT_FontScale,       _SG, SIT_INT,  0 },

@@ -36,7 +36,7 @@ struct NFATrans_t
 /* Special values for chrtrans */
 #define	EPSILON_TRANSITION     256
 #define SUBDFA_TRANSITION      257
-#define EPSILON_CLOSING(nfa, state)   ((NFAVector)(nfa->epsbuf.buffer + nfa->epsclosing[state]))
+#define EPSILON_CLOSURE(nfa, state)   ((NFAVector)(nfa->epsbuf.buffer + nfa->epsclosure[state]))
 #define SZST                   sizeof (NFAState)
 
 struct NFARel_t
@@ -45,7 +45,7 @@ struct NFARel_t
 	int      first, last;      /* First transition in vector (NFA.trans - linked list) */
 	uint8_t  isFinal;          /* Final state */
 	uint8_t  flag;             /* FLG_* */
-	uint16_t visit;            /* eps. closing stage */
+	uint16_t visit;            /* eps. closure stage */
 };
 
 enum /* Bitfield values for 'flag' */
@@ -95,14 +95,14 @@ struct NFA_t                   /* Non-Deterministic Finite Automaton */
 	vector_t    group;         /* For region token (NFAStack) */
 	vector_t    stack;         /* Stack of states (NFAStack) */
 	vector_t    trans;         /* All transitions of NFA (NFATrans) */
-	vector_t    epsbuf;        /* For epsilon closing (NFAState) */
+	vector_t    epsbuf;        /* For epsilon closure (NFAState) */
 	Bool        noCase;        /* TRUE if letter case doesn't care */
 	Bool        fullWord;      /* TRUE if implicit \< \> around reg exp */
 	NFAFile     files;         /* Inclusion directive */
 	NFAStackBuf stackTop;      /* Item on the top (0 otherwise) */
 	NFAState    startState;    /* Where to start attaching regexp */
 	NFAState    lastState;     /* Last final state after regexp parsing */
-	int *       epsclosing;    /* Epsilon closing of each state */
+	int *       epsclosure;    /* Epsilon closure of each state */
 };
 
 struct DFAState_t

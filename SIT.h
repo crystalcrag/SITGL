@@ -130,6 +130,7 @@ DLLIMP float      SIT_EmToReal(SIT_Widget, uint32_t val);
 DLLIMP void       SIT_ExtractDialog(SIT_Widget);
 DLLIMP void       SIT_InsertDialog(SIT_Widget);
 DLLIMP int        SIT_TextEditLineLength(SIT_Widget, int line);
+DLLIMP void       SIT_TextEditGetStat(SIT_Widget, int stat[8]);
 DLLIMP void       SIT_ToggleFullScreen(int width, int height);
 
 DLLIMP Bool       SIT_ListSetCell(SIT_Widget, int row, int col, APTR rowTag, int align, STRPTR text);
@@ -293,6 +294,7 @@ enum
 	SIT_LexerData        = 91,   /* _SG: APTR */
 	SIT_EditAddText      = 92,   /* _S_: STRPTR */
 	// SIT_CurValue      = 76,   /* _SG: Pointer (already defined for SIT_BUTTON) */
+	SIT_CaretStyle       = 139,  /* _SG: Enum (see below) */
 
 	/* List box */
 	SIT_ListBoxFlags     = 93,   /* C__: Enum */
@@ -517,6 +519,15 @@ enum         /* SIT_WordWrap */
 	SITV_WWNone,
 	SITV_WWChar,
 	SITV_WWWord
+};
+
+enum         /* SIT_CaretStyle */
+{
+	SITV_CaretIBeam,
+	SITV_CaretBlock,
+	SITV_CaretUnderline,
+	SITV_CaretBlink  = 0x40,     /* flag can be ored with previous values */
+	SITV_CaretNotify = 0x80,     /* can be ored: get notification of cursor pos change, see doc on how to use it */
 };
 
 enum         /* SIT_MoveNearby() defAlign parameter bitfield */

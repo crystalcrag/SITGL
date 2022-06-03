@@ -171,6 +171,7 @@ static STRPTR SIT_ParseLine(STRPTR line, va_list * list, TagList classArgs, PLAr
 						break;
 					}
 					/* no break; */
+				case SIT_U8:
 				case SIT_BOOL: cur->key.val = e < p ? strtol(e, &e, 0) : 0; break;
 				case SIT_CTRL:
 					if (p - e == 5 && strncmp(e, "#LAST", 5) == 0)
@@ -227,6 +228,7 @@ static STRPTR SIT_ParseLine(STRPTR line, va_list * list, TagList classArgs, PLAr
 				case SIT_CTRL: case SIT_STR:
 				case SIT_PTR:  cur->key.ptr = va_arg(*list, APTR); break;
 				case SIT_UNIT:
+				case SIT_U8:
 				case SIT_INT:  cur->key.val = va_arg(*list, int); break;
 				case SIT_BOOL: cur->key.val = va_arg(*list, Bool); break;
 				}

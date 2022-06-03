@@ -616,7 +616,11 @@ static void renderBoxShadow(SIT_Widget node, RectF * box, Bool inset)
 		bbox[0] += shadow->XYSfloat[0] - spreadX;   bbox[2] += spreadX*2;
 		bbox[1] += shadow->XYSfloat[1] - spreadY;   bbox[3] += spreadY*2;
 		/* radius */
-		bbox[4] = node->layout.majorRadius.top; spreadX = shadow->XYSfloat[2] + shadow->blurFloat * (0.5f+inset);
+		bbox[4] = MAX(node->layout.majorRadius.top, node->layout.majorRadius.left);
+		spreadX = MAX(node->layout.majorRadius.bottom, node->layout.majorRadius.right);
+		if (bbox[4] < spreadX)
+			bbox[4] = spreadX;
+		spreadX = shadow->XYSfloat[2] + shadow->blurFloat * (0.5f+inset);
 		if (shadow->blurFloat > 0 && bbox[4] < spreadX)
 			bbox[4] = spreadX;
 		/* feather: yeah, way bigger than what's asked :-/ */

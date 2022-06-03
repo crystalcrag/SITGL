@@ -228,12 +228,6 @@ int main(int nb, char * argv[])
 		{
 			switch (event.type) {
 			case SDL_KEYDOWN:
-				switch (event.key.keysym.sym) {
-				case SDLK_F4:
-					SIT_Nuke(SITV_NukeCtrl);
-					glClear(GL_COLOR_BUFFER_BIT);
-				default: break;
-				}
 			case SDL_KEYUP:
 				{
 					int * sdlk;
@@ -247,6 +241,8 @@ int main(int nb, char * argv[])
 				}
 				if (event.key.keysym.unicode > 0)
 					SIT_ProcessChar(event.key.keysym.unicode, SDLMtoSIT(event.key.keysym.mod));
+				else if (event.key.keysym.sym < 128 && event.type == SDL_KEYDOWN)
+					SIT_ProcessChar(event.key.keysym.sym, SDLMtoSIT(event.key.keysym.mod));
 			break_loop:
 				break;
 			case SDL_MOUSEBUTTONDOWN:
