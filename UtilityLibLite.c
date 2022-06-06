@@ -996,12 +996,12 @@ DLLIMP int StrCount(STRPTR list, int chr)
 }
 
 /* String/FormatNumber */
-DLLIMP int FormatNumber(STRPTR buffer, int max, STRPTR fmt, int num)
+DLLIMP int FormatNumber(STRPTR buffer, int max, STRPTR fmt, int64_t num)
 {
 	WCHAR input[32];
-	WCHAR output[32];
+	WCHAR output[64];
 	if (max <= 0) return 0;
-	wsprintf(input, L"%d", num);
+	wsprintf(input, L"%I64d", num);
 	GetNumberFormat(LOCALE_USER_DEFAULT, 0, input, NULL, output, sizeof output);
 	/* of course, it has to add useless stuff */
 	LPWSTR dot = wcsrchr(output, '.');

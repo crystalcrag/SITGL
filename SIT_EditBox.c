@@ -87,6 +87,20 @@ static int  SIT_TextEditPaste(SIT_EditBox, DATA8 text, int len);
 static void SIT_TextEditMoveCursorUpOrDown(SIT_EditBox, int dir, int sel);
 static void SIT_TextEditMakeCursorVisible(SIT_EditBox);
 
+
+/* trigger user callback when something has changed */
+static void SIT_TextEditNotify(SIT_Widget w)
+{
+	SIT_EditBox edit = (SIT_EditBox) w;
+	if (edit->caretMode & SITV_CaretNotify)
+	{
+		int stat[8];
+		SIT_TextEditGetStat(w, stat);
+		SIT_ApplyCallback(w, stat, SITE_OnChange);
+	}
+	else SIT_ApplyCallback(w, edit->text, SITE_OnChange);
+}
+
 /* SITE_OnResize: redo word wrapping */
 static int SIT_TextEditResize(SIT_Widget w, APTR cd, APTR ud)
 {
@@ -119,10 +133,15 @@ static int SIT_TextEditResize(SIT_Widget w, APTR cd, APTR ud)
 
 	if (state->flags & FLAG_HASSCROLL)
 		state->width -= state->scrollPad;
-	if (state->length > 0 && state->wordWrap && state->formatWidth != state->width)
+	if (state->formatWidth != state->width)
 	{
-		state->formatWidth = state->width;
-		SIT_TextEditInsertChars(state, 0, NULL, -1);
+		if (state->length > 0 && state->wordWrap)
+		{
+			state->formatWidth = state->width;
+			SIT_TextEditInsertChars(state, 0, NULL, -1);
+		}
+		if (state->caretMode & SITV_CaretNotify)
+			SIT_TextEditNotify(w);
 	}
 	SIT_TextEditAdjustScroll(state);
 	return 1;
@@ -334,19 +353,6 @@ static int SIT_TextEditSyncValue(SIT_Widget w, APTR cd, APTR ud)
 		}
 	}
 	return 0;
-}
-
-/* trigger user callback when something has changed */
-static void SIT_TextEditNotify(SIT_Widget w)
-{
-	SIT_EditBox edit = (SIT_EditBox) w;
-	if (edit->caretMode & SITV_CaretNotify)
-	{
-		int stat[8];
-		SIT_TextEditGetStat(w, stat);
-		SIT_ApplyCallback(w, stat, SITE_OnChange);
-	}
-	else SIT_ApplyCallback(w, edit->text, SITE_OnChange);
 }
 
 /* click on number inc/dec button */
@@ -570,6 +576,7 @@ Bool SIT_InitEditBox(SIT_Widget w, va_list args)
 		{
 			edit->maxText = edit->fixedSize;
 			edit->text = mem;
+			mem[0] = 0;
 			mem += edit->maxText;
 		}
 		if (edit->flags & FLAG_FIXEDUNDO)
@@ -924,7 +931,7 @@ static REAL SIT_TextEditRenderLine(SIT_EditBox state, DATA8 str, int length, REA
 		if (p > str)
 		{
 			/* normal text */
-			if (sel || code > 0)
+			if (sel || code > 0 || lexer)
 			{
 				DATA8 cmap, bgcol;
 				if (sel || code == SEL_INDEX_CODE)
@@ -939,10 +946,16 @@ static REAL SIT_TextEditRenderLine(SIT_EditBox state, DATA8 str, int length, REA
 					nvgRect(vg, x + off, y-1-state->extendT, w, state->fh+state->extendB);
 					nvgFill(vg);
 				}
+				else if (cmap[3] == 0)
+				{
+					/* bg and fg and set to transparent */
+					goto fill_normal;
+				}
 				nvgFillColorRGBA8(vg, cmap[3] > 0 ? cmap : state->super.style.color.rgba);
 			}
 			else
 			{
+				fill_normal:
 				if (state->super.style.shadowCount > 0)
 				{
 					/* no inherited shadow */

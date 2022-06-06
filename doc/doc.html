@@ -3910,10 +3910,12 @@ SIT_SetValues(app,
 	worry about it in your event loop.
 
 	<li><tt>event</tt>: what <b>kind of event</b> this shortcut will trigger. Must an event type,
-	ie: <tt>SITE_...</tt>, like <tt>SITE_OnClose</tt> or <tt>SITE_OnActivate</tt>.
+	ie: <tt>SITE_...</tt>, like <tt>SITE_OnClose</tt> or <tt>SITE_OnActivate</tt>. This event will
+	be sent to the target widget specified for <tt>target</tt> field. If you want to use a callback
+	instead, this field is not used.
 
-	<li><tt>event</tt>: an arbitrary value, that will be given to the callback registered for this
-	entry. If no callback were registered, this field is mostly useless.
+	<li><tt>tag</tt>: an arbitrary value, that will be given to the callback registered for this
+	entry. If no callback were registered, this field is not used.
 
 	<li><tt>target</tt>: the <b>name of a widget</b>, which will receive the event. You can also set
 	this field to <tt class="o">NULL</tt>, in which case the event will be sent to the <tt>SIT_APP</tt>
@@ -3930,8 +3932,8 @@ SIT_SetValues(app,
   whose last entry must have its <tt>key</tt> field set to 0. A typical way to initialize such an array is
   as follows:
   <pre><type>static struct</type> SIT_Accel_t accels[] = {
-	{SITK_FlagCapture + SITK_FlagAlt + SITK_F4, SITE_OnClose, <val>NULL</val>},
-	{SITK_FlagCapture + SITK_Escape,            SITE_OnClose, <val>NULL</val>},
+	{SITK_FlagCapture + SITK_FlagAlt + SITK_F4, SITE_OnClose},
+	{SITK_FlagCapture + SITK_Escape,            SITE_OnClose},
 	{<val>0</val>}
   };
   </pre>
@@ -4600,7 +4602,7 @@ assigned to one of the following values:
   <li><tt class="dt">SITV_TextBox</tt>
   <p><b>Default value</b> for this property: it will create a single-line edit box.
   <span class="key">Enter</span> key will do nothing. If text extends beyond visible area, it will be
-  scrolled so that the cursor remain visible. Also tab character will be ignored, it will simply be used
+  scrolled so that the caret remain visible. Also tab character will be ignored, it will simply be used
   to move the keyboard focus to the next control in the chain.
 
   <li><tt class="dt">SITV_MultiLineEdit</tt>
@@ -4756,7 +4758,7 @@ allocation at the start).
 
 <ul>
   <li><tt class="dt">SIT_Title</tt> (<tt class="t">STRPTR</tt>)
-  <p>The title property is used to set or get the content of the edit box. Keep in mind that cursor
+  <p>The title property is used to set or get the content of the edit box. Keep in mind that caret
   position will be reset to 0 when setting this property. Also, just like for other controls, when getting
   the value, you'll get the raw pointer that is used internally to store the text. <b>Do not modify</b>
   anything as long as the text is displayed: any modification will lead to undefined behavior.
@@ -4785,23 +4787,23 @@ allocation at the start).
   this function a first time with <tt>max</tt> set to <val>0</val>.
 
   <li><tt class="dt">SIT_EditAddText</tt> (<tt class="t">STRPTR</tt>) <span class="ro">write-only</span>
-  <p>This property allows you to insert text at current cursor location, just like if it was typed
+  <p>This property allows you to insert text at current caret location, just like if it was typed
   by the user. The text will therefore go through the same pipeline: case transform, newline filtering,
-  max length clipping. Cursor will also be moved at the end of string. Undo log will be disabled as
+  max length clipping. Caret will also be moved at the end of string. Undo log will be disabled as
   long as the control has not been managed (ie: <tt>SIT_ManageWidget()</tt> was not call on the
   parent dialog).
 
 
   <li><tt class="dt">SIT_StartSel</tt>, <tt class="dt">SIT_EndSel</tt> (<tt class="t">int</tt>)
-  <p>These properties allow you to set the cursor (if you specify only one of them) or the part of
+  <p>These properties allow you to set the caret (if you specify only one of them) or the part of
   text being selected (if you specify both, with different values). If you select text, the position
-  of the cursor will be the value given for <tt>SIT_EndSel</tt>. Both arguments must specify the <b>offset
-  in bytes</b> where you want to put the selection and/or cursor. If you specify out of range values,
+  of the caret will be the value given for <tt>SIT_EndSel</tt>. Both arguments must specify the <b>offset
+  in bytes</b> where you want to put the selection and/or caret. If you specify out of range values,
   they will be clamped to the length of the text.
 
   <p><span class="n">Note</span>: to have any visual feedback, you need to set the focus on the control <b>before</b> setting
   these properties (using <tt>SIT_SetFocus()</tt>), otherwise for single-line edit, the default
-  behaviour when it gets the focus, is to select all the text and place the cursor at the end
+  behaviour when it gets the focus, is to select all the text and place the caret at the end
   (undoing whatever you provided earlier).
 
   <li><tt class="dt">SIT_CurValue</tt> (<tt class="t">int *</tt> or <tt class="t">float *</tt> or <tt class="t">double *</tt>)
@@ -4865,18 +4867,44 @@ allocation at the start).
 	<li><tt>SITV_TabEditForbid</tt>: if the limitations of <tt>SITV_TabEditToSpace</tt> are too problematic,
 	you can simply <b>forbid any tab character</b> from appearing in the edit buffer. In that case, if the
 	user presses the tab key, it will be used to move the keyboard focus to the next control in the chain.
-
   </ul>
   
   <p><span class="n">Note</span>: by default, single-line edit will use <tt>SITV_TabEditForbid</tt> and
   multi-line edit will use <tt>SITV_TabEditNormal</tt>. This property lets you override this.
+
+  <li><tt class="dt">SIT_CaretStyle</tt> (<tt class="t">int</tt>)
+  <p>Allows you to configure <b>how the caret will look like</b>. You can choose one style among these:
+  <ul>
+	<li><tt>SITV_CaretIBeam</tt>: vertical bar that will be positionned between the characters where
+	insertion occurs. This is the <b>default style</b>.
+
+	<li><tt>SITV_CaretBlock</tt>: block that will cover exactly one character, giving that old school
+	text editor look and feel (like those 1980s BASIC micro-computers). Usually the effect works better
+	with a fixed pitch font. You might also want to avoid using tab as a character (and convert them
+	to spaces instead), because the cursor will cover the whole tab length.
+
+	<li><tt>SITV_CaretUnderline</tt>: if you prefer a MS-DOS style caret, this is the style you might
+	want. Like with <tt>SITV_CaretBlock</tt>, it works better if used with a fixed pitch font. This is
+	also the caret style used when switching to replace mode.
+  </ul>
+
+  <p>You can also combine the style you choose, with any of the following flags:
+  <ul>
+	<li><tt>SITV_CaretBlink</tt>: makes the caret <b>blink at regular interval</b> (not configurable though).
+	This style is activated by default, if nothing is specified for this property.
+
+	<li><tt>SITV_CaretNotify</tt>: this flag will <b>change the content of the <tt>call_data</tt> parameter</b>
+	for the <tt>SITE_OnChange</tt> event. Instead of reporting whenever the text within the widget has
+	changed, it will report whenever the caret position and/or text has changed. See <a href="#editevents">events</a>
+	below for more details.
+  </ul>
 
   <li><tt class="dt">SIT_WordWrap</tt> (<tt class="t">int</tt>)
   <p><b>How lines should be wrapped</b> if they happen to reach the limit of the horizontal space available. There
   are 3 possibile choices:
   <ul>
 	<li><tt>SITV_WWNone</tt>: no wrapping at all will be made. The content of the edit buffer will
-	then scroll left and/or right to make sure the cursor remain visible.
+	then scroll left and/or right to make sure the caret remain visible.
 	<li><tt>SITV_WWChar</tt>: lines will be split at arbitrary characters position, as much as can fit
 	in the horizontal space available.
 	<li><tt>SITV_WWWord</tt>: lines will only be split at word boundaries. What defines a boundary is
@@ -4925,19 +4953,45 @@ SIT_Wiget num = SIT_CreateWidget(<val>"fps"</val>, SIT_EDITBOX, parent,
   and one that crashes. If you use the <tt>SIT_CreateWidgets()</tt> function and specify these parameters
   as text, you won't have to worry about these details.
 
+
+
 </ul>
 
 <h4 id="editevents">Events</h4>
 
 <p>The main event reported by text boxes that you might be interested in is <tt><b>SITE_OnChange</b></tt>.
-This event will be fired whenever the content of the edit buffer has changed. The <tt>call_data</tt>
-for this event will be the UTF-8 string that you can also get by reading the <tt>SIT_Title</tt> property.
-By the time the event is fired, the changes will have already been committed, therefore it won't be
-possible to cancel them. And, as usual, don't try to modify the content of this buffer, you'll cause
-undefined behavior all over the place.
+<b>This event has two operating modes</b>: basic and detailed.
 
-<p>If you want to change the text of the control at this point, you can do safely using the <tt>SIT_Title</tt>
-property. Keep in mind, that cursor position will be reset to 0.
+<p>The basic mode is the default one, detailed mode must be explicitely activated. In this mode, the
+<tt>SITE_OnChange</tt> event will be fired whenever the content of the edit buffer has changed.
+The <tt>call_data</tt> for this event will be the UTF-8 string that you can also get by reading the
+<tt>SIT_Title</tt> property. By the time the event is fired, the changes will have already been
+committed, therefore it won't be possible to cancel them. And, as usual, don't try to modify the
+content of this buffer, you'll cause undefined behavior all over the place.
+
+<p>If you want to change the text of the control at this point, you can do so safely by setting the
+<tt>SIT_Title</tt> property. Keep in mind, that caret position will be reset to 0.
+
+<p>The <b>detailed mode</b> can be activated by setting the property flag <tt>SITV_CaretNotify</tt> on
+the <tt>SIT_CaretStyle</tt> property. This mode is useful, if you want to add a status bar to show to
+the user the caret position and/or total lines/bytes of the file being edited, without having to
+continuously poll the state of the control.
+
+<p>If this flag has been set, the <tt>call_data</tt> of the <tt>SITE_OnChange</tt> event will be an
+<b>array of 8 integers</b>. Each indices will have the following meaning:
+<ul>
+  <li><tt>[0]</tt> and <tt>[1]</tt>: caret position, first is column and then the row (all 0 based),
+  without taking wrapped lines into account. 
+  <li><tt>[2]</tt> and <tt>[3]</tt>: caret position, including wrapped lines. If word-wrapping is
+  disabled, it will be the same as <tt>[0]</tt> and <tt>[1]</tt>.
+  <li><tt>[4]</tt>: number of lines in the editor (not taking soft lines into account).
+  <li><tt>[5]</tt>: number of lines, taking soft lines into account (if word-wrapping is disabled,
+  it will be the same as <tt>[4]</tt>).
+  <li><tt>[6]</tt>: caret position in bytes offset from the start of the buffer.
+  <li><tt>[7]</tt>: total bytes in the file (not including final NUL byte).
+</ul>
+
+<p>Like in basic mode, when this event is fired, the modification will already have been committed.
 
 <p>You also might want to catch some keystrokes (like cursor keys, function keys, ...) while the focus
 is in the editbox. You can register a <tt>SITE_OnRawKey</tt> callback, and process events you might be
@@ -7228,8 +7282,8 @@ the enumeration values <tt>REGEXP_*</tt>.
 <ul>
   <li><tt class="dt">SIT_Lexer</tt>: the function you need to provide is <tt>SYN_HighlightText</tt>.
   <li><tt class="dt">SIT_LexerData</tt>: a pointer to a compiled syntax.
-  <li><tt class="dt">SIT_UserData</tt>: some extra memory need to be allocated for the <tt>SYN_HighlightText()</tt>
-  to work. The buffer needs to be stored in this property, which means you <b>cannot</b> use it for your
+  <li><tt class="dt">SIT_UserData</tt>: some extra memory needs to be allocated for the <tt>SYN_HighlightText()</tt>
+  to do its work. The buffer needs to be stored in this property, which means you <b>cannot</b> use it for your
   own purpose. The buffer size is stored in the macro <tt>LEXER_EXTRA</tt>. The typical use case is to
   allocate that memory using the <tt><a href="#SIT_UserData">SIT_EXTRA()</a></tt>.
   <li><tt class="dt">SIT_ColorMap</tt>: the syntax file have 10 pre-defined tokens, therefore it will
@@ -7253,7 +7307,7 @@ the enumeration values <tt>REGEXP_*</tt>.
 
 <p>If for whatever reason, you want to change the syntax being used to highlight patterns, <b>you will
 need to set 2 properties</b>: <tt>SIT_LexerData</tt> and <tt>SIT_ColorMap</tt>. <tt>SIT_ColorMap</tt>
-will reset the cache used by SYN_HighlightText().
+will reset the cache used by <tt>SYN_HighlightText()</tt>.
 
 
 
@@ -7722,7 +7776,7 @@ between lines and/or comments. For example:
 	DLANG(<val>"Under terms of BSD 2-clause license.&lt;br&gt;"
 		  "No warranty, use at your own risk."</val>);
 
-<com>/* <err>this is not</err>: the preprossor directives won't be processed */</com>
+<com>/* <err>this is not</err>: the preprossor directives won't be converted */</com>
 <type>static char</type> appName[] =
 	DLANG(<val>""</val> APPNAME <val>" v"</val> APPVERSION <val>" by crystalcrag"</val>);
 
@@ -7750,8 +7804,8 @@ colon or period, will be removed before being added to the <tt>.po</tt> file. Th
 only one version of the message to translate.
 
 <p>Then, when using the <tt>LangStr()</tt> function, it will first look for the string that was passed
-as is. If nothing is found, it will removed the same characters from the end and look for the resulting
-translation. If something is found, what was removed will be added back to the translation.
+as is. If nothing is found, it will remove the same characters from the end and look for the resulting
+translation. If something is found, what was removed, will be added back to the translation.
 
 <p>Another extremely common variation is the case of the first letter of the message. String comparison
 is done <b>case sensitively</b> when being checked if they already are in the translation file, except
@@ -7776,9 +7830,10 @@ LangStr(<val>"Edit :"</val>);     <com>/* will return "Éditer :" */</com>
 <com>/* <err> do not do this though </err> */</com>
 fprintf(stderr, <val>"msgs = <spe>%s</spe>, <spe>%s\n</spe>"</val>, LangStr(<val>"edit..."</val>), LangStr(<val>"edit :"</val>));
 <com>/*
- * the strings are kept in the same static buffer, trying to retrieve 2 different messages from the same
- * source, in the same sequence of instructions, will lead to undefined behavior (you will get twice the
- * same message, but which one will be difficult to predict: <err> DO NOT RELY ON THIS </err>).
+ * the strings are kept in the same static buffer (one for each message to translate), trying to retrieve
+ * 2 different messages from the same source, in the same sequence of instructions, will lead to undefined
+ * behavior. You will get twice the same message, but which one will be difficult to predict:
+ * <err> DO NOT RELY ON THIS </err>.
  */</com>
 </pre>
 
@@ -8121,10 +8176,10 @@ better to use the functions provided by these instead of <tt>SITGL</tt>.
 threads</b>. This is usually way harder than it seems and will require some careful synchronization
 with the main thread in order to work properly.
 
-<p>Using correctly all the functions listed here is way harder than it seems. Entire books have been
-written about this topic, this documentation will not pretend to replace them. If this is the first
-time you are dealing with multi-threading, it is more than strongly advised to familiarized yourself
-with this topic in much more depth, than what is explained in here.
+<p>Using these functions correctly usually requires way more work than what is descrbied here. Entire
+books have been written about this topic, this documentation will not pretend to replace them. If this
+is the first time you are dealing with multi-threading, it is more than strongly advised to familiarized
+yourself with this topic, since the explanations provided here are nowhere near sufficient.
 
 
 <ul>
@@ -8134,24 +8189,24 @@ with this topic in much more depth, than what is explained in here.
   <pre><type>void</type> func(<type>void</type> * arg);</pre>
   <p><tt>arg</tt> will be the same value than the one given to the <tt>ThreadCreate()</tt> function.
   <p>If successful, a non-zero number will be returned. At this point, the thread will be already
-  running and address space will be shared with main thread. The thread won't be a software hack:
-  it will be a real thread handled by the operating system, and therefore possibly running on
-  different CPU core, with all the synchronization problems it comes with it.
+  running and address space will be shared with the main thread. This thread won't be a software hack:
+  it will be handled by the operating system, and therefore possibly running on different CPU core,
+  with all the synchronization problems it comes with it.
 
   <p><span class="n">Note</span>: the <b>recommended way to stop a thread</b>, is to let it exit gracefully.
-  In this library, there are no function to forcibly kill a thread. You'll need to setup some synchronization
+  In this library, there are no functions to forcibly kill a thread. You'll need to setup some synchronization
   points with a shared state that indicate when the thread has to exit, and wait for it.
 
   <li><tt class="dt"><type>void</type> ThreadPause(<type>int</type> delay);</tt>
   <p><b>Pause the calling thread</b> for the specified amount of milliseconds. The timer used for this delay
   is a low precision timer, tied to the context switch delay. On Windows, with a default configuration,
-  the precision will be around 10 to 15ms. Check below, for timers that have a much greater precision
-  (but requires a small bit of work to be used).
+  the precision will be around 10 to 15ms. But since threads of this library are not meant to run in
+  the main event loop, this precision is usually good enough for most use cases.
 
   <li><tt class="dt">Mutex MutexCreate(<type>void</type>);</tt>
-  <p>A mutex is used to create a <b>critical section</b> where only one thread is allowed to enter at a time.
-  The typical use case is to protect a global variable, <b>if it is modified by a thread</b>. If the
-  variable is only read, no need to protect the access.
+  <p>A mutex is used to create a <b>critical section</b> where only one thread is allowed to enter at
+  a time. The typical use case is to protect a global variable, <b>if it is going to be modified by 
+  multiple threads</b>. If the variable is only read, no need to protect the access.
   
   <li><tt class="dt"><type>void</type> MutexEnter(Mutex);</tt>,<br>
 	  <tt class="dt"><type>void</type> MutexLeave(Mutex);</tt>,<br>
@@ -8160,14 +8215,14 @@ with this topic in much more depth, than what is explained in here.
   <tt>MutexTryEnter()</tt> is followed by a <tt>MutexLeave()</tt>, otherwise every subsequent thread
   that will attempt to enter the section will block indefinitely. If a mutex is currently locked,
   any other attempt to call <tt>MutexEnter()</tt> will block until <tt>MutexLeave()</tt> is called
-  by the thread owning the lock. If multiple thread are waiting to be released, the order by which
-  thread are awaken is undefined, and can lead to thread starvation.
+  by the thread owning the lock. If multiple threads are waiting on the lock to be released, the
+  order by which threads are awaken is undefined, and can lead to thread starvation.
   
   <p><tt>MutexTryEnter()</tt> will get ownership of the lock is it returns <tt class="o">True</tt>.
   If it cannot, <tt class="o">False</tt> will be returned and the lock will remain unchanged.
 
   <li><tt class="dt"><type>void</type> MutexDestroy(Mutex);</tt>
-  <p>If the lock is no longer needed, you can free its resource with this function. Keep in mind,
+  <p>If the lock is no longer needed, you can <b>free its resources</b> with this function. Keep in mind,
   you'll have to make sure that all the other threads do not have a pending lock on it before freeing
   it, otherwise a segmentation fault is pending.
 
@@ -8429,6 +8484,12 @@ API.
 
 	<com>/* &lt;line&gt; points to a single line of text, and is NULL-terminated */</com>
 }</pre>
+
+  <li><tt class="dt"><type>int</type> FormatNumber(<type>STRPTR</type> buffer, <type>int</type> max, <type>STRPTR</type> fmt, <type>int64_t</type> num);</tt>
+  <p>Will convert <tt>num</tt> into a string using current locale: usually, it will include thousand
+  separators. <tt>fmt</tt> must be a <tt>printf</tt>-like format specifier. The only token recognized
+  is <tt class="o">"%d"</tt>. This is where the converted number will be inserted, you can then surround
+  this number with any characters you want.
 
   <li><tt class="dt"><type>int</type> Split(<type>STRPTR</type> * table, <type>STRPTR</type> str, <type>int</type> max, <type>int</type> chr);</tt>
   <p>Will split <tt>str</tt> at each character <tt>chr</tt> encountered and store the start of each

@@ -616,11 +616,7 @@ static void renderBoxShadow(SIT_Widget node, RectF * box, Bool inset)
 		bbox[0] += shadow->XYSfloat[0] - spreadX;   bbox[2] += spreadX*2;
 		bbox[1] += shadow->XYSfloat[1] - spreadY;   bbox[3] += spreadY*2;
 		/* radius */
-		bbox[4] = MAX(node->layout.majorRadius.top, node->layout.majorRadius.left);
-		spreadX = MAX(node->layout.majorRadius.bottom, node->layout.majorRadius.right);
-		if (bbox[4] < spreadX)
-			bbox[4] = spreadX;
-		spreadX = shadow->XYSfloat[2] + shadow->blurFloat * (0.5f+inset);
+		bbox[4] = node->layout.majorRadius.top; spreadX = shadow->XYSfloat[2] + shadow->blurFloat * (0.5f+inset);
 		if (shadow->blurFloat > 0 && bbox[4] < spreadX)
 			bbox[4] = spreadX;
 		/* feather: yeah, way bigger than what's asked :-/ */
@@ -1488,27 +1484,39 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 				if (shadowLayer > 0)
 				{
 					/* PITA: shadow needs to be rendered layer per layer and can differs from node to node :-/ */
-					TextShadow shadow = renderGetNthShadow(w->node, shadowLayer, &ret);
+					TextShadow shadow = renderGetNthShadow(old, shadowLayer, &ret);
 					if (shadow == NULL)
 					{
 						/* skip all nodes with the same parent */
-						for (; ; w ++, count --, i ++)
+						if (renderBg && old->style.bgCount)
 						{
-							if (h < w->h) h = w->h;
-							if (w->nl)
-							{
-								x = cx; cy += h; y = cy;
-								h = 0; first = 1;
-							}
-							else x += w->width + w->space + w->marginL + w->marginR, first = 0;
-							if (count == 1 || w[1].node != old) break;
+							offX = offY = 0;
+							memset(&colDeco, 0, sizeof colDeco);
+							memset(&color,   0, sizeof color);
 						}
-						continue;
+						else
+						{
+							for (; ; w ++, count --, i ++)
+							{
+								if (h < w->h) h = w->h;
+								if (w->nl)
+								{
+									x = cx; cy += h; y = cy;
+									h = 0; first = 1;
+								}
+								else x += w->width + w->space + w->marginL + w->marginR, first = 0;
+								if (count == 1 || w[1].node != old) break;
+							}
+							continue;
+						}
 					}
-					offX = shadow->pos.XYfloat[0];
-					offY = shadow->pos.XYfloat[1];
-					colDeco = color = shadow->color;
-					nvgFontBlur(vg, shadow->blurFloat);
+					else
+					{
+						offX = shadow->pos.XYfloat[0];
+						offY = shadow->pos.XYfloat[1];
+						colDeco = color = shadow->color;
+						nvgFontBlur(vg, shadow->blurFloat);
+					}
 				}
 				else colDeco = curDeco->style.decoColor, color = old->style.color, offX = offY = 0;
 

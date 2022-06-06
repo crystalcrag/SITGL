@@ -212,6 +212,7 @@ Bool SIT_InitButton(SIT_Widget w, va_list args)
 	case SITV_RadioButton:
 		w->tagName = "radio";
 		/* assign a RadioID automatically if not already */
+	case_radio:
 		if (button->radioID == 0xdeadbeef)
 		{
 			SIT_Widget prev;
@@ -219,13 +220,12 @@ Bool SIT_InitButton(SIT_Widget w, va_list args)
 			for (prev = TAIL(w->parent->children), id = 0; prev; PREV(prev))
 			{
 				#define	pb    ((SIT_Button)prev)
-				if (prev->type == SIT_BUTTON && pb->type == SITV_RadioButton &&
-				    pb->group == button->group) id ++;
+				if (prev->type == SIT_BUTTON && (pb->type == button->type) && pb->group == button->group)
+					id ++;
 				#undef pb
 			}
 			button->radioID = id;
 		}
-	case_radio:
 		/* already select radio in the group */
 		if (button->curValue && *button->curValue == button->radioID && ! button->state)
 			SIT_SetValues(w, SIT_CheckState, True, NULL);

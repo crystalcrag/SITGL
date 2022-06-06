@@ -202,8 +202,8 @@ static int SIT_ListMeasure(SIT_Widget w, APTR cd, APTR ud)
 		list->scrollHeight = size.height - list->hdrHeight;
 		size.width  += w->padding[0] + w->padding[1];
 		size.height += w->padding[1] + w->padding[3];
-		if (pref->width  < 0) pref->width  = size.width;
-		if (pref->height < 0) pref->height = size.height;
+		if (pref->width  < 0) pref->width  = 0;
+		if (pref->height < 0) pref->height = 0;
 		list->lbFlags |= SITV_ListMeasured;
 	}
 	else /* SITV_ListViewIcon */

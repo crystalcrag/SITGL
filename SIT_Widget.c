@@ -343,13 +343,13 @@ int SIT_MeasureCanvas(SIT_Widget w, APTR cd, APTR userData)
 	if (ret->height < sz.height) ret->height = sz.height;
 
 	if (w->title)
-	{
 		layoutMeasureWords(w, &sz);
-		sz.width  += w->padding[0] + w->padding[2];
-		sz.height += w->padding[1] + w->padding[3];
-		if (ret->width  < sz.width)  ret->width  = sz.width;
-		if (ret->height < sz.height) ret->height = sz.height;
-	}
+	else
+		memset(&sz, 0, sizeof sz);
+	sz.width  += w->padding[0] + w->padding[2];
+	sz.height += w->padding[1] + w->padding[3];
+	if (ret->width  < sz.width)  ret->width  = sz.width;
+	if (ret->height < sz.height) ret->height = sz.height;
 	w->childBox = *ret;
 	return 1;
 }
