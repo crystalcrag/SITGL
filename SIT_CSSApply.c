@@ -1540,9 +1540,12 @@ void cssClear(SIT_Widget node)
 	if (node->inlineStyles)
 		free(node->inlineStyles), node->inlineStyles = NULL;
 
+	vector_t wrap = node->layout.wordwrap;
+	memset(&node->layout.wordwrap, 0, sizeof node->layout.wordwrap);
 	SIT_FreeCSS(node);
-	vector_init(node->layout.wordwrap, sizeof (struct WordWrap_t));
-	memset(&node->style, 0,sizeof node->style);
+	node->layout.wordwrap = wrap;
+	//vector_init(node->layout.wordwrap, sizeof (struct WordWrap_t));
+	memset(&node->style, 0, offsetof(struct Style_t, height));
 	memset(node->layout.crc32, 0xff, sizeof node->layout.crc32);
 }
 

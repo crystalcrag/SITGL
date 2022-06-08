@@ -144,6 +144,8 @@ DLLIMP int    StrToLower(STRPTR str, int len);
 DLLIMP int    StrCount(STRPTR list, int chr);
 DLLIMP int    FormatNumber(STRPTR buffer, int max, STRPTR fmt, int64_t num);
 
+#define FIL_CHRLEN(chr, len)         ((len) | ((chr) << 16))
+
 /* Encodings.c */
 DLLIMP int    CP2UTF8(DATA8 dest, int cp);
 DLLIMP STRPTR NthChar(STRPTR str, int nth);

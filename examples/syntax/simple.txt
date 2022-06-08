@@ -1,1 +1,0 @@
-constant -?\d+(\.\d*)?(em|px|%|vw|vh)?

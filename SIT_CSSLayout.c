@@ -107,7 +107,7 @@ void layoutAdjustBorderRadius(SIT_Widget node)
 	REAL   maxminor = layoutSize(node, CSS_HEIGHT);
 	REAL * major;
 	REAL * minor;
-	int    i, none;
+	int    none, i;
 
 	for (i = none = 0, major = &node->layout.majorRadius.top, minor = &node->layout.minorRadius.top; i < 4;
 		 i ++,  major ++, minor ++)
@@ -132,6 +132,7 @@ void layoutAdjustBorderRadius(SIT_Widget node)
 				fact = val;
 		}
 		/* all radius need to be scaled by the same factor */
+		node->layout.flags &= ~LAYF_NoRoundBorder;
 		if (fact > 0)
 			for (i = 0; i < 8; major[i] *= fact, i ++);
 	}

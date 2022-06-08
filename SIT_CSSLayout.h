@@ -19,7 +19,6 @@ void layoutParseHTML(SIT_Widget, STRPTR);
 void layoutFreeTree(SIT_Widget start);
 void layoutCalc(SIT_Widget);
 REAL layoutNCSize(SIT_Widget, int side);
-void layoutAdjustBorderRadius(SIT_Widget);
 void layoutFree(SIT_Widget);
 void layoutAlignText(SIT_Widget);
 REAL layoutSize(SIT_Widget, int side);

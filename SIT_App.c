@@ -174,7 +174,7 @@ void SIT_ChangeChildrenStyle(SIT_Widget root, int flags)
 			}
 			while (list->node.ln_Next == NULL)
 			{
-				/* can only be done once chiildren have their styles cleared */
+				/* can only be done once children have their styles cleared */
 				layoutRecalcWords(list);
 				list = list->parent;
 				if (list == NULL || list == root) goto layout;

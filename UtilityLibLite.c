@@ -909,20 +909,23 @@ STRPTR RawDoFmt(STRPTR fmt, va_list * args)
 /* String/FindInList */
 DLLIMP int FindInList(STRPTR list, STRPTR word, int len)
 {
-	int pos = 0;
+	int pos = 0, chr = ',';
 
 	if (list == NULL || word == NULL) return -1;
+
+	if (len > 65535)
+		chr = len >> 16, len &= 0xffff;
 
 	if (len <= 0)
 		len = strlen(word);
 
 	while (list)
 	{
-		if (strncasecmp(list, word, len) == 0 && (list[len] == ',' || list[len] == 0))
+		if (strncasecmp(list, word, len) == 0 && (list[len] == chr || list[len] == 0))
 			return pos;
 
 		pos ++;
-		list = strchr(list, ',');
+		list = strchr(list, chr);
 		if (list) list ++;
 	}
 	return -1;

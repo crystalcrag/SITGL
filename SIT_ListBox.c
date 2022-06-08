@@ -1564,9 +1564,7 @@ static Cell SIT_ListGetNth(SIT_ListBox list, int nth)
 	if (col < 0 || col >= list->columnCount)
 		return NULL;
 	nth *= list->columnCount;
-	if (nth < 0) nth = 0;
-	if (nth >= list->cells.count) nth = list->cells.count - 1;
-	if (nth < 0) return NULL;
+	if (nth < 0 || nth+col >= list->cells.count) return NULL;
 	return (Cell) vector_nth(&list->cells, nth + col);
 }
 
@@ -1632,8 +1630,8 @@ void SIT_ListGetArg(SIT_Widget w, int type, APTR arg)
 	SIT_ListBox list = (SIT_ListBox) w;
 	Cell cell = SIT_ListGetNth(list, list->curRow);
 	switch (type) {
-	case 0: * (Bool *) arg = (cell->flags & CELL_SELECT) > 0; break;
-	case 1: * (APTR *) arg = cell->userData; break;
+	case 0: * (Bool *) arg = cell && (cell->flags & CELL_SELECT) > 0; break;
+	case 1: * (APTR *) arg = cell ? cell->userData : NULL; break;
 	}
 }
 
@@ -2027,6 +2025,10 @@ DLLIMP void SIT_ListDeleteRow(SIT_Widget w, int row)
 		list->selIndex = -1;
 		if ((list->lbFlags & SITV_SelectMultiple) == 0 && HAS_EVT(&list->super, SITE_OnChange))
 			SIT_ApplyCallback(&list->super, NULL, SITE_OnChange);
+	}
+	else if (list->selIndex > row)
+	{
+		list->selIndex -= cols;
 	}
 
 	StrPool str = SIT_ListGetStrPool(list, cells);

@@ -1280,10 +1280,6 @@ DLLIMP void SIT_GetValues(SIT_Widget w, ...)
 						va_arg(vargs, APTR);
 					continue;
 				case SIT_CurrentDir: SIT_AppGetCWD(w); break;
-					if (w->type == SIT_EDITBOX)
-					{
-					}
-					break;
 				case SIT_StartSel:
 				case SIT_EndSel:
 				case SIT_EditLength:
@@ -1389,6 +1385,14 @@ DLLIMP int SIT_ManageWidget(SIT_Widget w)
 			else
 				/* keep last widget focus */
 				((SIT_Dialog)sit.activeDlg)->lastFocus = sit.focus;
+		}
+		if (sit.hover)
+		{
+			/* need to clear styles before */
+			SIT_Widget hover = sit.hover;
+			hover->oldState = hover->state;
+			hover->state &= ~(STATE_ACTIVE | STATE_HOVER);
+			layoutUpdateStyles(hover);
 		}
 		w->flags &= ~SITF_GeometrySet;
 		sit.active = sit.hover = NULL;

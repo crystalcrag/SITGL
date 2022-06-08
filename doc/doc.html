@@ -5646,9 +5646,14 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
   0-based row number as argument, like this:
   <pre>SIT_SetValues(list, SIT_RowSel(<val>0</val>), True, <val>NULL</val>);</pre>
 
+  <p>If the <tt>row</tt> parameter if out of range, it will simply deselect the currently selected
+  row (if set) or will return <tt>False</tt> (if get).
+
   <li><tt class="dt">SIT_RowTag(row)</tt> (<tt class="t">APTR</tt>)
   <p>This tag allows you to set or get an arbitrary pointer to the given row. It works like the previous
   one: you have to specify the row you want to modify as argument to the tag name.
+
+  <p>If you attempt to get the row tag of an out of range row index, it will always return <tt>NULL</tt>.
 
   <li><tt class="dt">SIT_CellTag(row, col)</tt> (<tt class="t">APTR</tt>)
   <p>In report view, you can actually store an arbitrary pointer per cell. The <tt>SIT_ListInsertItem()</tt>
