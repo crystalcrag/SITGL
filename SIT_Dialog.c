@@ -10,8 +10,8 @@
 #include "SIT_CSSLayout.h"
 
 	struct TagList_t DialogClass[] = {
-		{ "styles",     SIT_DialogStyles,  C__, SIT_INT,  OFFSET(SIT_Dialog, customStyles) },
-		{ "accelTable", SIT_AccelTable,   _SG,  SIT_PTR,  OFFSET(SIT_Dialog, accel) },
+		{ "styles",     SIT_DialogStyles,  C__, SIT_U8,  OFFSET(SIT_Dialog, customStyles) },
+		{ "accelTable", SIT_AccelTable,   _SG,  SIT_PTR, OFFSET(SIT_Dialog, accel) },
 		{ NULL,         SIT_TagEnd }
 	};
 

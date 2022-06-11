@@ -1034,18 +1034,7 @@ static CSSRule cssCompileSelector(STRPTR start, int prevRule)
 				if (*p) *p ++ = 0;
 				sel[0] = 0;
 			}
-			else
-			{
-				p = cssIdent(prev);
-				if (rule == CSSR_PSEUDO && *p == '(')
-				{
-					/* ignore whatever transition there is before and after */
-					if (FindInList("nth-page,page", prev, p - prev) >= 0)
-						next = (CSST_CURRENT+1) | ((CSST_CURRENT+1) << 8);
-					for (p ++; *p && *p != ')'; p ++);
-					if (*p) p ++;
-				}
-			}
+			else p = cssIdent(prev);
 			break;
 
 		case '*': /* processed like a tag name */

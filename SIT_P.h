@@ -122,6 +122,8 @@ void renderBorder(SIT_Widget, RectF * box, int flag);
 void renderTextShadow(SIT_Widget, RectF * box);
 void renderInitBox(SIT_Widget, RectF * out, Bool init, int flag);
 
+STRPTR SIT_GetHTMLAttr(SIT_Widget node, STRPTR key);
+
 #define SITV_AssignAction        ((APTR) 1)
 
 struct SIT_Action_t
@@ -275,7 +277,7 @@ struct SIT_Dialog_t
 	SIT_Widget   lastFocus;
 	SizeF        minSize;
 	SizeF        maxSize;
-	int          customStyles;         /* public: SITV_DialogStyles */
+	uint8_t      customStyles;         /* public: SITV_DialogStyles */
 	uint8_t      cornerResize;
 	uint8_t      cornerHover;
 	int16_t      moveOffX;
@@ -307,9 +309,9 @@ struct SIT_Label_t
 {
 	SIT_Widget_t super;
 	CSSImage     image;
-	int          overflow;             /* public */
+	uint8_t      overflow;             /* public */
+	uint8_t      currentDir;           /* public */
 	int          labelSize;            /* public */
-	int          currentDir;           /* public */
 };
 
 struct SIT_ListBox_t
@@ -322,7 +324,6 @@ struct SIT_ListBox_t
 	int          rowCount;
 	int          sortColumn;           /* public: SG */
 	int          columnCount;          /* public: G */
-	int          viewMode;             /* public: SG */
 	int          selIndex;             /* public: SG */
 	int          curRow;               /* public: G */
 	int          softColumn;
@@ -332,6 +333,7 @@ struct SIT_ListBox_t
 	STRPTR       columnNames;          /* public: S */
 	STRPTR       columnWidths;         /* public: S */
 	STRPTR       columnAlign;          /* public: S */
+	uint8_t      viewMode;             /* public: SG */
 	uint8_t      catCount;
 	uint8_t      catVisible;
 	int8_t       defAlign;
@@ -389,7 +391,7 @@ struct SIT_EditBox_t
 	CSSColor     caret;
 	CSSColor     bgSel;
 	int16_t      msgX, msgY;           /* last clicked pos */
-	uint32_t     lastLog;
+	uint32_t     lastLog;              /* split undo log if enough time has passed */
 
 	int          cursor;               /* public: character position of the text cursor within the string */
 	int          selStart;             /* public: selection start/end point */
@@ -542,10 +544,10 @@ struct SIT_Tab_t
 	SIT_TabItem  items;                /* tab labels */
 	STRPTR       tabStr;               /* public */
 	REAL         tabSpace;             /* public */
-	int          tabStyle;             /* public */
 	int          nbTab;                /* public */
 	int          curTab;               /* public */
-	int          visiBitField;
+	uint8_t      tabStyle;             /* public */
+	uint8_t      visiBitField;
 	REAL         maxHeight;
 	REAL         padTop;
 	REAL         tabWidth;

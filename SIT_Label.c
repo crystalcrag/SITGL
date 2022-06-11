@@ -15,9 +15,9 @@
 
 	struct TagList_t LabelClass[] = {
 		{ "imagePath",  SIT_ImagePath,  CSG, SIT_PTR, OFFSET(SIT_Label, image) },
-		{ "currentDir", SIT_CurrentDir, CSG, SIT_INT, OFFSET(SIT_Label, currentDir) },
+		{ "currentDir", SIT_CurrentDir, CSG, SIT_U8,  OFFSET(SIT_Label, currentDir) },
 		{ "labelSize",  SIT_LabelSize,  CSG, SIT_INT, OFFSET(SIT_Label, labelSize) },
-		{ "overflow",   SIT_Overflow,   CSG, SIT_INT, OFFSET(SIT_Label, overflow) },
+		{ "overflow",   SIT_Overflow,   CSG, SIT_U8,  OFFSET(SIT_Label, overflow) },
 		{ NULL,         SIT_TagEnd }
 	};
 

@@ -12,7 +12,7 @@
 #include "SIT_CSSLayout.h"
 
 	struct TagList_t TabClass[] = {
-		{ "tabStyle",  SIT_TabStyle,  C__, SIT_INT,  OFFSET(SIT_Tab, tabStyle) },
+		{ "tabStyle",  SIT_TabStyle,  C__, SIT_U8,   OFFSET(SIT_Tab, tabStyle) },
 		{ NULL,        SIT_TabCount,  __G, SIT_INT,  OFFSET(SIT_Tab, nbTab) },
 		{ "tabStr",    SIT_TabStr,    _SG, SIT_PTR,  OFFSET(SIT_Tab, tabStr) },
 		{ "tabSpace",  SIT_TabSpace,  _SG, SIT_UNIT, OFFSET(SIT_Tab, tabSpace) },

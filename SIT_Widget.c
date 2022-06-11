@@ -890,14 +890,6 @@ DLLIMP void SIT_DelCallback(SIT_Widget w, int type, SIT_CallProc proc, APTR data
 	if (type == SITE_OnDropFiles) SIT_AppDelDnD();
 }
 
-/* remove all callbacks (reusable canvas) */
-DLLIMP void SIT_ClearCallbacks(SIT_Widget w)
-{
-	if (w == NULL) return;
-	while (HEAD(w->callbacks))
-		SIT_DelCB(w, HEAD(w->callbacks));
-}
-
 void SIT_FreeCSS(SIT_Widget node)
 {
 	Background bg;

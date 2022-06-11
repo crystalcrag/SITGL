@@ -31,7 +31,7 @@ extern "C" {
 #define PRINTFWARN(posfmt, posarg)
 #endif
 
-/* basic datatypes (plus those defined in UtilityLib) */
+/* basic datatypes (plus those defined in UtilityLibLite.h) */
 typedef struct SIT_Widget_t *    SIT_Widget;
 typedef struct SIT_Action_t *    SIT_Action;
 typedef struct KeyVal_t *        KeyVal;
@@ -96,20 +96,32 @@ DLLIMP Bool       SIT_CreateWidgets(SIT_Widget parent, STRPTR fmt, ...);
 DLLIMP void       SIT_RemoveWidget(SIT_Widget);
 DLLIMP Bool       SIT_AddCallback(SIT_Widget, int type, SIT_CallProc, APTR data);
 DLLIMP void       SIT_DelCallback(SIT_Widget, int type, SIT_CallProc, APTR data);
-DLLIMP void       SIT_ClearCallbacks(SIT_Widget w);
 DLLIMP int        SIT_ApplyCallback(SIT_Widget, APTR cd, int type);
 DLLIMP void       SIT_SetValues(SIT_Widget, ...) SENTINEL;
 DLLIMP void       SIT_GetValues(SIT_Widget, ...) SENTINEL;
-DLLIMP STRPTR     SIT_GetHTMLAttr(SIT_Widget node, STRPTR key);
 DLLIMP void       SIT_SetAttributes(SIT_Widget parent, STRPTR fmt, ...);
 DLLIMP void       SIT_SetFocus(SIT_Widget);
 DLLIMP void       SIT_CloseDialog(SIT_Widget);
+DLLIMP void       SIT_MoveNearby(SIT_Widget, int XYWH[4], int defAlign);
+DLLIMP void       SIT_ForceRefresh(void);
+DLLIMP int        SIT_NeedRefresh(void);
+DLLIMP int        SIT_InitDrag(SIT_CallProc);
+DLLIMP Bool       SIT_ParseCSSColor(STRPTR cssColor, uint8_t ret[4]);
+DLLIMP Bool       SIT_GetCSSValue(SIT_Widget, STRPTR property, APTR mem);
+DLLIMP float      SIT_EmToReal(SIT_Widget, uint32_t val);
+DLLIMP void       SIT_ToggleFullScreen(int width, int height);
+                  /* SIT_DIALOG */
+DLLIMP void       SIT_ExtractDialog(SIT_Widget);
+DLLIMP void       SIT_InsertDialog(SIT_Widget);
 DLLIMP int        SIT_ManageWidget(SIT_Widget);
+                  /* SIT_COMBOBOX */
 DLLIMP int        SIT_ComboInsertItem(SIT_Widget, int index, STRPTR item, int length, APTR rowTag);
 DLLIMP int        SIT_ComboDeleteItem(SIT_Widget, int index);
 DLLIMP APTR       SIT_ComboGetRowTag(SIT_Widget, int nth, STRPTR * label);
+                  /* SIT_TAB */
 DLLIMP SIT_Widget SIT_TabGetNth(SIT_Widget, int nth);
 DLLIMP void       SIT_TabSplice(SIT_Widget, int pos, int del, ...) SENTINEL;
+                  /* SIT_LISTBOX */
 DLLIMP int        SIT_ListInsertItem(SIT_Widget, int row, APTR rowTag, ...);
 DLLIMP void       SIT_ListDeleteRow(SIT_Widget, int row);
 DLLIMP SIT_Widget SIT_ListInsertControlIntoCell(SIT_Widget, int row, int cell);
@@ -119,24 +131,13 @@ DLLIMP int        SIT_ListFindByTag(SIT_Widget w, APTR tag);
 DLLIMP int        SIT_ListGetItemOver(SIT_Widget, float rect[4], float mouseX, float mouseY, SIT_Widget * mouseIsRelTo);
 DLLIMP SIT_Widget SIT_ListGetItemRect(SIT_Widget, float rect[4], int row, int col);
 DLLIMP void       SIT_ListReorgColumns(SIT_Widget, STRPTR);
-DLLIMP int        SIT_TextGetWithSoftline(SIT_Widget, STRPTR buffer, int max);
-DLLIMP void       SIT_MoveNearby(SIT_Widget, int XYWH[4], int defAlign);
-DLLIMP void       SIT_ForceRefresh(void);
-DLLIMP int        SIT_NeedRefresh(void);
-DLLIMP int        SIT_InitDrag(SIT_CallProc);
-DLLIMP Bool       SIT_ParseCSSColor(STRPTR cssColor, uint8_t ret[4]);
-DLLIMP Bool       SIT_GetCSSValue(SIT_Widget, STRPTR property, APTR mem);
-DLLIMP float      SIT_EmToReal(SIT_Widget, uint32_t val);
-DLLIMP void       SIT_ExtractDialog(SIT_Widget);
-DLLIMP void       SIT_InsertDialog(SIT_Widget);
-DLLIMP int        SIT_TextEditLineLength(SIT_Widget, int line);
-DLLIMP void       SIT_TextEditGetStat(SIT_Widget, int stat[8]);
-DLLIMP void       SIT_ToggleFullScreen(int width, int height);
-
 DLLIMP Bool       SIT_ListSetCell(SIT_Widget, int row, int col, APTR rowTag, int align, STRPTR text);
 DLLIMP Bool       SIT_ListSetColumn(SIT_Widget, int col, int width, int align, STRPTR label);
 DLLIMP void       SIT_ListSetRowVisibility(SIT_Widget w, int row, Bool visible);
-
+                  /* SIT_EDITBOX */
+DLLIMP int        SIT_TextEditLineLength(SIT_Widget, int line);
+DLLIMP int        SIT_TextGetWithSoftline(SIT_Widget, STRPTR buffer, int max);
+                  /* clipboard */
 DLLIMP STRPTR     SIT_GetFromClipboard(int * size);
 DLLIMP Bool       SIT_CopyToClipboard(STRPTR text, int size);
 
@@ -271,7 +272,7 @@ enum
 
 	/* Push/Toggle button */
 	SIT_ButtonType       = 73,   /* C___: Enum */
-	SIT_CheckState       = 74,   /* CSG_: Enum */
+	SIT_CheckState       = 74,   /* CSG_: Bool */
 	SIT_RadioGroup       = 75,   /* C___: Int */
 	SIT_CurValue         = 76,   /* CSG_: Pointer */
 	SIT_RadioID          = 77,   /* C___: Int */
@@ -370,6 +371,7 @@ enum
 #define	SIT_RowTag(row)          SIT_TargetRow, row, SIT_RowTagArg
 #define	SIT_CellTag(row, cell)   SIT_TargetRow, (row) | ((cell) << 24), SIT_RowTagArg
 #define	SIT_RowSel(row)          SIT_TargetRow, row, SIT_RowSelArg
+#define SIT_ListItem(row, col)   ((col) | ((row) << 8)), 0xbaadf00d
 
 #define SITV_LabelSize(w,h)      (int) ((w) | ((h) << 16))
 
@@ -425,20 +427,6 @@ enum         /* SIT_EditType */
 	SITV_Integer  = 3,
 	SITV_Float    = 4,
 	SITV_Double   = 5
-};
-
-enum         /* SIT_CheckState */
-{
-	SITV_Unchecked,
-	SITV_Checked,
-	SITV_Indeterminate
-};
-
-enum         /* SIT_ResizePolicy */
-{
-	SITV_Auto,                   /* enlarge/reduce as needed */
-	SITV_Fixed,                  /* compute once */
-	SITV_Optimal                 /* (dialog only) get optimal box */
 };
 
 enum         /* SIT_ListBoxFlags */
@@ -553,8 +541,8 @@ enum /* event type (SIT_AddCallback) */
 	SITE_OnFinalize,     // NULL
 	SITE_OnClick,        // SIT_OnMouse *
 	SITE_OnMouseMove,    // SIT_OnMouse *
-	SITE_OnResize,       // int [2]
-	SITE_OnPaint,        // GC
+	SITE_OnResize,       // float [2]
+	SITE_OnPaint,        // SIT_OnPaint *
 	SITE_OnRawKey,       // SIT_OnKey *
 	SITE_OnVanillaKey,   // SIT_OnKey *
 	SITE_OnSortColumn,   // int
@@ -562,7 +550,7 @@ enum /* event type (SIT_AddCallback) */
 	SITE_OnSetOrGet,     // SIT_OnVal *
 	SITE_OnGeometrySet,  // int [3]
 	SITE_OnDropFiles,    // STRPTR * (array is null-terminated)
-	SITE_OnMouseOut,     // SIT_Widet
+	SITE_OnMouseOut,     // SIT_Widget
 	SITE_LastEvent,
 	SITE_OnClickMove     // SIT_OnMouse *  (register cb both for OnClick and OnMouseMove) */
 };

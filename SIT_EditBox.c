@@ -94,8 +94,20 @@ static void SIT_TextEditNotify(SIT_Widget w)
 	SIT_EditBox edit = (SIT_EditBox) w;
 	if (edit->caretMode & SITV_CaretNotify)
 	{
-		int stat[8];
-		SIT_TextEditGetStat(w, stat);
+		DOMRow row;
+		/* stat: 0,1 = absolute cursor pos, 2,3 = pos with soft lines, 4,5 = total lines/with soft breaks, 6 = pos in bytes, 7 = buffer bytes, 8 = has changes */
+		int stat[9], line, chr, max = edit->rowCount - 1;
+		for (line = edit->rowTop, chr = edit->charTop, row = edit->rows + line;
+			 line < max && chr + row->bytes <= edit->cursor;
+			 chr += row->bytes, row ++, line ++);
+
+		stat[0] = stat[2] = edit->cursor - chr;
+		stat[1] = stat[3] = line;
+		stat[4] =
+		stat[5] = edit->rowCount;
+		stat[6] = edit->cursor;
+		stat[7] = edit->length;
+		stat[8] = edit->undoCount;
 		SIT_ApplyCallback(w, stat, SITE_OnChange);
 	}
 	else SIT_ApplyCallback(w, edit->text, SITE_OnChange);
@@ -715,29 +727,6 @@ DLLIMP int SIT_TextGetWithSoftline(SIT_Widget w, STRPTR buffer, int max)
 	if (max > 0) *d = 0; else
 	if (d > (DATA8) buffer) d[-1] = 0;
 	return length;
-}
-
-/* stat: 0,1 = absolute cursor pos, 2,3 = pos with soft lines, 4,5 = total lines/with soft breaks, 6 = pos in bytes, 7 = buffer bytes */
-DLLIMP void SIT_TextEditGetStat(SIT_Widget w, int stat[8])
-{
-	if (w && w->type == SIT_EDITBOX)
-	{
-		SIT_EditBox edit = (SIT_EditBox) w;
-
-		DOMRow row;
-		int line, chr, max = edit->rowCount - 1;
-		for (line = edit->rowTop, chr = edit->charTop, row = edit->rows + line;
-		     line < max && chr + row->bytes <= edit->cursor;
-		     chr += row->bytes, row ++, line ++);
-
-		stat[0] = stat[2] = edit->cursor - chr;
-		stat[1] = stat[3] = line;
-		stat[4] =
-		stat[5] = edit->rowCount;
-		stat[6] = edit->cursor;
-		stat[7] = edit->length;
-	}
-	else memset(stat, 0, 8 * sizeof (int));
 }
 
 DLLIMP int SIT_TextEditLineLength(SIT_Widget w, int line)
@@ -1766,7 +1755,7 @@ static int SIT_TextEditMoveToPreviousWord(SIT_EditBox state, int c, int move)
 	DATA8 text = state->text;
 	DATA8 str  = text + c;
 	if (str == text || state->editType == SITV_Password) return 0;
-	if (str > text && str[-1] == '\n') return str - text - 1;
+	if (str > text && str[-1] == '\n' && move) return str - text - 1;
 	for (str -= move; str > text && str[-1] != '\n' && !SIT_IsWordBoundary(state, str); str --);
 	return str - text;
 }
@@ -1781,7 +1770,7 @@ static int SIT_TextEditMoveToNextWord(SIT_EditBox state, int c, int move)
 	{
 		uint8_t cls;
 		for (cls = SIT_ChrClass(*str); str < eof && *str != '\n' && SIT_ChrClass(*str) == cls; str = NEXTCHAR(str));
-		if (str < eof && *str != '\n' && SIT_ChrClass(*str) == SPC)
+		if (str < eof && *str != '\n' && SIT_ChrClass(*str) == SPC && move)
 			for (str ++; str < eof && *str != '\n' && SIT_ChrClass(*str) == SPC; str = NEXTCHAR(str));
 		if (move && str == text + c && str < eof) str ++;
 	}
@@ -1821,7 +1810,7 @@ static void SIT_TextEditMakeCursorVisible(SIT_EditBox state)
 	DOMRow rows;
 	int    i, max, pos, c = state->cursor;
 
-	if (state->rowVisible == 0) return; /* not yet visible */
+	if (state->rowVisible == 0) return; /* entire widget not yet visible */
 	/* cannot rely on ypos: it is set when content is redrawn */
 	if (state->editType == SITV_Multiline)
 	{
@@ -1858,11 +1847,7 @@ static void SIT_TextEditMakeCursorVisible(SIT_EditBox state)
 	SIT_TextEditRefreshCaret(state);
 
 	if (state->caretMode & SITV_CaretNotify)
-	{
-		int stat[8];
-		SIT_TextEditGetStat(&state->super, stat);
-		SIT_ApplyCallback(&state->super, stat, SITE_OnChange);
-	}
+		SIT_TextEditNotify(&state->super);
 }
 
 /* traverse the layout to locate the nearest character to a display position */
@@ -1912,11 +1897,11 @@ static void SIT_TextEditAdjustSelRange(SIT_EditBox state)
 
 	state->selStart = state->selStart <= state->selEnd ?
 		prev(state, state->selInit, 0) :
-		next(state, state->selInit, 0);
+		next(state, state->selInit, 0) ;
 
 	state->selEnd = state->selEnd < state->selStart ?
 		prev(state, state->cursor, 0) :
-		next(state, state->cursor, 0);
+		next(state, state->cursor, 0) ;
 }
 
 /* on mouse down, move the cursor to the clicked location, and reset the selection */
@@ -1937,6 +1922,7 @@ static int SIT_TextEditClick(SIT_Widget w, APTR cd, APTR ud)
 				msg->y = 0;
 
 			state->hasPreferredX = 0;
+			int oldpos = state->cursor;
 			int cursor = SIT_TextEditLocateCoord(state, msg->x - w->padding[0], msg->y);
 			if (state->selectWord == 2 || cursor != state->cursor || TimeMS() - lastClick > sit.dblClickMS)
 			{
@@ -1951,12 +1937,14 @@ static int SIT_TextEditClick(SIT_Widget w, APTR cd, APTR ud)
 			sit.dirty = 1;
 			lastClick = TimeMS();
 			SIT_TextEditRefreshCaret(state);
+			if ((state->caretMode & SITV_CaretNotify) && cursor != oldpos)
+				SIT_TextEditNotify(w);
 			return 2;
 		}
-		else if (state->editType >= SITV_Integer && (msg->button == 3 || msg->button == 4))
+		else if (state->editType >= SITV_Integer && (msg->button == SITOM_ButtonWheelUp || msg->button == SITOM_ButtonWheelDown))
 		{
 			/* mouse wheel: inc/dec number */
-			SIT_TextEditSpinnerClick(state->spinnerUp, NULL, msg->button == 3 ? (APTR) 2 : 0);
+			SIT_TextEditSpinnerClick(state->spinnerUp, NULL, msg->button == SITOM_ButtonWheelUp ? (APTR) 2 : 0);
 		}
 	default: break;
 	}
@@ -2038,7 +2026,7 @@ static int SIT_TextEditDrag(SIT_Widget w, APTR cd, APTR ud)
 			SIT_TextEditStartAutoScroll(state, 0);
 		}
 
-		int cursor = SIT_TextEditLocateCoord(state, msg->x, y);
+		int cursor = SIT_TextEditLocateCoord(state, msg->x - w->padding[0], y);
 		if (cursor != state->cursor)
 		{
 			state->cursor = state->selEnd = cursor;
@@ -2434,8 +2422,6 @@ int SIT_TextEditInsertText(SIT_EditBox state, DATA8 utf8)
 		SIT_TextEditMakeCursorVisible(state);
 	if (top != state->rowTop || num != state->rowCount)
 		SIT_TextEditAdjustScroll(state);
-	if (HAS_EVT(&state->super, SITE_OnChange))
-		SIT_TextEditNotify(&state->super);
 	sit.dirty = True;
 	return True;
 }

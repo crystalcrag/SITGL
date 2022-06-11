@@ -211,7 +211,7 @@ Bool SIT_IsImageModified(CSSImage img, STRPTR path, Bool fromCSS)
 }
 
 /* retrieve the value of given HTML attribute */
-DLLIMP STRPTR SIT_GetHTMLAttr(SIT_Widget node, STRPTR key)
+STRPTR SIT_GetHTMLAttr(SIT_Widget node, STRPTR key)
 {
 	if (node == NULL)
 		return NULL;

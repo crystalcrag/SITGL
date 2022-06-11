@@ -20,7 +20,7 @@
 		{ "cellPaint",     SIT_CellPaint,     _SG, SIT_PTR,  OFFSET(SIT_ListBox, cellPaint) },
 		{ "finalizeItem",  SIT_FinalizeItem,  _SG, SIT_PTR,  OFFSET(SIT_ListBox, finalizeItem) },
 		{ NULL,            SIT_AutoComplete,  _S_, SIT_PTR,  0 },
-		{ "viewMode",      SIT_ViewMode,      _SG, SIT_INT,  OFFSET(SIT_ListBox, viewMode) },
+		{ "viewMode",      SIT_ViewMode,      _SG, SIT_U8,   OFFSET(SIT_ListBox, viewMode) },
 		{ NULL,            SIT_ColumnCount,   __G, SIT_INT,  OFFSET(SIT_ListBox, softColumn) },
 		{ "columnWidths",  SIT_ColumnWidths,  _SG, SIT_PTR,  OFFSET(SIT_ListBox, columnWidths) },
 		{ "columnNames",   SIT_ColumnNames,   _SG, SIT_PTR,  OFFSET(SIT_ListBox, columnNames) },
@@ -441,6 +441,7 @@ static Bool SIT_ListAdjustScroll(SIT_ListBox list)
 	Bool ret = False;
 	REAL max = list->super.layout.pos.height - list->hdrHeight;
 
+	if (max <= 0) return False;
 	if (list->scrollHeight > max)
 	{
 		if ((list->lbFlags & SITV_HasScroll) == 0)
@@ -505,7 +506,6 @@ static void SIT_ListAdjustMaxHeight(SIT_ListBox list)
 			height += cell->sizeObj.height;
 	}
 	if (height == 0) height = 1;
-	fprintf(stderr, "setting size to %dx%d\n", (int) width, (int) height);
 	SIT_SetValues(&list->super, SIT_Height, (int) height, SIT_Width, (int) width, NULL);
 }
 
@@ -2425,7 +2425,7 @@ DLLIMP int SIT_ListGetItemOver(SIT_Widget w, float rect[4], float mouseX, float 
 	SIT_ListBox list = (SIT_ListBox) w;
 	SIT_Widget parent = *mouseIsRelTo;
 
-	if (parent != w)
+	if (mouseY != 0xbaadf00d && parent != w)
 	{
 		/* need to be relative to <w> */
 		if (parent == NULL)
@@ -2442,11 +2442,28 @@ DLLIMP int SIT_ListGetItemOver(SIT_Widget w, float rect[4], float mouseX, float 
 	REAL offX   = w->offsetX + w->layout.pos.left - (parent->offsetX + parent->layout.pos.left - parent->padding[0]);
 	REAL offY   = w->offsetY + w->layout.pos.top  - (parent->offsetY + parent->layout.pos.top  - parent->padding[1]);
 	int  row, col, i, j;
+
+	if (mouseY == 0xbaadf00d)
+	{
+		/* cell coordiantes, instead of screen coords */
+		row = (int) mouseX;
+		col = i = 0;
+		j   = row & 0xff;
+		row >>= 8;
+		if (row < 0 || row >= list->rowCount || j >= list->columnCount)
+			return -1;
+
+		height = 1e6;
+		cell = STARTCELL(list) + row * list->columnCount + j;
+		goto get_rect;
+	}
+
 	for (cell = list->rowTop, row = cell - STARTCELL(list), col = list->columnCount, i = list->cells.count - row, row /= col; i > 0; i -= col, row ++)
 	{
 		if (cell->flags & (CELL_HIDDEN|CELL_CATEGORY)) { cell += col; continue; }
 		for (j = 0; j < col; j ++, cell ++)
 		{
+			get_rect:
 			rect[0] = cell->sizeCell.left + w->padding[0];
 			rect[1] = cell->sizeCell.top - list->scrollTop + w->padding[1];
 			rect[2] = rect[0] + cell->sizeCell.width;
@@ -2454,8 +2471,8 @@ DLLIMP int SIT_ListGetItemOver(SIT_Widget w, float rect[4], float mouseX, float 
 			if (rect[1] > height)
 				return -1;
 
-			if (rect[0] <= mouseX && mouseX <= rect[2] &&
-			    rect[1] <= mouseY && mouseY <= rect[3])
+			if ((rect[0] <= mouseX && mouseX <= rect[2] &&
+			     rect[1] <= mouseY && mouseY <= rect[3]) || mouseY == 0xbaadf00d)
 			{
 				rect[0] += offX;   rect[2] += offX;
 				rect[1] += offY;   rect[3] += offY;
