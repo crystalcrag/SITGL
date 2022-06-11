@@ -420,7 +420,7 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 /* OnScroll on vertical scroll bar */
 static int SIT_ListScroll(SIT_Widget w, APTR cd, APTR ud)
 {
-	SIT_ListBox list = (SIT_ListBox) w->parent;
+	SIT_ListBox list = ud;
 	REAL        top  = (int) cd, count;
 	Cell        row;
 
@@ -450,7 +450,7 @@ static Bool SIT_ListAdjustScroll(SIT_ListBox list)
 			{
 				SIT_CreateWidgets(&list->super, "<scrollbar name=vscroll lineHeight=", (int) list->super.style.font.size,
 					"top=", SITV_AttachForm, (int) list->hdrHeight, SITV_NoPad, "bottom=FORM,,NOPAD right=FORM,,NOPAD>");
-				SIT_AddCallback(list->super.vscroll, SITE_OnChange, SIT_ListScroll, NULL);
+				SIT_AddCallback(list->super.vscroll, SITE_OnChange, SIT_ListScroll, list);
 			}
 			list->lbFlags |= SITV_HasScroll;
 			list->scrollPad = ((SIT_App)sit.root)->defSBSize;
@@ -539,7 +539,7 @@ static void SIT_ListMakeVisible(SIT_ListBox list, Cell cell)
 	if (y < 0) y = 0;
 	if (y != list->scrollTop)
 	{
-		SIT_ListScroll(list->super.vscroll, (APTR) (int) y, NULL);
+		SIT_ListScroll(list->super.vscroll, (APTR) (int) y, list);
 		SIT_ListAdjustScroll(list);
 	}
 }
@@ -658,7 +658,7 @@ static int SIT_ListResize(SIT_Widget w, APTR cd, APTR ud)
 			x = list->scrollHeight - y;
 			if (x < 0) x = 0;
 			if (list->scrollTop != x)
-				SIT_ListScroll(w->vscroll, (APTR) (int) x, NULL);
+				SIT_ListScroll(w->vscroll, (APTR) (int) x, list);
 		}
 
 		SIT_ListAdjustScroll(list);
@@ -1030,7 +1030,7 @@ static int SIT_ListAutoScroll(SIT_Widget w, APTR cd, APTR ud)
 		if (list->autoScrollDir < 0) list->lassoEY = y;
 		else list->lassoEY = y + list->super.layout.pos.height;
 		SIT_ListSelectLasso(list);
-		SIT_ListScroll(list->super.vscroll, (APTR) (int) y, NULL);
+		SIT_ListScroll(list->super.vscroll, (APTR) (int) y, list);
 		SIT_ListAdjustScroll(list);
 	}
 	return 25;
@@ -1187,7 +1187,7 @@ static int SIT_ListClick(SIT_Widget w, APTR cd, APTR ud)
 			if (y > max) y = max;
 			if (y != list->scrollTop)
 			{
-				SIT_ListScroll(list->super.vscroll, (APTR) (int) y, NULL);
+				SIT_ListScroll(list->super.vscroll, (APTR) (int) y, list);
 				SIT_ListAdjustScroll(list);
 			}
 		}
@@ -1290,7 +1290,7 @@ static Cell SIT_ListMovePage(SIT_ListBox list, int dir)
 	if (top < 0)   top = 0;
 	if (top != list->scrollTop)
 	{
-		SIT_ListScroll(list->super.vscroll, (APTR) top, NULL);
+		SIT_ListScroll(list->super.vscroll, (APTR) top, list);
 		SIT_SetValues(list->super.vscroll, SIT_ScrollPos, top, NULL);
 		sit.dirty = 1;
 		if (list->selIndex >= 0)
@@ -2482,27 +2482,3 @@ DLLIMP int SIT_ListGetItemOver(SIT_Widget w, float rect[4], float mouseX, float 
 	}
 	return -1;
 }
-
-DLLIMP SIT_Widget SIT_ListGetItemRect(SIT_Widget w, float rect[4], int row, int col)
-{
-	if (w == NULL || rect == NULL || w->type != SIT_LISTBOX) return NULL;
-
-	SIT_ListBox list = (SIT_ListBox) w;
-	Cell        cell = SIT_ListGetNth(list, row | (col << 24));
-
-	if (cell)
-	{
-		SIT_Widget root;
-		/* make it relative to dialog */
-		for (root = w; (root->flags & SITF_TopLevel) == 0; root = root->parent);
-
-		rect[0] = cell->sizeCell.left + w->padding[0] + w->offsetX + w->layout.pos.left - (root->offsetX + root->layout.pos.left - root->padding[0]);
-		rect[1] = cell->sizeCell.top  + w->padding[1] + w->offsetY + w->layout.pos.top  - (root->offsetY + root->layout.pos.top  - root->padding[1]) - list->scrollTop;
-		rect[2] = rect[0] + cell->sizeCell.width;
-		rect[3] = rect[1] + cell->sizeCell.height;
-
-		return root;
-	}
-	return NULL;
-}
-

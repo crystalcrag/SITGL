@@ -920,6 +920,7 @@ void SIT_DestroyWidget(SIT_Widget w)
 {
 	SIT_Callback next, cbl;
 
+	w->flags |= SITF_BeingDestroyed;
 	if (HAS_EVT(w, SITE_OnFinalize))
 	{
 		/* need to be done as early as possible while we still have some internal consistency */
@@ -930,7 +931,6 @@ void SIT_DestroyWidget(SIT_Widget w)
 	if (w->flags & SITF_IsLocked)
 	{
 		SIT_Widget parent = w->parent;
-		w->flags |= SITF_BeingDestroyed;
 		/*
 		 * if parent is being also destroyed, we need to unlink from it now, because when we
 		 * got back here later, memory referenced by parent will be freed.
@@ -1409,6 +1409,8 @@ DLLIMP void SIT_RemoveWidget(SIT_Widget w)
 
 	if (w == NULL || (w->flags & SITF_BeingDestroyed)) return;
 	for (d = w; d && ! (d->type & SITF_TopLevel); d = d->parent);
+	/* in case this function is called twice (due to OnBlur event being triggered) */
+	w->flags |= SITF_BeingDestroyed;
 
 	/* Remove from MAX constraint chain */
 	SIT_Widget prev = (APTR) w->max.ln_Prev;

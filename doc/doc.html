@@ -97,6 +97,7 @@
   <a class="sub3" href="#listicon">Icon view</a>
   <a class="sub3" href="#listcat">Category separator</a>
   <a class="sub3" href="#listprop">Listbox properties</a>
+  <a class="sub3" href="#listinplacedit">In-place editing</a>
   <a class="sub3" href="#listonthefly">Lazy rendering</a>
   <a class="sub3" href="#listevents">Events</a>
   <a class="sub3" href="#listkbd">Keyboard shortcuts</a>
@@ -4978,7 +4979,7 @@ the user the caret position and/or total lines/bytes of the file being edited, w
 continuously poll the state of the control.
 
 <p>If this flag has been set, the <tt>call_data</tt> of the <tt>SITE_OnChange</tt> event will be an
-<b>array of 8 integers</b>. Each indices will have the following meaning:
+<b>array of 9 integers</b>. Each indices will have the following meaning:
 <ul>
   <li><tt>[0]</tt> and <tt>[1]</tt>: caret position, first is column and then the row (all 0 based),
   without taking wrapped lines into account. 
@@ -4989,6 +4990,18 @@ continuously poll the state of the control.
   it will be the same as <tt>[4]</tt>).
   <li><tt>[6]</tt>: caret position in bytes offset from the start of the buffer.
   <li><tt>[7]</tt>: total bytes in the file (not including final NUL byte).
+  <li><tt>[8]</tt>: <b>number of operations stored in the undo log</b>. Use this to know if the file has
+  been modified and show a status indicator somewhere. If the file is saved at some point, keep the
+  number at this slot somewhere safe. Whenever this number match what you saved earlier, it means
+  that you reach the same savepoint (ie: you should remove modification status).
+  
+  <p>This also works if the <b>undo log is fixed in size</b>. If the savepoint is ever discarded due
+  to the undo log not having enough place, it means you'll never get this modification index from
+  the callback ever again.
+
+  <p>Also, keep in mind that setting the <tt>SIT_Title</tt> property will completely <b>empty the
+  undo/redo log</b> (which means, you'll have to update your internal state accordingly if you do that).
+  
 </ul>
 
 <p>Like in basic mode, when this event is fired, the modification will already have been committed.
@@ -5152,7 +5165,7 @@ on regular expressions. Fortunately, its usage is way simpler than its implement
 	<kwd>return</kwd> <val>1</val>;
 }</pre>
 
-<p>As you can see, even for something as simple as this, there is quite a bit a work involved. If you
+<p>As you can see, even for something as simple as this, there is quite a bit of work involved. If you
 want anything more complicated, you really should have a look at the <a href="#lexer">Lexer</a> module
 given in the examples section.
 
@@ -5627,7 +5640,7 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
   The message will be hidden as soon as there is at least one item to display.
 
   <li><tt class="dt">SIT_SortColumn</tt> (<tt class="t">int</tt>)
-  <p>Allows you to programmatically set the column used for sorting items. If the integer is positive
+  <p>Allows you to programmatically <b>set the column used for sorting items</b>. If the integer is positive
   or 0, the specified column will be used to sort items in ascending order. If the integer is negative,
   the <tt>-n-2</tt> will be sorted in descending order (i.e: to sort first column in descending order,
   specify <tt>-2</tt>).
@@ -5636,12 +5649,12 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
   property.
 
   <li><tt class="dt">SIT_SelectedIndex</tt> (<tt class="t">int</tt>)
-  <p>Set or get currently selected row. <tt class="o">-1</tt> will be returned if none are selected.
+  <p><b>Set or get currently selected row</b>. <tt class="o">-1</tt> will be returned if none are selected.
   If you try to set an index out of range, it will be clamped between the minimum and maximum row number.
   In case of multi-selection is allowed, this will give you the index of the last item selected.
 
   <li><tt class="dt">SIT_RowSel(row)</tt> (<tt class="t">int</tt>)
-  <p>Set or get selection state of a row. If the list is single-selection only, it will automatically
+  <p><b>Set or get selection state of a row</b>. If the list is single-selection only, it will automatically
   deselect the previously selected item. This tag is actually a macro, where you have to give the
   0-based row number as argument, like this:
   <pre>SIT_SetValues(list, SIT_RowSel(<val>0</val>), True, <val>NULL</val>);</pre>
@@ -5650,13 +5663,13 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
   row (if set) or will return <tt>False</tt> (if get).
 
   <li><tt class="dt">SIT_RowTag(row)</tt> (<tt class="t">APTR</tt>)
-  <p>This tag allows you to set or get an arbitrary pointer to the given row. It works like the previous
-  one: you have to specify the row you want to modify as argument to the tag name.
+  <p>This tag allows you to <b>set or get an arbitrary pointer to the given row</b>. It works like
+  the previous one: you have to specify the row you want to modify as argument to the tag name.
 
   <p>If you attempt to get the row tag of an out of range row index, it will always return <tt>NULL</tt>.
 
   <li><tt class="dt">SIT_CellTag(row, col)</tt> (<tt class="t">APTR</tt>)
-  <p>In report view, you can actually store an arbitrary pointer per cell. The <tt>SIT_ListInsertItem()</tt>
+  <p>In report view, you can actually store an <b>arbitrary pointer per cell</b>. The <tt>SIT_ListInsertItem()</tt>
   function will let you store a pointer on the first column only. This tag will let you store on any column.
   If the <tt>col</tt> parameter is outside range, setting the value will do nothing, and getting the
   value will return NULL.
@@ -5776,6 +5789,83 @@ by retrieving the <tt>SIT_RowTag(row)</tt> property.
   <p><b>The default behavior</b> for sorting items is <tt>SIT_SortAlpha</tt>.
 </ul>
 
+<h4 id="listinplacedit">In-place editing</h4>
+
+<p>At some point, you might want to let the <b>user edit the items</b> in the list. If your items are
+displayed in a report view, with some column containing just plain text, it would be overkill to display
+a full modal dialog just to edit this piece of information. For example, here a simple edit box is
+displayed whenever the user right-click on an item in the first column:
+
+<div class="image">
+  <img src="images/inplaceedit.png">
+</div>
+
+<p>To do this, there is an API that can retrieve screen coordinates of an item in a list:
+<pre><type>int</type> SIT_ListGetItemOver(SIT_Widget, <type>float</type> rect[<val>4</val>], <type>float</type> mouseX, <type>float</type> mouseY, SIT_Widget * mouseIsRelTo);</pre>
+
+<p>This API can be used in two different modes:
+<ol>
+  <li><b>Mouse input</b>: if you want to edit a cell based on mouse clicks, just provide the mouse
+  coordinates to the <tt>mouseX</tt> and <tt>mouseY</tt> parameter as they were given in the event.
+  <li><b>Row/column</b>: if you want to edit based on its row/column position (typically: in a
+  <tt>SITE_OnActivate</tt> callback), you can use the following macro (it is an alias to
+  <tt>SIT_ListGetItemOver()</tt>):
+  <pre><type>int</type> SIT_ListGetItemRect(SIT_Widget, <type>float</type> rect_out[<val>4</val>], <type>int</type> row, <type>int</type> col, SIT_Widget * mouseIsRelTo);</pre>
+</ol>
+
+<p>For this function to work, the parameter <tt>mouseIsRelTo</tt> must also be initialized. It must
+point to the widget where coordinates in <tt>rect</tt> will be made relative. If unsure, provide a
+pointer that is initialized to <tt class="o">NULL</tt>.
+
+<p><b>On return</b>, this API will provide:
+<ul>
+  <li>The coordinates of the cell in <tt>rect</tt>, as <b>two points</b> (top left and bottom right corner,
+  in that order), relative to the widget stored in <tt>mouseIsRelTo</tt>. If that parameter was set to 
+  <tt class="o">NULL</tt>, it will now contain the widget to where the coordinates are relative to.
+  <p>If you want to create an editbox over the cell, <tt>mouseIsRelTo</tt> is what you should now
+  use as parent.
+  <li><b>The return value</b> will contain the row and column of the item, with the column stored in
+  the lower 8bits, and the row in the rest. I.e: you can split it back this way:
+  <pre>SIT_Widget parent = <val>NULL</val>;
+<type>float</type> rect[<val>4</val>];
+<type>int</type> row = SIT_ListGetItemOver(list, rect, msg->mouseX, msg->mouseY, &amp;parent);
+<kwd>if</kwd> (row >= <val>0</val>)
+{
+	<type>int</type> col = row & <val>0xff</val>;
+	row >>= <val>8</val>;
+
+	<com>/* ... */</com>
+}</pre>
+  <p>If <tt class="o">-1</tt> is returned, it means the mouse wasn't over any item or the row/column
+  you requested didn't exist.
+</ul>
+
+<p>Sadly, there are still a lot of work for this to work properly: you have now all the information
+to <b>create an editbox widget over the cell</b> you want to edit: use the values stored in <tt>rect</tt>
+to set the <tt>SIT_X</tt>, <tt>SIT_Y</tt>, <tt>SIT_Width</tt> and <tt>SIT_Height</tt> properties of the
+new widget.
+
+<p>You'll have to register at least <b>two callbacks</b> on this new widget:
+<ul>
+  <li><tt>SITE_OnBlur</tt>: if the edit box ever loses the keyboard focus, you want to remove this
+  control right after. At this point it is recommended to commit any changes made to the text.
+  <li><tt>SITE_OnRawKey</tt>: you might want to check for some key presses like:
+    <ul>
+	  <li><tt>SITK_Escape</tt>: to cancel the changes.
+	  <li><tt>SITK_Return</tt>: to confirm the changes.
+	</ul>
+  <p><b>Be careful though!</b> when the widget is removed, a <tt>SITE_OnBlur</tt> event will trigger.
+  If you want to cancel the changes, while the <tt>OnBlur</tt> event will commit them, it means you'll
+  have to inform your <tt>OnBlur</tt> callback not to do that.
+</ul>
+
+<p>This technique should work fairly well: if the user tries to edit another cell, while one is already
+being edited, a <tt>SITE_OnBlur</tt> event will automatically trigger on the current widget, ensuring
+that only one item can be edited at a time.
+
+<p><b>Keep in mind</b> that this technique requires a decent amount of code behind the scene. Using
+a modal popup is more clunky, but usually get the job done with way less boilerplate than in-place
+editing.
 
 <h4 id="listonthefly">Rendering items on the fly</h4>
 
@@ -7236,7 +7326,7 @@ keyboard events to this control (typical use case: redirect some events from a s
 
 <p>This module can add on-the-fly keywords highlight on a <a href="#SIT_EDITBOX"><tt>SIT_EDITBOX</tt></a>
 control. It is <b>based on a custom regular expression parser</b>, and as such can handle arbitrarily complex
-lexical recognition in almost linear time (based on the amount of characters to process). This module
+lexical recognition in almost linear time (based on the amount of characters visible on screen). This module
 will also implement some caching mechanism, therefore CPU usage should be kept very low.
 
 <p>Depending on the complexity of the lexical patterns, <b>memory usage can be quite high though</b>. It is
@@ -7575,7 +7665,7 @@ you only have to modify the label creation, with the following line:
 file</b>, that means any errors occurring before a successful <tt>SIT_Init()</tt> cannot be translated
 with this module.
 
-<p>You'll have to mark all of your message that way. Once it is done, you can use the <tt>msgextract</tt>
+<p>You'll have to mark all of your messages that way. Once it is done, you can use the <tt>msgextract</tt>
 utility to extract them in one shot, and update/create every translation file. You can find it in the
 <tt>examples</tt> folder of the SIT distribution. The way this utility works is through an INI configuration
 file. A typical configuration for extracting messages from C source files is:
@@ -8461,15 +8551,21 @@ API.
   insensitively for each word of the list, <tt>len</tt> is an optional length you want to limit the
   length of the <tt>word</tt>. If given <tt class="o">0</tt> for this parameter, the <tt>word</tt>
   parameter is supposed to be <tt class="o">NULL</tt>-terminated.
-  
+
   <p>Return value will be the index of the n<sup>th</sup> string that the <tt>word</tt> matched, started
   from <tt class="o">0</tt>. If the word did not match anything, <tt class="o">-1</tt> will be returned.
 
+  <p>This function can use a different separator for <tt>list</tt>, for this you'll have to use the
+  macro <tt>FIL_CHRLEN(chr, len)</tt> as for the <tt>len</tt> parameter, where <tt>chr</tt> is the
+  character you want to use as separator (limited to ASCII range though).
+
   <p>Here are a few examples of how this function works:
   <ul>
-	<li><tt>FindInList(<val>"aaa,aa,a"</val>, <val>"aa"</val>, <val>0</val>);</tt>: will return 1: only whole words are matched.
-	<li><tt>FindInList(<val>"STR,URI,POS,INT,COLOR"</val>, <val>"POS POS POS COLOR"</val>, <val>3</val>);</tt>: will return 2: only the
+	<li><tt>FindInList(<val>"aaa,aa,a"</val>, <val>"aa"</val>, <val>0</val>);</tt>: will return <val>1</val>: only whole words are matched.
+	<li><tt>FindInList(<val>"STR,URI,POS,INT,COLOR"</val>, <val>"POS POS POS COLOR"</val>, <val>3</val>);</tt>: will return <val>2</val>: only the
 	first 3 characters from the word will be matched against the word list.
+	<li><tt>FindInList(<val>"m/degC/g"</val>, <val>"G"</val>, FIL_CHRLEN(<val>'/'</val>, <val>0</val>));</tt>:
+	will return <val>2</val>.
   </ul>
 
   <li><tt class="dt"><type>STRPTR</type> StripCRLF(<type>STRPTR</type> in);</tt>
