@@ -456,7 +456,7 @@
 
 	/* CSS3 - should be inheritable */
 	{.attr    = "text-shadow",         .format  = "POS POS POS COLOR", .objtype = 2, .inherit = INHERIT(0, cssAttrTextShadow),
-	 .arg1    = OFFSH(pos.XYfixed[0]), .arg2    = OFFSH(pos.XYfixed[1]),
+	 .arg1    = OFFSH(XYfixed[0]),     .arg2    = OFFSH(XYfixed[1]),
 	 .arg3    = OFFSH(blurFixed),      .arg4    = OFFSH(color)},
 
 	{.attr    = "text-transform",      .inherit = 1, .sz = 1, .reflow = ReflowLayout,

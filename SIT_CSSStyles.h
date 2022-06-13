@@ -116,27 +116,15 @@ struct Text_t
 
 struct TextShadow_t
 {
-	union {
-		ULONG XYfixed[2];
-		REAL  XYfloat[2];
-	} pos;
-	union {
-		ULONG blurFixed;
-		REAL  blurFloat;
-	};
+	ULONG    XYfixed[2], blurFixed;
+	REAL     XYfloat[2], blurFloat;
 	CSSColor color;
 };
 
 struct BoxShadow_t
 {
-	union {
-		ULONG XYSfixed[3];
-		REAL  XYSfloat[3];
-	};
-	union {
-		ULONG blurFixed;
-		REAL  blurFloat;
-	};
+	ULONG    XYSfixed[3], blurFixed;
+	REAL     XYSfloat[3], blurFloat;
 	ULONG    inset;
 	CSSColor color;
 };

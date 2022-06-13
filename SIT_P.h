@@ -438,14 +438,13 @@ struct SIT_EditBox_t
 	SIT_Action   autoScroll;
 	SIT_Action   caretBlink;
 	REAL         preferredX;
-	DATA8        undoLast;             /* undo/redo state */
+	DATA8        undoLast;             /* pointer within <undoBuffer> where last op is (NULL if none) */
 	DATA8        redoLast;
-	DATA8        undoBuffer;
-	int          lenInsert;
-	uint16_t     redoCount;
+	DATA8        undoBuffer;           /* buffer where undo/redo log will be stored */
+	int          undoDiscarded;        /* undo op discarded due to lack of space (fixed undo buffer size) */
+	uint16_t     redoCount;            /* number of op in the log */
 	uint16_t     undoCount;
-	int          undoSize;
-	DATA8        undoFixed;
+	int          undoSize;             /* size in bytes of the undo/redo log */
 };
 
 struct SIT_ScrollBar_t
@@ -731,8 +730,6 @@ enum /* bitfield for style.flags */
 	CSSF_IMG             = 0x0040,      /* need to load external ressources */
 	CSSF_LINK            = 0x0080,      /* set on anchor and its descendant (used in render.c) */
 	CSSF_BORDERIMG       = 0x0100,      /* cache for border-image is done */
-	CSSF_TEXTSHADOW      = 0x0200,      /* style.shadow struct need recompute */
-	CSSF_BOXSHADOW       = 0x0400,      /* style.boxShadow need recompute */
 	CSSF_BACKGROUND      = 0x0800       /* style.background need update (dim and offset) */
 };
 

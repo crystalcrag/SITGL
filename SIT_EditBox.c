@@ -79,7 +79,7 @@ static int SIT_MeasureEditBox(SIT_Widget w, APTR cd, APTR unused)
 static int  SIT_TextEditRender(SIT_Widget, APTR, APTR);
 static int  SIT_TextEditClick(SIT_Widget, APTR, APTR);
 static int  SIT_TextEditDrag(SIT_Widget, APTR, APTR);
-static int  SIT_TextEditInsertChars(SIT_EditBox, int pos, char * text, int len);
+static int  SIT_TextEditInsertChars(SIT_EditBox, int pos, char * text, int len, int * lenInsert);
 static void SIT_TextEditAdjustScroll(SIT_EditBox);
 static void SIT_TextEditUndoRedo(SIT_EditBox, int redo);
 static void SIT_TextEditRegUndo(SIT_EditBox, int where, int length, int type);
@@ -107,7 +107,7 @@ static void SIT_TextEditNotify(SIT_Widget w)
 		stat[5] = edit->rowCount;
 		stat[6] = edit->cursor;
 		stat[7] = edit->length;
-		stat[8] = edit->undoCount;
+		stat[8] = edit->undoCount + edit->undoDiscarded;
 		SIT_ApplyCallback(w, stat, SITE_OnChange);
 	}
 	else SIT_ApplyCallback(w, edit->text, SITE_OnChange);
@@ -150,7 +150,7 @@ static int SIT_TextEditResize(SIT_Widget w, APTR cd, APTR ud)
 		if (state->length > 0 && state->wordWrap)
 		{
 			state->formatWidth = state->width;
-			SIT_TextEditInsertChars(state, 0, NULL, -1);
+			SIT_TextEditInsertChars(state, 0, NULL, -1, NULL);
 		}
 		if (state->caretMode & SITV_CaretNotify)
 			SIT_TextEditNotify(w);
@@ -170,7 +170,7 @@ static int SIT_TextEditResizeSB(SIT_Widget w, APTR cd, APTR ud)
 	{
 		state->charTop = 0;
 		state->formatWidth = state->width;
-		SIT_TextEditInsertChars(state, 0, NULL, -1);
+		SIT_TextEditInsertChars(state, 0, NULL, -1, NULL);
 		/* reset charTop from rowTop */
 		DOMRow row;
 		int    top, i;
@@ -956,7 +956,7 @@ static REAL SIT_TextEditRenderLine(SIT_EditBox state, DATA8 str, int length, REA
 					{
 						nvgFontBlur(vg, txtShadow->blurFloat);
 						nvgFillColorRGBA8(vg, txtShadow->color.rgba);
-						nvgText(vg, x + off + txtShadow->pos.XYfloat[0], y + offy + txtShadow->pos.XYfloat[1], str, p);
+						nvgText(vg, x + off + txtShadow->XYfloat[0], y + offy + txtShadow->XYfloat[1], str, p);
 					}
 					nvgFontBlur(vg, 0);
 				}
@@ -1344,7 +1344,7 @@ static int SIT_TextEditRender(SIT_Widget w, APTR unused1, APTR unused2)
 				TextShadow shadow  = state->super.style.shadow;
 				int count = state->super.style.shadowCount;
 				for (; count > 0; count --, shadow ++)
-					SIT_TextEditDrawCaret(vg, state, shadow->color.rgba, x + shadow->pos.XYfloat[0], ycursor + shadow->pos.XYfloat[1], cw, c);
+					SIT_TextEditDrawCaret(vg, state, shadow->color.rgba, x + shadow->XYfloat[0], ycursor + shadow->XYfloat[1], cw, c);
 			}
 			SIT_TextEditDrawCaret(vg, state, col, x, ycursor, cw, c);
 		}
@@ -1358,8 +1358,8 @@ static int SIT_TextEditRender(SIT_Widget w, APTR unused1, APTR unused2)
 				{
 					nvgStrokeColorRGBA8(vg, shadow->color.rgba);
 					nvgBeginPath(vg);
-					REAL x2 = x + shadow->pos.XYfloat[0];
-					REAL y2 = ycursor + shadow->pos.XYfloat[1];
+					REAL x2 = x + shadow->XYfloat[0];
+					REAL y2 = ycursor + shadow->XYfloat[1];
 					nvgMoveTo(vg, x2, y2 - 1 - state->extendT);
 					nvgLineTo(vg, x2, y2 - 1 + state->fh + state->extendB - state->extendT);
 					nvgStroke(vg);
@@ -1553,7 +1553,7 @@ struct LineBuf_t
 /*
  * main edit function: insert char into buffer and readjust line pointers
  */
-static int SIT_TextEditInsertChars(SIT_EditBox state, int pos, char * text, int len)
+static int SIT_TextEditInsertChars(SIT_EditBox state, int pos, char * text, int len, int * lenInsert)
 {
 	LineBuf next, last;
 	uint8_t lines[MAX_LINES];
@@ -1719,7 +1719,8 @@ static int SIT_TextEditInsertChars(SIT_EditBox state, int pos, char * text, int 
 		}
 	}
 	if (setLast) memset(rows + i, 0, sizeof *rows);
-	state->lenInsert = len;
+	if (lenInsert)
+		lenInsert[0] = len;
 
 	#if 0
 	fprintf(stderr, "====================== %f\n", state->width);
@@ -2219,9 +2220,8 @@ static int SIT_TextEditPaste(SIT_EditBox state, DATA8 text, int len)
 		SIT_TextEditTransform(dup, len, state->super.style.text.transform);
 	}
 
-	if (SIT_TextEditInsertChars(state, state->cursor, text, len) && ! init)
+	if (SIT_TextEditInsertChars(state, state->cursor, text, len, &len) && ! init)
 	{
-		len = state->lenInsert;
 		if (state->width > 0) /* not yet fully initialized */
 			SIT_TextEditRegUndo(state, state->cursor, len, UNDO_INSERT);
 		state->cursor += len;
@@ -2402,7 +2402,7 @@ int SIT_TextEditInsertText(SIT_EditBox state, DATA8 utf8)
 
 		/* not the most optimized, but at least it works */
 		SIT_TextEditDeleteChars(state, pos, dstlen);
-		if (SIT_TextEditInsertChars(state, pos, utf8, len))
+		if (SIT_TextEditInsertChars(state, pos, utf8, len, NULL))
 		{
 			state->cursor += len;
 			state->hasPreferredX = 0;
@@ -2410,9 +2410,8 @@ int SIT_TextEditInsertText(SIT_EditBox state, DATA8 utf8)
 	} else {
 		SIT_TextEditDeleteSelect(state); /* implicitly clamps */
 		pos = state->cursor;
-		if (SIT_TextEditInsertChars(state, pos, utf8, len))
+		if (SIT_TextEditInsertChars(state, pos, utf8, len, &len))
 		{
-			len = state->lenInsert;
 			SIT_TextEditRegUndo(state, pos, len, UNDO_INSERT);
 			state->cursor += len;
 			state->hasPreferredX = 0;
@@ -2786,8 +2785,8 @@ int SIT_TextEditKey(SIT_EditBox state, int key)
  *     - 3 bytes BE for length
  *     - 1 byte that is always set to 0
  * - immediately after, if the operation is UNDO_DELETE or UNDO_REPLACE is a stream of bytes
- *   containing the text deleted. Note: due to UTF-8, bytes in stream is not necessarily equals to
- *   length field in header.
+ *   containing the text deleted. Note: for UNDO_REPLACE due to UTF-8, bytes in stream is not
+ *   necessarily equals to length field in header.
  * - operations are stored one after the other, without padding.
  * - when undoing stuff, to get a pointer of the previous operations, you first locate that NUL byte
  *   by scanning the undo buffer in reverse. Once found, you subtract 7 bytes to get to the start of
@@ -2807,7 +2806,8 @@ static int SIT_TextEditUndoMakeRoom(SIT_EditBox state, int opsize, int offset, D
 		/* use a fixed amount of memory */
 		if (opsize > state->undoSize)
 		{
-			/* need to discard everything :-/ */
+			/* need to discard everything */
+			state->undoDiscarded = state->undoCount;
 			state->undoCount = 0;
 			state->undoLast  = NULL;
 			return 0;
@@ -2819,8 +2819,9 @@ static int SIT_TextEditUndoMakeRoom(SIT_EditBox state, int opsize, int offset, D
 			if (op[0] != UNDO_INSERT) len += BE24(op+4);
 			op += len;
 			state->undoCount --;
+			state->undoDiscarded ++;
 		}
-		/* discard */
+		/* discard last operation */
 		if (op > state->undoBuffer)
 		{
 			int diff = op - state->undoBuffer;
@@ -3059,10 +3060,9 @@ static void SIT_TextEditUndoRedo(SIT_EditBox state, int redo)
 		state->cursor = loc + len;
 		/* cannot use <undo>, it can be relocated :-/ */
 		if (off < 0) off += state->undoSize;
-		SIT_TextEditInsertChars(state, loc, state->undoBuffer + off, len);
+		SIT_TextEditInsertChars(state, loc, state->undoBuffer + off, len, &len);
 		if (log)
 		{
-			len = state->lenInsert;
 			memcpy(text, op, 8);
 			if (op[0] == UNDO_REPLACE)
 			{

@@ -783,13 +783,12 @@ static void layoutSetTextShadow(SIT_Widget node)
 	for (i = 0; i < node->style.shadowCount; i ++)
 	{
 		TextShadow shadow = node->style.shadow + i;
-		ULONG * fixed = &shadow->pos.XYfixed[0];
-		float * real  = &shadow->pos.XYfloat[0];
+		ULONG * fixed = &shadow->XYfixed[0];
+		float * real  = &shadow->XYfloat[0];
 
 		for (j = 0; j < 3; j ++, fixed ++, real ++)
 			*real = *fixed ? ToPoints(node, node, *fixed, CSS_LEFT) : 0;
 	}
-	node->style.flags &= ~CSSF_TEXTSHADOW;
 	node->style.shadowTotal = node->style.shadowCount;
 }
 
@@ -805,7 +804,6 @@ static void layoutSetBoxShadow(SIT_Widget node)
 		for (j = 0; j < 4; j ++, fixed ++, real ++)
 			*real = *fixed ? ToPoints(node, node, *fixed, CSS_LEFT) : 0;
 	}
-	node->style.flags &= ~CSSF_BOXSHADOW;
 }
 
 static void layoutSetOutline(SIT_Widget node)
@@ -868,7 +866,7 @@ void layoutCalcBox(SIT_Widget node)
 			node->style.shadowInherit = parent;
 		node->style.shadowCount = parent->style.shadowCount;
 	}
-	else if (node->style.flags & CSSF_TEXTSHADOW)
+	else if (node->style.shadow)
 	{
 		layoutSetTextShadow(node);
 	}
@@ -876,7 +874,7 @@ void layoutCalcBox(SIT_Widget node)
 //	if (node->type != SIT_HTMLTAG && node->layout.wordwrap.count > 0)
 //		node->style.shadowTotal = layoutGetTextShadowCount(node);
 
-	if (node->style.flags & CSSF_BOXSHADOW)
+	if (node->layout.flags & (LAYF_HasBoxShadow | LAYF_HasInset))
 		layoutSetBoxShadow(node);
 
 	layoutCalcPadding(node);
@@ -1061,10 +1059,10 @@ int layoutUpdateStyles(SIT_Widget node)
 	}
 	else /* might still need to recompute a few things */
 	{
-		if (node->style.flags & CSSF_TEXTSHADOW)
+		if (node->style.shadow)
 			layoutSetTextShadow(node);
 
-		if (node->style.flags & CSSF_BOXSHADOW)
+		if (node->layout.flags & (LAYF_HasBoxShadow | LAYF_HasInset))
 			layoutSetBoxShadow(node);
 
 		if (node->style.flags & CSSF_BACKGROUND)
@@ -1257,6 +1255,9 @@ void layoutRecalcWords(SIT_Widget w)
 	REAL     fh, bl, space;
 	int      i = w->layout.wordwrap.count;
 
+	if (strcmp(w->name, "f64") == 0)
+		puts("here");
+
 	for (word = vector_first(w->layout.wordwrap), old = NULL, space = 0; i > 0; word ++, i --)
 	{
 		if (old != word->node)
@@ -1274,6 +1275,18 @@ void layoutRecalcWords(SIT_Widget w)
 			word->width = nvgTextBounds(vg, 0, 0, word->word, word->word+word->n, NULL);
 			if (word->space > 0)
 				word->space = space;
+		}
+
+		if (old != w)
+		{
+			SIT_Widget offset;
+			word->marginL = word->marginR = 0;
+			for (offset = old; offset->type == SIT_HTMLTAG; offset = offset->parent)
+			{
+				/* XXX that's not always correct */
+				word->marginL += layoutNCSize(offset, CSS_LEFT);
+				word->marginR += layoutNCSize(offset, CSS_RIGHT);
+			}
 		}
 	}
 

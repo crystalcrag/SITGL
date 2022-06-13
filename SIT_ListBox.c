@@ -526,6 +526,8 @@ static void SIT_ListMakeVisible(SIT_ListBox list, Cell cell)
 	REAL maxy = list->super.layout.pos.height;
 	REAL padH = list->hdrHeight;
 
+	if (maxy < 0) return;
+
 	list->makeVisible = 0;
 	if (y < -(padT - padH))
 	{

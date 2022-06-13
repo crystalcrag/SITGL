@@ -1512,8 +1512,8 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 					}
 					else
 					{
-						offX = shadow->pos.XYfloat[0];
-						offY = shadow->pos.XYfloat[1];
+						offX = shadow->XYfloat[0];
+						offY = shadow->XYfloat[1];
 						colDeco = color = shadow->color;
 						nvgFontBlur(vg, shadow->blurFloat);
 					}

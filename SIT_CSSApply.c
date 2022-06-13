@@ -639,7 +639,7 @@ static Bool cssApplyMultipleParam(SIT_Widget node, CSSAttr a, STRPTR value)
 		{
 			node->style.boxShadowCount = 0;
 			node->style.boxShadowCountInset = 0;
-			node->style.flags &= ~CSSF_BOXSHADOW;
+			node->layout.flags &= ~(LAYF_HasBoxShadow | LAYF_HasInset);
 			return True;
 		}
 	}
@@ -922,11 +922,10 @@ static Bool cssApplyMultipleParam(SIT_Widget node, CSSAttr a, STRPTR value)
 		break;
 
 	case 2: /* text-shadow */
-		node->style.flags |= CSSF_TEXTSHADOW;
 		for (list = layer, count = 0; list; list = list->next)
 		{
 			TextShadow shadow = (TextShadow) layer->payload;
-			if (shadow->pos.XYfixed[0] == 0 && shadow->pos.XYfixed[1] == 0 && shadow->blurFixed == 0)
+			if (shadow->XYfixed[0] == 0 && shadow->XYfixed[1] == 0 && shadow->blurFixed == 0)
 				/* user wants to cancel text-shadow */
 				shadow->color.val = 0;
 			else
@@ -952,7 +951,6 @@ static Bool cssApplyMultipleParam(SIT_Widget node, CSSAttr a, STRPTR value)
 		break;
 
 	case 3: /* box-shadow -- looks similar to text-shadow but not quite */
-		node->style.flags |= CSSF_BOXSHADOW;
 		for (list = layer, count = 0; list; list = list->next)
 		{
 			BoxShadow shadow = (BoxShadow) layer->payload;
@@ -1466,7 +1464,7 @@ int cssApply(SIT_Widget node)
 	if (node->enabled == 0)
 		state = 7;
 
-	for (rule = (CSSRule) sit.theme, i = 0; ; rule = (CSSRule) (sit.theme + rule->next), i ++)
+	for (rule = (CSSRule) sit.theme, i = 0; rule < (CSSRule) (sit.theme + sit.themeSize); rule = (CSSRule) (sit.theme + rule->next), i ++)
 	{
 		if (cssMatchSelector(stack, level, rule))
 			cssAddStyles(&cssStyles, (STRPTR *) (sit.theme + rule->styles), rule->nbstyles, rule->specif, 1);
