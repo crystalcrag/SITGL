@@ -2,7 +2,7 @@
  * stylesheet that somewhat mimics the style of windows7
  * written by T.Pierron, june 2021
  */
-html   { color: black; font-size: 1.6vw; background: blue }
+html   { color: black; font-size: 2vw; background: blue }
 label  { color: #333 }
 dialog { background: #303238 }
 form   { padding: 0.5em }

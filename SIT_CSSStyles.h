@@ -60,6 +60,8 @@ struct Gradient_t
 	uint8_t  colorStop;     /* number of stops (max 8) */
 	uint8_t  flags;         /* predefined corner [1-16] or 0 to use <orient> field */
 	uint16_t orient;        /* angle [0- 65535] mapped to [0 - 360[deg */
+	ULONG    wxh;           /* gradient was render for this dimension */
+	CStopBuf colors[8];     /* pre-alloc 8 color stops (pairs of color+pos) */
 	union {
 		float rect[4];      /* linear-gradient parameters */
 		struct {
@@ -67,8 +69,6 @@ struct Gradient_t
 			ULONG rx, ry;
 		} radial;           /* radial-gradient param */
 	};
-	ULONG    wxh;           /* gradient was render for this dimension */
-	CStopBuf colors[8];     /* pre-alloc 8 color stops (pairs of color+pos) */
 };
 
 #define GRADIENT_CORNER     31

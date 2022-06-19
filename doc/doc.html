@@ -5807,7 +5807,7 @@ displayed whenever the user right-click on an item in the first column:
 <ol>
   <li><b>Mouse input</b>: if you want to edit a cell based on mouse clicks, just provide the mouse
   coordinates to the <tt>mouseX</tt> and <tt>mouseY</tt> parameter as they were given in the event.
-  <li><b>Row/column</b>: if you want to edit based on its row/column position (typically: in a
+  <li><b>Row/column</b>: if you want to edit a cell based on its row/column position (typically: in a
   <tt>SITE_OnActivate</tt> callback), you can use the following macro (it is an alias to
   <tt>SIT_ListGetItemOver()</tt>):
   <pre><type>int</type> SIT_ListGetItemRect(SIT_Widget, <type>float</type> rect_out[<val>4</val>], <type>int</type> row, <type>int</type> col, SIT_Widget * mouseIsRelTo);</pre>
@@ -5840,7 +5840,7 @@ pointer that is initialized to <tt class="o">NULL</tt>.
   you requested didn't exist.
 </ul>
 
-<p>Sadly, there are still a lot of work for this to work properly: you have now all the information
+<p>Sadly, there are still a lot of work left at this point: you have now all the information
 to <b>create an editbox widget over the cell</b> you want to edit: use the values stored in <tt>rect</tt>
 to set the <tt>SIT_X</tt>, <tt>SIT_Y</tt>, <tt>SIT_Width</tt> and <tt>SIT_Height</tt> properties of the
 new widget.

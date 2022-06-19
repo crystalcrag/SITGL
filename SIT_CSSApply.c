@@ -516,7 +516,7 @@ REAL cssApplyFontSize(SIT_Widget parent, ULONG size)
 	case 1: res *= ref; break; /* em */
 	case 2: res *= ref / 100.0f; break; /* percentage */
 	case 3:
-		res *= sit.scrWidth * sit.fontScale * 0.01f; /* vw */
+		res *= MIN(sit.scrWidth, sit.scrHeight) * sit.fontScale * 0.01f; /* vw */
 		//if (res < sit.defFontHeight)
 		//	res = sit.defFontHeight;
 	}
@@ -1754,10 +1754,10 @@ CSSImage cssAddGradient(Gradient * grad, int w, int h, REAL fh)
 	uint32_t crc;
 	int      old = grad->wxh;
 
-	/* linear gradients use a smaller bitmap than radial */
+	/* linear gradients use a smaller bitmap (1px high, instead of <h>) than radial */
 	gradientGetParam(&init, grad);
 	grad->wxh = 0;
-	crc = crc32(crc32(0, (DATA8) &init.width, 2*sizeof (int)), (DATA8) grad, sizeof *grad);
+	crc = crc32(crc32(0, (DATA8) &init.width, 2*sizeof (int)), (DATA8) grad, grad->flags & GRADIENT_RADIAL ? sizeof *grad : offsetof(Gradient, rect));
 	grad->wxh = old;
 
 	for (img = HEAD(sit.images); img && img->crc32 != crc; NEXT(img));

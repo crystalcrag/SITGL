@@ -282,6 +282,7 @@ static int SIT_TextEditFormatDouble(STRPTR buffer, int max, double val, int roun
 {
 	if (fabs(val) < 1e16)
 	{
+		#if 0
 		/* all of this is to make sure we don't lose precision when displaying number, while not printing garbage either */
 		char * p = buffer;
 		int    n, digit;
@@ -301,6 +302,12 @@ static int SIT_TextEditFormatDouble(STRPTR buffer, int max, double val, int roun
 			else *p = 0;
 		}
 		else p = strchr(buffer, 0);
+		#else
+		/* XXX most of the time roundTo will be set to something reasonable */
+		snprintf(buffer, max, "%.*f", roundTo, val);
+		char * p = strchr(buffer, 0);
+		#endif
+		/* removes useless 0 at the end */
 		for (p --; p >= buffer && *p == '0'; *p-- = 0);
 		if (p >= buffer && *p == '.') *p = 0;
 		return p - buffer;
@@ -375,6 +382,7 @@ static int SIT_TextEditSpinnerClick(SIT_Widget w, APTR cd, APTR ud)
 	double        step = edit->stepValue;
 
 	if (msg == (APTR) 1)
+		/* msg coming from SIT_ActionAdd() */
 		msg = NULL;
 
 	if (msg == NULL || msg->state == SITOM_ButtonPressed)
@@ -416,6 +424,7 @@ static int SIT_TextEditSpinnerClick(SIT_Widget w, APTR cd, APTR ud)
 			}
 			edit->flags |= FLAG_IGNOREEVT;
 			SIT_TextEditNotify(&edit->super);
+			/* first delay is 500ms, next ones are 50ms */
 			return 50;
 		}
 		else if (changes)
@@ -669,7 +678,7 @@ void SIT_TextEditSetText(SIT_Widget w, STRPTR title)
 		edit->ypos = 0;
 		/* text */
 		edit->length = 0;
-		if (edit->text)
+		if (edit->text && edit->text != (DATA8) title)
 			edit->text[0] = 0;
 		if (title == NULL && edit->curValue && edit->editType >= SITV_Integer)
 		{
@@ -2202,9 +2211,9 @@ static int SIT_TextEditPaste(SIT_EditBox state, DATA8 text, int len)
 	int editLen = SIT_TextEditProcessText(state, NULL, text, len);
 	if (editLen > 0)
 	{
-		DATA8 d = editLen > 2047 ? malloc(len+1) : alloca(len+1);
-		SIT_TextEditProcessText(state, d, text, len);
-		text = d;
+		dup = editLen > 2047 ? malloc(len+1) : alloca(len+1);
+		SIT_TextEditProcessText(state, dup, text, len);
+		text = dup;
 		len  = editLen;
 	}
 
@@ -2212,10 +2221,10 @@ static int SIT_TextEditPaste(SIT_EditBox state, DATA8 text, int len)
 	switch (state->super.style.text.transform) {
 	case TextTransformLowercase:
 	case TextTransformUppercase:
-		if (dup)
+		if (dup == NULL && text)
 		{
 			dup = alloca(len);
-			memcpy(dup, text, end-text);
+			memcpy(dup, text, len);
 		}
 		SIT_TextEditTransform(dup, len, state->super.style.text.transform);
 	}

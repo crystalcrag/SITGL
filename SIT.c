@@ -43,12 +43,13 @@
 
 struct SITContext_t sit;
 
+/* this function needs to be called right after opengl context creation (and NOT before) */
 DLLIMP SIT_Widget SIT_Init(int nvgFlags, int width, int height, STRPTR theme, int _1_if_theme_is_path_0_if_string)
 {
 	if (! gladLoadGL())
 		return NULL;
 
-	/* will be needed for high frequency timer */
+	/* needed by high frequency timer */
 	LARGE_INTEGER start;
 	QueryPerformanceCounter(&start);
 	QueryPerformanceFrequency((PLARGE_INTEGER) &sit.QPCfreq);
@@ -96,7 +97,7 @@ DLLIMP SIT_Widget SIT_Init(int nvgFlags, int width, int height, STRPTR theme, in
 	return sit.root;
 }
 
-/* if something fail, better report something meaningful to the user */
+/* if something fails, better report something meaningful to the user */
 DLLIMP STRPTR SIT_GetError(void)
 {
 	switch (sit.errorCode) {
@@ -118,11 +119,7 @@ DLLIMP STRPTR SIT_GetError(void)
 	return sit.relPath;
 }
 
-void SIT_ClearGL(void)
-{
-	glClear(GL_STENCIL_BUFFER_BIT);
-}
-
+/* load bitmap from disk and transfer to GPU (via nanovg) */
 Bool SIT_LoadImg(CSSImage img, STRPTR path, int len, int flags, Bool fromCSS)
 {
 	int himg;
@@ -159,11 +156,13 @@ Bool SIT_LoadImg(CSSImage img, STRPTR path, int len, int flags, Bool fromCSS)
 	return True;
 }
 
+/* retrieve dimension of image in pixels */
 void SIT_GetImageSize(CSSImage img)
 {
 	nvgImageSize(sit.nvgCtx, img->handle, &img->width, &img->height);
 }
 
+/* delete from CPU and GPU */
 static int SIT_FreeImg(SIT_Widget w, APTR cd, APTR ud)
 {
 	CSSImage img, next;
@@ -179,14 +178,16 @@ static int SIT_FreeImg(SIT_Widget w, APTR cd, APTR ud)
 	return 0;
 }
 
+/* schedule image for deletion: don't do right after ref count is 0, we might need it shortly after */
 void SIT_UnloadImg(CSSImage img)
 {
 	img->usage --;
 	if (img->usage == 0 && ! sit.imageCleanup)
-		/* don't delete image: might be needed a short time after */
+		/* typical use case: pushing a button will load a texture for activated state, no need to free right after */
 		sit.imageCleanup = SIT_ActionAdd(NULL, sit.curTime + 30000, -1, SIT_FreeImg, NULL);
 }
 
+/* check timestamp on disk to see if bitmap needs to be updated on the GPU */
 Bool SIT_IsImageModified(CSSImage img, STRPTR path, Bool fromCSS)
 {
 	/* bitmap might have changed */
@@ -300,7 +301,7 @@ static int SIT_MessageBox(STRPTR text, STRPTR title, int flags)
 	return MessageBox(mainWnd, text16, title16, flags);
 }
 
-/* report an error and quit */
+/* report an error and quit (only function that can be used before SIT_Init()) */
 DLLIMP void SIT_Log(int level, STRPTR fmt, ...)
 {
 	static int flags[] = {
@@ -323,9 +324,6 @@ DLLIMP void SIT_Log(int level, STRPTR fmt, ...)
 		break;
 	}
 	va_end(args);
-
-	if (level == SIT_CRITICAL)
-		exit(1);
 }
 
 /* simple function to copy block of UTF-8 text to clipboard */
@@ -438,6 +436,7 @@ DLLIMP SIT_Widget SIT_GetById(SIT_Widget parent, STRPTR utf8name)
 	return SIT_FindControl(parent, utf8name, strlen(utf8name) + 1, True);
 }
 
+/* change keyboard focus */
 DLLIMP void SIT_SetFocus(SIT_Widget w)
 {
 	SIT_Widget old = sit.focus;
@@ -462,6 +461,7 @@ DLLIMP void SIT_SetFocus(SIT_Widget w)
 	}
 }
 
+/* only useful with SIT_RefreshMode set to SITV_RefreshAsNeeded */
 DLLIMP void SIT_ForceRefresh(void)
 {
 	sit.dirty = 1;
@@ -477,7 +477,7 @@ DLLIMP SIT_Widget SIT_GetFocus(void)
 	return sit.focus;
 }
 
-/* we are not in control from the event loop, but we can signal when to exit from it */
+/* SITGL does not control the event loop, but we can signal when to exit from it */
 DLLIMP void SIT_Exit(int exit)
 {
 	int * code = ((SIT_App)sit.root)->exitCode;
@@ -557,9 +557,9 @@ DLLIMP void SIT_Nuke(int what)
 	}
 }
 
+/* clear the CSS styles of all widgets */
 void SIT_NukeCSS(void)
 {
-	/* clear all styles of all widgets */
 	SIT_Widget list;
 	CSSImage   img;
 	for (list = sit.root; ; )
@@ -594,27 +594,6 @@ DLLIMP Bool SIT_ParseCSSColor(STRPTR cssColor, uint8_t ret[4])
 {
 	return cssParseColor(&cssColor, (CSSColor *) ret);
 }
-
-#if 0
-static int SIT_CalcFade(SIT_Widget w, APTR cd, APTR ud)
-{
-	SIT_Action act = cd;
-	int alpha = roundf((sit.curTime - act->start) * 255 / (act->end - act->start));
-	if (alpha > 255) alpha = 255;
-	sit.fadeToRGBA[3] = alpha;
-	return 0;
-}
-
-/* very common feature */
-DLLIMP void SIT_InitFade(DATA8 rgb, float time_in_ms)
-{
-	if (sit.fade) return;
-	memcpy(sit.fadeToRGBA, rgb, 3);
-	sit.fadeToRGBA[3] = 0;
-	sit.fade = 1;
-	SIT_ActionAdd(NULL, sit.curTime, sit.curTime + time_in_ms, SIT_CalcFade, SITV_AssignAction);
-}
-#endif
 
 /*
  * async actions
@@ -924,10 +903,6 @@ int gladLoadGL(void)
 		STRPTR name;
 		gladGetProcAddressPtr = (void *) GetProcAddress(opengl, "wglGetProcAddress");
 		if ((glad_glBlendFuncSeparate  = load(name = "glBlendFuncSeparate"))
-		 #ifdef DEBUG_SIT
-		 && (glad_glGetShaderInfoLog   = load(name = "glGetShaderInfoLog"))
-		 && (glad_glGetProgramInfoLog  = load(name = "glGetProgramInfoLog"))
-		 #endif
 		 && (glad_glCreateProgram      = load(name = "glCreateProgram"))
 		 && (glad_glCreateShader       = load(name = "glCreateShader"))
 		 && (glad_glShaderSource       = load(name = "glShaderSource"))
@@ -992,6 +967,10 @@ int gladLoadGL(void)
 		 && (glad_glFramebufferRenderbuffer  = load(name = "glFramebufferRenderbuffer"))
 		 && (glad_glCheckFramebufferStatus   = load(name = "glCheckFramebufferStatus"))
 		 && (glad_glDeleteFramebuffers       = load(name = "glDeleteFramebuffers"))
+		 #ifdef DEBUG_SIT
+		 && (glad_glGetShaderInfoLog         = load(name = "glGetShaderInfoLog"))
+		 && (glad_glGetProgramInfoLog        = load(name = "glGetProgramInfoLog"))
+		 #endif
 		 && (glad_glDeleteRenderbuffers      = load(name = "glDeleteRenderbuffers")))
 		{
 			sit.cssFile = NULL;

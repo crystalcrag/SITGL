@@ -3,7 +3,7 @@
  *
  * Written by T.Pierron, feb 2022.
  */
-html    { color: #dfdfdf; font-size: 1.2vw; background: linear-gradient(to bottom left, #444, #393931); padding: 0.5em }
+html    { color: #dfdfdf; font-size: 2vw; background: linear-gradient(to bottom left, #444, #393931); padding: 0.5em }
 canvas  { background: url(checkboard.png); border: 2px solid black; box-shadow: 4px 4px rgba(black, 0.3) }
 .editor { background: white }
 .dim    { color: white; padding: 1em; text-shadow: 0.1em 0.1em #888; font-size: 1.2em }

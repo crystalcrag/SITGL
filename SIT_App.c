@@ -239,7 +239,7 @@ static int SIT_AppSetValues(SIT_Widget w, APTR call_data, APTR user_data)
 		/* second arg to SIT_AddFont */
 		if (val->pointer == NULL)
 		{
-			/* XXX nanovg does have a way to delete font */
+			/* XXX nanovg does not have a way to delete a font */
 			return 0;
 		}
 		if (! FileExists(val->pointer))

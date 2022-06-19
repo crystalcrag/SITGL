@@ -110,6 +110,7 @@ void SIT_ChangeStyleSheet(STRPTR path, int mode);
 void SIT_ListClearStyles(SIT_Widget, int flags);
 void SIT_ChangeChildrenStyle(SIT_Widget root, int flags);
 void SIT_GeomRemoveChildrenOf(SIT_Widget * first, SIT_Widget parent);
+REAL SIT_PercentMovable(SIT_Widget, int side);
 
 int  SIT_TextEditKey(SIT_EditBox, int key);
 int  SIT_TextEditInsertText(SIT_EditBox, DATA8 utf8);

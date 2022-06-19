@@ -202,8 +202,10 @@ static int SIT_ListMeasure(SIT_Widget w, APTR cd, APTR ud)
 		list->scrollHeight = size.height - list->hdrHeight;
 		size.width  += w->padding[0] + w->padding[1];
 		size.height += w->padding[1] + w->padding[3];
-		if (pref->width  < 0) pref->width  = 0;
-		if (pref->height < 0) pref->height = 0;
+		if (pref->width < 0)
+			pref->width = SIT_PercentMovable(w, CSS_LEFT) == SIT_PercentMovable(w, CSS_RIGHT) ? size.width : 0;
+		if (pref->height < 0)
+			pref->height = SIT_PercentMovable(w, CSS_TOP) == SIT_PercentMovable(w, CSS_BOTTOM) ? size.height : 0;
 		list->lbFlags |= SITV_ListMeasured;
 	}
 	else /* SITV_ListViewIcon */
@@ -251,6 +253,7 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 	pos.left += w->offsetX;
 	pos.height += w->layout.padding.bottom + w->layout.padding.top;
 	list->lbFlags &= ~SITV_ReorgColumns;
+	if (sel == NULL) sel = td;
 
 	if (icon == 0)
 	{
@@ -375,7 +378,7 @@ static int SIT_ListRender(SIT_Widget w, APTR cd, APTR ud)
 			else SIT_ListRestoreChildren(node, cell);
 
 			SIT_LayoutCSSSize(node);
-			if (node == sel)
+			if (node == sel && icon == 0)
 			{
 				/* background is already rendered */
 				uint8_t bgCount = node->style.bgCount;

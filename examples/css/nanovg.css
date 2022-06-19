@@ -1,5 +1,5 @@
 /* stylesheet that somewhat mimics the style of nanovg */
-html { color: #dfdfdf; font-size: 1.2vw; background: linear-gradient(to bottom, #2f2f34, #25262b 50%, #25262b); padding: 0.5em }
+html { color: #dfdfdf; font-size: 2vw; background: linear-gradient(to bottom, #2f2f34, #25262b 50%, #25262b); padding: 0.5em }
 
 dialog, form { border-radius: 0.2em; box-shadow: 0 0 20px #444; border-bottom: 1px solid black;
 	     background: #303238; padding: 2em 0.5em 0.5em 0.5em }

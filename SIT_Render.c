@@ -5,6 +5,7 @@
  * written by T.Pierron, mar 2010.
  */
 
+#include <glad.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1970,8 +1971,6 @@ DLLIMP void SIT_RenderNode(SIT_Widget root)
 	}
 }
 
-void SIT_ClearGL(void);
-
 /* render all visible nodes in the hierarchy */
 DLLIMP SIT_RENDER SIT_RenderNodes(double time)
 {
@@ -2018,7 +2017,7 @@ DLLIMP SIT_RENDER SIT_RenderNodes(double time)
 
 	sit.dirty = False;
 
-	SIT_ClearGL();
+	glClear(GL_STENCIL_BUFFER_BIT);
 	nvgBeginFrame(sit.nvgCtx, sit.scrWidth, sit.scrHeight, 1);
 
 	SIT_RenderNode(sit.root);

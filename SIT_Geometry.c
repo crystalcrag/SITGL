@@ -18,7 +18,7 @@
 static uint8_t relative[] = {0, 0, 0, 1, 1, 1, 1, 0};
 
 /* check how much the widget <w> will adjust its edge[side] relative to width/height of its container [0-1.0] */
-static REAL SIT_PercentMovable(SIT_Widget w, int side)
+REAL SIT_PercentMovable(SIT_Widget w, int side)
 {
 	SIT_Widget sub;
 	for (sub = w; ; )
