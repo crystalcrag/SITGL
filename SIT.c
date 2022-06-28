@@ -700,14 +700,21 @@ static struct
 	/* statistics: total time it took to draw <fps> frames */
 	int      time;
 	uint64_t lastTS;
+	double   curFPS;
 
 }	curframe;
 
 DLLIMP int FrameSetFPS(int fps)
 {
-	if (fps > curframe.fps)
+	if (fps == 0)
 	{
-		if (curframe.delays) free(curframe.delays);
+		free(curframe.delays);
+		curframe.fps = fps;
+		return 1;
+	}
+	if (fps != curframe.fps)
+	{
+		free(curframe.delays);
 		curframe.fps = fps;
 		curframe.delays = malloc(fps * sizeof (int));
 	}
@@ -733,17 +740,32 @@ DLLIMP int FrameSetFPS(int fps)
 
 DLLIMP double FrameGetFPS(void)
 {
-	return curframe.fps / (0.001 * curframe.time * sit.QPCfreqinv);
+	return curframe.fps == 0 ? curframe.curFPS : curframe.fps / (0.001 * curframe.time * sit.QPCfreqinv);
 }
 
 DLLIMP void FrameWaitNext(void)
 {
+	if (curframe.fps == 0)
+	{
+		/* unlimited */
+		curframe.frame ++;
+		QueryPerformanceCounter(&curframe.next);
+		curframe.time = curframe.next.QuadPart - curframe.lastTS;
+		if (curframe.time > sit.QPCfreq)
+		{
+			curframe.lastTS = curframe.next.QuadPart;
+			curframe.curFPS = curframe.frame / (0.001 * curframe.time * sit.QPCfreqinv);
+			curframe.time -= sit.QPCfreq;
+			curframe.frame = 0;
+		}
+		return;
+	}
 	uint64_t wait = curframe.next.QuadPart + curframe.delays[curframe.frame];
 	curframe.frame ++;
-	QueryPerformanceCounter(&curframe.next);
 	if (curframe.frame >= curframe.fps)
 	{
 		/* fps stat: updated every second at the earliest */
+		QueryPerformanceCounter(&curframe.next);
 		curframe.time   = curframe.next.QuadPart - curframe.lastTS;
 		curframe.lastTS = curframe.next.QuadPart;
 		curframe.frame  = 0;

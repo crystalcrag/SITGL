@@ -1255,9 +1255,6 @@ void layoutRecalcWords(SIT_Widget w)
 	REAL     fh, bl, space;
 	int      i = w->layout.wordwrap.count;
 
-	if (strcmp(w->name, "f64") == 0)
-		puts("here");
-
 	for (word = vector_first(w->layout.wordwrap), old = NULL, space = 0; i > 0; word ++, i --)
 	{
 		if (old != word->node)

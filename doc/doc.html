@@ -140,7 +140,7 @@
  <a class="sub2" href="#advi18n">Advanced features</a>
   <a class="sub3" href="#i18nbdummy">Dummy strings</a>
   <a class="sub3" href="#i18nplural">Handling plural form</a>
-  <a class="sub3" href="#i18nmultiline">Multi-lines strings</a>
+  <a class="sub3" href="#i18nmultiline">Multi-line strings</a>
   <a class="sub3" href="#i18npunct">Handling punctuation</a>
 
 <a class="annex sub1" href="#annexA"><span>UtilityLib API</span></a>
@@ -4303,6 +4303,7 @@ layout, that can accommodate almost every situation, with very little effort.
 
   <ul>
 	<li><tt class="dt">SITV_Multiline</tt>: default value, overflow is disabled.
+	<li><tt class="dt">SITV_Hidden</tt>
 	<li><tt class="dt">SITV_EllipsisRight</tt>
 	<li><tt class="dt">SITV_EllipsisLeft</tt>
 	<li><tt class="dt">SITV_EllipsisPath</tt> or <tt class="dt">SITV_EllipsisMiddle</tt>
@@ -4313,7 +4314,8 @@ layout, that can accommodate almost every situation, with very little effort.
 	<img src="images/SIT_LABEL_overflow.png">
   </div>
 
-  <p><span class="n">Note</span>: text-overflow will always be <tt>...</tt>.
+  <p><span class="n">Note</span>: you can customize the text used for overflow (in this case <tt>...</tt>)
+  using the CSS property <tt>text-overflow</tt>.
 
 </ul>
 
@@ -7856,7 +7858,7 @@ to enclose them with a dummy declaration. Take also note that no quantity
 case is not handled by this function, you'll have to add special processing
 if you ever plan to handle that case.</p>
 
-<h4 id="i18nmultiline">Multi-lines strings</h4>
+<h4 id="i18nmultiline">Multi-line strings</h4>
 
 <p>Sometimes you'll have to translate very long strings or strings that will be easier to read if they
 are <b>split across multiple lines</b>. Macros/functions can process multi-line strings without problems,
@@ -8037,17 +8039,25 @@ a double-linked list might not be the right solution.
 
 <p>For reference, here is a quick summary of all the functions related to double-linked list manipulation:
 <ul>
-  <li><tt class="dt"><type>void</type> ListAddHead(ListHead *, ListNode *);</tt>,<br><tt class="dt"><type>void</type> ListAddTail(ListHead *, ListNode *);</tt>
-  <p>Add an item at the beginning/end of the list.
+  <li><tt class="dt"><type>void</type> ListAddHead(ListHead *, ListNode * item);</tt>,<br><tt class="dt"><type>void</type> ListAddTail(ListHead *, ListNode * item);</tt>
+  <p><b>Add an item at the beginning/end</b> of the list. Only a single item will be inserted in the list,
+  even if <tt>item</tt> has a valid <tt>ln_Next</tt> pointer stored in it. In fact, the <tt>ln_Prev</tt>
+  and <tt>ln_Next</tt> won't even be read, therefore you do not have to initialize these fields before
+  calling this function.
+  
+  <p>That also means, this API <b>will not</b> try to detect if the item was  already inserted in the
+  list. If that the case, you'll probably get a circular reference, that will cause an infinite loop
+  when scanning items later.
+
   <li><tt class="dt"><type>void</type> ListInsert(ListHead *, ListNode * item, ListNode * insert_after);</tt>
-  <p>Insert item at an arbitrary position. <tt>insert_after</tt> must be part of the list, otherwise
+  <p><b>Insert item at an arbitrary position</b>. <tt>insert_after</tt> must be part of the list, otherwise
   bad thing will happen (you can expect a segmentation fault at some point). If <tt>insert_after</tt>
   is <tt class="o">NULL</tt>, insert will happen at the beginning. To insert at the end, use the <tt>lh_Tail</tt>
   field in the <tt>ListHead</tt>. To do an insert before, assuming <tt>insert_after</tt> is not <tt class="o">NULL</tt>,
   simply deference the <tt>ln_Prev</tt> field of the node.
 
-  <li><tt class="dt"><type>void</type> ListInsertSort(ListHead *, ListNode *, ListSortFunc);</tt>
-  <p>Insert an item based on an order function.
+  <p>Like <tt>ListAddHead()</tt> and <tt>ListAddTail()</tt>, the content of <tt>item</tt> will not be
+  read, only written, therefore the same constraints applied to this parameter.
 
   <li><tt class="dt"><type>void</type> ListSort(ListHead *, ListSortFunc);</tt>
   <p>Rearrange the list so that all items are sorted using the given callback. The algorithm used in
@@ -8217,7 +8227,7 @@ are straightforward, but here is the complete list:
   <p><b>Copy the file and everything associated with it</b> (including NTFS alternate data stream for example).
 
   <li><tt class="dt"><type>Bool</type> IsSameFile(<type>STRPTR</type> file1, <type>STRPTR</type> file2);</tt>
-  <p>Check if two semmingly different path point in fact to the same file. Useful if you have a relative
+  <p>Check if two seemingly different paths point in fact to the same file. Useful if you have a relative
   and absolute path, and want to know if they are the same.
 
   <li><tt class="dt"><type>Bool</type> IsRelativePath(<type>STRPTR</type> file);</tt>
@@ -8457,6 +8467,9 @@ API.
   <p>Before you can use <tt>FrameWaitNext()</tt>, you need to initialize the <b>targeted frame per
   second</b> you want. This function can be called at any point, but this is usually done before the main
   event loop starts.
+  
+  <p><span class="n">Note</span>: if you want uncapped framerate, you can use <tt>0</tt> as for the
+  <tt>fps</tt> parameter.
 
   <li><tt class="dt"><type>void</type> FrameWaitNext(<type>void</type>);</tt>
   <p>This function will <b>wait until the remainder of the frame</b> time window. It will attempt to do a

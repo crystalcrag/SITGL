@@ -539,6 +539,7 @@ void SIT_LayoutCSSSize(SIT_Widget root)
 	root->layout.pos.top    = root->box.top  + root->padding[1];
 	root->layout.pos.width  = root->box.right  - root->padding[2] - root->layout.pos.left;
 	root->layout.pos.height = root->box.bottom - root->padding[3] - root->layout.pos.top;
+	root->layout.flags &= ~LAYF_VisibleChanged;
 
 	c = root->parent;
 	if (c && root->type != SIT_DIALOG)
@@ -573,6 +574,7 @@ void SIT_LayoutCSSSize(SIT_Widget root)
 			c->offsetX = root->offsetX + root->box.left;
 			c->offsetY = root->offsetY + root->box.top;
 			c->style.flags &= ~CSSF_BORDERIMG;
+			c->layout.flags &= ~LAYF_VisibleChanged;
 			layoutAdjustBorderRadius(c);
 			layoutAlignText(c);
 			if (HAS_EVT(c, SITE_OnResize) && ! (ALMOST0(size.width-c->layout.pos.width) && ALMOST0(size.height-c->layout.pos.height)))
@@ -721,7 +723,11 @@ void SIT_ReflowLayout(SIT_Widget list)
 			list = list->geomChanged;
 			continue;
 		}
-		memcpy(dim, &list->box, sizeof dim);
+		if ((list->layout.flags & LAYF_VisibleChanged) && list->visible)
+			memset(dim, 0, sizeof dim);
+		else
+			memcpy(dim, &list->box, sizeof dim);
+
 		memcpy(pbox, &parent->box, sizeof pbox);
 		if ((list->flags & SITF_GeomNotified) == 0)
 		{

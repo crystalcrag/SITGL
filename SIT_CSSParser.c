@@ -905,9 +905,9 @@ static STRPTR cssParseStyles(STRPTR start, int * count)
 				}
 				else if (chr == '\"' || chr == '\'')
 				{
-					fmt = cssSkipString(fmt);
-					/* unterminated literal not at end of stream */
-					if (fmt[-1] != chr && *fmt)
+					start = fmt + 1;
+					if (cssTokenizer(fmt, &fmt) != CSST_STRING)
+						/* unterminated literal not at end of stream */
 						goto error;
 				}
 				else fmt ++;

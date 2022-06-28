@@ -168,6 +168,8 @@ static Bool SIT_ProcessAccel(int capture, int key)
 			if (w)
 			{
 				int * exit;
+				if (! w->visible)
+					return False;
 				switch (evt) {
 				case SITE_OnClose:
 					switch (w->type) {

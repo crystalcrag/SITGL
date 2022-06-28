@@ -1260,6 +1260,7 @@ void cssSetDefault(SIT_Widget node)
 		((SIT_EditBox)node)->caret.val = 0;
 	node->layout.flags &= ~LAYF_HasBoxShadow;
 	node->style.overflow = oldFlow; /* hmm, not set through CSS :-/ */
+	node->style.textOverflow = "...";
 
 	GetSelectionColor(node->style.fgSel.rgba, node->style.bgSel.rgba);
 }

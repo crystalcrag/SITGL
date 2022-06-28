@@ -5,7 +5,6 @@
  * written by T.Pierron, mar 2010.
  */
 
-#include <glad.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,6 +14,7 @@
 #include "SIT_CSSLayout.h"
 #include "SIT_CSSParser.h"
 #include "nanovg.h"
+#include "glad.h"
 
 /* optimize if border is fully opaque */
 static Bool renderIsFullyOpaqueBorder(Border * borders, int side)
@@ -430,8 +430,12 @@ static void renderBackground(SIT_Widget node, RectF * alt, int sides)
 			}
 			else /* values */
 			{
+				RectF old = node->layout.pos;
+				node->layout.pos.width = rect.width;
+				node->layout.pos.height = rect.height;
 				bg->dim.width  = ToPoints(node, node, bg->bgw, CSS_LEFT | CSS_ADDPAD);
 				bg->dim.height = ToPoints(node, node, bg->bgh, CSS_TOP  | CSS_ADDPAD);
+				node->layout.pos = old;
 				if (bg->dim.width == 0)
 					bg->dim.width = img->width * bg->dim.height / img->height;
 				else if (bg->dim.height == 0)
@@ -1401,8 +1405,6 @@ struct Overflow_t
 /* main function for rendering text from inlines */
 Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 {
-	static TEXT textOverflow[] = {'.', '.', '.'}; /* don't want final 0 */
-
 	NVGcontext * vg = sit.nvgCtx;
 	SIT_Widget   old;
 	Overflow     overflow = {0};
@@ -1412,6 +1414,11 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 	int          count = node->layout.wordwrap.count;
 
 	switch (node->style.overflow) {
+	case SITV_Hidden:
+		node->style.textOverflow = "";
+		overflow.width = node->layout.pos.width;
+		overflow.state = overflow.init = OVERFLOW_RIGHT;
+		break;
 	case SITV_EllipsisRight:
 		overflow.width = node->layout.pos.width;
 		overflow.state = overflow.init = OVERFLOW_RIGHT;
@@ -1547,7 +1554,7 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 				nvgFontFaceId(vg, old->style.font.handle);
 				nvgFontSize(vg, old->style.font.size);
 				if (overflow.state)
-					overflow.ellipsis = nvgTextBounds(vg, 0, 0, textOverflow, EOT(textOverflow), NULL);
+					overflow.ellipsis = nvgTextBounds(vg, 0, 0, node->style.textOverflow, NULL, NULL);
 			}
 			REAL xf, yf;
 			word = *w;
@@ -1585,8 +1592,8 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 				{
 					if (overflow.state != OVERFLOW_MIDDLE)
 					{
-						word.word  = textOverflow;
-						word.n     = DIM(textOverflow);
+						word.word  = node->style.textOverflow;
+						word.n     = strlen(node->style.textOverflow);
 						word.width = ellipse.width = overflow.ellipsis;
 						word.space = 0;
 						overflow.state = OVERFLOW_LWORDSKIP;
@@ -1609,8 +1616,8 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 				word.n = nvgTextFit(vg, word.word, word.word + word.n, overflow.width - overflow.ellipsis - (xf - yf), &word.width);
 				word.space = 0;
 				ellipse = word;
-				ellipse.word   = textOverflow;
-				ellipse.n      = DIM(textOverflow);
+				ellipse.word   = node->style.textOverflow;
+				ellipse.n      = strlen(node->style.textOverflow);
 				ellipse.width  = overflow.ellipsis;
 				overflow.state = node->style.overflow == SITV_EllipsisMiddle ? OVERFLOW_MWORDSKIP : OVERFLOW_RWORDELIPSE;
 				break;
@@ -1701,7 +1708,7 @@ Bool renderWords(SIT_Widget node, RectF * box, int shadowLayer)
 				overflow.state = overflow.init;
 			}
 			else x += word.width + word.space + word.marginR, first = 0;
-			if (word.word == textOverflow || overflow.state == OVERFLOW_MWORDSKIP)
+			if (word.word == node->style.textOverflow || overflow.state == OVERFLOW_MWORDSKIP)
 				w --, i ++, count ++;
 		}
 		if (overflow.state == OVERFLOW_RWORDELIPSE)

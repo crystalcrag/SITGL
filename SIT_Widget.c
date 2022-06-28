@@ -214,6 +214,7 @@ int SIT_SetWidgetValue(SIT_Widget w, APTR cd, APTR ud)
 		w->composited = val->boolean;
 		break;
 	case SIT_Visible:
+		w->layout.flags |= LAYF_VisibleChanged;
 		if (w->type == SIT_TOOLTIP)
 		{
 			if (val->boolean == 0 && sit.curTooltip == w)
@@ -1105,7 +1106,6 @@ void SIT_InitiateReflow(SIT_Widget w)
 	sit.geomList = w;
 }
 
-/* was originally a macro :-( */
 Bool IsVisible(SIT_Widget w)
 {
 	while (w->visible == 1 && (w->flags & SITF_TopLevel) == 0)

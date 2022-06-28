@@ -738,11 +738,21 @@ DLLIMP int SIT_TextGetWithSoftline(SIT_Widget w, STRPTR buffer, int max)
 	return length;
 }
 
-DLLIMP int SIT_TextEditLineLength(SIT_Widget w, int line)
+DLLIMP int SIT_TextEditLineLength(SIT_Widget w, int line, int * lineStart)
 {
 	if (w == NULL || w->type != SIT_EDITBOX) return 0;
 	SIT_EditBox edit = (SIT_EditBox) w;
-	if (line >= edit->rowCount) return 0;
+	if (line >= edit->rowCount)
+	{
+		if (lineStart) *lineStart = edit->length;
+		return 0;
+	}
+	if (lineStart)
+	{
+		int i, start;
+		for (i = 0, start = 0; i < line; start += edit->rows[i].bytes, i ++);
+		*lineStart = start;
+	}
 	return edit->rows[line].bytes;
 }
 
