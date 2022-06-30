@@ -20,6 +20,8 @@ typedef struct VTIter_t         VTIter_t;
 typedef struct VTLine_t *       VTLine;
 typedef uint16_t *              DATA16;
 
+static VirtualTerm term;
+
 struct VTCoord_t
 {
 	int line;
@@ -50,7 +52,7 @@ struct VirtualTerm_t
 	uint8_t    tabSize;
 	uint8_t    hasScroll;
 	uint8_t    hasSelect;
-	uint8_t    wordSelect;
+	uint8_t    wordSelect;      /* WSEL_* */
 
 	int8_t     dx, dy;          /* used to render text-shadow */
 	int8_t     autoScrollDir;
@@ -72,11 +74,11 @@ struct VirtualTerm_t
 	int        bufUsage;        /* bytes currently stored in VTerm (including attributes) */
 	int        bufMax;          /* max bytes that can be stored */
 	int        bufStart;        /* start of content within the ring buffer */
-	int        allocLines;      /* max capacity on <styles> and <lines> array */
+	int        allocLines;      /* max capacity for <lines> array */
 	int        topLine;
 	int        topTarget;
 	int        topOffset;       /* pixel offset to shift lines in content area */
-	int        totalLines;      /* number of items in <styles> and <lines> array */
+	int        totalLines;      /* number of initialized items for <lines> array */
 	int        totalBytes;
 	int        formatWidth;     /* need to redo word wrapping if it differs */
 	int        width, height;   /* size of content area in px */
@@ -120,11 +122,20 @@ struct VTIter_t
 #define VT_ATTRLINE   0x0200
 #define VT_ATTRBG     0x00f0
 
+enum /* possible values for <wordSelect> */
+{
+	WSEL_CHARACTER,
+	WSEL_WORDS_INIT,
+	WSEL_WORDS,
+	WSEL_LINES_INIT,
+	WSEL_LINES,
+};
+
 static Bool VTMarkSelection(VirtualTerm vt);
 static int VTRawKey(SIT_Widget w, APTR cd, APTR ud);
 
 static uint8_t VTDefPalette[] = {
-	0xff, 0xff, 0xff, 0xff,
+	0x00, 0x00, 0x00, 0xff,
 	0x00, 0x00, 0xAA, 0xff,
 	0x00, 0xAA, 0x00, 0xff,
 	0x00, 0xAA, 0xAA, 0xff,
@@ -139,7 +150,7 @@ static uint8_t VTDefPalette[] = {
 	0xFF, 0x55, 0x55, 0xff,
 	0xFF, 0x55, 0xFF, 0xff,
 	0xFF, 0xFF, 0x55, 0xff,
-	0x00, 0x00, 0x00, 0xff,
+	0xff, 0xff, 0xff, 0xff,
 };
 
 static uint8_t VTUtf8Next[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 3, 4};
@@ -165,7 +176,6 @@ static void VTAdjustScroll(VirtualTerm vt)
 
 	if (height > vt->height)
 	{
-		fprintf(stderr, "height = %d, total = %d\n", height, vt->totalLines);
 		if (! vt->hasScroll)
 		{
 			SIT_SetValues(vt->scroll, SIT_Visible, 1, NULL);
@@ -245,7 +255,10 @@ static float nvgTextBoundsWithTabs(VirtualTerm vt, NVGcontext * vg, float x, DAT
 		DATA8 next;
 		for (next = start; next < end && *next >= 32; next ++);
 		if (next > start)
+		{
 			x += nvgTextBounds(vg, x, 0, start, next, NULL);
+			if (next == end) break;
+		}
 		switch (*next) {
 		case 27:
 			if (attrs) attrs[0] = (next[1] << 8) | next[2];
@@ -284,8 +297,11 @@ static int VTTextFit(VirtualTerm vt, NVGcontext * vg, float max, DATA8 start, DA
 	nvgFontFaceId(vg, *attr & VT_ATTRBOLD ? vt->fontBoldId : vt->fontId);
 	eof = vt->buffer + vt->bufMax;
 
+	/* indent on the start of a word wrapped line */
+	x = start != vt->buffer + vt->bufStart && start[start == vt->buffer ? vt->bufMax-1 : -1] != '\n' ? attr[1] : 0;
+
 	/* try to fit as many characters into <max> width */
-	for (x = start != vt->buffer + vt->bufStart && start[start == vt->buffer ? vt->bufMax-1 : -1] != '\n' ? attr[1] : 0, len = 0, next = start; next != end; )
+	for (len = 0, next = start; next != end; )
 	{
 		/* note: cannot use iterators at this point, since we are in the process of building line ptr (which are needed by iterators) */
 		DATA8   frag;
@@ -299,7 +315,10 @@ static int VTTextFit(VirtualTerm vt, NVGcontext * vg, float max, DATA8 start, DA
 		case 27:
 		case 28:
 		case 29: eol = next + 3; fit = 3; break; /* style attribute: always 3 bytes */
-		case '\n': goto break_all;
+		case '\n':
+			if (round && x + (vt->spaceLen >> 1) < max)
+				len ++;
+			goto break_all;
 		case '\t': eol = next + 1; fit = 1; break;
 		default:
 			/* stop at the next EOL/tab/attr */
@@ -902,6 +921,13 @@ static int VTPaint(SIT_Widget w, APTR cd, APTR ud)
 			}
 			p = next;
 		}
+		if (p[-1] == 3 && (iter.curLine != iter.endLine || hasNL))
+		{
+			/* last character selected: extend selection up to end of line */
+			nvgBeginPath(vg);
+			nvgRect(vg, x2, y, vt->width - x2 + paint->x, vt->lineHeight - vt->linePadding);
+			nvgFill(vg);
+		}
 
 		/* shadow and text on top */
 		SITTSH textShadow = paint->shadow;
@@ -1158,8 +1184,8 @@ static void VTAddText(VirtualTerm vt, DATA8 text)
 			for (end = text += 1; *end && ! isalpha(*end); end ++);
 			switch (*end) {
 			case 'm': chr = VTParseAttribute(text, buffer, vt->curAttr); break;
-			case 's': chr = VTParseSpaceWidth(text, buffer, 28, vt->curAttr); break; /* ext */
-			case 'i': chr = VTParseSpaceWidth(text, buffer, 29, vt->curAttr); break; /* ext */
+			case 's': chr = VTParseSpaceWidth(text, buffer, 28, vt->curAttr); break; /* ext: variable space */
+			case 'i': chr = VTParseSpaceWidth(text, buffer, 29, vt->curAttr); break; /* ext: indent wrapped lines */
 			default:  chr = 0;
 			}
 			text = end + 1;
@@ -1190,7 +1216,7 @@ static void VTClearAll(VirtualTerm vt)
 	vt->lines = NULL;
 	vt->buffer = NULL;
 	vt->hasSelect = 0;
-	vt->wordSelect = 0;
+	vt->wordSelect = WSEL_CHARACTER;
 	vt->autoScrollDir = 0;
 	vt->allocLines = 0;
 	vt->bufUsage = vt->bufMax = vt->bufStart = 0;
@@ -1503,10 +1529,15 @@ static int VTAdjustCoordNextWord(VirtualTerm vt, VTCoord_t * coord)
 /* update selection flags on lines from selCur to selEnd */
 static Bool VTMarkSelection(VirtualTerm vt)
 {
-	if (vt->wordSelect != 2) /* initial point for word selection */
-	{
+	switch (vt->wordSelect) {
+	case WSEL_WORDS:
 		/* move mouse over same character */
 		if (memcmp(&vt->selEnd, &vt->selCur, sizeof vt->selEnd) == 0)
+			return False;
+		break;
+	case WSEL_LINES:
+		/* move cursor over same line */
+		if (vt->selEnd.line == vt->selCur.line)
 			return False;
 	}
 
@@ -1534,22 +1565,47 @@ static Bool VTMarkSelection(VirtualTerm vt)
 	}
 
 	line = vt->lines + vt->selEnd.line;
-	line->styles = (line->styles & VT_SELCLEAR) | (vt->selEnd.line < vt->selStart.line ? VT_SELSTART : VT_SELEND);
+	line->styles = (line->styles & VT_SELCLEAR) | (vt->wordSelect >= WSEL_LINES ? VT_SELWHOLE : vt->selEnd.line < vt->selStart.line ? VT_SELSTART : VT_SELEND);
 
+	start = vt->selEnd.line == vt->selStart.line ? VT_SELSTART | VT_SELEND : 0;
 	if (vt->selStart.line < vt->selEnd.line || (vt->selStart.line == vt->selEnd.line && vt->selStart.chr <= vt->selEnd.chr))
 	{
-		vt->colStart = vt->wordSelect ? VTAdjustCoordPrevWord(vt, &vt->selStart) : vt->selStart.chr;
-		vt->colEnd   = vt->wordSelect ? VTAdjustCoordNextWord(vt, &vt->selEnd)   : vt->selEnd.chr;
-		start = VT_SELSTART;
+		start |= VT_SELSTART;
+		switch (vt->wordSelect) {
+		case WSEL_WORDS:
+		case WSEL_WORDS_INIT:
+			vt->colStart = VTAdjustCoordPrevWord(vt, &vt->selStart);
+			vt->colEnd   = VTAdjustCoordNextWord(vt, &vt->selEnd);
+			break;
+		case WSEL_LINES:
+		case WSEL_LINES_INIT:
+			start = VT_SELWHOLE;
+			// no break;
+		default:
+			vt->colStart = vt->selStart.chr;
+			vt->colEnd   = vt->selEnd.chr;
+		}
 	}
 	else
 	{
-		vt->colStart = vt->wordSelect ? VTAdjustCoordPrevWord(vt, &vt->selEnd)   : vt->selEnd.chr;
-		vt->colEnd   = vt->wordSelect ? VTAdjustCoordNextWord(vt, &vt->selStart) : vt->selStart.chr;
-		start = VT_SELEND;
+		start |= VT_SELEND;
+		switch (vt->wordSelect) {
+		case WSEL_WORDS:
+		case WSEL_WORDS_INIT:
+			vt->colStart = VTAdjustCoordPrevWord(vt, &vt->selEnd);
+			vt->colEnd   = VTAdjustCoordNextWord(vt, &vt->selStart);
+			break;
+		case WSEL_LINES:
+		case WSEL_LINES_INIT:
+			start = VT_SELWHOLE;
+			// no break;
+		default:
+			vt->colStart = vt->selEnd.chr;
+			vt->colEnd   = vt->selStart.chr;
+		}
 	}
 	line = vt->lines + vt->selStart.line;
-	line->styles = (line->styles & VT_SELCLEAR) | (vt->selEnd.line == vt->selStart.line ? VT_SELSTART | VT_SELEND : start);
+	line->styles = (line->styles & VT_SELCLEAR) | start;
 
 	vt->hasSelect |= 1;
 	vt->selCur = vt->selEnd;
@@ -1622,6 +1678,7 @@ static void VTStartAutoScroll(VirtualTerm vt, int dir)
 	vt->autoScrollDir = dir;
 }
 
+/* SITE_OnMouseMove and SITE_OnClick handler */
 static int VTMouse(SIT_Widget w, APTR cd, APTR ud)
 {
 	static uint32_t lastClick;
@@ -1635,17 +1692,20 @@ static int VTMouse(SIT_Widget w, APTR cd, APTR ud)
 			if (vt->hasSelect)
 				VTClearSelection(vt), SIT_ForceRefresh();
 			vt->selCur = vt->selStart;
-			vt->wordSelect = 0;
 			if (VTGetCoord(vt, &vt->selStart, msg->x, msg->y) && memcmp(&vt->selStart, &vt->selCur, sizeof vt->selStart) == 0 &&
 			    TimeMS() - lastClick < 750)
 			{
-				vt->wordSelect = 2;
+				switch (vt->wordSelect) {
+				case WSEL_CHARACTER: vt->wordSelect = WSEL_WORDS_INIT; break;
+				case WSEL_WORDS:     vt->wordSelect = WSEL_LINES_INIT; break;
+				case WSEL_LINES:     vt->wordSelect = WSEL_WORDS_INIT;
+				}
 				vt->selEnd = vt->selStart;
 				if (VTMarkSelection(vt))
 					SIT_ForceRefresh();
-				vt->wordSelect = 1;
+				vt->wordSelect ++;
 			}
-			else vt->selCur = vt->selStart;
+			else vt->selCur = vt->selStart, vt->wordSelect = WSEL_CHARACTER;
 			lastClick = TimeMS();
 			return 2;
 
@@ -1824,11 +1884,32 @@ static void VTFindNext(VirtualTerm vt)
 	}
 }
 
+static void showLines(VirtualTerm vt)
+{
+	VTLine line, eol;
+	fprintf(stderr, "colStart = %d, colEnd = %d, total = %d\n", vt->colStart, vt->colEnd, vt->totalLines);
+	for (line = vt->lines, eol = line + vt->totalLines; line < eol; line ++)
+	{
+		STRPTR str;
+		switch (line->styles & VT_SELWHOLE) {
+		default:          str = "  "; break;
+		case VT_SELSTART: str = "[ "; break;
+		case VT_SELEND:   str = " ]"; break;
+		case VT_SELSTART|VT_SELEND: str = "[]"; break;
+		case VT_SELWHOLE: str = "__"; break;
+		}
+		fprintf(stderr, "%s: %d [%d]\n", str, line[1].offset - line->offset, line->offset);
+	}
+}
+
 static int VTKeyboard(SIT_Widget w, APTR cd, APTR ud)
 {
 	SIT_OnKey * msg = cd;
 
 	switch (msg->utf8[0]) {
+	case 4: /* ctrl+D: debug */
+		showLines(ud);
+		break;
 	case 1: /* ctrl+A */
 		VTSelectAll(ud);
 		SIT_ForceRefresh();
@@ -2003,7 +2084,7 @@ static void VTUnitTest(VirtualTerm vt)
 
 void VTInit(SIT_Widget canvas, SIT_Widget scroll)
 {
-	VirtualTerm vt = calloc(sizeof *vt, 1);
+	VirtualTerm vt = term = calloc(sizeof *vt, 1);
 
 	/* quick and dirty character classifier lookup table */
 	memset(VTCharClass, SEP, 128);
@@ -2028,7 +2109,7 @@ void VTInit(SIT_Widget canvas, SIT_Widget scroll)
 	vt->wordWrap   = 1;
 
 	SIT_AddCallback(canvas, SITE_OnSetOrGet,   VTSetOrGet,  vt);
-	SIT_AddCallback(canvas, SITE_OnPaint,      VTPaint,     vt);
+	SIT_AddCallback(canvas, SITE_OnPaintPad,   VTPaint,     vt);
 	SIT_AddCallback(canvas, SITE_OnResize,     VTResize,    vt);
 	SIT_AddCallback(canvas, SITE_OnFinalize,   VTFinalize,  vt);
 	SIT_AddCallback(canvas, SITE_OnClickMove,  VTMouse,     vt);

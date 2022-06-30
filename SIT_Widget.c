@@ -803,60 +803,58 @@ void SIT_ParseTags(SIT_Widget w, va_list vargs, TagList classArgs)
 	}
 }
 
-DLLIMP Bool SIT_AddCallback(SIT_Widget w, int type, SIT_CallProc proc, APTR data)
+DLLIMP void SIT_AddCallback(SIT_Widget w, int type, SIT_CallProc proc, APTR data)
 {
 	SIT_Callback cb;
 	uint8_t priority = type >> 8;
 	type &= 0xff;
 
-	if (w == NULL) return False;
+	if (w == NULL || proc == NULL) return;
 
 	if (type == SITE_OnClickMove)
 	{
 		/* register 2 events at once */
-		return SIT_AddCallback(w, SITE_OnClick,     proc, data) &&
-		       SIT_AddCallback(w, SITE_OnMouseMove, proc, data);
+		SIT_AddCallback(w, SITE_OnClick,     proc, data);
+		SIT_AddCallback(w, SITE_OnMouseMove, proc, data);
+		return;
 	}
 
-	/* check that callback didn't exist yet */
-	for (cb = HEAD(w->callbacks); cb && ! (cb->sc_CB == proc &&
-	     cb->sc_UserData == data && cb->sc_Event == type); NEXT(cb));
-
-	if (cb == NULL && proc)
+	if (type == SITE_OnPaintPad)
 	{
-		uint8_t alloced = 0;
-		if (w->cbSlot > 0)
+		type = SITE_OnPaint;
+		/* report content box instead of padding box */
+		w->layout.flags |= LAYF_PaintPadding;
+	}
+
+	uint8_t alloced = 0;
+	if (w->cbSlot > 0)
+	{
+		for (cb = w->slots; cb->sc_CB; cb ++);
+		w->cbSlot -= sizeof *cb;
+	}
+	else cb = malloc(sizeof *cb), alloced = 1;
+
+	if (cb)
+	{
+		cb->sc_CB       = proc;
+		cb->sc_UserData = data;
+		cb->sc_Event    = type;
+		cb->sc_Malloc   = alloced;
+		cb->sc_Priority = priority;
+		w->evtFlags    |= SET_EVT(type);
+
+		/* keep them ordered in descreasing priority */
+		SIT_Callback ins;
+		for (ins = HEAD(w->callbacks); ins && ins->sc_Priority > priority; NEXT(ins));
+		if (ins) ListInsert(&w->callbacks, &cb->sc_Node, ins->sc_Node.ln_Prev);
+		else ListAddTail(&w->callbacks, &cb->sc_Node);
+
+		if (type == SITE_OnDropFiles)
 		{
-			for (cb = w->slots; cb->sc_CB; cb ++);
-			w->cbSlot -= sizeof *cb;
-		}
-		else cb = malloc(sizeof *cb), alloced = 1;
-
-		if (cb)
-		{
-			cb->sc_CB       = proc;
-			cb->sc_UserData = data;
-			cb->sc_Event    = type;
-			cb->sc_Malloc   = alloced;
-			cb->sc_Priority = priority;
-			w->evtFlags    |= SET_EVT(type);
-
-			/* keep them ordered in descreasing priority */
-			SIT_Callback ins;
-			for (ins = HEAD(w->callbacks); ins && ins->sc_Priority > priority; NEXT(ins));
-			if (ins) ListInsert(&w->callbacks, &cb->sc_Node, ins->sc_Node.ln_Prev);
-			else ListAddTail(&w->callbacks, &cb->sc_Node);
-
-			if (type == SITE_OnDropFiles)
-			{
-				/* need some house keeping */
-				SIT_AppAllowDnD();
-			}
-
-			return True;
+			/* need some house keeping */
+			SIT_AppAllowDnD();
 		}
 	}
-	return False;
 }
 
 static void SIT_DelCB(SIT_Widget w, SIT_Callback cb)

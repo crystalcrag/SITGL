@@ -719,6 +719,7 @@ enum /* bitfield for 'layout.flags' */
 	LAYF_RenderWordBg    = 0x00080000,
 	LAYF_RelUnit         = 0x00100000,  /* 6 bits needed ... */
 	LAYF_RelUnitLast     = 0x02000000,  /* ... up to here */
+	LAYF_PaintPadding    = 0x04000000,
 };
 
 enum /* bitfield for style.flags */

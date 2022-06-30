@@ -1283,8 +1283,6 @@ static int SIT_ListFinalize(SIT_Widget w, APTR cd, APTR ud)
 
 static Cell SIT_ListMovePage(SIT_ListBox list, int dir)
 {
-	if ((list->lbFlags & SITV_HasScroll) == 0) return NULL;
-
 	int  page = list->super.layout.pos.height - list->hdrHeight;
 	int  top  = list->scrollTop + dir * page;
 	int  max  = list->scrollHeight - page;

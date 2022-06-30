@@ -1935,6 +1935,11 @@ static void renderNode(SIT_Widget node)
 			.x = box.left, .w = box.width, .nvg = sit.nvgCtx, .fontId = node->style.font.handle,
 			.y = box.top,  .h = box.height, .fontSize = node->style.font.size
 		};
+		if (node->layout.flags & SITE_OnPaintPad)
+		{
+			paint.x += node->layout.padding.left;
+			paint.y += node->layout.padding.top;
+		}
 		/* retrieve text-shadow in case cb want to handle it */
 		paint.shadow = (APTR) node->style.shadow;
 		paint.shadowCount = node->style.shadowCount;

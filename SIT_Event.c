@@ -550,6 +550,12 @@ DLLIMP int SIT_ProcessClick(float x, float y, int button, int pressed)
 			msg.x     = x - target->offsetX - target->box.left - target->layout.border.left;
 			msg.y     = y - target->offsetY - target->box.top  - target->layout.border.top;
 			msg.flags = sit.keyQual;
+			if (target->layout.flags & LAYF_PaintPadding)
+			{
+				/* relative to content box */
+				msg.x -= target->layout.padding.left;
+				msg.y -= target->layout.padding.top;
+			}
 			handled = SIT_ApplyCallback(target, &msg, SITE_OnClick);
 			if (handled > 1 && pressed)
 				sit.captureEvt = 1, sit.active = target;
@@ -637,6 +643,12 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 			msg.flags = sit.keyQual;
 			msg.x     = x - evt->offsetX - evt->box.left - evt->layout.border.left;
 			msg.y     = y - evt->offsetY - evt->box.top  - evt->layout.border.top;
+			if (evt->layout.flags & LAYF_PaintPadding)
+			{
+				/* relative to content box */
+				msg.x -= evt->layout.padding.left;
+				msg.y -= evt->layout.padding.top;
+			}
 			SIT_ApplyCallback(evt, &msg, SITE_OnMouseMove);
 		}
 	}
@@ -781,6 +793,12 @@ DLLIMP void SIT_ProcessMouseMove(float x, float y)
 			msg.flags = sit.keyQual;
 			msg.x     = sit.mouseX - hover->offsetX - hover->box.left - hover->layout.border.left;
 			msg.y     = sit.mouseY - hover->offsetY - hover->box.top  - hover->layout.border.top;
+			if (hover->layout.flags & LAYF_PaintPadding)
+			{
+				/* relative to content box */
+				msg.x -= hover->layout.padding.left;
+				msg.y -= hover->layout.padding.top;
+			}
 			if (SIT_ApplyCallback(hover, &msg, SITE_OnMouseMove) == 0)
 				hover = SIT_EventBubble(hover->parent, SITE_OnMouseMove);
 			else
